@@ -1,0 +1,418 @@
+/* Executive To-Do List Styles */
+.executive-todo-container {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main content area */
+main {
+  flex: 1;
+  padding-bottom: 80px; /* Space for bottom navigation */
+}
+
+/* Header Styles */
+.header {
+  background-color: white;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e9ecef;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #212529;
+  margin: 0;
+}
+
+/* Logo Styles */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 600;
+  color: #212529;
+  letter-spacing: -0.02em;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.notification-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.notification-bell {
+  position: relative;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-bell:hover {
+  background-color: #f8f9fa;
+}
+
+.notification-bell:active {
+  transform: scale(0.95);
+}
+
+.bell-icon {
+  font-size: 20px;
+}
+
+.notification-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #6c5ce7;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Pending Tasks Section */
+.pending-tasks-section {
+  padding: 24px 20px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #212529;
+  margin: 0 0 8px 0;
+}
+
+.section-subtitle {
+  color: #6c757d;
+  font-size: 14px;
+  margin: 0 0 24px 0;
+}
+
+/* Table Styles */
+.table-container {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tasks-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tasks-table thead {
+  background-color: #f8f9fa;
+}
+
+.tasks-table th {
+  padding: 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.tasks-table tbody tr {
+  border-bottom: 1px solid #e9ecef;
+  transition: background-color 0.2s;
+}
+
+.tasks-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.tasks-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.tasks-table td {
+  padding: 16px;
+  vertical-align: middle;
+}
+
+.store-name {
+  font-weight: 600;
+  color: #212529;
+  font-size: 14px;
+}
+
+.issue {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.city {
+  color: #495057;
+  font-size: 14px;
+}
+
+/* Status Badge Styles */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+  display: inline-block;
+}
+
+.status-badge.pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.submitted {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+/* Bottom Navigation */
+.bottom-navigation {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #2d3436;
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  color: #636e72;
+  transition: color 0.2s;
+  flex: 1;
+  text-decoration: none;
+}
+
+.nav-item.active {
+  color: #74b9ff;
+}
+
+.nav-item:not(.active) {
+  color: #636e72;
+}
+
+.nav-item:hover {
+  color: #74b9ff;
+}
+
+.nav-icon {
+  font-size: 20px;
+}
+
+.nav-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Desktop and Large Screen Header Styles */
+@media (min-width: 1024px) {
+  .header {
+    padding: 20px 40px;
+  }
+  
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+  
+  .logo-text {
+    font-size: 22px;
+  }
+  
+  .notification-count {
+    width: 22px;
+    height: 22px;
+    font-size: 13px;
+  }
+  
+  .profile-avatar {
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+  
+  .header-right {
+    gap: 20px;
+  }
+  
+  /* Desktop Bottom Navigation */
+  .bottom-navigation {
+    padding: 16px 0;
+  }
+  
+  .nav-item {
+    gap: 6px;
+  }
+  
+  .nav-icon {
+    font-size: 22px;
+  }
+  
+  .nav-label {
+    font-size: 14px;
+  }
+}
+
+/* Tablet Header Styles */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .header {
+    padding: 16px 32px;
+  }
+  
+  .logo-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 19px;
+  }
+  
+  .logo-text {
+    font-size: 21px;
+  }
+  
+  .notification-count {
+    width: 21px;
+    height: 21px;
+    font-size: 12px;
+  }
+  
+  .profile-avatar {
+    width: 42px;
+    height: 42px;
+    font-size: 15px;
+  }
+  
+  .header-right {
+    gap: 18px;
+  }
+}
+
+/* Mobile Header Styles */
+@media (max-width: 768px) {
+  .header {
+    padding: 12px 16px;
+  }
+  
+  .title {
+    font-size: 20px;
+  }
+  
+  .logo-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+  
+  .logo-text {
+    font-size: 18px;
+  }
+  
+  .pending-tasks-section {
+    padding: 16px;
+  }
+  
+  .tasks-table th,
+  .tasks-table td {
+    padding: 12px 8px;
+  }
+  
+  .store-name,
+  .issue,
+  .city {
+    font-size: 13px;
+  }
+  
+  .status-badge {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .table-container {
+    margin: 0 -16px;
+    border-radius: 0;
+  }
+  
+  .tasks-table th,
+  .tasks-table td {
+    padding: 8px 6px;
+  }
+  
+  .tasks-table th {
+    font-size: 11px;
+  }
+  
+  .store-name,
+  .issue,
+  .city {
+    font-size: 12px;
+  }
+}
