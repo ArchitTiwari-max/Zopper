@@ -131,7 +131,7 @@ const ExecutiveForm: React.FC = () => {
   const handleSubmitVisit = () => {
     console.log('Submitting visit:', formData);
     alert('Visit submitted successfully!');
-    router.push('/store');
+    router.push('/executive/store');
   };
 
   const getStatusColor = (status: string) => {
@@ -152,7 +152,7 @@ const ExecutiveForm: React.FC = () => {
       <div className="executive-form-content">
         {/* Header */}
         <div className="form-header">
-          <button className="back-btn" onClick={() => router.push('/store')}>
+          <button className="back-btn" onClick={() => router.push('/executive/store')}>
             <span className="back-arrow">←</span>
             Back to Stores
           </button>

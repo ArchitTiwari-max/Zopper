@@ -79,12 +79,11 @@ const Dashboard: React.FC = () => {
   };
 
   const handleViewAllStores = () => {
-    router.push('/store');
+    router.push('/executive/store');
   };
 
   const handleViewAllTasks = () => {
-    // Check if ExecutiveTodoList page exists, otherwise create route
-    router.push('/executive-todo-list');
+    router.push('/executive/executive-todo-list');
   };
 
   return (

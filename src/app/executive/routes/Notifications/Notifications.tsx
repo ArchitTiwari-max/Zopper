@@ -10,7 +10,7 @@ const Notifications: React.FC = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
   const handleBackToDashboard = () => {
-    router.push('/');
+    router.push('/executive');
   };
 
   const handleViewDetails = (notificationId: number) => {

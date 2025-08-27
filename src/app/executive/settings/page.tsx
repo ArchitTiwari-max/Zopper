@@ -82,7 +82,7 @@ const Settings: React.FC = () => {
   };
 
   const handleBackToDashboard = () => {
-    router.push('/');
+    router.push('/executive');
   };
 
   return (

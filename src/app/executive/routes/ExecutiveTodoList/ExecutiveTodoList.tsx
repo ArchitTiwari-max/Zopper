@@ -88,16 +88,15 @@ const ExecutiveTodoList: React.FC = () => {
   ];
 
   const handleNavigateToDashboard = () => {
-    router.push('/');
+    router.push('/executive');
   };
 
   const handleNavigateToVisitHistory = () => {
-    router.push('/visit-history');
+    router.push('/executive/visit-history');
   };
 
   const handleNavigateToSettings = () => {
-    // Settings page to be implemented
-    alert('Settings page coming soon!');
+    router.push('/executive/settings');
   };
 
   return (

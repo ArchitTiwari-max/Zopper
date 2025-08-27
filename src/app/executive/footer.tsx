@@ -10,19 +10,19 @@ const Footer: React.FC = () => {
 
   return (
     <div className="bottom-navigation">
-      <Link href="/" className={`nav-item ${pathname === '/' ? 'active' : ''}`}>
+      <Link href="/executive" className={`nav-item ${pathname === '/executive' || pathname === '/executive/dashboard' ? 'active' : ''}`}>
         <span className="nav-icon">📊</span>
         <span className="nav-label">Dashboard</span>
       </Link>
-      <Link href="/store" className={`nav-item ${pathname === '/store' ? 'active' : ''}`}>
+      <Link href="/executive/store" className={`nav-item ${pathname === '/executive/store' ? 'active' : ''}`}>
         <span className="nav-icon">🏪</span>
         <span className="nav-label">Stores</span>
       </Link>
-      <Link href="/visit-history" className={`nav-item ${pathname === '/visit-history' ? 'active' : ''}`}>
+      <Link href="/executive/visit-history" className={`nav-item ${pathname === '/executive/visit-history' ? 'active' : ''}`}>
         <span className="nav-icon">📋</span>
         <span className="nav-label">History</span>
       </Link>
-      <Link href="/settings" className={`nav-item ${pathname === '/settings' ? 'active' : ''}`}>
+      <Link href="/executive/settings" className={`nav-item ${pathname === '/executive/settings' ? 'active' : ''}`}>
         <span className="nav-icon">⚙️</span>
         <span className="nav-label">Settings</span>
       </Link>

@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "./header";
-import Footer from "./footer";
-import { NotificationProvider } from "../contexts/NotificationContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Executive To-Do List",
-  description: "Executive task management dashboard",
+  title: "ZopperTrack",
+  description: "Field executive and admin management platform",
 };
 
 export default function RootLayout({
@@ -27,14 +24,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="executive-todo-container">
-        <NotificationProvider>
-          <Header />
-          <main>
-            {children}
-          </main>
-          <Footer />
-        </NotificationProvider>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        {children}
       </body>
     </html>
   );

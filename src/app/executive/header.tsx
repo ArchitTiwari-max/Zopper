@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import './routes/ExecutiveTodoList/ExecutiveTodoList.css';
-import NotificationDropdown from '../components/NotificationDropdown/NotificationDropdown';
-import { useNotifications } from '../contexts/NotificationContext';
+import NotificationDropdown from '../../components/NotificationDropdown/NotificationDropdown';
+import { useNotifications } from '../../contexts/NotificationContext';
 
 const Header: React.FC = () => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);

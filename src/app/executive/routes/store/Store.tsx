@@ -18,6 +18,7 @@ const Store: React.FC = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [selectedStores, setSelectedStores] = useState<number[]>([]);
+  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const [filters, setFilters] = useState({
     storeName: '',
     city: 'All Cities',
@@ -25,13 +26,7 @@ const Store: React.FC = () => {
     sortBy: 'Recently Visited First',
     date: '2025-03-23'
   });
-
-  // Available filter options
-  const cities = ['All Cities', 'Ghaziabad', 'Noida', 'Delhi', 'Gurgaon', 'Faridabad'];
-  const brands = ['All Brands', 'Samsung', 'Godrej', 'Vivo', 'Xiomi', 'Realme', 'Oppo', 'Oneplus'];
-  const sortOptions = ['Recently Visited First', 'Store Name A-Z', 'Store Name Z-A', 'City A-Z'];
-
-  const storeData: StoreData[] = [
+  const [storeData, setStoreData] = useState<StoreData[]>([
     {
       id: 1,
       storeName: "Lucky Mobile Gallery",
@@ -112,7 +107,12 @@ const Store: React.FC = () => {
       visited: "4 day ago",
       brandColor: "#1f77b4"
     }
-  ];
+  ]);
+
+  // Available filter options
+  const cities = ['All Cities', 'Ghaziabad', 'Noida', 'Delhi', 'Gurgaon', 'Faridabad'];
+  const brands = ['All Brands', 'Samsung', 'Godrej', 'Vivo', 'Xiomi', 'Realme', 'Oppo', 'Oneplus'];
+  const sortOptions = ['Recently Visited First', 'Store Name A-Z', 'Store Name Z-A', 'City A-Z'];
 
   const handleCreateVisit = () => {
     setIsCreateMode(true);
@@ -147,8 +147,14 @@ const Store: React.FC = () => {
   };
 
   const handleStoreRowClick = (storeId: number, event: React.MouseEvent) => {
-    // Don't navigate if clicking on checkbox in create mode
+    // Don't navigate if clicking on checkbox in create mode or dropdown elements
     if (isCreateMode && (event.target as HTMLElement).tagName === 'INPUT') {
+      return;
+    }
+    
+    // Don't navigate if clicking on dropdown elements
+    const target = event.target as HTMLElement;
+    if (target.closest('.partner-dropdown') || target.closest('.dropdown-menu')) {
       return;
     }
     
@@ -159,7 +165,7 @@ const Store: React.FC = () => {
     }
     
     // Navigate to executive form
-    router.push(`/executive-form?storeId=${storeId}`);
+    router.push(`/executive/executive-form?storeId=${storeId}`);
   };
 
   const handleFilterChange = (filterType: string, value: string) => {
@@ -168,6 +174,55 @@ const Store: React.FC = () => {
       [filterType]: value
     }));
   };
+
+  const handleDropdownToggle = (storeId: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setOpenDropdownId(openDropdownId === storeId ? null : storeId);
+  };
+
+  const handleBrandChange = (storeId: number, newBrand: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
+    // Brand colors mapping
+    const brandColors: { [key: string]: string } = {
+      'Samsung': '#1f77b4',
+      'Godrej': '#2ca02c',
+      'Vivo': '#9467bd',
+      'Xiomi': '#ff7f0e',
+      'Realme': '#d62728',
+      'Oppo': '#17becf',
+      'Oneplus': '#1f77b4'
+    };
+    
+    // Update the store data with the new brand using state setter
+    setStoreData(prevStoreData => 
+      prevStoreData.map(store => 
+        store.id === storeId 
+          ? { 
+              ...store, 
+              partnerBrand: newBrand, 
+              brandColor: brandColors[newBrand] || '#1f77b4' 
+            }
+          : store
+      )
+    );
+    
+    setOpenDropdownId(null);
+  };
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = () => {
+      if (openDropdownId !== null) {
+        setOpenDropdownId(null);
+      }
+    };
+    
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [openDropdownId]);
 
   const filteredStores = storeData.filter(store => {
     const matchesName = store.storeName.toLowerCase().includes(filters.storeName.toLowerCase());
@@ -309,7 +364,7 @@ const Store: React.FC = () => {
             {filteredStores.map((store) => (
               <div 
                 key={store.id} 
-                className={`table-row ${isCreateMode ? 'create-mode' : ''} ${selectedStores.includes(store.id) ? 'selected' : ''} ${!isCreateMode ? 'clickable' : ''}`}
+                className={`table-row ${isCreateMode ? 'create-mode' : ''} ${selectedStores.includes(store.id) ? 'selected' : ''} ${!isCreateMode ? 'clickable' : ''} ${openDropdownId === store.id ? 'dropdown-open' : ''}`}
                 onClick={(e) => handleStoreRowClick(store.id, e)}
               >
                 {isCreateMode && (
@@ -327,13 +382,31 @@ const Store: React.FC = () => {
                 </div>
                 <div className="table-cell partner-cell">
                   <div className="partner-brand">
-                    <span 
-                      className="brand-text"
-                      style={{ color: store.brandColor }}
+                    <div 
+                      className="partner-dropdown"
+                      onClick={(e) => handleDropdownToggle(store.id, e)}
                     >
-                      {store.partnerBrand}
-                    </span>
-                    <span className="dropdown-arrow">▼</span>
+                      <span 
+                        className="brand-text"
+                        style={{ color: store.brandColor }}
+                      >
+                        {store.partnerBrand}
+                      </span>
+                      <span className="dropdown-arrow">▼</span>
+                    </div>
+                    {openDropdownId === store.id && (
+                      <div className="dropdown-menu">
+                        {brands.filter(brand => brand !== 'All Brands').map((brand) => (
+                          <div
+                            key={brand}
+                            className={`dropdown-item ${brand === store.partnerBrand ? 'selected' : ''}`}
+                            onClick={(e) => handleBrandChange(store.id, brand, e)}
+                          >
+                            {brand}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="table-cell city-cell">
