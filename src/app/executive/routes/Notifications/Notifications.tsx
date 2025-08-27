@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import './Notifications.css';
-import { useNotifications } from '../../../contexts/NotificationContext';
+import { useNotifications } from '../../../../contexts/NotificationContext';
 
 const Notifications: React.FC = () => {
   const router = useRouter();
