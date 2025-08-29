@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import './routes/ExecutiveTodoList/ExecutiveTodoList.css';
+import './assinged-task/ExecutiveTodoList.css';
 
 const Footer: React.FC = () => {
   const pathname = usePathname();

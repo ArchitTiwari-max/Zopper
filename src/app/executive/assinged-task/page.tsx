@@ -106,7 +106,7 @@ const ExecutiveTodoList: React.FC = () => {
       {/* Main Content */}
       <main>
         <div className="pending-tasks-section">
-          <h2 className="section-title">Pending Tasks</h2>
+          <h2 className="section-title">Assinged Tasks</h2>
           <p className="section-subtitle">Complete your assigned store visits and reports</p>
 
           {/* Table */}

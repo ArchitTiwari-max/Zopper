@@ -1,4 +1,4 @@
-/* Admin Dashboard Styles for Next.js */
+/* Admin Dashboard Styles - Cleaned Version */
 * {
   margin: 0;
   padding: 0;
@@ -3310,5 +3310,105 @@
   
   .assignment-history-table .header-cell {
     display: none;
+  }
+}
+
+/* Account Management Section Styles */
+.account-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.logout-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.logout-section:last-child {
+  border-bottom: none;
+}
+
+.logout-info {
+  flex: 1;
+}
+
+.logout-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.logout-info p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.logout-btn:hover:not(:disabled) {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+}
+
+.logout-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.logout-btn .spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Section Icon Styles for Account */
+.section-icon.account {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+}
+
+/* Mobile Responsive for Logout Section */
+@media (max-width: 768px) {
+  .logout-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .logout-btn {
+    width: 100%;
+    min-width: auto;
   }
 }

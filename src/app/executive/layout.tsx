@@ -1,12 +1,11 @@
-import type { Metadata } from "next";
+'use client';
+
 import Header from "./header";
 import Footer from "./footer";
-import { NotificationProvider } from "../../contexts/NotificationContext";
-
-export const metadata: Metadata = {
-  title: "Executive Dashboard",
-  description: "Executive task management dashboard",
-};
+import { NotificationProvider } from "./notifications/components/contexts/NotificationContext";
+import AuthGuard from '@/components/AuthGuard';
+import './globals.css';
+import './styles.css';
 
 export default function ExecutiveLayout({
   children,
@@ -14,14 +13,16 @@ export default function ExecutiveLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <NotificationProvider>
-      <div className="executive-todo-container">
-        <Header />
-        <main>
-          {children}
-        </main>
-        <Footer />
-      </div>
-    </NotificationProvider>
+    <AuthGuard>
+      <NotificationProvider>
+        <div className="executive-todo-container">
+          <Header />
+          <main>
+            {children}
+          </main>
+          <Footer />
+        </div>
+      </NotificationProvider>
+    </AuthGuard>
   );
 }

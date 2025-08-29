@@ -1,0 +1,42 @@
+import { NextResponse } from 'next/server'
+
+export function middleware(request) {
+  console.log('🚨 MIDDLEWARE IS RUNNING for path:', request.nextUrl.pathname)
+  
+  const pathname = request.nextUrl.pathname
+  
+  // Block admin routes without accessToken
+  if (pathname.startsWith('/admin')) {
+    const accessToken = request.cookies.get('accessToken')
+    console.log('🔐 Checking admin access, token exists:', !!accessToken)
+    
+    if (!accessToken) {
+      console.log('🛑 BLOCKING ACCESS - REDIRECTING TO LOGIN')
+      return NextResponse.redirect(new URL('/?redirect=' + pathname, request.url))
+    }
+    
+    console.log('✅ ACCESS GRANTED')
+  }
+  
+  // Block executive routes without accessToken
+  if (pathname.startsWith('/executive')) {
+    const accessToken = request.cookies.get('accessToken')
+    console.log('🔐 Checking executive access, token exists:', !!accessToken)
+    
+    if (!accessToken) {
+      console.log('🛑 BLOCKING ACCESS - REDIRECTING TO LOGIN')
+      return NextResponse.redirect(new URL('/?redirect=' + pathname, request.url))
+    }
+  }
+  
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: [
+    // Match admin and executive routes specifically
+    '/admin/:path*',
+    '/executive/:path*',
+    '/',
+  ],
+};

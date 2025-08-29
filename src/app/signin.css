@@ -1,0 +1,653 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Sign-In Page Global Styles - Restored from original globals.css */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #e5e7eb;
+  min-height: 100vh;
+}
+
+/* Container and Card Styles */
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background-color: #e5e7eb;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid #e5e7eb;
+}
+
+/* Logo Section */
+.logo-section {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  position: relative;
+}
+
+.logo-icon::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #f97316 100%);
+  border-radius: 4px;
+  z-index: -1;
+}
+
+.logo-text {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1e293b;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Form Section */
+.form-section h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.subtitle {
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 32px;
+  text-align: left;
+}
+
+/* Form Styles */
+.sign-in-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-group input {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1f2937;
+  background: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group input::placeholder {
+  color: #9ca3af;
+}
+
+/* Password Container */
+.password-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-container input {
+  padding-right: 48px;
+  width: 100%;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: color 0.2s ease;
+}
+
+.toggle-password:hover {
+  color: #374151;
+}
+
+.eye-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Sign Up Button */
+.sign-up-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  margin-top: 8px;
+}
+
+.sign-up-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.sign-up-btn:active {
+  transform: translateY(0);
+}
+
+/* Form Footer */
+.form-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.forgot-password {
+  font-size: 13px;
+  color: #6b7280;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.forgot-password:hover {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+/* Mobile Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+    align-items: flex-start;
+    padding-top: 60px;
+  }
+  
+  .card {
+    padding: 32px 24px;
+    max-width: 100%;
+    border-radius: 16px;
+  }
+  
+  .logo-section {
+    margin-bottom: 24px;
+  }
+  
+  .form-section h1 {
+    font-size: 24px;
+  }
+  
+  .sign-in-form {
+    gap: 20px;
+  }
+  
+  .form-group {
+    gap: 6px;
+  }
+  
+  .form-footer {
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 12px;
+    padding-top: 40px;
+  }
+  
+  .card {
+    padding: 24px 20px;
+    border-radius: 12px;
+  }
+  
+  .logo-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+  
+  .logo-text {
+    font-size: 20px;
+  }
+  
+  .form-section h1 {
+    font-size: 22px;
+  }
+  
+  .form-group input {
+    padding: 14px 16px;
+  }
+  
+  .sign-up-btn {
+    padding: 14px 24px;
+    font-size: 15px;
+  }
+}
+
+/* OTP Verification Section */
+.otp-verification-section {
+  margin-top: 24px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.otp-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e5e7eb, transparent);
+  margin-bottom: 24px;
+}
+
+.otp-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.otp-message {
+  font-size: 14px;
+  color: #374151;
+  text-align: center;
+  font-weight: 500;
+}
+
+.otp-input-group {
+  display: flex;
+  justify-content: center;
+}
+
+.otp-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+  color: #1f2937;
+  background: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  letter-spacing: 2px;
+  font-weight: 500;
+}
+
+.otp-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.otp-input::placeholder {
+  color: #9ca3af;
+  letter-spacing: normal;
+}
+
+.otp-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.verify-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  flex: 1;
+  max-width: 120px;
+}
+
+.verify-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.verify-btn:active {
+  transform: translateY(0);
+}
+
+.cancel-btn {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  flex: 1;
+  max-width: 120px;
+}
+
+.cancel-btn:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+.cancel-btn:active {
+  transform: translateY(0);
+}
+
+/* Disabled state styles */
+input:disabled {
+  background-color: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+button:disabled {
+  background-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+button:disabled:hover {
+  transform: none;
+  background-color: #d1d5db;
+}
+
+.toggle-password:disabled {
+  background: none;
+  color: #d1d5db;
+}
+
+/* Animation for OTP section */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 200px;
+  }
+}
+
+/* Mobile responsive for OTP section */
+@media (max-width: 768px) {
+  .otp-verification-section {
+    margin-top: 20px;
+  }
+  
+  .otp-content {
+    gap: 14px;
+  }
+  
+  .otp-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .verify-btn,
+  .cancel-btn {
+    max-width: 100%;
+    padding: 12px 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .otp-verification-section {
+    margin-top: 16px;
+  }
+  
+  .otp-message {
+    font-size: 13px;
+  }
+  
+  .otp-input {
+    padding: 14px 16px;
+    font-size: 15px;
+  }
+}
+
+/* Focus states for accessibility */
+.sign-up-btn:focus,
+.toggle-password:focus,
+.verify-btn:focus,
+.cancel-btn:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+input[type="checkbox"]:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Spinner Animation */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Utility classes for loader */
+.mr-2 {
+  margin-right: 8px;
+}
+
+/* Button content alignment and sizing */
+.sign-up-btn,
+.verify-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  line-height: 1;
+}
+
+.sign-up-btn svg,
+.verify-btn svg {
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Improved button disabled state for loading */
+.sign-up-btn:disabled:not(.loading),
+.verify-btn:disabled:not(.loading) {
+  background-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.6;
+}
+
+.sign-up-btn:disabled:not(.loading):hover,
+.verify-btn:disabled:not(.loading):hover {
+  background-color: #d1d5db;
+  transform: none;
+}
+
+/* Loading state styles - keep original colors */
+.sign-up-btn:disabled.loading {
+  background-color: #3b82f6;
+  color: white;
+  cursor: not-allowed;
+  opacity: 0.9;
+}
+
+.verify-btn:disabled.loading {
+  background-color: #10b981;
+  color: white;
+  cursor: not-allowed;
+  opacity: 0.9;
+}
+
+/* Forgot Password Component Styles */
+.forgot-password-card {
+  margin-top: 20px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.forgot-password-card h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.forgot-password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.forgot-password-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.forgot-password-buttons .verify-btn,
+.forgot-password-buttons .cancel-btn {
+  flex: 1;
+  max-width: 150px;
+}
+
+/* Container adjustments when forgot password is shown */
+.container {
+  align-items: flex-start;
+  padding-top: 40px;
+}
+
+.container:has(.forgot-password-card) {
+  min-height: auto;
+  padding-bottom: 40px;
+}
+
+/* Mobile responsive for forgot password */
+@media (max-width: 768px) {
+  .forgot-password-card {
+    margin-top: 16px;
+  }
+  
+  .forgot-password-card h2 {
+    font-size: 20px;
+  }
+  
+  .forgot-password-form {
+    gap: 16px;
+  }
+  
+  .forgot-password-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .forgot-password-buttons .verify-btn,
+  .forgot-password-buttons .cancel-btn {
+    max-width: 100%;
+    padding: 12px 24px;
+  }
+  
+  .container {
+    padding-top: 20px;
+  }
+  
+  .container:has(.forgot-password-card) {
+    padding-bottom: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .forgot-password-card {
+    margin-top: 12px;
+  }
+  
+  .forgot-password-card h2 {
+    font-size: 18px;
+  }
+  
+  .container {
+    padding-top: 16px;
+  }
+  
+  .container:has(.forgot-password-card) {
+    padding-bottom: 16px;
+  }
+}

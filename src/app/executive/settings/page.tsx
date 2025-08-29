@@ -35,6 +35,7 @@ const Settings: React.FC = () => {
   const [emailError, setEmailError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [profileEdited, setProfileEdited] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -83,6 +84,34 @@ const Settings: React.FC = () => {
 
   const handleBackToDashboard = () => {
     router.push('/executive');
+  };
+
+  const handleLogout = async () => {
+    if (profileEdited) {
+      const confirmed = confirm('You have unsaved changes. Are you sure you want to logout?');
+      if (!confirmed) return;
+    }
+
+    setIsLoggingOut(true);
+    
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        // Redirect to login page
+        window.location.href = '/';
+      } else {
+        throw new Error('Logout failed');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('Failed to logout. Please try again.');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -201,6 +230,46 @@ const Settings: React.FC = () => {
                   />
                   <span className="toggle-slider"></span>
                 </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Account Management Card */}
+        <div className="account-card">
+          <h2 className="account-card-title">Account Management</h2>
+          
+          <div className="account-settings">
+            <div className="account-item">
+              <div className="account-info">
+                <span className="account-label">Sign Out</span>
+                <span className="account-description">
+                  Sign out from your executive account and return to the login page
+                </span>
+              </div>
+              <div className="logout-container">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="logout-btn"
+                  disabled={isLoggingOut}
+                >
+                  {isLoggingOut ? (
+                    <>
+                      <div className="logout-spinner"></div>
+                      Signing Out...
+                    </>
+                  ) : (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <polyline points="16,17 21,12 16,7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Sign Out
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>

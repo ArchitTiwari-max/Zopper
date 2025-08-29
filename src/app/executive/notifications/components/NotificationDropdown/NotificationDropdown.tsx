@@ -50,7 +50,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   }, [isOpen, onClose]);
 
   const handleViewAllNotifications = () => {
-    router.push('/notifications');
+    router.push('/executive/notifications');
     onClose();
   };
 

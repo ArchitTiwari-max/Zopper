@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { SettingsData, ApprovalTimeOption, RegionOption, TimeZoneOption } from '../types';
 import '../styles.css';
 
 const AdminSettingsPage: React.FC = () => {
+  const router = useRouter();
+  
   const [settings, setSettings] = useState<SettingsData>({
     autoApprovalTime: '6 hours',
     emailNotifications: true,
@@ -14,6 +17,7 @@ const AdminSettingsPage: React.FC = () => {
   });
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleSettingChange = (key: keyof SettingsData, value: string | boolean) => {
     setSettings(prev => ({
@@ -33,6 +37,34 @@ const AdminSettingsPage: React.FC = () => {
   const handleCancel = () => {
     // Reset to original values or reload from server
     setHasUnsavedChanges(false);
+  };
+
+  const handleLogout = async () => {
+    if (hasUnsavedChanges) {
+      const confirmed = confirm('You have unsaved changes. Are you sure you want to logout?');
+      if (!confirmed) return;
+    }
+
+    setIsLoggingOut(true);
+    
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        // Redirect to login page
+        window.location.href = '/';
+      } else {
+        throw new Error('Logout failed');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('Failed to logout. Please try again.');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const approvalTimeOptions: ApprovalTimeOption[] = [
@@ -184,6 +216,50 @@ const AdminSettingsPage: React.FC = () => {
                   <option key={option} value={option}>{option}</option>
                 ))}
               </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Account Management Section */}
+        <div className="settings-section">
+          <div className="section-icon-header">
+            <div className="section-icon account">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <polyline points="16,17 21,12 16,7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div className="section-content">
+              <h3>Account Management</h3>
+              <p>Manage your account session and security settings.</p>
+            </div>
+          </div>
+
+          <div className="account-controls">
+            <div className="logout-section">
+              <div className="logout-info">
+                <h4>Sign Out</h4>
+                <p>Sign out from your admin account and return to the login page</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="logout-btn"
+                disabled={isLoggingOut}
+              >
+                {isLoggingOut ? (
+                  <>
+                    <svg className="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 4.5v5l4-4-4-4v5z" fill="currentColor"/>
+                      <path opacity="0.5" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="currentColor"/>
+                    </svg>
+                    Signing Out...
+                  </>
+                ) : (
+                  'Sign Out'
+                )}
+              </button>
             </div>
           </div>
         </div>

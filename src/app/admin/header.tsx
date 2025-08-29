@@ -98,16 +98,6 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
       <div className="header-right">
         {/* Dynamic actions based on page */}
         <div className="header-actions">
-          {pageInfo.showTimeframe && (
-            <div className="header-control">
-              <label htmlFor="timeframe-select">Period</label>
-              <select id="timeframe-select" className="header-select">
-                <option value="Last 7 Days">Last 7 Days</option>
-                <option value="Last 30 Days">Last 30 Days</option>
-                <option value="Last 90 Days">Last 90 Days</option>
-              </select>
-            </div>
-          )}
           
           {pageInfo.showSearch && (
             <div className="header-control">

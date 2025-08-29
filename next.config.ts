@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Fix the working directory warning
+  outputFileTracingRoot: __dirname,
 };
 
 export default nextConfig;
