@@ -401,9 +401,11 @@ export default function Home() {
               )}
             </button>
             
-            <div className="form-footer">
-              <a href="#" className="forgot-password" onClick={handleForgotPasswordClick}>Forgot a password?</a>
-            </div>
+            {!showOtpVerification && !showForgotPassword && (
+              <div className="form-footer">
+                <a href="#" className="forgot-password" onClick={handleForgotPasswordClick}>Forgot a password?</a>
+              </div>
+            )}
             
             {/* OTP Verification Component */}
             {showOtpVerification && (

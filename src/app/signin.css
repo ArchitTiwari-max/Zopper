@@ -27,6 +27,7 @@ body {
   min-height: 100vh;
   padding: 20px;
   background-color: #e5e7eb;
+  flex-direction: column;
 }
 
 .card {
@@ -225,8 +226,9 @@ body {
 @media (max-width: 768px) {
   .container {
     padding: 16px;
-    align-items: flex-start;
-    padding-top: 60px;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
   }
   
   .card {
@@ -260,7 +262,9 @@ body {
 @media (max-width: 480px) {
   .container {
     padding: 12px;
-    padding-top: 40px;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
   }
   
   .card {
@@ -590,20 +594,41 @@ input[type="checkbox"]:focus {
 }
 
 /* Container adjustments when forgot password is shown */
-.container {
+.cards-container {
+  display: flex;
+  gap: 24px;
   align-items: flex-start;
-  padding-top: 40px;
+  justify-content: center;
+  width: 100%;
+  max-width: 900px;
 }
 
-.container:has(.forgot-password-card) {
+.cards-container .card {
+  flex: 1;
+  margin: 0;
+}
+
+.container.forgot-password-active {
+  align-items: flex-start;
+  padding-top: 40px;
   min-height: auto;
   padding-bottom: 40px;
 }
 
 /* Mobile responsive for forgot password */
 @media (max-width: 768px) {
+  .cards-container {
+    flex-direction: column;
+    gap: 16px;
+    max-width: 100%;
+  }
+  
+  .cards-container .card {
+    max-width: 100%;
+  }
+  
   .forgot-password-card {
-    margin-top: 16px;
+    margin-top: 0;
   }
   
   .forgot-password-card h2 {
@@ -625,11 +650,8 @@ input[type="checkbox"]:focus {
     padding: 12px 24px;
   }
   
-  .container {
+  .container.forgot-password-active {
     padding-top: 20px;
-  }
-  
-  .container:has(.forgot-password-card) {
     padding-bottom: 20px;
   }
 }
@@ -643,11 +665,9 @@ input[type="checkbox"]:focus {
     font-size: 18px;
   }
   
-  .container {
-    padding-top: 16px;
-  }
-  
   .container:has(.forgot-password-card) {
+    align-items: flex-start;
+    padding-top: 16px;
     padding-bottom: 16px;
   }
 }
