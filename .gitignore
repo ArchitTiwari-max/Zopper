@@ -12,26 +12,53 @@
 
 # testing
 /coverage
+/cypress/videos
+/cypress/screenshots
+/cypress/fixtures/
+jest.config.js
 
 # next.js
-/.next/
+/.next
+/.next-backup
 /out/
+.next
 
 # production
 /build
+/dist
+
+# development
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
 # misc
 .DS_Store
 *.pem
+Thumbs.db
 
-# debug
+# logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+logs/
+*.log
+
+# runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
 
 # env files (can opt-in for committing if needed)
 .env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # vercel
 .vercel
@@ -40,4 +67,111 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# database
+/prisma/dev.db
+/prisma/dev.db-journal
+*.db
+*.sqlite
+*.sqlite3
+
+# backup files
+*.backup
+*.bak
+*.tmp
+*.temp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.kate-swp
+*.code-workspace
+
+# Generated files
+/src/generated/
 /src/generated/prisma
+/generated/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.turbo/
+
+# Storybook build outputs
+/storybook-static
+
+# Local Netlify folder
+.netlify
+
+# ESLint cache
+.eslintcache
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build tools
+.turbo
+.swc
+
+# Performance monitoring
+.clinic
+
+# Documentation
+/docs/build
+
+# Local development
+/local
+/playground
