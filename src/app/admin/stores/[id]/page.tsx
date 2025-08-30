@@ -12,8 +12,6 @@ const getStoreVisitReport = (storeId: string): StoreVisitReport => {
     storeId: parseInt(storeId),
     storeName: 'Lucky Electronics',
     address: 'I-441, Govindpuram Ghaziabad, UP',
-    contactPerson: 'Mr. Sharma',
-    contactPhone: '+91 7872356274B',
     brands: ['Godrej', 'Havells', 'Philips'],
     visits: [
       {
@@ -304,7 +302,7 @@ const StoreVisitReportPage: React.FC = () => {
             </svg>
             <span>{storeData.address}</span>
           </div>
-          <div className="contact-item">
+          {/* <div className="contact-item">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M22 16.92V19.92C22 20.52 21.52 21 20.92 21C9.4 21 0 11.6 0 0.0799999C0 -0.52 0.48 -1 1.08 -1H4.08C4.68 -1 5.16 -0.52 5.16 0.0799999C5.16 1.16 5.35 2.23 5.72 3.24C5.82 3.49 5.76 3.77 5.56 3.97L3.84 5.69C5.34 8.75 7.75 11.17 10.81 12.67L12.53 10.95C12.73 10.75 13.01 10.69 13.26 10.79C14.27 11.16 15.34 11.35 16.42 11.35C17.02 11.35 17.5 11.83 17.5 12.43V15.43C17.5 16.03 17.02 16.51 16.42 16.51C16.07 16.89 15.97 16.92 22 16.92Z" stroke="currentColor" strokeWidth="2"/>
             </svg>
@@ -312,7 +310,7 @@ const StoreVisitReportPage: React.FC = () => {
           </div>
           <div className="contact-item">
             <span className="contact-phone">{storeData.contactPhone}</span>
-          </div>
+          </div> */}
         </div>
       </div>
 

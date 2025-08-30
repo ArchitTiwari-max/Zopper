@@ -23,9 +23,113 @@ model User {
   role      Role     @default(EXECUTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  executive Executive?
+  admin Admin?
   
-  @@map("users")
+  @@map("User")
 }
+
+model Executive {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  region    String?
+  visits    Visit[]
+  assigned  Assigned[]
+  // relation to User
+  userId String @unique @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+  assignedBrandIds String[] @db.ObjectId
+  assignedStoreIds String[] @db.ObjectId
+}
+
+model Admin {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  region    String?
+  userId String @unique @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+}
+//
+// Brand & Store
+//
+model Brand {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  brandName  String
+  category   String?
+}
+
+model Store {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  storeName      String
+  city           String
+  fullAddress    String?
+  visits Visit[]
+  partnerBrandIds String[] @db.ObjectId
+}
+
+//
+// Visit & Issue
+//
+model Visit {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  personMet      Json     // [{ name: "Rajesh", designation: "Manager" }]
+  displayChecked Boolean
+  remarks        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // relations
+  executiveId String   @db.ObjectId
+  executive   Executive @relation(fields: [executiveId], references: [id])
+
+  storeId String @db.ObjectId
+  store   Store  @relation(fields: [storeId], references: [id])
+  brandIds String[] @db.ObjectId
+
+  issues   Issue[]
+}
+
+enum IssueStatus {
+  PENDING
+  ASSIGNED
+  RESOLVED
+}
+
+model Issue {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  details   String
+  createdAt DateTime    @default(now())
+  status    IssueStatus @default(PENDING)
+
+  // relation
+  visitId   String      @db.ObjectId
+  visit     Visit       @relation(fields: [visitId], references: [id])
+
+  assigned  Assigned[]  // One Issue can have multiple Assigned records
+}
+
+enum AssignedStatus {
+  ASSIGNED
+  IN_PROGRESS
+  VIEW_REPORT
+}
+
+model Assigned {
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
+  adminComment String?
+  createdAt    DateTime       @default(now())
+  status       AssignedStatus @default(ASSIGNED)
+
+  // relation to Issue
+  issueId String @db.ObjectId
+  issue   Issue  @relation(fields: [issueId], references: [id])
+
+  // relation to Executive
+  executiveId String     @db.ObjectId
+  executive   Executive  @relation(fields: [executiveId], references: [id])
+}
+
 
 model OTP {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -34,5 +138,5 @@ model OTP {
   expiresAt DateTime
   createdAt DateTime @default(now())
   
-  @@map("otps")
+  @@map("Otp")
 }

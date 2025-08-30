@@ -13,6 +13,11 @@ interface PastVisit {
   adminNote?: string;
 }
 
+interface PersonMet {
+  name: string;
+  designation: string;
+}
+
 interface StoreData {
   id: number;
   storeName: string;
@@ -26,12 +31,14 @@ const ExecutiveForm: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
-    personMet: 'Mr. Sharma',
+    peopleMet: [] as PersonMet[],
     displayChecked: false,
     issuesReported: '',
-    nextVisitDate: '2025-03-23',
+    brandsVisited: [] as string[],
     remarks: ''
   });
+  const [currentBrand, setCurrentBrand] = useState('');
+  const [currentPerson, setCurrentPerson] = useState({ name: '', designation: '' });
   const [storeData, setStoreData] = useState<StoreData>({
     id: 1,
     storeName: "Lucky Electronics",
@@ -40,6 +47,15 @@ const ExecutiveForm: React.FC = () => {
     contactPerson: "Mr. Sharma",
     contactNumber: "+91 7872356278"
   });
+
+  // Available brands list
+  const availableBrands = [
+    'Samsung', 'Apple', 'OnePlus', 'Xiaomi', 'Vivo', 'Oppo', 'Realme', 'Motorola',
+    'Nokia', 'Huawei', 'Honor', 'Nothing', 'Google Pixel', 'Asus', 'Sony',
+    'Godrej', 'Havells', 'Philips', 'LG', 'Whirlpool', 'Bosch', 'IFB',
+    'Blue Star', 'Voltas', 'Daikin', 'Hitachi', 'Carrier', 'O General',
+    'Panasonic', 'Sharp', 'TCL', 'Mi', 'OnePlus TV', 'Thomson'
+  ];
 
   // Store data mapping based on store ID
   const storeDataMap: { [key: number]: StoreData } = {
@@ -77,10 +93,6 @@ const ExecutiveForm: React.FC = () => {
       const selectedStore = storeDataMap[id];
       if (selectedStore) {
         setStoreData(selectedStore);
-        setFormData(prev => ({
-          ...prev,
-          personMet: selectedStore.contactPerson
-        }));
       }
     }
   }, [searchParams]);
@@ -134,6 +146,55 @@ const ExecutiveForm: React.FC = () => {
     router.push('/executive/store');
   };
 
+  const addBrand = () => {
+    if (currentBrand.trim() && !formData.brandsVisited.includes(currentBrand.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        brandsVisited: [...prev.brandsVisited, currentBrand.trim()]
+      }));
+      setCurrentBrand('');
+    }
+  };
+
+  const removeBrand = (brandToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      brandsVisited: prev.brandsVisited.filter(brand => brand !== brandToRemove)
+    }));
+  };
+
+  const handleBrandKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addBrand();
+    }
+  };
+
+  // Person management functions
+  const addPerson = () => {
+    if (currentPerson.name.trim() && currentPerson.designation.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        peopleMet: [...prev.peopleMet, { ...currentPerson }]
+      }));
+      setCurrentPerson({ name: '', designation: '' });
+    }
+  };
+
+  const removePerson = (indexToRemove: number) => {
+    setFormData(prev => ({
+      ...prev,
+      peopleMet: prev.peopleMet.filter((_, index) => index !== indexToRemove)
+    }));
+  };
+
+  const handlePersonInputChange = (field: 'name' | 'designation', value: string) => {
+    setCurrentPerson(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Pending':
@@ -177,13 +238,6 @@ const ExecutiveForm: React.FC = () => {
               <span className="location-icon">📍</span>
               <span>{storeData.address}</span>
             </div>
-            <div className="detail-item">
-              <span className="person-icon">👤</span>
-              <div>
-                <div>{storeData.contactPerson}</div>
-                <div className="contact-number">{storeData.contactNumber}</div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -193,17 +247,54 @@ const ExecutiveForm: React.FC = () => {
           
           <div className="form-group">
             <label className="form-label">
-              Person Met <span className="required">*</span>
+              People Met <span className="required">*</span>
             </label>
-            <select 
-              className="form-select"
-              value={formData.personMet}
-              onChange={(e) => handleInputChange('personMet', e.target.value)}
-            >
-              <option value="Mr. Sharma">Mr. Sharma</option>
-              <option value="Ms. Singh">Ms. Singh</option>
-              <option value="Mr. Kumar">Mr. Kumar</option>
-            </select>
+            <div className="people-input-container">
+              <div className="person-input-wrapper">
+                <input
+                  type="text"
+                  className="form-input person-name-input"
+                  placeholder="Enter person's name"
+                  value={currentPerson.name}
+                  onChange={(e) => handlePersonInputChange('name', e.target.value)}
+                />
+                <input
+                  type="text"
+                  className="form-input person-designation-input"
+                  placeholder="Enter designation"
+                  value={currentPerson.designation}
+                  onChange={(e) => handlePersonInputChange('designation', e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="add-person-btn"
+                  onClick={addPerson}
+                  disabled={!currentPerson.name.trim() || !currentPerson.designation.trim()}
+                >
+                  Add
+                </button>
+              </div>
+              {formData.peopleMet.length > 0 && (
+                <div className="people-list">
+                  {formData.peopleMet.map((person, index) => (
+                    <div key={index} className="person-item">
+                      <div className="person-details">
+                        <span className="person-name">{person.name}</span>
+                        <span className="person-designation">({person.designation})</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="remove-person-btn"
+                        onClick={() => removePerson(index)}
+                        title="Remove person"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="form-group">
@@ -242,16 +333,50 @@ const ExecutiveForm: React.FC = () => {
 
           <div className="form-group">
             <label className="form-label">
-              Next Visit Date <span className="required">*</span>
+              Brands Visited <span className="required">*</span>
             </label>
-            <div className="date-input-container">
-              <input
-                type="date"
-                className="form-date"
-                value={formData.nextVisitDate}
-                onChange={(e) => handleInputChange('nextVisitDate', e.target.value)}
-              />
-              <span className="calendar-icon">📅</span>
+            <div className="brands-input-container">
+              <div className="brand-input-wrapper">
+                <select
+                  className="form-select brand-select"
+                  value={currentBrand}
+                  onChange={(e) => setCurrentBrand(e.target.value)}
+                >
+                  <option value="">Select a brand to add...</option>
+                  {availableBrands
+                    .filter(brand => !formData.brandsVisited.includes(brand))
+                    .sort()
+                    .map((brand, index) => (
+                      <option key={index} value={brand}>{brand}</option>
+                    ))
+                  }
+                </select>
+                <button
+                  type="button"
+                  className="add-brand-btn"
+                  onClick={addBrand}
+                  disabled={!currentBrand.trim()}
+                >
+                  Add
+                </button>
+              </div>
+              {formData.brandsVisited.length > 0 && (
+                <div className="brands-list">
+                  {formData.brandsVisited.map((brand, index) => (
+                    <div key={index} className="brand-item">
+                      <span className="brand-name">{brand}</span>
+                      <button
+                        type="button"
+                        className="remove-brand-btn"
+                        onClick={() => removeBrand(brand)}
+                        title="Remove brand"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

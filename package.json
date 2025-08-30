@@ -8,7 +8,12 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "biome check",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "import-brands": "tsx src/querryRunner/Brands/brand.ts",
+    "export-brand": "tsx src/querryRunner/Brands/fetchbrand.ts ",
+    "import-stores": "tsx src/querryRunner/stores/store.ts",
+    "export-store": "tsx src/querryRunner/stores/fetchstore.ts ",
+    "import-users": "tsx src/querryRunner/user/user.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.14.0",
@@ -22,7 +27,8 @@
     "nodemailer": "^7.0.5",
     "prisma": "^6.14.0",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
@@ -31,6 +37,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "tailwindcss": "^4",
+    "tsx": "^4.20.5",
     "typescript": "^5"
   }
 }

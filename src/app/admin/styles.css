@@ -79,11 +79,16 @@
 
 .visit-context-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 1rem;
+}
+
+.visit-context-header h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
 }
 
 .visit-icon {
@@ -191,6 +196,104 @@
   background: white;
   border-radius: 6px;
   border-left: 3px solid #3b82f6;
+}
+
+/* Store Details Toggle Styles */
+.store-name-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.store-name-section span {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.view-details-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-details-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.store-details {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.store-details div {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.store-details div:last-child {
+  margin-bottom: 0;
+}
+
+.store-details strong {
+  color: #1e293b;
+  margin-right: 0.5rem;
+}
+
+/* Visit Context Toggle Buttons */
+.show-visit-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 1rem 0;
+  display: block;
+}
+
+.show-visit-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.hide-visit-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hide-visit-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
 }
 
 /* Issue Link Styles */
@@ -1118,7 +1221,7 @@
 .stores-table .table-header {
   background: #6b7280;
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1.5fr 1fr 1fr 0.8fr 0.8fr;
+  grid-template-columns: 1.8fr 1.2fr 1.8fr 1fr 1fr 1fr;
   gap: 1rem;
   padding: 1rem;
 }
@@ -1138,7 +1241,7 @@
 
 .stores-table .table-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1.5fr 1fr 1fr 0.8fr 0.8fr;
+  grid-template-columns: 1.8fr 1.2fr 1.8fr 1fr 1fr 1fr;
   gap: 1rem;
   padding: 1rem;
   border-bottom: 1px solid #f1f5f9;

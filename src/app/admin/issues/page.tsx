@@ -18,7 +18,7 @@ const mockIssuesData: IssueData[] = [
     dateReported: '2025-01-15',
     reportedBy: 'Priya Singh',
     reportedByRole: 'Executive',
-    status: 'Open',
+    status: 'Closed',
     priority: 'High',
     category: 'Technical',
     description: 'Digital display unit not functioning properly. Screen shows flickering and intermittent connectivity issues.',
@@ -230,7 +230,7 @@ const AdminIssuesPage: React.FC = () => {
           </div>
           <div className="stats-content">
             <h4>Open Issues</h4>
-            <div className="stats-value">{filteredIssues.filter(issue => issue.status === 'Open').length}</div>
+            <div className="stats-value">{filteredIssues.filter(issue => issue.status === 'Closed').length}</div>
           </div>
         </div>
 

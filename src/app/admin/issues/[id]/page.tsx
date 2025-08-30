@@ -19,7 +19,7 @@ const mockIssueData: Record<number, IssueData> = {
     dateReported: '2025-08-20',
     reportedBy: 'Priya Gupta',
     reportedByRole: 'Executive',
-    status: 'Open',
+    status: 'Pending',
     priority: 'High',
     category: 'Technical',
     description: 'WiFi connectivity issues affecting digital promotional displays. Customers unable to access interactive content and promotional offers. Network stability issues causing intermittent disconnections throughout the day.',
@@ -78,7 +78,7 @@ const mockIssueData: Record<number, IssueData> = {
     dateReported: '2025-08-01',
     reportedBy: 'Ramesh Kumar',
     reportedByRole: 'Executive',
-    status: 'Open',
+    status: 'Pending',
     priority: 'Medium',
     category: 'Inventory',
     description: 'Store is completely out of promotional flyers and brochures for new product launches. Customer inquiries about product features cannot be properly addressed without marketing materials. Urgent restocking required.',
@@ -129,7 +129,7 @@ const mockIssueData: Record<number, IssueData> = {
     dateReported: '2025-08-08',
     reportedBy: 'Sunita Yadav',
     reportedByRole: 'Executive',
-    status: 'Open',
+    status: 'Pending',
     priority: 'High',
     category: 'Display',
     description: 'Customer requesting live product demonstration for new electrical appliances. Current display setup does not allow for proper product showcase. Need to arrange demo unit installation and training for store staff.',
@@ -180,7 +180,7 @@ const mockIssueData: Record<number, IssueData> = {
     dateReported: '2025-08-12',
     reportedBy: 'Rajesh Singh',
     reportedByRole: 'Executive',
-    status: 'Open',
+    status: 'Pending',
     priority: 'Medium',
     category: 'Inventory',
     description: 'Product shelf positioned too low for customer visibility. Popular items are not easily accessible to customers, affecting sales potential. Shelf reorganization and height adjustment required for better product exposure.',
@@ -231,7 +231,7 @@ const mockIssueData: Record<number, IssueData> = {
     dateReported: '2025-08-08',
     reportedBy: 'Amit Verma',
     reportedByRole: 'Executive',
-    status: 'Open',
+    status: 'Pending',
     priority: 'Medium',
     category: 'Display',
     description: 'Multiple products displayed without proper price tags or product information labels. Customers unable to identify prices and specifications, leading to confusion and potential sales loss. Complete price tag update required.',
@@ -290,7 +290,8 @@ const IssueDetailPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [newComment, setNewComment] = useState<string>('');
   const [selectedExecutive, setSelectedExecutive] = useState<string>('');
-  const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [showStoreDetails, setShowStoreDetails] = useState<boolean>(false);
+  const [showVisitContext, setShowVisitContext] = useState<boolean>(false);
 
   // Load issue data
   useEffect(() => {
@@ -363,8 +364,8 @@ const IssueDetailPage: React.FC = () => {
 
   const getStatusColor = (status: string): string => {
     const colors: Record<string, string> = {
-      'Open': '#f59e0b',
-      'Assigned': '#3b82f6',
+      'Pending': '#3b82f6',
+      'Assigned': '#f59e0b',
       'In Progress': '#8b5cf6',
       'Resolved': '#10b981',
       'Closed': '#64748b'
@@ -405,7 +406,7 @@ const IssueDetailPage: React.FC = () => {
   return (
     <div className="issue-management-overview">
       {/* Header Section */}
-      <div className="issue-management-header">
+      {/* <div className="issue-management-header">
         <div className="back-navigation">
           <Link href="/admin/issues" className="back-link">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -414,11 +415,7 @@ const IssueDetailPage: React.FC = () => {
             Back to Issues
           </Link>
         </div>
-        <div className="issue-management-title">
-          <h2>Issue Management</h2>
-          <p>Comprehensive issue tracking and resolution management</p>
-        </div>
-      </div>
+      </div> */}
 
       <div className="issue-content-grid">
         {/* Left Side - Issue Details */}
@@ -428,7 +425,6 @@ const IssueDetailPage: React.FC = () => {
               <div className="issue-id-section">
                 <h3>{issueData.issueId}</h3>
                 <div className="issue-badges">
-                  <span className="mark-resolved-btn">Mark Resolved</span>
                   <span 
                     className="status-badge"
                     style={{ backgroundColor: getStatusColor(issueData.status) }}
@@ -437,59 +433,23 @@ const IssueDetailPage: React.FC = () => {
                   </span>
                 </div>
               </div>
+
+              <div className="store-name-section">
+                <span>{issueData.storeName}</span>
+                <button type="button" onClick={() => setShowStoreDetails(!showStoreDetails)} className="view-details-btn">
+                  {showStoreDetails ? 'Hide Details' : 'View Details'}
+                </button>
+              </div>
+
+              {showStoreDetails && (
+                <div className="store-details">
+                  <div><strong>Brand Associated:</strong> {issueData.brandAssociated}</div>
+                  <div><strong>City:</strong> {issueData.city}</div>
+                </div>
+              )}
             </div>
 
             <div className="issue-info-grid">
-              <div className="info-item">
-                <div className="info-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1z"/>
-                  </svg>
-                </div>
-                <div className="info-content">
-                  <span className="info-label">Store Name:</span>
-                  <Link href={`/admin/stores/${issueData.storeId}`} className="info-value info-link">
-                    {issueData.storeName}
-                  </Link>
-                </div>
-              </div>
-
-              <div className="info-item">
-                <div className="info-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                  </svg>
-                </div>
-                <div className="info-content">
-                  <span className="info-label">Location:</span>
-                  <span className="info-value">{issueData.location}</span>
-                </div>
-              </div>
-
-              <div className="info-item">
-                <div className="info-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                  </svg>
-                </div>
-                <div className="info-content">
-                  <span className="info-label">Brand Associated:</span>
-                  <span className="info-value">{issueData.brandAssociated}</span>
-                </div>
-              </div>
-
-              <div className="info-item">
-                <div className="info-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                  </svg>
-                </div>
-                <div className="info-content">
-                  <span className="info-label">City:</span>
-                  <span className="info-value">{issueData.city}</span>
-                </div>
-              </div>
-
               <div className="info-item">
                 <div className="info-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -509,19 +469,13 @@ const IssueDetailPage: React.FC = () => {
             </div>
             
             {/* Visit Context Section - Show if issue was created from a visit */}
-            {issueData.visitContext && (
+            {showVisitContext && issueData.visitContext && (
               <div className="visit-context-section">
-                <h4>Related Visit Information</h4>
+                <div className="visit-context-header">
+                  <h4>Related Visit Information</h4>
+                  <button type="button" onClick={() => setShowVisitContext(false)} className="hide-visit-btn">Hide Visit Info</button>
+                </div>
                 <div className="visit-context-card">
-                  <div className="visit-context-header">
-                    <div className="visit-icon">
-                      🏪
-                    </div>
-                    <div className="visit-info">
-                      <h5>Store Visit on {new Date(issueData.visitContext.visitDate).toLocaleDateString()}</h5>
-                      <p>This issue was reported during an executive visit</p>
-                    </div>
-                  </div>
                   <div className="visit-context-details">
                     <div className="visit-detail-grid">
                       <div className="visit-detail-item">
@@ -556,63 +510,57 @@ const IssueDetailPage: React.FC = () => {
                 </div>
               </div>
             )}
+            {!showVisitContext && issueData.visitContext && (
+              <button type="button" onClick={() => setShowVisitContext(true)} className="show-visit-btn">Show Visit Info</button>
+            )}
           </div>
 
           {/* Assignment History */}
           <div className="assignment-history-section">
             <div className="section-header">
               <h3>Assignment History</h3>
-              <button 
-                className="toggle-history-btn"
-                onClick={() => setShowHistory(!showHistory)}
-                type="button"
-              >
-                {showHistory ? 'Hide History' : 'Toggle History'}
-              </button>
             </div>
 
-            {showHistory && (
-              <div className="assignment-history-table">
-                <div className="table-header">
-                  <div className="header-cell">Executive</div>
-                  <div className="header-cell">Date Assigned</div>
-                  <div className="header-cell">Admin Comment</div>
-                  <div className="header-cell">Status</div>
-                </div>
-                <div className="table-body">
-                  {issueData.assignmentHistory.map(assignment => (
-                    <div key={assignment.id} className="table-row">
-                      <div className="cell executive-cell">
-                        <div className="executive-avatar-small">
-                          {assignment.executiveInitials}
-                        </div>
-                        <span className="executive-name">{assignment.executiveName}</span>
-                      </div>
-                      <div className="cell">
-                        {new Date(assignment.dateAssigned).toLocaleDateString()}
-                      </div>
-                      <div className="cell admin-comment">
-                        {assignment.adminComment}
-                      </div>
-                      <div className="cell">
-                        {assignment.status === 'Completed' ? (
-                          <button className="view-report-btn" type="button">
-                            View Report
-                          </button>
-                        ) : (
-                          <span 
-                            className="assignment-status-badge"
-                            style={{ backgroundColor: getAssignmentStatusColor(assignment.status) }}
-                          >
-                            {assignment.status}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            <div className="assignment-history-table">
+              <div className="table-header">
+                <div className="header-cell">Executive</div>
+                <div className="header-cell">Date Assigned</div>
+                <div className="header-cell">Admin Comment</div>
+                <div className="header-cell">Status</div>
               </div>
-            )}
+              <div className="table-body">
+                {issueData.assignmentHistory.map(assignment => (
+                  <div key={assignment.id} className="table-row">
+                    <div className="cell executive-cell">
+                      <div className="executive-avatar-small">
+                        {assignment.executiveInitials}
+                      </div>
+                      <span className="executive-name">{assignment.executiveName}</span>
+                    </div>
+                    <div className="cell">
+                      {new Date(assignment.dateAssigned).toLocaleDateString()}
+                    </div>
+                    <div className="cell admin-comment">
+                      {assignment.adminComment}
+                    </div>
+                    <div className="cell">
+                      {assignment.status === 'Completed' ? (
+                        <button className="view-report-btn" type="button">
+                          View Report
+                        </button>
+                      ) : (
+                        <span 
+                          className="assignment-status-badge"
+                          style={{ backgroundColor: getAssignmentStatusColor(assignment.status) }}
+                        >
+                          {assignment.status}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -674,31 +622,6 @@ const IssueDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Comments Section */}
-      {issueData.comments.length > 0 && (
-        <div className="comments-section">
-          <h3>Comments</h3>
-          <div className="comments-list">
-            {issueData.comments.map(comment => (
-              <div key={comment.id} className="comment-item">
-                <div className="comment-header">
-                  <div className="comment-author">
-                    <span className="author-name">{comment.authorName}</span>
-                    <span className="author-role">({comment.authorRole})</span>
-                  </div>
-                  <div className="comment-date">
-                    {new Date(comment.createdAt).toLocaleDateString()} at{' '}
-                    {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-                <div className="comment-content">
-                  {comment.comment}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Issue Resolution Report */}
       <div className="issue-resolution-report">

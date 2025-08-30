@@ -108,8 +108,6 @@ export interface StoreVisitReport {
   storeId: number;
   storeName: string;
   address: string;
-  contactPerson: string;
-  contactPhone: string;
   brands: string[];
   visits: ExecutiveVisit[];
 }
@@ -215,7 +213,7 @@ export interface IssueData {
   dateReported: string;
   reportedBy: string;
   reportedByRole: string;
-  status: 'Open' | 'Assigned' | 'In Progress' | 'Resolved' | 'Closed';
+  status: 'Pending' | 'Assigned' | 'In Progress' | 'Resolved' | 'Closed';
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   category: 'Display' | 'Technical' | 'Inventory' | 'Customer Service' | 'Other';
   description: string;
@@ -270,7 +268,7 @@ export interface IssueFilters {
   dateRange: string;
 }
 
-export type IssueStatusOption = 'All Status' | 'Open' | 'Assigned' | 'In Progress' | 'Resolved' | 'Closed';
+export type IssueStatusOption = 'All Status' | 'Pending' | 'Assigned' | 'In Progress' | 'Resolved' | 'Closed';
 export type IssuePriorityOption = 'All Priority' | 'Low' | 'Medium' | 'High' | 'Critical';
 export type IssueCategoryOption = 'All Category' | 'Display' | 'Technical' | 'Inventory' | 'Customer Service' | 'Other';
 export type IssueAssigneeOption = 'All Assignees' | string;

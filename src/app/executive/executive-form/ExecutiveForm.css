@@ -353,35 +353,256 @@
   background-color: #c82333;
 }
 
-/* Date Input */
-.date-input-container {
-  position: relative;
-  display: inline-block;
+/* People Input - scoped to visit form */
+.visit-form-card .people-input-container {
   width: 100%;
 }
 
-.form-date {
-  width: 100%;
-  padding: 12px 40px 12px 16px;
+.visit-form-card .person-input-wrapper {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.visit-form-card .form-input {
+  padding: 12px 16px;
   border: 1px solid #dee2e6;
   border-radius: 8px;
   font-size: 14px;
   transition: border-color 0.2s;
+  background-color: white;
 }
 
-.form-date:focus {
+.visit-form-card .form-input:focus {
   outline: none;
   border-color: #4f46e5;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-.calendar-icon {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
+.visit-form-card .person-name-input {
+  flex: 2;
+  min-width: 200px;
+}
+
+.visit-form-card .person-designation-input {
+  flex: 1;
+  min-width: 150px;
+}
+
+.visit-form-card .add-person-btn {
+  padding: 12px 20px;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.visit-form-card .add-person-btn:hover:not(:disabled) {
+  background-color: #4338ca;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.visit-form-card .add-person-btn:disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.visit-form-card .people-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.visit-form-card .person-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  animation: personFadeIn 0.2s ease-out;
+}
+
+.visit-form-card .person-details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.visit-form-card .person-name {
+  font-weight: 500;
+  color: #212529;
+}
+
+.visit-form-card .person-designation {
+  color: #6c757d;
+  font-size: 13px;
+}
+
+.visit-form-card .remove-person-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
   font-size: 16px;
-  pointer-events: none;
+  font-weight: bold;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.visit-form-card .remove-person-btn:hover {
+  background-color: #dc3545;
+  color: white;
+  transform: scale(1.1);
+}
+
+@keyframes personFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Brands Input - scoped to visit form to avoid dashboard conflicts */
+.visit-form-card .brands-input-container {
+  width: 100%;
+}
+
+.visit-form-card .brand-input-wrapper {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.visit-form-card .brand-input-wrapper .form-select.brand-select {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  background-color: white;
+  margin-right: 0;
+}
+
+.visit-form-card .brand-input-wrapper .form-select.brand-select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.visit-form-card .add-brand-btn {
+  padding: 12px 20px;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.visit-form-card .add-brand-btn:hover:not(:disabled) {
+  background-color: #4338ca;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.visit-form-card .add-brand-btn:disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Form-specific brands list to avoid conflicts with dashboard */
+.visit-form-card .brands-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  min-height: 50px;
+}
+
+.visit-form-card .brand-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  color: #dc3545;
+  padding: 2px 4px;
+  border: none;
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 400;
+  animation: brandFadeIn 0.2s ease-out;
+}
+
+.visit-form-card .brand-name {
+  margin-right: 2px;
+}
+
+.visit-form-card .remove-brand-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.visit-form-card .remove-brand-btn:hover {
+  background-color: #dc3545;
+  color: white;
+  transform: scale(1.1);
+}
+
+@keyframes brandFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Form Actions */

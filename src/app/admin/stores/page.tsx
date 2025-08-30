@@ -304,7 +304,6 @@ const AdminStoresPage: React.FC = () => {
             <div className="header-cell">STORE NAME</div>
             <div className="header-cell">PARTNER BRANDS</div>
             <div className="header-cell">ADDRESS</div>
-            <div className="header-cell">CONTACT PERSON</div>
             <div className="header-cell">ASSIGNED TO</div>
             <div className="header-cell">Pending Reviews</div>
             <div className="header-cell">PENDING ISSUES</div>
@@ -330,7 +329,6 @@ const AdminStoresPage: React.FC = () => {
                   ))}
                 </div>
                 <div className="cell">{store.address}</div>
-                <div className="cell">{store.contactPerson}</div>
                 <div className="cell">
                   <button 
                     className="view-all-btn"

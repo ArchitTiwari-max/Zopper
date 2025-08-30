@@ -10,7 +10,7 @@ import './styles.css';
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage = 'Dashboard' }) => {
   return (
-    <AuthGuard>
+    // <AuthGuard>
       <div className="admin-dashboard">
         {/* Navigation Component */}
         <Navigation />
@@ -24,7 +24,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage = 'Dash
           {children}
         </div>
       </div>
-   </AuthGuard>
+  //  </AuthGuard>
   );
 };
 

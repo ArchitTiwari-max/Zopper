@@ -53,10 +53,8 @@ export async function POST(request: NextRequest) {
         expiresAt
       }
     });
-    console.log("honey");
     // Send OTP email
     const emailSent = await sendOTPEmail(email, otp);
-  console.log("money");
     if (!emailSent) {
       return NextResponse.json(
         { error: 'Failed to send OTP email' },
