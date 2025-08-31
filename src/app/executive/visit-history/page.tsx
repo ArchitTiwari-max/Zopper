@@ -1,111 +1,111 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import VisitDetailsModal from '@/components/VisitDetailsModal';
 import './VisitHistory.css';
 
 interface VisitDetail {
-  id: number;
+  id: string;
   storeName: string;
-  status: 'Submitted' | 'Reviewed' | 'Pending';
-  personMet: string;
+  status: 'PENDING_REVIEW' | 'REVIEWD';
+  personMet: PersonMet[];
   date: string;
   displayChecked: boolean;
-  feedback: string;
-  issueReported: string;
-  nextVisit: string;
-  remarks: string;
-  photos: string[];
-  adminComment: string;
-  expanded: boolean;
+  remarks?: string;
+  imageUrls: string[];
+  adminComment?: string;
+  issues: VisitIssue[];
+  createdAt: string;
+  updatedAt: string;
+  representative: string;
+}
+
+interface PersonMet {
+  name: string;
+  designation: string;
+}
+
+interface VisitIssue {
+  id: string;
+  details: string;
+  status: 'PENDING' | 'ASSIGNED' | 'RESOLVED';
+  createdAt: string;
+  assigned: IssueAssignment[];
+}
+
+interface IssueAssignment {
+  id: string;
+  adminComment?: string;
+  status: 'ASSIGNED' | 'IN_PROGRESS' | 'VIEW_REPORT';
+  createdAt: string;
+  executiveName: string;
 }
 
 const VisitHistory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
-  const [visits, setVisits] = useState<VisitDetail[]>([
-    {
-      id: 1,
-      storeName: "Lucky Mobile Gallery",
-      status: "Submitted",
-      personMet: "Mr. Sharma",
-      date: "2025-08-01",
-      displayChecked: true,
-      feedback: "Asked for new standee",
-      issueReported: "No flyer stock",
-      nextVisit: "2025-08-10",
-      remarks: "Requested pricing sheet",
-      photos: [],
-      adminComment: "",
-      expanded: true
-    },
-    {
-      id: 2,
-      storeName: "Modern Traders",
-      status: "Reviewed",
-      personMet: "Ms. Singh",
-      date: "2025-07-28",
-      displayChecked: true,
-      feedback: "Good display setup",
-      issueReported: "None",
-      nextVisit: "2025-08-15",
-      remarks: "Store performing well",
-      photos: [],
-      adminComment: "Excellent work on display arrangement",
-      expanded: false
-    },
-    {
-      id: 3,
-      storeName: "TechZone Mobiles",
-      status: "Submitted",
-      personMet: "Mr. Kumar",
-      date: "2025-07-25",
-      displayChecked: false,
-      feedback: "Need more promotional materials",
-      issueReported: "Display not visible",
-      nextVisit: "2025-08-05",
-      remarks: "Requires attention",
-      photos: [],
-      adminComment: "",
-      expanded: false
-    },
-    {
-      id: 4,
-      storeName: "TechZone Mobiles",
-      status: "Submitted",
-      personMet: "Mr. Kumar",
-      date: "2025-07-20",
-      displayChecked: true,
-      feedback: "Initial setup completed",
-      issueReported: "None",
-      nextVisit: "2025-08-01",
-      remarks: "Good cooperation from store owner",
-      photos: [],
-      adminComment: "",
-      expanded: false
-    }
-  ]);
+  const [visits, setVisits] = useState<VisitDetail[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedVisit, setSelectedVisit] = useState<VisitDetail | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
-  const toggleExpanded = (id: number) => {
-    setVisits(visits.map(visit => 
-      visit.id === id ? { ...visit, expanded: !visit.expanded } : visit
-    ));
-  };
+  // Fetch visit history from API
+  useEffect(() => {
+    const fetchVisitHistory = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/executive/visits');
+        if (response.ok) {
+          const data = await response.json();
+          setVisits(data.data || []);
+        } else {
+          console.log(`Visit history API returned ${response.status}`);
+          setVisits([]);
+        }
+      } catch (error) {
+        console.error('Error fetching visit history:', error);
+        setError('Failed to load visit history');
+        setVisits([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVisitHistory();
+  }, []);
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Pending':
-        return '#ffc107';
-      case 'Submitted':
-        return '#007bff';
-      case 'Reviewed':
+    switch (status?.toUpperCase()) {
+      case 'PENDING_REVIEW':
         return '#28a745';
+      case 'REVIEWD':
+        return '#007bff';
       default:
         return '#6c757d';
     }
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const openVisitModal = (visit: VisitDetail) => {
+    setSelectedVisit(visit);
+    setShowModal(true);
+  };
+
+  const closeVisitModal = () => {
+    setSelectedVisit(null);
+    setShowModal(false);
+  };
+
   const filteredVisits = visits.filter(visit => {
-    const matchesSearch = visit.storeName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = visit.storeName?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'All Status' || visit.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -150,159 +150,87 @@ const VisitHistory: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="All Status">All Status ▼</option>
-              <option value="Submitted">Submitted</option>
-              <option value="Reviewed">Reviewed</option>
-              <option value="Pending">Pending</option>
+              <option value="PENDING_REVIEW">Pending Review</option>
+              <option value="REVIEWD">Reviewed</option>
             </select>
           </div>
         </div>
 
-        {/* Visit Cards */}
+        {/* Visit History Table */}
         <div className="visits-container">
-          {filteredVisits.map((visit) => (
-            <div key={visit.id} className="visit-card">
-              <div className="visit-card-header">
-                <div className="store-info">
-                  <h3 className="store-name">
-                    {visit.storeName}
-                    <button 
-                      className="expand-btn"
-                      onClick={() => toggleExpanded(visit.id)}
-                    >
-                      {visit.expanded ? '▲' : '▼'}
-                    </button>
-                  </h3>
-                  <span 
-                    className="status-badge"
-                    style={{ backgroundColor: getStatusColor(visit.status) }}
-                  >
-                    {visit.status}
-                  </span>
-                </div>
-              </div>
-
-              {visit.expanded && (
-                <div className="visit-details">
-                  <div className="detail-row">
-                    <div className="detail-item">
-                      <span className="detail-icon">👤</span>
-                      <div className="detail-content">
-                        <span className="detail-label">Person Met:</span>
-                        <span className="detail-value">{visit.personMet}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="detail-row">
-                    <div className="detail-item">
-                      <span className="detail-icon">📅</span>
-                      <div className="detail-content">
-                        <span className="detail-label">Date:</span>
-                        <span className="detail-value">{visit.date}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="detail-row">
-                    <div className="detail-item">
-                      <span className="detail-icon">✓</span>
-                      <div className="detail-content">
-                        <span className="detail-label">Display Checked:</span>
-                        <span className="detail-value">{visit.displayChecked ? 'Yes' : 'No'}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="detail-row">
-                    <div className="detail-item">
-                      <span className="detail-icon">💬</span>
-                      <div className="detail-content">
-                        <span className="detail-label">Feedback:</span>
-                        <span className="detail-value">{visit.feedback}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="detail-row">
-                    <div className="detail-item">
-                      <span className="detail-icon">⚠️</span>
-                      <div className="detail-content">
-                        <span className="detail-label">Issue Reported:</span>
-                        <span className="detail-value">{visit.issueReported}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="detail-row">
-                    <div className="detail-item">
-                      <span className="detail-icon">📅</span>
-                      <div className="detail-content">
-                        <span className="detail-label">Next Visit:</span>
-                        <span className="detail-value">{visit.nextVisit}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="detail-row">
-                    <div className="detail-item">
-                      <span className="detail-icon">📝</span>
-                      <div className="detail-content">
-                        <span className="detail-label">Remarks:</span>
-                        <span className="detail-value">{visit.remarks}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="detail-row">
-                    <div className="detail-item">
-                      <span className="detail-icon">📷</span>
-                      <div className="detail-content">
-                        <span className="detail-label">Photos:</span>
-                        <div className="photos-container">
-                          <div className="photo-placeholder"></div>
-                          <div className="photo-placeholder"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {visit.adminComment && (
-                    <div className="admin-comment-section">
-                      <label className="admin-comment-label">Admin Comment:</label>
-                      <div className="admin-comment-box">
-                        {visit.adminComment}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+          {loading ? (
+            <div className="loading-state">
+              <p>Loading visit history...</p>
             </div>
-          ))}
-
-          {/* Collapsed Visit Cards */}
-          {filteredVisits.filter(visit => !visit.expanded).length > 0 && (
-            <div className="collapsed-visits">
-              {filteredVisits.filter(visit => !visit.expanded).map((visit) => (
-                <div key={`collapsed-${visit.id}`} className="collapsed-visit-card">
-                  <div className="collapsed-content">
-                    <h4 className="collapsed-store-name">
-                      {visit.storeName}
-                      <button 
-                        className="expand-btn-small"
-                        onClick={() => toggleExpanded(visit.id)}
-                      >
-                        ▶
-                      </button>
-                    </h4>
-                    <span 
-                      className="collapsed-status-badge"
-                      style={{ backgroundColor: getStatusColor(visit.status) }}
-                    >
-                      {visit.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
+          ) : error ? (
+            <div className="error-state">
+              <p>Error: {error}</p>
+            </div>
+          ) : filteredVisits.length === 0 ? (
+            <div className="no-history">
+              <p>No history found</p>
+            </div>
+          ) : (
+            <div className="visits-table-container">
+              <table className="visits-table">
+                <thead>
+                  <tr>
+                    <th>Store Name</th>
+                    <th>Person Met</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredVisits.map((visit) => (
+                    <tr key={visit.id}>
+                      <td>
+                        <div className="store-cell">
+                          <span className="store-name-cell">{visit.storeName || 'N/A'}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="person-cell">
+                          {visit.personMet && visit.personMet.length > 0 ? (
+                            <div className="person-met-list">
+                              {visit.personMet.map((person, index) => (
+                                <div key={index} className="person-met-item">
+                                  <span className="person-name">{person.name}</span>
+                                  <span className="person-designation">({person.designation})</span>
+                                  {index < visit.personMet.length - 1 && <span className="person-separator">, </span>}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="no-data">-</span>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="date-cell">
+                          <span className="visit-date-table">{formatDate(visit.createdAt)}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="action-cell">
+                          <span 
+                            className="visit-status-badge"
+                            style={{ backgroundColor: getStatusColor(visit.status) }}
+                          >
+                            {visit.status === 'PENDING_REVIEW' ? 'Pending' : 'Reviewed'}
+                          </span>
+                          <button 
+                            className="view-details-btn-table"
+                            onClick={() => openVisitModal(visit)}
+                          >
+                            View Detail
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
@@ -317,6 +245,13 @@ const VisitHistory: React.FC = () => {
             Export to PDF
           </button>
         </div>
+
+        {/* Visit Details Modal */}
+        <VisitDetailsModal
+          isOpen={showModal}
+          onClose={closeVisitModal}
+          visit={selectedVisit}
+        />
       </div>
     </div>
   );

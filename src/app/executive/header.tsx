@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import './assinged-task/ExecutiveTodoList.css';
 import NotificationDropdown from './notifications/components/NotificationDropdown/NotificationDropdown';
 import { useNotifications } from './notifications/components/contexts/NotificationContext';
@@ -40,7 +41,7 @@ const Header: React.FC = () => {
             onMarkAllRead={markAllAsRead}
           />
         </div>
-        <div className="profile-avatar">SK</div>
+        <Link href="/executive/profile" className="profile-avatar">SK</Link>
       </div>
     </div>
   );

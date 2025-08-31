@@ -123,6 +123,17 @@ main {
   justify-content: center;
   font-weight: 600;
   font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.profile-avatar:hover {
+  background-color: #5a4fcf;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+  color: white;
+  text-decoration: none;
 }
 
 /* Pending Tasks Section */
@@ -189,20 +200,60 @@ main {
   vertical-align: middle;
 }
 
-.store-name {
+/* Executive Task Table Specific Styles */
+.executive-todo-container .tasks-table .store-name {
   font-weight: 600;
-  color: #212529;
-  font-size: 14px;
+  color: #212529 !important;
+  font-size: 14px !important;
+  text-decoration: none !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
 }
 
-.issue {
-  color: #6c757d;
-  font-size: 14px;
+.executive-todo-container .tasks-table .issue {
+  color: #6c757d !important;
+  font-size: 14px !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
 }
 
-.city {
-  color: #495057;
-  font-size: 14px;
+.executive-todo-container .tasks-table .city {
+  color: #495057 !important;
+  font-size: 14px !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100px;
+}
+
+/* Ensure table cells have proper styling */
+.executive-todo-container .tasks-table td {
+  padding: 16px !important;
+  vertical-align: middle !important;
+  border-bottom: 1px solid #e9ecef !important;
+}
+
+/* Ensure table structure is preserved */
+.executive-todo-container .tasks-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: inherit !important;
+}
+
+.executive-todo-container .tasks-table th {
+  padding: 16px !important;
+  text-align: left !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #6c757d !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  border-bottom: 1px solid #e9ecef !important;
+  background-color: #f8f9fa !important;
 }
 
 /* Status Badge Styles */
@@ -223,6 +274,180 @@ main {
 .status-badge.submitted {
   background-color: #d1ecf1;
   color: #0c5460;
+}
+
+/* Action Column Styles */
+.action-column {
+  text-align: center;
+}
+
+.action-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-task-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 80px;
+}
+
+.view-task-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
+}
+
+.view-task-btn:active {
+  transform: translateY(0);
+}
+
+/* Action Header Alignment */
+.executive-todo-container .tasks-table .action-header {
+  text-align: center !important;
+}
+
+/* Loading and Error States */
+.loading-container {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.loading-container p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.error-container {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.error-container p {
+  margin: 0 0 16px 0;
+  color: #721c24;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.retry-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.retry-button:hover {
+  background-color: #c82333;
+}
+
+.no-tasks {
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  padding: 40px 20px;
+}
+
+.loading-row {
+  text-align: center;
+  color: #6c757d;
+  padding: 40px 20px;
+  font-weight: 500;
+}
+
+.error-row {
+  text-align: center;
+  padding: 20px;
+}
+
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.error-content p {
+  margin: 0;
+  color: #dc3545;
+  font-weight: 500;
+}
+
+.retry-button-small {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.retry-button-small:hover {
+  background-color: #c82333;
+}
+
+/* Issue Column Expandable Styles */
+.issue-container {
+  width: 100%;
+}
+
+.issue-text {
+  display: block;
+  line-height: 1.4;
+  word-wrap: break-word;
+  transition: all 0.3s ease;
+}
+
+.issue-text.expandable {
+  cursor: pointer;
+  position: relative;
+}
+
+.issue-text.expandable:hover {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+/* Expanded Row Styles */
+.expanded-row {
+  background-color: #f8f9fa !important;
+}
+
+.expanded-row:hover {
+  background-color: #e9ecef !important;
+}
+
+.expanded-row .issue-text {
+  white-space: normal;
+  max-width: none;
 }
 
 /* Bottom Navigation */

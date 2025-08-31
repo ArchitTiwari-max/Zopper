@@ -2,15 +2,39 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import ImageUpload from '@/components/ImageUpload';
+import VisitDetailsModal from '@/components/VisitDetailsModal';
 import './ExecutiveForm.css';
 
 interface PastVisit {
-  id: number;
+  id: string;
   date: string;
-  status: 'Pending' | 'Submitted' | 'Reviewed';
+  status: 'PENDING_REVIEW' | 'REVIEWD';
   representative: string;
-  description?: string;
-  adminNote?: string;
+  personMet: PersonMet[];
+  displayChecked: boolean;
+  remarks?: string;
+  imageUrls: string[];
+  adminComment?: string;
+  issues: VisitIssue[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface VisitIssue {
+  id: string;
+  details: string;
+  status: 'PENDING' | 'ASSIGNED' | 'RESOLVED';
+  createdAt: string;
+  assigned: IssueAssignment[];
+}
+
+interface IssueAssignment {
+  id: string;
+  adminComment?: string;
+  status: 'ASSIGNED' | 'IN_PROGRESS' | 'VIEW_REPORT';
+  createdAt: string;
+  executiveName: string;
 }
 
 interface PersonMet {
@@ -18,115 +42,115 @@ interface PersonMet {
   designation: string;
 }
 
+interface UploadedImage {
+  url: string;
+  public_id: string;
+  bytes: number;
+  format: string;
+}
+
 interface StoreData {
-  id: number;
+  id: string;
   storeName: string;
+  city: string;
+  fullAddress?: string;
   partnerBrands: string[];
-  address: string;
-  contactPerson: string;
-  contactNumber: string;
 }
 
 const ExecutiveForm: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const storeId = searchParams.get('storeId');
+  
   const [formData, setFormData] = useState({
     peopleMet: [] as PersonMet[],
     displayChecked: false,
     issuesReported: '',
     brandsVisited: [] as string[],
-    remarks: ''
+    remarks: '',
+    uploadedImages: [] as UploadedImage[]
   });
   const [currentBrand, setCurrentBrand] = useState('');
   const [currentPerson, setCurrentPerson] = useState({ name: '', designation: '' });
-  const [storeData, setStoreData] = useState<StoreData>({
-    id: 1,
-    storeName: "Lucky Electronics",
-    partnerBrands: ["Godrej", "Havells", "Philips"],
-    address: "I-441, Govindpuram Ghaziabad, UP",
-    contactPerson: "Mr. Sharma",
-    contactNumber: "+91 7872356278"
-  });
+  const [storeData, setStoreData] = useState<StoreData | null>(null);
+  const [pastVisits, setPastVisits] = useState<PastVisit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedVisit, setSelectedVisit] = useState<PastVisit | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
-  // Available brands list
-  const availableBrands = [
-    'Samsung', 'Apple', 'OnePlus', 'Xiaomi', 'Vivo', 'Oppo', 'Realme', 'Motorola',
-    'Nokia', 'Huawei', 'Honor', 'Nothing', 'Google Pixel', 'Asus', 'Sony',
-    'Godrej', 'Havells', 'Philips', 'LG', 'Whirlpool', 'Bosch', 'IFB',
-    'Blue Star', 'Voltas', 'Daikin', 'Hitachi', 'Carrier', 'O General',
-    'Panasonic', 'Sharp', 'TCL', 'Mi', 'OnePlus TV', 'Thomson'
-  ];
+  // LocalStorage key for form data persistence
+  const getFormStorageKey = () => `visit-form-data-${storeId}`;
 
-  // Store data mapping based on store ID
-  const storeDataMap: { [key: number]: StoreData } = {
-    1: {
-      id: 1,
-      storeName: "Lucky Mobile Gallery",
-      partnerBrands: ["Samsung"],
-      address: "I-441, Govindpuram Ghaziabad, UP",
-      contactPerson: "Mr. Sharma",
-      contactNumber: "+91 7872356278"
-    },
-    2: {
-      id: 2,
-      storeName: "Techno Hub",
-      partnerBrands: ["Godrej"],
-      address: "Sector 18, Noida, UP",
-      contactPerson: "Mr. Kumar",
-      contactNumber: "+91 9876543210"
-    },
-    3: {
-      id: 3,
-      storeName: "Digital Express",
-      partnerBrands: ["Vivo"],
-      address: "Connaught Place, Delhi",
-      contactPerson: "Ms. Singh",
-      contactNumber: "+91 8765432109"
-    }
-    // Add more stores as needed
-  };
-
+  // Load form data from localStorage
   useEffect(() => {
-    const storeId = searchParams.get('storeId');
-    if (storeId) {
-      const id = parseInt(storeId);
-      const selectedStore = storeDataMap[id];
-      if (selectedStore) {
-        setStoreData(selectedStore);
+    if (!storeId) return;
+    
+    const savedData = localStorage.getItem(getFormStorageKey());
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        setFormData(parsedData);
+      } catch (error) {
+        console.error('Error loading saved form data:', error);
       }
     }
-  }, [searchParams]);
+  }, [storeId]);
 
-  const pastVisits: PastVisit[] = [
-    {
-      id: 1,
-      date: "December 28, 2023",
-      status: "Pending",
-      representative: "Raj Mishra"
-    },
-    {
-      id: 2,
-      date: "January 8, 2024",
-      status: "Submitted",
-      representative: "Raj Mishra",
-      description: "Checked display setup and collected feedback on customer preferences. Updated promotional materials."
-    },
-    {
-      id: 3,
-      date: "January 15, 2024",
-      status: "Reviewed",
-      representative: "You",
-      description: "Initial visit to establish partnership terms and discuss product placement strategies.",
-      adminNote: "Check Samsung Fold Phone in next time Visit"
-    },
-    {
-      id: 4,
-      date: "December 28, 2023",
-      status: "Submitted",
-      representative: "You",
-      description: "Initial visit to establish partnership terms and discuss product placement strategies."
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    if (!storeId) return;
+    
+    localStorage.setItem(getFormStorageKey(), JSON.stringify(formData));
+  }, [formData, storeId]);
+
+  // Fetch store data and past visits
+  useEffect(() => {
+    if (!storeId) {
+      setError('Store ID is required');
+      setLoading(false);
+      return;
     }
-  ];
+
+    const fetchStoreData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/executive/stores/${storeId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch store data');
+        }
+        const data = await response.json();
+        setStoreData(data);
+      } catch (error) {
+        console.error('Error fetching store data:', error);
+        setError('Failed to load store information');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchPastVisits = async () => {
+      try {
+        const response = await fetch(`/api/executive/visitform?storeId=${storeId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setPastVisits(data.data || []);
+        } else {
+          // Any non-200 response (including 404) - just set empty array
+          console.log(`Past visits API returned ${response.status} - no visits available`);
+          setPastVisits([]);
+        }
+      } catch (error) {
+        console.log('Past visits fetch failed - this is non-critical:', error);
+        // Set empty array as fallback - past visits are not critical for form functionality
+        setPastVisits([]);
+      }
+    };
+
+    fetchStoreData();
+    fetchPastVisits();
+  }, [storeId]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
@@ -140,14 +164,83 @@ const ExecutiveForm: React.FC = () => {
     alert('Draft saved successfully!');
   };
 
-  const handleSubmitVisit = () => {
-    console.log('Submitting visit:', formData);
-    alert('Visit submitted successfully!');
-    router.push('/executive/store');
+  const handleSubmitVisit = async () => {
+    if (!storeId) {
+      alert('Store ID is required');
+      return;
+    }
+
+    // Basic validation
+    if (formData.peopleMet.length === 0) {
+      alert('Please add at least one person met');
+      return;
+    }
+
+    if (formData.brandsVisited.length === 0) {
+      alert('Please select at least one brand visited');
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const visitData: any = {
+        storeId,
+        personMet: formData.peopleMet,
+        displayChecked: formData.displayChecked,
+        imageUrls: formData.uploadedImages.map(img => img.url),
+        brandsVisited: formData.brandsVisited,
+        remarks: formData.remarks
+      };
+
+      // Only include issuesReported if it's not empty
+      if (formData.issuesReported.trim()) {
+        visitData.issuesReported = formData.issuesReported.trim();
+      }
+
+      const response = await fetch('/api/executive/visitform', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(visitData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to submit visit');
+      }
+
+      const result = await response.json();
+      
+      // Clear localStorage after successful submission
+      localStorage.removeItem(getFormStorageKey());
+      
+      alert('Visit submitted successfully!');
+      router.push('/executive/store');
+    } catch (error) {
+      console.error('Error submitting visit:', error);
+      alert(error instanceof Error ? error.message : 'Failed to submit visit. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const addBrand = () => {
-    if (currentBrand.trim() && !formData.brandsVisited.includes(currentBrand.trim())) {
+    if (currentBrand === 'ALL_BRANDS') {
+      // Add all available brands that are not already selected
+      const availableBrands = storeData?.partnerBrands.filter(brand => 
+        !formData.brandsVisited.includes(brand)
+      ) || [];
+      
+      if (availableBrands.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          brandsVisited: [...prev.brandsVisited, ...availableBrands]
+        }));
+      }
+      setCurrentBrand('');
+    } else if (currentBrand.trim() && !formData.brandsVisited.includes(currentBrand.trim())) {
       setFormData(prev => ({
         ...prev,
         brandsVisited: [...prev.brandsVisited, currentBrand.trim()]
@@ -195,18 +288,70 @@ const ExecutiveForm: React.FC = () => {
     }));
   };
 
+  // Image upload handler
+  const handleImageUpload = (images: UploadedImage[]) => {
+    setFormData(prev => ({
+      ...prev,
+      uploadedImages: images
+    }));
+    console.log('Updated images:', images);
+  };
+
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Pending':
+    switch (status.toUpperCase()) {
+      case 'PENDING_REVIEW':
         return '#ffc107';
-      case 'Submitted':
-        return '#007bff';
-      case 'Reviewed':
+      case 'REVIEWD':
         return '#28a745';
       default:
         return '#6c757d';
     }
   };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  // Modal handlers
+  const openVisitModal = (visit: PastVisit) => {
+    setSelectedVisit(visit);
+    setShowModal(true);
+  };
+
+  const closeVisitModal = () => {
+    setSelectedVisit(null);
+    setShowModal(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="executive-form-container">
+        <div className="executive-form-content">
+          <div className="loading-state">Loading Visit Form...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !storeData) {
+    return (
+      <div className="executive-form-container">
+        <div className="executive-form-content">
+          <div className="error-state">
+            <h2>Error Loading Store</h2>
+            <p>{error || 'Store not found'}</p>
+            <button onClick={() => router.push('/executive/store')} className="back-btn">
+              Back to Stores
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="executive-form-container">
@@ -236,7 +381,12 @@ const ExecutiveForm: React.FC = () => {
           <div className="store-details">
             <div className="detail-item">
               <span className="location-icon">📍</span>
-              <span>{storeData.address}</span>
+              <div className="address-info">
+                <div className="city">{storeData.city}</div>
+                {storeData.fullAddress && (
+                  <div className="full-address">{storeData.fullAddress}</div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -322,13 +472,12 @@ const ExecutiveForm: React.FC = () => {
 
           <div className="form-group">
             <label className="form-label">Photos Taken</label>
-            <div className="photo-upload-area">
-              <div className="upload-icon">🖼️</div>
-              <div className="upload-text">
-                <div>Click to upload photos or drag and drop</div>
-                <div className="upload-formats">PNG, JPG up to 10MB</div>
-              </div>
-            </div>
+            <ImageUpload 
+              onUpload={handleImageUpload}
+              multiple={true}
+              maxFiles={5}
+              existingImages={formData.uploadedImages}
+            />
           </div>
 
           <div className="form-group">
@@ -343,7 +492,10 @@ const ExecutiveForm: React.FC = () => {
                   onChange={(e) => setCurrentBrand(e.target.value)}
                 >
                   <option value="">Select a brand to add...</option>
-                  {availableBrands
+                  {storeData.partnerBrands.filter(brand => !formData.brandsVisited.includes(brand)).length > 1 && (
+                    <option value="ALL_BRANDS">Add All Available Brands</option>
+                  )}
+                  {storeData.partnerBrands
                     .filter(brand => !formData.brandsVisited.includes(brand))
                     .sort()
                     .map((brand, index) => (
@@ -392,11 +544,15 @@ const ExecutiveForm: React.FC = () => {
           </div>
 
           <div className="form-actions">
-            <button className="save-draft-btn" onClick={handleSaveDraft}>
+            <button className="save-draft-btn" onClick={handleSaveDraft} disabled={submitting}>
               Save Draft
             </button>
-            <button className="submit-visit-btn" onClick={handleSubmitVisit}>
-              Submit Visit
+            <button 
+              className="submit-visit-btn" 
+              onClick={handleSubmitVisit}
+              disabled={submitting || formData.peopleMet.length === 0 || formData.brandsVisited.length === 0}
+            >
+              {submitting ? 'Submitting...' : 'Submit Visit'}
             </button>
           </div>
         </div>
@@ -405,38 +561,80 @@ const ExecutiveForm: React.FC = () => {
         <div className="past-visits-card">
           <h3 className="section-title">Past Visits</h3>
           <div className="visits-list">
-            {pastVisits.map((visit) => (
-              <div key={visit.id} className="visit-item">
-                <div className="visit-header">
-                  <div className="visit-date-status">
-                    <span className="visit-date">{visit.date}</span>
-                    <span 
-                      className="visit-status"
-                      style={{ backgroundColor: getStatusColor(visit.status) }}
-                    >
-                      {visit.status}
-                    </span>
-                  </div>
-                  <button className="view-details-btn">View Details</button>
-                </div>
-                <div className="visit-representative">
-                  <span className="person-icon">👤</span>
-                  <span>{visit.representative}</span>
-                </div>
-                {visit.description && (
-                  <div className="visit-description">
-                    {visit.description}
-                  </div>
-                )}
-                {visit.adminNote && (
-                  <div className="admin-note">
-                    <strong>Admin:</strong> {visit.adminNote}
-                  </div>
-                )}
+            {pastVisits.length === 0 ? (
+              <div className="no-visits">
+                <p>No previous visits found for this store.</p>
               </div>
-            ))}
+            ) : (
+              pastVisits.map((visit) => (
+                <div key={visit.id} className="visit-item">
+                  <div className="visit-header">
+                    <div className="visit-date-status">
+                      <span className="visit-date">{formatDate(visit.createdAt)}</span>
+                      <span 
+                        className="visit-status"
+                        style={{ backgroundColor: getStatusColor(visit.status) }}
+                      >
+                        {visit.status}
+                      </span>
+                    </div>
+                    <button 
+                      className="view-details-btn"
+                      onClick={() => openVisitModal(visit)}
+                    >
+                      View Details
+                    </button>
+                  </div>
+                  <div className="visit-representative">
+                    <span className="person-icon">👤</span>
+                    <span>{visit.representative}</span>
+                  </div>
+                  {visit.remarks && (
+                    <div className="visit-description">
+                      {visit.remarks}
+                    </div>
+                  )}
+                  {visit.adminComment && (
+                    <div className="admin-note">
+                      <strong>Admin:</strong> {visit.adminComment}
+                    </div>
+                  )}
+                  {visit.issues && visit.issues.length > 0 && (
+                    <div className="visit-issues">
+                      <strong>Issues Reported:</strong>
+                      {visit.issues.map((issue) => (
+                        <div key={issue.id} className="issue-item">
+                          <span className="issue-details">{issue.details}</span>
+                          <span className="issue-status" style={{ color: getStatusColor(issue.status) }}>
+                            ({issue.status})
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {visit.personMet && visit.personMet.length > 0 && (
+                    <div className="visit-people">
+                      <strong>People Met:</strong>
+                      {visit.personMet.map((person, index) => (
+                        <span key={index} className="person-met">
+                          {person.name} ({person.designation})
+                          {index < visit.personMet.length - 1 && ', '}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
+
+        {/* Visit Details Modal */}
+        <VisitDetailsModal
+          isOpen={showModal}
+          onClose={closeVisitModal}
+          visit={selectedVisit}
+        />
       </div>
     </div>
   );

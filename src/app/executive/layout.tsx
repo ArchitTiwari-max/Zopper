@@ -13,7 +13,7 @@ export default function ExecutiveLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // <AuthGuard>
+    <AuthGuard>
       <NotificationProvider>
         <div className="executive-todo-container">
           <Header />
@@ -23,6 +23,6 @@ export default function ExecutiveLayout({
           <Footer />
         </div>
       </NotificationProvider>
-    // </AuthGuard>
+   </AuthGuard>
   );
 }

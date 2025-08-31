@@ -1,82 +1,112 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import './Dashboard.css';
 
-interface BrandVisit {
-  id: number;
+interface Brand {
+  id: string;
   name: string;
-  icon: string;
+  category: string | null;
   visits: number;
-  color: string;
-  bgColor: string;
+}
+
+interface DashboardStats {
+  brandVisits: Brand[];
+  totalVisits: number;
+  tasks: {
+    pending: number;
+    completed: number;
+    total: number;
+  };
+  period: string;
+}
+
+interface ApiResponse {
+  success: boolean;
+  data: DashboardStats;
+  error?: string;
 }
 
 const Dashboard: React.FC = () => {
   const router = useRouter();
+  const [datePeriod, setDatePeriod] = useState('Last 30 Days');
   const [brandFilter, setBrandFilter] = useState('All Brands');
-  const [visitsPeriod, setVisitsPeriod] = useState('Last 30 Days');
-  const [totalVisitsPeriod, setTotalVisitsPeriod] = useState('Last 30 Days');
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const allBrandVisits: BrandVisit[] = [
-    {
-      id: 1,
-      name: 'Xiaomi',
-      icon: 'X',
-      visits: 15,
-      color: '#fff',
-      bgColor: '#ff4757'
-    },
-    {
-      id: 2,
-      name: 'OnePlus',
-      icon: 'O',
-      visits: 12,
-      color: '#fff',
-      bgColor: '#2ed573'
-    },
-    {
-      id: 3,
-      name: 'Vivo',
-      icon: 'V',
-      visits: 9,
-      color: '#fff',
-      bgColor: '#a55eea'
-    },
-    {
-      id: 4,
-      name: 'Oppo',
-      icon: 'O',
-      visits: 7,
-      color: '#fff',
-      bgColor: '#ffa502'
-    },
-    {
-      id: 5,
-      name: 'Realme',
-      icon: 'R',
-      visits: 6,
-      color: '#fff',
-      bgColor: '#ff6b9d'
-    }
+  // Dynamic color palette for brands - 10 colors that cycle
+  const colorPalette = [
+    { bgColor: '#ff4757', color: '#fff' }, // Red
+    { bgColor: '#2ed573', color: '#fff' }, // Green
+    { bgColor: '#a55eea', color: '#fff' }, // Purple
+    { bgColor: '#ffa502', color: '#fff' }, // Orange
+    { bgColor: '#ff6b9d', color: '#fff' }, // Pink
+    { bgColor: '#3742fa', color: '#fff' }, // Blue
+    { bgColor: '#00d2d3', color: '#fff' }, // Teal
+    { bgColor: '#4834d4', color: '#fff' }, // Indigo
+    { bgColor: '#ff3838', color: '#fff' }, // Bright Red
+    { bgColor: '#2f3542', color: '#fff' }  // Dark Gray
   ];
 
+  // Get brand icon (first letter)
+  const getBrandIcon = (brandName: string) => {
+    return brandName.charAt(0).toUpperCase();
+  };
+
+  // Get brand colors using modulus for dynamic assignment
+  const getBrandStyle = (index: number) => {
+    return colorPalette[index % colorPalette.length];
+  };
+
+  // Fetch dashboard stats
+  const fetchDashboardStats = async (period: string) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/executive/dashboard-stats?period=${encodeURIComponent(period)}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result: ApiResponse = await response.json();
+      
+      if (result.success) {
+        setStats(result.data);
+        setError(null);
+      } else {
+        setError(result.error || 'Failed to fetch dashboard stats');
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard stats:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch dashboard stats');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load stats on component mount and when date period changes
+  useEffect(() => {
+    fetchDashboardStats(datePeriod);
+  }, [datePeriod]);
+
   // Filter brands based on selected filter
-  const filteredBrandVisits = brandFilter === 'All Brands' 
-    ? allBrandVisits 
-    : allBrandVisits.filter(brand => brand.name === brandFilter);
+  const filteredBrandVisits = stats ? 
+    (brandFilter === 'All Brands' 
+      ? stats.brandVisits 
+      : stats.brandVisits.filter(brand => brand.name === brandFilter)
+    ) : [];
 
-  // Calculate total visits for the filtered period
-  const totalVisitsForPeriod = () => {
-    const multiplier = visitsPeriod === 'Last 7 Days' ? 0.3 : visitsPeriod === 'Last 90 Days' ? 3 : 1;
-    return Math.round(95 * multiplier);
-  };
-
-  const totalVisitsForTotalPeriod = () => {
-    const multiplier = totalVisitsPeriod === 'Last 7 Days' ? 0.25 : totalVisitsPeriod === 'Last 90 Days' ? 3.5 : 1;
-    return Math.round(95 * multiplier);
-  };
+  // Get unique brand names for filter dropdown
+  const uniqueBrandNames = stats ? 
+    [...new Set(stats.brandVisits.map(brand => brand.name))].sort() : [];
 
   const handleViewAllStores = () => {
     router.push('/executive/store');
@@ -95,6 +125,17 @@ const Dashboard: React.FC = () => {
             <h1 className="dashboard-title">Dashboard</h1>
             <p className="dashboard-subtitle">Track visits, tasks, and overall progress at a glance</p>
           </div>
+          <div className="dashboard-date-filter">
+            <select 
+              className="date-period-select"
+              value={datePeriod}
+              onChange={(e) => setDatePeriod(e.target.value)}
+            >
+              <option value="Last 7 Days">Last 7 Days</option>
+              <option value="Last 30 Days">Last 30 Days</option>
+              <option value="Last 90 Days">Last 90 Days</option>
+            </select>
+          </div>
         </div>
 
         {/* Brand-wise Visits Section */}
@@ -109,43 +150,57 @@ const Dashboard: React.FC = () => {
                 className="filter-select"
                 value={brandFilter}
                 onChange={(e) => setBrandFilter(e.target.value)}
+                disabled={loading}
               >
                 <option value="All Brands">All Brands</option>
-                <option value="Xiaomi">Xiaomi</option>
-                <option value="OnePlus">OnePlus</option>
-                <option value="Vivo">Vivo</option>
-                <option value="Oppo">Oppo</option>
-                <option value="Realme">Realme</option>
-              </select>
-              <select 
-                className="filter-select"
-                value={visitsPeriod}
-                onChange={(e) => setVisitsPeriod(e.target.value)}
-              >
-                <option value="Last 30 Days">Last 30 Days</option>
-                <option value="Last 7 Days">Last 7 Days</option>
-                <option value="Last 90 Days">Last 90 Days</option>
+                {uniqueBrandNames.map(brandName => (
+                  <option key={brandName} value={brandName}>{brandName}</option>
+                ))}
               </select>
             </div>
           </div>
           
           <div className="brands-list">
-            {filteredBrandVisits.map((brand) => (
-              <div key={brand.id} className="brand-item">
-                <div className="brand-info">
-                  <div 
-                    className="brand-icon"
-                    style={{ backgroundColor: brand.bgColor, color: brand.color }}
-                  >
-                    {brand.icon}
-                  </div>
-                  <span className="brand-name">{brand.name}</span>
-                </div>
-                <div className="visit-badge">
-                  {brand.visits} visits
-                </div>
+            {loading ? (
+              <div className="loading-state">
+                <div className="loading-spinner"></div>
+                <span>Loading brand visits...</span>
               </div>
-            ))}
+            ) : error ? (
+              <div className="error-state">
+                <span>Error: {error}</span>
+                <button onClick={() => fetchDashboardStats(datePeriod)} className="retry-btn">
+                  Retry
+                </button>
+              </div>
+            ) : filteredBrandVisits.length === 0 ? (
+              <div className="no-data-state">
+                <span>No brand visits found for {datePeriod}</span>
+              </div>
+            ) : (
+              filteredBrandVisits.map((brand, index) => {
+                const brandStyle = getBrandStyle(index);
+                return (
+                  <div key={brand.id} className="brand-item">
+                    <div className="brand-info">
+                      <div 
+                        className="brand-icon"
+                        style={{ backgroundColor: brandStyle.bgColor, color: brandStyle.color }}
+                      >
+                        {getBrandIcon(brand.name)}
+                      </div>
+                      <div className="brand-details">
+                        <span className="brand-name">{brand.name}</span>
+                        {brand.category && <span className="brand-category">{brand.category}</span>}
+                      </div>
+                    </div>
+                    <div className="visit-badge">
+                      {brand.visits} visits
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -156,21 +211,16 @@ const Dashboard: React.FC = () => {
               <div className="location-icon">📍</div>
               <h2 className="card-title">Total Visits</h2>
             </div>
-            <div className="filters">
-              <select 
-                className="filter-select"
-                value={totalVisitsPeriod}
-                onChange={(e) => setTotalVisitsPeriod(e.target.value)}
-              >
-                <option value="Last 30 Days">Last 30 Days</option>
-                <option value="Last 7 Days">Last 7 Days</option>
-                <option value="Last 90 Days">Last 90 Days</option>
-              </select>
-            </div>
           </div>
           
           <div className="total-visits-content">
-            <div className="total-number">{totalVisitsForTotalPeriod()}</div>
+            {loading ? (
+              <div className="loading-number">
+                <div className="loading-spinner"></div>
+              </div>
+            ) : (
+              <div className="total-number">{stats?.totalVisits || 0}</div>
+            )}
             <div className="total-description">Total store visits completed</div>
             <button className="view-all-btn" onClick={handleViewAllStores}>View All Stores</button>
           </div>
@@ -186,7 +236,13 @@ const Dashboard: React.FC = () => {
           </div>
           
           <div className="tasks-content">
-            <div className="pending-number">12</div>
+            {loading ? (
+              <div className="loading-number">
+                <div className="loading-spinner"></div>
+              </div>
+            ) : (
+              <div className="pending-number">{stats?.tasks.pending || 0}</div>
+            )}
             <div className="pending-description">Pending tasks to complete</div>
             <button className="view-all-btn" onClick={handleViewAllTasks}>View All Tasks</button>
           </div>

@@ -18,13 +18,13 @@ const Footer: React.FC = () => {
         <span className="nav-icon">🏪</span>
         <span className="nav-label">Stores</span>
       </Link>
+      <Link href="/executive/assinged-task" className={`nav-item ${pathname === '/executive/assinged-task' ? 'active' : ''}`}>
+        <span className="nav-icon">📝</span>
+        <span className="nav-label">Tasks</span>
+      </Link>
       <Link href="/executive/visit-history" className={`nav-item ${pathname === '/executive/visit-history' ? 'active' : ''}`}>
         <span className="nav-icon">📋</span>
         <span className="nav-label">History</span>
-      </Link>
-      <Link href="/executive/settings" className={`nav-item ${pathname === '/executive/settings' ? 'active' : ''}`}>
-        <span className="nav-icon">⚙️</span>
-        <span className="nav-label">Settings</span>
       </Link>
     </div>
   );

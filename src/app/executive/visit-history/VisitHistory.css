@@ -140,17 +140,157 @@
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-/* Visit Cards */
+/* Visit History Content */
 .visits-container {
   margin-bottom: 32px;
 }
 
+.loading-state,
+.error-state,
+.no-history {
+  text-align: center;
+  padding: 40px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.error-state {
+  color: #dc3545;
+}
+
+/* Visits Table */
+.visits-table-container {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.visits-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.visits-table thead {
+  background-color: #f8f9fa;
+}
+
+.visits-table th {
+  padding: 16px 20px;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #e9ecef;
+  font-size: 14px;
+}
+
+/* Center align the Action column header */
+.visits-table th:nth-child(4) {
+  text-align: center;
+}
+
+.visits-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f3f4;
+  vertical-align: middle;
+}
+
+.visits-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.store-cell {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.person-cell {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.date-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.action-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+}
+
+.store-name-cell {
+  font-weight: 500;
+  color: #212529;
+  font-size: 14px;
+}
+
+.person-cell {
+  color: #495057;
+  font-size: 14px;
+}
+
+.no-data {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.visit-date-table {
+  color: #495057;
+  font-size: 13px;
+}
+
+.view-details-btn-table {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.view-details-btn-table:hover {
+  color: #4338ca;
+  background-color: #f0f0ff;
+}
+
+/* Visit Status Badge in Action Column */
+.visit-status-badge {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* Legacy card styles (removed) */
 .visit-card {
   background: white;
   border-radius: 12px;
   margin-bottom: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   overflow: hidden;
+  display: none; /* Hidden since we're using table now */
 }
 
 .visit-card-header {
@@ -376,7 +516,7 @@
 /* Desktop Responsive */
 @media (min-width: 1200px) {
   .visit-history-content {
-    max-width: 700px;
+    max-width: 1000px;
     padding: 32px;
   }
 
@@ -517,6 +657,70 @@
   
   .export-btn {
     min-height: 48px;
+  }
+
+  /* Mobile Table Responsive */
+  .visits-table-container {
+    border-radius: 8px;
+    /* Remove overflow-x: auto to prevent horizontal scroll */
+  }
+
+  .visits-table {
+    width: 100%;
+    font-size: 13px;
+    table-layout: fixed; /* Fixed table layout for better control */
+  }
+
+  .visits-table th {
+    padding: 12px 8px;
+    font-size: 12px;
+  }
+
+  .visits-table td {
+    padding: 12px 8px;
+  }
+
+  /* Column width distribution for mobile */
+  .visits-table th:nth-child(1), .visits-table td:nth-child(1) { width: 28%; } /* Store Name */
+  .visits-table th:nth-child(2), .visits-table td:nth-child(2) { width: 32%; } /* Person Met */
+  .visits-table th:nth-child(3), .visits-table td:nth-child(3) { width: 18%; } /* Date */
+  .visits-table th:nth-child(4), .visits-table td:nth-child(4) { width: 22%; } /* Action */
+
+  .store-name-cell {
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .person-cell {
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .visit-date-table {
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .view-details-btn-table {
+    font-size: 11px;
+    padding: 4px 6px;
+    white-space: nowrap;
+    min-height: 32px;
+  }
+
+  /* Mobile status badge adjustments */
+  .visit-status-badge {
+    padding: 2px 6px;
+    font-size: 9px;
+    margin-bottom: 3px;
+  }
+
+  .action-cell {
+    gap: 4px;
   }
 
   .history-title {
@@ -697,5 +901,65 @@
 
   .export-section {
     padding: 14px;
+  }
+
+  /* Adjust column widths for very small screens */
+  .visits-table th:nth-child(1), .visits-table td:nth-child(1) { width: 25%; } /* Store Name */
+  .visits-table th:nth-child(2), .visits-table td:nth-child(2) { width: 40%; } /* Person Met */
+  .visits-table th:nth-child(3), .visits-table td:nth-child(3) { width: 20%; } /* Date */
+  .visits-table th:nth-child(4), .visits-table td:nth-child(4) { width: 15%; } /* Action */
+
+  .visits-table th {
+    padding: 10px 6px;
+    font-size: 11px;
+  }
+
+  .visits-table td {
+    padding: 10px 6px;
+  }
+
+  .store-name-cell {
+    font-size: 12px;
+  }
+
+  .person-cell {
+    font-size: 11px;
+  }
+
+  .visit-date-table {
+    font-size: 10px;
+  }
+
+  .view-details-btn-table {
+    font-size: 10px;
+    padding: 3px 4px;
+  }
+}
+
+/* Extremely Small Screens - Enable horizontal scroll only when absolutely necessary */
+@media (max-width: 320px) {
+  .visits-table-container {
+    overflow-x: auto;
+  }
+
+  .visits-table {
+    min-width: 300px;
+    table-layout: auto;
+  }
+
+  .visits-table th,
+  .visits-table td {
+    padding: 8px 4px;
+    min-width: 60px;
+  }
+
+  .store-name-cell,
+  .person-cell {
+    max-width: 80px;
+  }
+
+  .view-details-btn-table {
+    font-size: 9px;
+    padding: 2px 3px;
   }
 }

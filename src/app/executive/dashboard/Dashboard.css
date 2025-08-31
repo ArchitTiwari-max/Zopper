@@ -26,6 +26,36 @@
   padding: 0 !important;
 }
 
+.dashboard-date-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.date-period-select {
+  padding: 10px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background-color: white;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.date-period-select:hover {
+  border-color: #3b82f6;
+  background-color: #f8fafc;
+}
+
+.date-period-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
 .dashboard-title-section {
   flex: 1;
   background: none !important;
@@ -136,6 +166,29 @@
 /* Brand Visits */
 .brands-list {
   padding: 0 24px 24px 24px;
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar styling */
+.brands-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.brands-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.brands-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.brands-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .brand-item {
@@ -177,10 +230,22 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.brand-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .brand-name {
   font-size: 16px;
   font-weight: 500;
   color: #1e293b;
+}
+
+.brand-category {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 400;
 }
 
 .visit-badge {
@@ -193,35 +258,110 @@
   letter-spacing: 0.025em;
 }
 
-/* Xiaomi specific styling */
-.brand-item:nth-child(1) .visit-badge {
-  background-color: #fff5f5;
+/* Loading States */
+.loading-state {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 100px;
+}
+
+.loading-spinner {
+  width: 20px !important;
+  height: 20px !important;
+  border: 2px solid #e5e7eb !important;
+  border-top: 2px solid #3b82f6 !important;
+  border-radius: 50% !important;
+  animation: dashboard-spin 1s linear infinite !important;
+  display: inline-block !important;
+  flex-shrink: 0;
+}
+
+.loading-number {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  min-height: 80px;
+}
+
+.loading-number .loading-spinner {
+  width: 32px !important;
+  height: 32px !important;
+  border-width: 3px !important;
+}
+
+@keyframes dashboard-spin {
+  0% { 
+    transform: rotate(0deg) !important;
+  }
+  100% { 
+    transform: rotate(360deg) !important;
+  }
+}
+
+/* Ensure spinner is visible */
+.dashboard-card .loading-spinner,
+.brands-list .loading-spinner,
+.total-visits-content .loading-spinner,
+.tasks-content .loading-spinner {
+  border: 3px solid #f1f1f1 !important;
+  border-top: 3px solid #3b82f6 !important;
+  border-radius: 50% !important;
+  width: 24px !important;
+  height: 24px !important;
+  animation: dashboard-spin 1s linear infinite !important;
+  display: block !important;
+  margin: 0 auto !important;
+}
+
+/* Error States */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 20px;
   color: #dc2626;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
 }
 
-/* OnePlus specific styling */
-.brand-item:nth-child(2) .visit-badge {
-  background-color: #f0fdf4;
-  color: #16a34a;
+.retry-btn {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-/* Vivo specific styling */
-.brand-item:nth-child(3) .visit-badge {
-  background-color: #faf5ff;
-  color: #9333ea;
+.retry-btn:hover {
+  background-color: #b91c1c;
 }
 
-/* Oppo specific styling */
-.brand-item:nth-child(4) .visit-badge {
-  background-color: #fffbeb;
-  color: #d97706;
+/* No Data States */
+.no-data-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #64748b;
+  font-size: 14px;
+  font-style: italic;
+  text-align: center;
 }
 
-/* Realme specific styling */
-.brand-item:nth-child(5) .visit-badge {
-  background-color: #fdf2f8;
-  color: #ec4899;
-}
+/* Dynamic brand styling - colors are now assigned via JavaScript modulus */
 
 /* Total Visits Content */
 .total-visits-content {

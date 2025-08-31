@@ -1,118 +1,76 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import './Store.css';
 
 interface StoreData {
-  id: number;
+  id: string;
   storeName: string;
-  partnerBrand: string;
   city: string;
+  fullAddress?: string;
+  partnerBrands: string[];
   visited: string;
-  brandColor: string;
+  lastVisitDate: string | null;
 }
 
 const Store: React.FC = () => {
   const router = useRouter();
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [isCreateMode, setIsCreateMode] = useState(false);
-  const [selectedStores, setSelectedStores] = useState<number[]>([]);
-  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+  const [selectedStores, setSelectedStores] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     storeName: '',
     city: 'All Cities',
     partnerBrand: 'All Brands',
-    sortBy: 'Recently Visited First',
-    date: '2025-03-23'
+    sortBy: 'Recently Visited First'
   });
-  const [storeData, setStoreData] = useState<StoreData[]>([
-    {
-      id: 1,
-      storeName: "Lucky Mobile Gallery",
-      partnerBrand: "Samsung",
-      city: "Ghaziabad",
-      visited: "Today",
-      brandColor: "#1f77b4"
-    },
-    {
-      id: 2,
-      storeName: "Techno Hub",
-      partnerBrand: "Godrej",
-      city: "Noida",
-      visited: "1 day ago",
-      brandColor: "#2ca02c"
-    },
-    {
-      id: 3,
-      storeName: "Digital Express",
-      partnerBrand: "Vivo",
-      city: "Delhi",
-      visited: "1 day ago",
-      brandColor: "#9467bd"
-    },
-    {
-      id: 4,
-      storeName: "Alpha Mobiles",
-      partnerBrand: "Xiomi",
-      city: "Noida",
-      visited: "2 day ago",
-      brandColor: "#ff7f0e"
-    },
-    {
-      id: 5,
-      storeName: "Mobile World",
-      partnerBrand: "Realme",
-      city: "Delhi",
-      visited: "3 day ago",
-      brandColor: "#d62728"
-    },
-    {
-      id: 6,
-      storeName: "Smart Zone",
-      partnerBrand: "Oppo",
-      city: "Delhi",
-      visited: "3 day ago",
-      brandColor: "#17becf"
-    },
-    {
-      id: 7,
-      storeName: "Galaxy Store",
-      partnerBrand: "Oneplus",
-      city: "Gurgaon",
-      visited: "4 day ago",
-      brandColor: "#1f77b4"
-    },
-    {
-      id: 8,
-      storeName: "Tech Paradise",
-      partnerBrand: "Samsung",
-      city: "Faridabad",
-      visited: "4 day ago",
-      brandColor: "#1f77b4"
-    },
-    {
-      id: 9,
-      storeName: "Galaxy Store",
-      partnerBrand: "Oneplus",
-      city: "Gurgaon",
-      visited: "4 day ago",
-      brandColor: "#1f77b4"
-    },
-    {
-      id: 10,
-      storeName: "Galaxy Store",
-      partnerBrand: "Oneplus",
-      city: "Gurgaon",
-      visited: "4 day ago",
-      brandColor: "#1f77b4"
-    }
-  ]);
+  const [storeData, setStoreData] = useState<StoreData[]>([]);
+  const [filterOptions, setFilterOptions] = useState({
+    cities: ['All Cities'],
+    brands: ['All Brands'],
+    sortOptions: ['Recently Visited First', 'Store Name A-Z', 'Store Name Z-A', 'City A-Z']
+  });
 
-  // Available filter options
-  const cities = ['All Cities', 'Ghaziabad', 'Noida', 'Delhi', 'Gurgaon', 'Faridabad'];
-  const brands = ['All Brands', 'Samsung', 'Godrej', 'Vivo', 'Xiomi', 'Realme', 'Oppo', 'Oneplus'];
-  const sortOptions = ['Recently Visited First', 'Store Name A-Z', 'Store Name Z-A', 'City A-Z'];
+  // Fetch stores data from API
+  useEffect(() => {
+    fetchStores();
+  }, []);
+
+  const fetchStores = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch('/api/executive/stores', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch stores');
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setStoreData(result.data.stores);
+        setFilterOptions(result.data.filterOptions);
+      } else {
+        throw new Error(result.error || 'Failed to fetch stores');
+      }
+    } catch (error) {
+      console.error('Error fetching stores:', error);
+      setError(error instanceof Error ? error.message : 'Failed to fetch stores');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreateVisit = () => {
     setIsCreateMode(true);
@@ -136,7 +94,7 @@ const Store: React.FC = () => {
     setSelectedStores([]);
   };
 
-  const handleStoreSelection = (storeId: number) => {
+  const handleStoreSelection = (storeId: string) => {
     setSelectedStores(prev => {
       if (prev.includes(storeId)) {
         return prev.filter(id => id !== storeId);
@@ -146,15 +104,9 @@ const Store: React.FC = () => {
     });
   };
 
-  const handleStoreRowClick = (storeId: number, event: React.MouseEvent) => {
-    // Don't navigate if clicking on checkbox in create mode or dropdown elements
+  const handleStoreRowClick = (storeId: string, event: React.MouseEvent) => {
+    // Don't navigate if clicking on checkbox in create mode
     if (isCreateMode && (event.target as HTMLElement).tagName === 'INPUT') {
-      return;
-    }
-    
-    // Don't navigate if clicking on dropdown elements
-    const target = event.target as HTMLElement;
-    if (target.closest('.partner-dropdown') || target.closest('.dropdown-menu')) {
       return;
     }
     
@@ -175,59 +127,10 @@ const Store: React.FC = () => {
     }));
   };
 
-  const handleDropdownToggle = (storeId: number, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setOpenDropdownId(openDropdownId === storeId ? null : storeId);
-  };
-
-  const handleBrandChange = (storeId: number, newBrand: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    
-    // Brand colors mapping
-    const brandColors: { [key: string]: string } = {
-      'Samsung': '#1f77b4',
-      'Godrej': '#2ca02c',
-      'Vivo': '#9467bd',
-      'Xiomi': '#ff7f0e',
-      'Realme': '#d62728',
-      'Oppo': '#17becf',
-      'Oneplus': '#1f77b4'
-    };
-    
-    // Update the store data with the new brand using state setter
-    setStoreData(prevStoreData => 
-      prevStoreData.map(store => 
-        store.id === storeId 
-          ? { 
-              ...store, 
-              partnerBrand: newBrand, 
-              brandColor: brandColors[newBrand] || '#1f77b4' 
-            }
-          : store
-      )
-    );
-    
-    setOpenDropdownId(null);
-  };
-
-  // Close dropdown when clicking outside
-  React.useEffect(() => {
-    const handleClickOutside = () => {
-      if (openDropdownId !== null) {
-        setOpenDropdownId(null);
-      }
-    };
-    
-    document.addEventListener('click', handleClickOutside);
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  }, [openDropdownId]);
-
   const filteredStores = storeData.filter(store => {
     const matchesName = store.storeName.toLowerCase().includes(filters.storeName.toLowerCase());
     const matchesCity = filters.city === 'All Cities' || store.city === filters.city;
-    const matchesBrand = filters.partnerBrand === 'All Brands' || store.partnerBrand === filters.partnerBrand;
+    const matchesBrand = filters.partnerBrand === 'All Brands' || store.partnerBrands.some(brand => brand === filters.partnerBrand);
     return matchesName && matchesCity && matchesBrand;
   }).sort((a, b) => {
     switch (filters.sortBy) {
@@ -238,7 +141,7 @@ const Store: React.FC = () => {
       case 'City A-Z':
         return a.city.localeCompare(b.city);
       default: // Recently Visited First
-        return 0; // Keep original order for recently visited
+        return 0; // Keep original order (already sorted by API)
     }
   });
 
@@ -252,13 +155,13 @@ const Store: React.FC = () => {
             <p className="store-subtitle">Manage your visits and track progress</p>
           </div>
           {!isCreateMode ? (
-            <button className="create-visit-btn" onClick={handleCreateVisit}>
+            <button className="create-visit-btn" onClick={handleCreateVisit} disabled={loading}>
               <span className="plus-icon">+</span>
               Create Visit
             </button>
           ) : (
             <div className="action-buttons">
-              <button className="preview-send-btn" onClick={handlePreviewAndSend}>
+              <button className="preview-send-btn" onClick={handlePreviewAndSend} disabled={loading}>
                 Preview And Send
               </button>
               <button className="cancel-btn" onClick={handleCancel}>
@@ -273,6 +176,7 @@ const Store: React.FC = () => {
           <button 
             className={`filters-toggle ${filtersOpen ? 'active' : ''}`}
             onClick={() => setFiltersOpen(!filtersOpen)}
+            disabled={loading}
           >
             <span>Filters</span>
             <span className="filter-arrow">▼</span>
@@ -288,6 +192,7 @@ const Store: React.FC = () => {
                   placeholder="Enter store name..."
                   value={filters.storeName}
                   onChange={(e) => handleFilterChange('storeName', e.target.value)}
+                  disabled={loading}
                 />
               </div>
               
@@ -297,8 +202,9 @@ const Store: React.FC = () => {
                   className="filter-select"
                   value={filters.city}
                   onChange={(e) => handleFilterChange('city', e.target.value)}
+                  disabled={loading}
                 >
-                  {cities.map(city => (
+                  {filterOptions.cities.map(city => (
                     <option key={city} value={city}>{city}</option>
                   ))}
                 </select>
@@ -310,8 +216,9 @@ const Store: React.FC = () => {
                   className="filter-select"
                   value={filters.partnerBrand}
                   onChange={(e) => handleFilterChange('partnerBrand', e.target.value)}
+                  disabled={loading}
                 >
-                  {brands.map(brand => (
+                  {filterOptions.brands.map(brand => (
                     <option key={brand} value={brand}>{brand}</option>
                   ))}
                 </select>
@@ -323,25 +230,14 @@ const Store: React.FC = () => {
                   className="filter-select"
                   value={filters.sortBy}
                   onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                  disabled={loading}
                 >
-                  {sortOptions.map(option => (
+                  {filterOptions.sortOptions.map(option => (
                     <option key={option} value={option}>{option}</option>
                   ))}
                 </select>
               </div>
               
-              <div className="filter-group">
-                <label className="filter-label">Filter By Date</label>
-                <div className="date-filter-container">
-                  <input
-                    type="date"
-                    className="filter-date"
-                    value={filters.date}
-                    onChange={(e) => handleFilterChange('date', e.target.value)}
-                  />
-                  <span className="date-icon">📅</span>
-                </div>
-              </div>
             </div>
           )}
         </div>
@@ -361,62 +257,56 @@ const Store: React.FC = () => {
 
           {/* Table Body */}
           <div className="table-body">
-            {filteredStores.map((store) => (
-              <div 
-                key={store.id} 
-                className={`table-row ${isCreateMode ? 'create-mode' : ''} ${selectedStores.includes(store.id) ? 'selected' : ''} ${!isCreateMode ? 'clickable' : ''} ${openDropdownId === store.id ? 'dropdown-open' : ''}`}
-                onClick={(e) => handleStoreRowClick(store.id, e)}
-              >
-                {isCreateMode && (
-                  <div className="table-cell checkbox-cell">
-                    <input
-                      type="checkbox"
-                      className="store-checkbox"
-                      checked={selectedStores.includes(store.id)}
-                      onChange={() => handleStoreSelection(store.id)}
-                    />
-                  </div>
-                )}
-                <div className="table-cell store-name-cell">
-                  <span className="store-name-text">{store.storeName}</span>
-                </div>
-                <div className="table-cell partner-cell">
-                  <div className="partner-brand">
-                    <div 
-                      className="partner-dropdown"
-                      onClick={(e) => handleDropdownToggle(store.id, e)}
-                    >
-                      <span 
-                        className="brand-text"
-                        style={{ color: store.brandColor }}
-                      >
-                        {store.partnerBrand}
-                      </span>
-                      <span className="dropdown-arrow">▼</span>
-                    </div>
-                    {openDropdownId === store.id && (
-                      <div className="dropdown-menu">
-                        {brands.filter(brand => brand !== 'All Brands').map((brand) => (
-                          <div
-                            key={brand}
-                            className={`dropdown-item ${brand === store.partnerBrand ? 'selected' : ''}`}
-                            onClick={(e) => handleBrandChange(store.id, brand, e)}
-                          >
-                            {brand}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="table-cell city-cell">
-                  <span className="city-text">{store.city}</span>
-                </div>
-                <div className="table-cell visited-cell">
-                  <span className="visited-text">{store.visited}</span>
-                </div>
+            {loading ? (
+              <div className="loading-state">
+                <div className="loading-spinner"></div>
+                <p className="loading-text">Loading store data...</p>
               </div>
-            ))}
+            ) : error ? (
+              <div className="error-state">
+                <div className="error-icon">⚠️</div>
+                <p className="error-text">Error: {error}</p>
+                <button className="retry-btn" onClick={fetchStores}>Retry</button>
+              </div>
+            ) : filteredStores.length === 0 ? (
+              <div className="no-stores-state">
+                <div className="no-stores-icon">🏪</div>
+                <p className="no-stores-text">No stores found matching your criteria</p>
+              </div>
+            ) : (
+              filteredStores.map((store) => (
+                <div 
+                  key={store.id} 
+                  className={`table-row ${isCreateMode ? 'create-mode' : ''} ${selectedStores.includes(store.id) ? 'selected' : ''} ${!isCreateMode ? 'clickable' : ''}`}
+                  onClick={(e) => handleStoreRowClick(store.id, e)}
+                >
+                  {isCreateMode && (
+                    <div className="table-cell checkbox-cell">
+                      <input
+                        type="checkbox"
+                        className="store-checkbox"
+                        checked={selectedStores.includes(store.id)}
+                        onChange={() => handleStoreSelection(store.id)}
+                      />
+                    </div>
+                  )}
+                  <div className="table-cell store-name-cell">
+                    <span className="store-name-text">{store.storeName}</span>
+                  </div>
+                  <div className="table-cell partner-cell">
+                    <span className="brand-text">
+                      {store.partnerBrands.length > 0 ? store.partnerBrands.join(', ') : 'No brands'}
+                    </span>
+                  </div>
+                  <div className="table-cell city-cell">
+                    <span className="city-text">{store.city}</span>
+                  </div>
+                  <div className="table-cell visited-cell">
+                    <span className="visited-text">{store.visited}</span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

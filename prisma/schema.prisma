@@ -39,7 +39,6 @@ model Executive {
   // relation to User
   userId String @unique @db.ObjectId
   user   User   @relation(fields: [userId], references: [id])
-  assignedBrandIds String[] @db.ObjectId
   assignedStoreIds String[] @db.ObjectId
 }
 
@@ -51,14 +50,8 @@ model Admin {
   user   User   @relation(fields: [userId], references: [id])
 }
 //
-// Brand & Store
+// Store & Brand 
 //
-model Brand {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  brandName  String
-  category   String?
-}
-
 model Store {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
   storeName      String
@@ -68,17 +61,29 @@ model Store {
   partnerBrandIds String[] @db.ObjectId
 }
 
+model Brand {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  brandName  String
+  category   String?
+}
 //
 // Visit & Issue
 //
+
+enum viststatus {
+  PENDING_REVIEW
+  REVIEWD
+}
 model Visit {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
   personMet      Json     // [{ name: "Rajesh", designation: "Manager" }]
   displayChecked Boolean
   remarks        String?
+  imageUrls      String[]   // Array of image URLs
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-
+  status         viststatus @default(PENDING_REVIEW)
+  adminComment   String?
   // relations
   executiveId String   @db.ObjectId
   executive   Executive @relation(fields: [executiveId], references: [id])
@@ -91,16 +96,17 @@ model Visit {
 }
 
 enum IssueStatus {
-  PENDING
-  ASSIGNED
-  RESOLVED
+  Pending
+  Assigned
+  Resolved
 }
 
 model Issue {
   id        String      @id @default(auto()) @map("_id") @db.ObjectId
   details   String
   createdAt DateTime    @default(now())
-  status    IssueStatus @default(PENDING)
+  updatedAt DateTime    @updatedAt
+  status    IssueStatus @default(Pending)
 
   // relation
   visitId   String      @db.ObjectId
@@ -110,16 +116,16 @@ model Issue {
 }
 
 enum AssignedStatus {
-  ASSIGNED
-  IN_PROGRESS
-  VIEW_REPORT
+  Assigned
+  In_Progress
+  Completed
 }
 
 model Assigned {
   id           String         @id @default(auto()) @map("_id") @db.ObjectId
   adminComment String?
   createdAt    DateTime       @default(now())
-  status       AssignedStatus @default(ASSIGNED)
+  status       AssignedStatus @default(Assigned)
 
   // relation to Issue
   issueId String @db.ObjectId
@@ -128,6 +134,24 @@ model Assigned {
   // relation to Executive
   executiveId String     @db.ObjectId
   executive   Executive  @relation(fields: [executiveId], references: [id])
+
+  // relation to AssignReport
+  assignReport AssignReport?
+}
+
+model AssignReport {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  remarks         String   // Required field
+  personMetName   String?  // Optional field
+  personMetDesignation String?  // Optional field
+  photoUrls       String[] // Array of photo URLs (optional)
+  createdAt       DateTime @default(now())
+
+  // relation to Assigned task
+  assignedId String   @unique @db.ObjectId
+  assigned   Assigned @relation(fields: [assignedId], references: [id], onDelete: Cascade)
+
+  @@map("AssignReport")
 }
 
 

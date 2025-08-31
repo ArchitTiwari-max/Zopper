@@ -537,9 +537,9 @@ body {
   color: #64748b;
 }
 
-/* Spinner Animation */
+/* Spinner Animation - scoped to avoid dashboard conflicts */
 .animate-spin {
-  animation: spin 1s linear infinite;
+  animation: global-spin 1s linear infinite;
 }
 
 /* Utility classes for loader */
@@ -564,7 +564,7 @@ body {
   flex-shrink: 0;
 }
 
-@keyframes spin {
+@keyframes global-spin {
   from {
     transform: rotate(0deg);
   }

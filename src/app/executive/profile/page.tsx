@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import './Settings.css';
+import './profile.css';
 
 interface UserProfile {
   name: string;
@@ -117,17 +117,9 @@ const Settings: React.FC = () => {
   return (
     <div className="settings-container">
       <div className="settings-content">
-        {/* Header */}
-        <div className="settings-header">
-          <button className="back-btn" onClick={handleBackToDashboard}>
-            <span className="back-arrow">←</span>
-            Back to Dashboard
-          </button>
-        </div>
-
         {/* Title Section */}
         <div className="settings-title-section">
-          <h1 className="settings-title">Settings</h1>
+          <h1 className="settings-title">Profile</h1>
           <p className="settings-subtitle">Manage your profile and notification preferences</p>
         </div>
 
