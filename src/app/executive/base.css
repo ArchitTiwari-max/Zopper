@@ -1,0 +1,238 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Essential Base Styles for Executive App */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Universal Loading Components */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-size: 18px;
+  color: #64748b;
+}
+
+/* Loading States */
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 100px;
+}
+
+.loading-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 60px;
+}
+
+.loading-small {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  color: #64748b;
+  font-size: 12px;
+  min-height: 40px;
+}
+
+/* Loading Spinners */
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #f1f1f1;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  display: inline-block;
+  animation: universal-spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+.loading-spinner-large {
+  width: 32px;
+  height: 32px;
+  border: 4px solid #f1f1f1;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  display: inline-block;
+  animation: universal-spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+.loading-spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f1f1f1;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  display: inline-block;
+  animation: universal-spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+/* Loading Animation */
+@keyframes universal-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Loading Text */
+.loading-text {
+  margin-left: 8px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Error States */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 20px;
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.error-state-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  color: #dc2626;
+  font-size: 13px;
+  text-align: center;
+}
+
+.retry-btn {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.retry-btn:hover {
+  background-color: #b91c1c;
+}
+
+/* No Data States */
+.no-data-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #64748b;
+  font-size: 14px;
+  font-style: italic;
+  text-align: center;
+}
+
+.no-data-state-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #64748b;
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+}
+
+/* Common button disabled states used across multiple components */
+button:disabled {
+  background-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+button:disabled:hover {
+  transform: none;
+  background-color: #d1d5db;
+}
+
+/* Common input disabled states */
+input:disabled {
+  background-color: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Layout Styles - Fix footer overlap issue */
+.executive-todo-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.executive-todo-container main {
+  flex: 1;
+  padding-bottom: 80px; /* Space for fixed footer */
+  min-height: calc(100vh - 80px);
+}
+
+/* Responsive footer spacing */
+@media (min-width: 1024px) {
+  .executive-todo-container main {
+    padding-bottom: 90px; /* Larger space for desktop footer */
+    min-height: calc(100vh - 90px);
+  }
+}
+
+@media (max-width: 480px) {
+  .executive-todo-container main {
+    padding-bottom: 70px; /* Smaller space for mobile footer */
+    min-height: calc(100vh - 70px);
+  }
+}
+
+/* Common focus states for accessibility */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}

@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import './profile.css';
 
 interface UserProfile {
+  id: string;
   name: string;
   email: string;
-  phone: string;
+  username: string;
+  region: string | null;
 }
 
 interface NotificationSettings {
@@ -19,11 +21,7 @@ const Settings: React.FC = () => {
   const router = useRouter();
   
   // User profile state
-  const [profile, setProfile] = useState<UserProfile>({
-    name: 'Shubham Kumar',
-    email: 'shubham.kumar@company.com',
-    phone: '+91 98765 43210'
-  });
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
   // Notification settings state
   const [notifications, setNotifications] = useState<NotificationSettings>({
@@ -32,27 +30,64 @@ const Settings: React.FC = () => {
   });
 
   // Form state
-  const [emailError, setEmailError] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [profileEdited, setProfileEdited] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newEmail = e.target.value;
-    setProfile(prev => ({ ...prev, email: newEmail }));
-    setProfileEdited(true);
+  // Helper function to get cookie value
+  const getCookie = (name: string): string | null => {
+    if (typeof document === 'undefined') return null;
     
-    if (newEmail && !validateEmail(newEmail)) {
-      setEmailError('Please enter a valid email address');
-    } else {
-      setEmailError('');
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+      const cookieValue = parts.pop()?.split(';').shift();
+      return cookieValue ? decodeURIComponent(cookieValue) : null;
     }
+    return null;
   };
+
+  // Load profile data from cookie on component mount
+  useEffect(() => {
+    const loadProfileFromCookie = () => {
+      try {
+        setIsLoadingProfile(true);
+        console.log('All cookies:', document.cookie);
+        
+        const userInfoCookie = getCookie('userInfo');
+        console.log('UserInfo cookie:', userInfoCookie);
+        
+        if (userInfoCookie) {
+          const userData = JSON.parse(userInfoCookie);
+          console.log('Parsed user data:', userData);
+          
+          // Map the cookie data to profile format
+          const profileData: UserProfile = {
+            id: userData.id,
+            name: userData.executive?.name || userData.admin?.name || 'Unknown',
+            email: userData.email,
+            username: userData.username,
+            region: userData.executive?.region || userData.admin?.region || null
+          };
+          
+          console.log('Mapped profile data:', profileData);
+          setProfile(profileData);
+          setProfileError(null);
+        } else {
+          console.log('No userInfo cookie found');
+          setProfileError('No user data found. Please login again.');
+        }
+      } catch (error) {
+        console.error('Error parsing user cookie:', error);
+        setProfileError('Failed to load profile data. Error: ' + (error as Error).message);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    // Add a small delay to ensure cookies are available
+    setTimeout(loadProfileFromCookie, 100);
+  }, []);
 
   const handleNotificationToggle = (type: keyof NotificationSettings) => {
     setNotifications(prev => ({
@@ -61,37 +96,7 @@ const Settings: React.FC = () => {
     }));
   };
 
-  const handleSaveProfile = async () => {
-    if (emailError || !profile.email) {
-      setEmailError('Please enter a valid email address');
-      return;
-    }
-
-    setIsLoading(true);
-    
-    // Simulate API call
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setProfileEdited(false);
-      // You would normally make an API call here
-      console.log('Profile saved:', profile);
-    } catch (error) {
-      console.error('Error saving profile:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleBackToDashboard = () => {
-    router.push('/executive');
-  };
-
   const handleLogout = async () => {
-    if (profileEdited) {
-      const confirmed = confirm('You have unsaved changes. Are you sure you want to logout?');
-      if (!confirmed) return;
-    }
-
     setIsLoggingOut(true);
     
     try {
@@ -132,54 +137,65 @@ const Settings: React.FC = () => {
             <h2 className="profile-card-title">Profile Information</h2>
           </div>
 
-          <div className="profile-form">
-            <div className="form-group">
-              <label className="form-label">Name</label>
-              <input
-                type="text"
-                className="form-input disabled"
-                value={profile.name}
-                disabled
-                readOnly
-              />
+          {isLoadingProfile ? (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <span>Loading profile...</span>
             </div>
-
-            <div className="form-group">
-              <label className="form-label">Email <span className="required">*</span></label>
-              <input
-                type="email"
-                className={`form-input ${emailError ? 'error' : ''}`}
-                value={profile.email}
-                onChange={handleEmailChange}
-                placeholder="Enter your email address"
-              />
-              {emailError && <span className="error-message">{emailError}</span>}
+          ) : profileError ? (
+            <div className="error-state">
+              <span className="error-message">{profileError}</span>
             </div>
+          ) : profile ? (
+            <div className="profile-form">
+              <div className="form-group">
+                <label className="form-label">Name</label>
+                <input
+                  type="text"
+                  className="form-input disabled"
+                  value={profile.name}
+                  disabled
+                  readOnly
+                />
+              </div>
 
-            <div className="form-group">
-              <label className="form-label">Phone Number</label>
-              <input
-                type="tel"
-                className="form-input disabled"
-                value={profile.phone}
-                disabled
-                readOnly
-              />
-              <span className="form-helper">Contact admin to update phone number</span>
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input
+                  type="email"
+                  className="form-input disabled"
+                  value={profile.email}
+                  disabled
+                  readOnly
+                />
+                <span className="form-helper">Contact admin to update email address</span>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Username</label>
+                <input
+                  type="text"
+                  className="form-input disabled"
+                  value={profile.username}
+                  disabled
+                  readOnly
+                />
+                <span className="form-helper">Username cannot be changed</span>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Region</label>
+                <input
+                  type="text"
+                  className="form-input disabled"
+                  value={profile.region || 'Not specified'}
+                  disabled
+                  readOnly
+                />
+                <span className="form-helper">Contact admin to update region</span>
+              </div>
             </div>
-
-            <button
-              className={`save-btn ${!profileEdited || emailError ? 'disabled' : ''}`}
-              onClick={handleSaveProfile}
-              disabled={!profileEdited || !!emailError || isLoading}
-            >
-              {isLoading ? (
-                <span className="loading-spinner"></span>
-              ) : (
-                'Save Changes'
-              )}
-            </button>
-          </div>
+          ) : null}
         </div>
 
         {/* Notifications Card */}
@@ -248,7 +264,7 @@ const Settings: React.FC = () => {
                 >
                   {isLoggingOut ? (
                     <>
-                      <div className="logout-spinner"></div>
+                      <div className="loading-spinner"></div>
                       Signing Out...
                     </>
                   ) : (

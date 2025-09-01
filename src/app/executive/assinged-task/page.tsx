@@ -186,18 +186,21 @@ const ExecutiveTodoList: React.FC = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className="loading-row">
-                      Loading assigned tasks...
+                    <td colSpan={4}>
+                      <div className="loading-state">
+                        <div className="loading-spinner-large"></div>
+                        <span className="loading-text">Loading assigned tasks...</span>
+                      </div>
                     </td>
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td colSpan={4} className="error-row">
-                      <div className="error-content">
+                    <td colSpan={4}>
+                      <div className="error-state">
                         <p>Error: {error}</p>
                         <button 
                           onClick={() => window.location.reload()} 
-                          className="retry-button-small"
+                          className="retry-btn"
                         >
                           Retry
                         </button>
@@ -206,8 +209,10 @@ const ExecutiveTodoList: React.FC = () => {
                   </tr>
                 ) : tasks.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="no-tasks">
-                      No assigned tasks
+                    <td colSpan={4}>
+                      <div className="no-data-state">
+                        <span>No assigned tasks</span>
+                      </div>
                     </td>
                   </tr>
                 ) : (

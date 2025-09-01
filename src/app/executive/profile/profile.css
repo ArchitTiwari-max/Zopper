@@ -227,18 +227,15 @@
   box-shadow: none;
 }
 
-.loading-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid transparent;
-  border-top: 2px solid white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+/* Profile-specific loading and error states - uses global classes from base.css */
+.profile-card .loading-state {
+  min-height: 200px;
+  border-radius: 8px;
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.profile-card .error-state {
+  min-height: 120px;
+  border-radius: 8px;
 }
 
 /* Notifications Card */
@@ -891,20 +888,7 @@ input:checked + .toggle-slider:before {
   flex-shrink: 0;
 }
 
-.logout-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* Logout spinner uses global loading spinner styles from base.css */
 
 /* Mobile Responsive for Account Card */
 @media (max-width: 768px) {

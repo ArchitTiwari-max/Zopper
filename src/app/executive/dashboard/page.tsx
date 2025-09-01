@@ -35,7 +35,6 @@ const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   // Dynamic color palette for brands - 10 colors that cycle
   const colorPalette = [
     { bgColor: '#ff4757', color: '#fff' }, // Red
@@ -163,8 +162,8 @@ const Dashboard: React.FC = () => {
           <div className="brands-list">
             {loading ? (
               <div className="loading-state">
-                <div className="loading-spinner"></div>
-                <span>Loading brand visits...</span>
+                <div className="loading-spinner-large"></div>
+                <span className="loading-text">Loading brand visits...</span>
               </div>
             ) : error ? (
               <div className="error-state">
@@ -215,8 +214,8 @@ const Dashboard: React.FC = () => {
           
           <div className="total-visits-content">
             {loading ? (
-              <div className="loading-number">
-                <div className="loading-spinner"></div>
+              <div className="loading-inline">
+                <div className="loading-spinner-large"></div>
               </div>
             ) : (
               <div className="total-number">{stats?.totalVisits || 0}</div>
@@ -237,8 +236,8 @@ const Dashboard: React.FC = () => {
           
           <div className="tasks-content">
             {loading ? (
-              <div className="loading-number">
-                <div className="loading-spinner"></div>
+              <div className="loading-inline">
+                <div className="loading-spinner-large"></div>
               </div>
             ) : (
               <div className="pending-number">{stats?.tasks.pending || 0}</div>

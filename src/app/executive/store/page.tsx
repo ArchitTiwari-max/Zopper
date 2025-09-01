@@ -259,8 +259,8 @@ const Store: React.FC = () => {
           <div className="table-body">
             {loading ? (
               <div className="loading-state">
-                <div className="loading-spinner"></div>
-                <p className="loading-text">Loading store data...</p>
+                <div className="loading-spinner-large"></div>
+                <span className="loading-text">Loading store data...</span>
               </div>
             ) : error ? (
               <div className="error-state">

@@ -145,21 +145,8 @@
   margin-bottom: 32px;
 }
 
-.loading-state,
-.error-state,
-.no-history {
-  text-align: center;
-  padding: 40px 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  color: #6c757d;
-  font-size: 14px;
-}
-
-.error-state {
-  color: #dc3545;
-}
+/* Visit history uses global loading/error/no-data styles from base.css */
+/* Loading states are now handled within the table only */
 
 /* Visits Table */
 .visits-table-container {
@@ -177,15 +164,22 @@
 
 .visits-table thead {
   background-color: #f8f9fa;
+  position: relative;
+  z-index: 1;
 }
 
 .visits-table th {
   padding: 16px 20px;
   text-align: left;
   font-weight: 600;
-  color: #495057;
+  color: #495057 !important;
   border-bottom: 2px solid #e9ecef;
   font-size: 14px;
+  background-color: #f8f9fa !important;
+  position: relative;
+  visibility: visible !important;
+  display: table-cell !important;
+  opacity: 1 !important;
 }
 
 /* Center align the Action column header */
@@ -674,6 +668,10 @@
   .visits-table th {
     padding: 12px 8px;
     font-size: 12px;
+    background-color: #f8f9fa !important;
+    visibility: visible !important;
+    display: table-cell !important;
+    opacity: 1 !important;
   }
 
   .visits-table td {

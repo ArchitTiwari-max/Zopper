@@ -169,6 +169,8 @@ main {
 
 .tasks-table thead {
   background-color: #f8f9fa;
+  position: relative;
+  z-index: 1;
 }
 
 .tasks-table th {
@@ -176,10 +178,15 @@ main {
   text-align: left;
   font-size: 12px;
   font-weight: 600;
-  color: #6c757d;
+  color: #6c757d !important;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-bottom: 1px solid #e9ecef;
+  background-color: #f8f9fa !important;
+  position: relative;
+  visibility: visible !important;
+  display: table-cell !important;
+  opacity: 1 !important;
 }
 
 .tasks-table tbody tr {
@@ -318,101 +325,7 @@ main {
   text-align: center !important;
 }
 
-/* Loading and Error States */
-.loading-container {
-  text-align: center;
-  padding: 40px 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.loading-container p {
-  margin: 0;
-  color: #6c757d;
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.error-container {
-  text-align: center;
-  padding: 40px 20px;
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.error-container p {
-  margin: 0 0 16px 0;
-  color: #721c24;
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.retry-button {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.retry-button:hover {
-  background-color: #c82333;
-}
-
-.no-tasks {
-  text-align: center;
-  color: #6c757d;
-  font-style: italic;
-  padding: 40px 20px;
-}
-
-.loading-row {
-  text-align: center;
-  color: #6c757d;
-  padding: 40px 20px;
-  font-weight: 500;
-}
-
-.error-row {
-  text-align: center;
-  padding: 20px;
-}
-
-.error-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.error-content p {
-  margin: 0;
-  color: #dc3545;
-  font-weight: 500;
-}
-
-.retry-button-small {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.retry-button-small:hover {
-  background-color: #c82333;
-}
+/* Loading and Error States - Using global styles from base.css */
 
 /* Issue Column Expandable Styles */
 .issue-container {
@@ -607,6 +520,13 @@ main {
   .tasks-table th,
   .tasks-table td {
     padding: 12px 8px;
+  }
+  
+  .tasks-table th {
+    background-color: #f8f9fa !important;
+    visibility: visible !important;
+    display: table-cell !important;
+    opacity: 1 !important;
   }
   
   .store-name,

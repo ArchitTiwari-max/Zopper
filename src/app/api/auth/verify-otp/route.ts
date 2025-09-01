@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateAccessToken, generateRefreshToken, getTokenExpiry } from '@/lib/jwt';
+import { storeUserInfo } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,9 +32,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user
+    // Find user with executive and admin information in single query
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
+      include: {
+        executive: true,
+        admin: true
+      }
     });
 
     if (!user) {
@@ -58,6 +63,32 @@ export async function POST(request: NextRequest) {
     const refreshTokenExpiry = getTokenExpiry(process.env.JWT_REFRESH_EXPIRY || '7d');
     const accessTokenExpiry = getTokenExpiry(process.env.JWT_ACCESS_EXPIRY || '15m');
 
+    // Create comprehensive user payload for cookie storage
+    let userPayload: any = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    };
+
+    // Add role-specific information
+    if (user.role === 'EXECUTIVE' && user.executive) {
+      userPayload.executive = {
+        id: user.executive.id,
+        name: user.executive.name,
+        region: user.executive.region,
+        assignedStoreIds: user.executive.assignedStoreIds
+      };
+    } else if (user.role === 'ADMIN' && user.admin) {
+      userPayload.admin = {
+        id: user.admin.id,
+        name: user.admin.name,
+        region: user.admin.region
+      };
+    }
+
     // Delete used OTP
     await prisma.oTP.delete({
       where: { id: otpRecord.id }
@@ -74,7 +105,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Set httpOnly cookies with corrected settings for development
+    // Set authentication cookies
     response.cookies.set('accessToken', accessToken, {
       httpOnly: true,
       secure: false, // Set to false for development (localhost)
@@ -90,6 +121,9 @@ export async function POST(request: NextRequest) {
       expires: refreshTokenExpiry,
       path: '/'
     });
+
+    // Store comprehensive user info in cookie using our new function
+    storeUserInfo(response, userPayload);
 
     return response;
 

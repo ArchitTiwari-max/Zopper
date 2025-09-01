@@ -74,7 +74,6 @@ const ExecutiveForm: React.FC = () => {
   const [currentPerson, setCurrentPerson] = useState({ name: '', designation: '' });
   const [storeData, setStoreData] = useState<StoreData | null>(null);
   const [pastVisits, setPastVisits] = useState<PastVisit[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState<PastVisit | null>(null);
@@ -105,33 +104,39 @@ const ExecutiveForm: React.FC = () => {
     localStorage.setItem(getFormStorageKey(), JSON.stringify(formData));
   }, [formData, storeId]);
 
+  // Separate loading states for different sections
+  const [storeLoading, setStoreLoading] = useState(true);
+  const [visitsLoading, setVisitsLoading] = useState(true);
+  
   // Fetch store data and past visits
   useEffect(() => {
     if (!storeId) {
       setError('Store ID is required');
-      setLoading(false);
+      setStoreLoading(false);
       return;
     }
 
     const fetchStoreData = async () => {
       try {
-        setLoading(true);
+        setStoreLoading(true);
         const response = await fetch(`/api/executive/stores/${storeId}`);
         if (!response.ok) {
           throw new Error('Failed to fetch store data');
         }
         const data = await response.json();
         setStoreData(data);
+        setError(null);
       } catch (error) {
         console.error('Error fetching store data:', error);
         setError('Failed to load store information');
       } finally {
-        setLoading(false);
+        setStoreLoading(false);
       }
     };
 
     const fetchPastVisits = async () => {
       try {
+        setVisitsLoading(true);
         const response = await fetch(`/api/executive/visitform?storeId=${storeId}`);
         if (response.ok) {
           const data = await response.json();
@@ -145,6 +150,8 @@ const ExecutiveForm: React.FC = () => {
         console.log('Past visits fetch failed - this is non-critical:', error);
         // Set empty array as fallback - past visits are not critical for form functionality
         setPastVisits([]);
+      } finally {
+        setVisitsLoading(false);
       }
     };
 
@@ -327,23 +334,14 @@ const ExecutiveForm: React.FC = () => {
     setShowModal(false);
   };
 
-  if (loading) {
-    return (
-      <div className="executive-form-container">
-        <div className="executive-form-content">
-          <div className="loading-state">Loading Visit Form...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !storeData) {
+  // Show error state only if store loading failed and we have an error
+  if (error && !storeLoading && !storeData) {
     return (
       <div className="executive-form-container">
         <div className="executive-form-content">
           <div className="error-state">
             <h2>Error Loading Store</h2>
-            <p>{error || 'Store not found'}</p>
+            <p>{error}</p>
             <button onClick={() => router.push('/executive/store')} className="back-btn">
               Back to Stores
             </button>
@@ -372,23 +370,35 @@ const ExecutiveForm: React.FC = () => {
 
         {/* Store Info Card */}
         <div className="store-info-card">
-          <h2 className="store-name">{storeData.storeName}</h2>
-          <div className="partner-brands">
-            {storeData.partnerBrands.map((brand, index) => (
-              <span key={index} className="brand-tag">{brand}</span>
-            ))}
-          </div>
-          <div className="store-details">
-            <div className="detail-item">
-              <span className="location-icon">📍</span>
-              <div className="address-info">
-                <div className="city">{storeData.city}</div>
-                {storeData.fullAddress && (
-                  <div className="full-address">{storeData.fullAddress}</div>
-                )}
-              </div>
+          {storeLoading ? (
+            <div className="loading-text">
+              Loading store information...
             </div>
-          </div>
+          ) : storeData ? (
+            <>
+              <h2 className="store-name">{storeData.storeName}</h2>
+              <div className="partner-brands">
+                {storeData.partnerBrands.map((brand, index) => (
+                  <span key={index} className="brand-tag">{brand}</span>
+                ))}
+              </div>
+              <div className="store-details">
+                <div className="detail-item">
+                  <span className="location-icon">📍</span>
+                  <div className="address-info">
+                    <div className="city">{storeData.city}</div>
+                    {storeData.fullAddress && (
+                      <div className="full-address">{storeData.fullAddress}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="error-message">
+              Failed to load store information
+            </div>
+          )}
         </div>
 
         {/* Visit Form */}
@@ -490,12 +500,15 @@ const ExecutiveForm: React.FC = () => {
                   className="form-select brand-select"
                   value={currentBrand}
                   onChange={(e) => setCurrentBrand(e.target.value)}
+                  disabled={storeLoading || !storeData}
                 >
-                  <option value="">Select a brand to add...</option>
-                  {storeData.partnerBrands.filter(brand => !formData.brandsVisited.includes(brand)).length > 1 && (
+                  <option value="">
+                    {storeLoading ? 'Loading brands...' : 'Select a brand to add...'}
+                  </option>
+                  {storeData && storeData.partnerBrands.filter(brand => !formData.brandsVisited.includes(brand)).length > 1 && (
                     <option value="ALL_BRANDS">Add All Available Brands</option>
                   )}
-                  {storeData.partnerBrands
+                  {storeData && storeData.partnerBrands
                     .filter(brand => !formData.brandsVisited.includes(brand))
                     .sort()
                     .map((brand, index) => (
@@ -507,7 +520,7 @@ const ExecutiveForm: React.FC = () => {
                   type="button"
                   className="add-brand-btn"
                   onClick={addBrand}
-                  disabled={!currentBrand.trim()}
+                  disabled={!currentBrand.trim() || storeLoading || !storeData}
                 >
                   Add
                 </button>
@@ -561,7 +574,11 @@ const ExecutiveForm: React.FC = () => {
         <div className="past-visits-card">
           <h3 className="section-title">Past Visits</h3>
           <div className="visits-list">
-            {pastVisits.length === 0 ? (
+            {visitsLoading ? (
+              <div className="loading-text">
+                Loading past visits...
+              </div>
+            ) : pastVisits.length === 0 ? (
               <div className="no-visits">
                 <p>No previous visits found for this store.</p>
               </div>

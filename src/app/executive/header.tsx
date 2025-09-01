@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import './assinged-task/ExecutiveTodoList.css';
+import './header.css';
 import NotificationDropdown from './notifications/components/NotificationDropdown/NotificationDropdown';
 import { useNotifications } from './notifications/components/contexts/NotificationContext';
 
 const Header: React.FC = () => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [userInitials, setUserInitials] = useState('U');
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
   const handleNotificationClick = () => {
@@ -17,6 +18,57 @@ const Header: React.FC = () => {
   const handleCloseNotification = () => {
     setIsNotificationOpen(false);
   };
+
+  // Helper function to get cookie value
+  const getCookie = (name: string): string | null => {
+    if (typeof document === 'undefined') return null;
+    
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+      const cookieValue = parts.pop()?.split(';').shift();
+      return cookieValue ? decodeURIComponent(cookieValue) : null;
+    }
+    return null;
+  };
+
+  // Function to generate initials from name
+  const generateInitials = (name: string): string => {
+    if (!name || name.trim() === '') return 'U';
+    
+    const nameParts = name.trim().split(' ').filter(part => part.length > 0);
+    
+    if (nameParts.length === 0) return 'U';
+    if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
+    
+    // Get first letter of first name and first letter of last name
+    const firstInitial = nameParts[0].charAt(0).toUpperCase();
+    const lastInitial = nameParts[nameParts.length - 1].charAt(0).toUpperCase();
+    
+    return firstInitial + lastInitial;
+  };
+
+  // Load user data from cookie on component mount
+  useEffect(() => {
+    const loadUserInitials = () => {
+      try {
+        const userInfoCookie = getCookie('userInfo');
+        
+        if (userInfoCookie) {
+          const userData = JSON.parse(userInfoCookie);
+          const userName = userData.executive?.name || userData.admin?.name || '';
+          const initials = generateInitials(userName);
+          setUserInitials(initials);
+        }
+      } catch (error) {
+        console.error('Error parsing user cookie in header:', error);
+        setUserInitials('U'); // Fallback
+      }
+    };
+
+    // Add a small delay to ensure cookies are available
+    setTimeout(loadUserInitials, 100);
+  }, []);
 
   return (
     <div className="header">
@@ -41,7 +93,7 @@ const Header: React.FC = () => {
             onMarkAllRead={markAllAsRead}
           />
         </div>
-        <Link href="/executive/profile" className="profile-avatar">SK</Link>
+        <Link href="/executive/profile" className="profile-avatar">{userInitials}</Link>
       </div>
     </div>
   );

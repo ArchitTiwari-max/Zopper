@@ -4,8 +4,7 @@ import Header from "./header";
 import Footer from "./footer";
 import { NotificationProvider } from "./notifications/components/contexts/NotificationContext";
 import AuthGuard from '@/components/AuthGuard';
-import './globals.css';
-import './styles.css';
+import './base.css';
 
 export default function ExecutiveLayout({
   children,
@@ -23,6 +22,6 @@ export default function ExecutiveLayout({
           <Footer />
         </div>
       </NotificationProvider>
-   </AuthGuard>
+ </AuthGuard>
   );
 }

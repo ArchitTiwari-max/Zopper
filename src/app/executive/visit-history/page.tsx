@@ -158,31 +158,44 @@ const VisitHistory: React.FC = () => {
 
         {/* Visit History Table */}
         <div className="visits-container">
-          {loading ? (
-            <div className="loading-state">
-              <p>Loading visit history...</p>
-            </div>
-          ) : error ? (
-            <div className="error-state">
-              <p>Error: {error}</p>
-            </div>
-          ) : filteredVisits.length === 0 ? (
-            <div className="no-history">
-              <p>No history found</p>
-            </div>
-          ) : (
-            <div className="visits-table-container">
-              <table className="visits-table">
-                <thead>
+          <div className="visits-table-container">
+            <table className="visits-table">
+              <thead>
+                <tr>
+                  <th>Store Name</th>
+                  <th>Person Met</th>
+                  <th>Date</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
                   <tr>
-                    <th>Store Name</th>
-                    <th>Person Met</th>
-                    <th>Date</th>
-                    <th>Action</th>
+                    <td colSpan={4}>
+                      <div className="loading-state">
+                        <div className="loading-spinner-large"></div>
+                        <span className="loading-text">Loading visit history...</span>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {filteredVisits.map((visit) => (
+                ) : error ? (
+                  <tr>
+                    <td colSpan={4}>
+                      <div className="error-state">
+                        <p>Error: {error}</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredVisits.length === 0 ? (
+                  <tr>
+                    <td colSpan={4}>
+                      <div className="no-data-state">
+                        <p>No history found</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredVisits.map((visit) => (
                     <tr key={visit.id}>
                       <td>
                         <div className="store-cell">
@@ -228,11 +241,11 @@ const VisitHistory: React.FC = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Export Section */}

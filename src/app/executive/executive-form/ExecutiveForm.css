@@ -8,7 +8,7 @@
 .executive-form-content {
   max-width: 500px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 20px 20px 100px 20px; /* Added 100px bottom padding for navigation */
   background-color: #f8f9fa;
 }
 
@@ -16,14 +16,14 @@
 @media (min-width: 1200px) {
   .executive-form-content {
     max-width: 700px;
-    padding: 32px;
+    padding: 32px 32px 120px 32px; /* Added bottom padding for navigation */
   }
 }
 
 @media (min-width: 992px) and (max-width: 1199px) {
   .executive-form-content {
     max-width: 600px;
-    padding: 28px;
+    padding: 28px 28px 120px 28px; /* Added bottom padding for navigation */
   }
 }
 

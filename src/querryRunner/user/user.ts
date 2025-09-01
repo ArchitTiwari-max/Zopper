@@ -20,9 +20,6 @@ async function main() {
           create: {
             name: row.name,
             region: row.region,
-            assignedBrandIds: row.assignedBrandIds
-              ? row.assignedBrandIds.split(",").map((id: string) => id.trim())
-              : [],
             assignedStoreIds: row.assignedStoreIds
               ? row.assignedStoreIds.split(",").map((id: string) => id.trim())
               : [],

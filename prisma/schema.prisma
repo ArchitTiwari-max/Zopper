@@ -92,7 +92,7 @@ model Visit {
   store   Store  @relation(fields: [storeId], references: [id])
   brandIds String[] @db.ObjectId
 
-  issues   Issue[]
+  issues   Issue[]   // One Visit can have multiple Issues or none
 }
 
 enum IssueStatus {

@@ -72,7 +72,7 @@ async function refreshAccessToken(refreshToken: string): Promise<AuthResult> {
 }
 
 /**
- * Clears authentication cookies
+ * Clears authentication cookies and user info
  */
 export function clearAuthCookies(response: NextResponse): NextResponse {
   response.cookies.set('accessToken', '', {
@@ -91,6 +91,15 @@ export function clearAuthCookies(response: NextResponse): NextResponse {
     path: '/'
   });
 
+  // Clear user info cookie as well
+  response.cookies.set('userInfo', '', {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    expires: new Date(0),
+    path: '/'
+  });
+
   return response;
 }
 
@@ -100,6 +109,29 @@ export function clearAuthCookies(response: NextResponse): NextResponse {
 export async function getAuthenticatedUser(request: NextRequest): Promise<TokenPayload | null> {
   const authResult = await validateAndRefreshToken(request);
   return authResult.isAuthenticated ? authResult.user || null : null;
+}
+
+/**
+ * Stores user information in cookie as JSON string
+ */
+export function storeUserInfo(response: NextResponse, userPayload: any): NextResponse {
+  try {
+    // Store user info as JSON string in cookie
+    const userInfoJson = JSON.stringify(userPayload);
+    
+    response.cookies.set('userInfo', userInfoJson, {
+      httpOnly: false, // Allow client-side access for user info
+      secure: false, // Set to false for development (localhost)
+      sameSite: 'lax',
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      path: '/'
+    });
+    
+    return response;
+  } catch (error) {
+    console.error('Error storing user info:', error);
+    return response;
+  }
 }
 
 /**
