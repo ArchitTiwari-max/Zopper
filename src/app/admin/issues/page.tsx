@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { IssueData, IssueFilters, TimeframeOption } from '../types';
-import '../styles.css';
+import './page.css';
 
 // Mock data for issues
 const mockIssuesData: IssueData[] = [

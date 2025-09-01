@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ExecutiveData, ExecutiveFilters, RegionFilterOption, ExecutiveStatusFilterOption, TimeframeOption } from '../types';
-import '../styles.css';
+import './page.css';
 
 // Mock data for executives
 const mockExecutivesData: ExecutiveData[] = [

@@ -6,7 +6,7 @@ import Navigation from './navigation';
 import Header from './header';
 import AuthGuard from '@/components/AuthGuard';
 import './globals.css';
-import './styles.css';
+import './base.css';
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage = 'Dashboard' }) => {
   return (

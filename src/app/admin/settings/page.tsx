@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SettingsData, ApprovalTimeOption, RegionOption, TimeZoneOption } from '../types';
-import '../styles.css';
+import './page.css';
 
 const AdminSettingsPage: React.FC = () => {
   const router = useRouter();
