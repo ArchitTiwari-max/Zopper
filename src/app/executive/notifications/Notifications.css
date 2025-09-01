@@ -1,8 +1,9 @@
 /* Notifications Styles */
 .notifications-container {
-  min-height: 100vh;
   background-color: #f8f9fa;
   padding: 0;
+  margin: 0;
+  min-height: calc(100vh - 160px); /* Account for header and footer */
 }
 
 .notifications-content {
@@ -10,6 +11,7 @@
   margin: 0 auto;
   padding: 20px;
   background-color: #f8f9fa;
+  min-height: inherit;
 }
 
 /* Header */
@@ -243,6 +245,10 @@
 
 /* Desktop Responsive */
 @media (min-width: 1200px) {
+  .notifications-container {
+    min-height: calc(100vh - 180px); /* Larger spacing for desktop */
+  }
+
   .notifications-content {
     max-width: 700px;
     padding: 32px;
@@ -372,6 +378,10 @@
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+  .notifications-container {
+    min-height: calc(100vh - 140px); /* Smaller spacing for mobile */
+  }
+
   .notifications-content {
     padding: 16px;
     max-width: 100%;
@@ -457,6 +467,10 @@
 
 /* Extra Small Mobile */
 @media (max-width: 480px) {
+  .notifications-container {
+    min-height: calc(100vh - 120px); /* Smallest spacing for extra small screens */
+  }
+
   .notifications-content {
     padding: 12px;
   }
