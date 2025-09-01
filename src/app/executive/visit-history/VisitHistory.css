@@ -656,13 +656,15 @@
   /* Mobile Table Responsive */
   .visits-table-container {
     border-radius: 8px;
-    /* Remove overflow-x: auto to prevent horizontal scroll */
+    overflow-x: auto; /* Enable horizontal scroll if needed */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
   }
 
   .visits-table {
     width: 100%;
+    min-width: 320px; /* Minimum width to ensure content is readable */
     font-size: 13px;
-    table-layout: fixed; /* Fixed table layout for better control */
+    table-layout: auto; /* Auto layout for better content fitting */
   }
 
   .visits-table th {
@@ -678,11 +680,11 @@
     padding: 12px 8px;
   }
 
-  /* Column width distribution for mobile */
-  .visits-table th:nth-child(1), .visits-table td:nth-child(1) { width: 28%; } /* Store Name */
-  .visits-table th:nth-child(2), .visits-table td:nth-child(2) { width: 32%; } /* Person Met */
-  .visits-table th:nth-child(3), .visits-table td:nth-child(3) { width: 18%; } /* Date */
-  .visits-table th:nth-child(4), .visits-table td:nth-child(4) { width: 22%; } /* Action */
+  /* Column width distribution for mobile - more flexible */
+  .visits-table th:nth-child(1), .visits-table td:nth-child(1) { min-width: 80px; } /* Store Name */
+  .visits-table th:nth-child(2), .visits-table td:nth-child(2) { min-width: 100px; } /* Person Met */
+  .visits-table th:nth-child(3), .visits-table td:nth-child(3) { min-width: 70px; } /* Date */
+  .visits-table th:nth-child(4), .visits-table td:nth-child(4) { min-width: 90px; } /* Action */
 
   .store-name-cell {
     font-size: 13px;
