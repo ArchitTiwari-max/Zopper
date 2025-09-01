@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import './signin.css';
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/admin/dashboard';
   
@@ -540,5 +540,38 @@ export default function Home() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="container">
+        <div className="card">
+          <div className="logo-section">
+            <div className="logo">
+              <div className="logo-icon">Z</div>
+              <span className="logo-text">ZopperTrack</span>
+            </div>
+          </div>
+          <div className="form-section">
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              minHeight: '200px',
+              fontSize: '16px',
+              color: '#64748b'
+            }}>
+              <Loader2 className="animate-spin mb-4" size={32} />
+              <p>Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
