@@ -221,7 +221,7 @@ const Dashboard: React.FC = () => {
               <div className="total-number">{stats?.totalVisits || 0}</div>
             )}
             <div className="total-description">Total store visits completed</div>
-            <button className="view-all-btn" onClick={handleViewAllStores}>View All Stores</button>
+            <button className="view-all-btn desktop-only" onClick={handleViewAllStores}>View All Stores</button>
           </div>
         </div>
 
@@ -243,7 +243,7 @@ const Dashboard: React.FC = () => {
               <div className="pending-number">{stats?.tasks.pending || 0}</div>
             )}
             <div className="pending-description">Pending tasks to complete</div>
-            <button className="view-all-btn" onClick={handleViewAllTasks}>View All Tasks</button>
+            <button className="view-all-btn desktop-only" onClick={handleViewAllTasks}>View All Tasks</button>
           </div>
         </div>
       </div>
