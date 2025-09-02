@@ -248,6 +248,16 @@
   text-align: center;
 }
 
+/* Status Badge */
+.status-badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  color: white;
+  text-align: center;
+}
+
 /* Reporter Info */
 .reporter-info {
   display: flex;
@@ -287,6 +297,22 @@
 
 .quick-assign-btn:hover {
   background: #d97706;
+}
+
+.view-details-btn {
+  background: transparent;
+  color: #3b82f6;
+  text-decoration: underline;
+  border: none;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s ease-in-out;
+}
+
+.view-details-btn:hover {
+  color: #2563eb;
 }
 
 /* No Issues State */
@@ -339,6 +365,104 @@
   color: #92400e;
   border-bottom-color: #92400e;
   background-color: rgba(124, 45, 18, 0.05);
+}
+
+/* Store Name Link Style */
+.store-name-link {
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  cursor: pointer;
+}
+
+.store-name-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.store-name-link:visited {
+  color: #3b82f6;
+}
+
+/* Date Selector Styles */
+.date-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.date-selector label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.timeframe-select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  min-width: 140px;
+}
+
+.timeframe-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Filters Section Styles */
+.filters-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.filters-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 1rem 0;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.875rem;
+  color: #374151;
+  outline: none;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.filter-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* Responsive Design for Issues */
