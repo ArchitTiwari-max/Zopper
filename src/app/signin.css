@@ -50,7 +50,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .logo-icon {
@@ -79,6 +79,13 @@ body {
   z-index: -1;
 }
 
+.logo-text-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
 .logo-text {
   font-size: 24px;
   font-weight: 600;
@@ -87,6 +94,16 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  line-height: 1;
+}
+
+.logo-tagline {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  font-style: italic;
+  line-height: 1;
+  margin-top: -2px;
 }
 
 /* Form Section */

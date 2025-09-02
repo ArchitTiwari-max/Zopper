@@ -1,0 +1,48 @@
+{
+  "name": "SalesDost - Safalta ka Sathi",
+  "short_name": "SalesDost",
+  "description": "Field executive and admin management platform - Safalta ka Sathi",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#3b82f6",
+  "theme_color": "#1d4ed8",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon",
+      "sizes": "32x32",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-icon",
+      "sizes": "180x180",
+      "type": "image/svg+xml",
+      "purpose": "apple touch icon"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"],
+  "lang": "en",
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Executive Dashboard",
+      "short_name": "Dashboard",
+      "description": "Access executive dashboard",
+      "url": "/executive/dashboard",
+      "icons": [{ "src": "/icon", "sizes": "32x32" }]
+    },
+    {
+      "name": "Admin Panel",
+      "short_name": "Admin",
+      "description": "Access admin panel",
+      "url": "/admin/dashboard",
+      "icons": [{ "src": "/icon", "sizes": "32x32" }]
+    }
+  ]
+}

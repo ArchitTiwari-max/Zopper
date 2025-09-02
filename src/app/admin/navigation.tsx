@@ -19,8 +19,11 @@ const Navigation: React.FC = () => {
     <div className="sidebar">
       <div className="sidebar-header">
         <div className="logo">
-          <span className="logo-icon">Z</span>
-          <span className="logo-text">ZopperTrack</span>
+          <span className="logo-icon">S</span>
+          <div className="logo-text-container">
+            <span className="logo-text">SalesDost</span>
+            <span className="logo-tagline">Safalta ka Sathi</span>
+          </div>
         </div>
       </div>
       <nav className="sidebar-nav">

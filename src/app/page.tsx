@@ -296,10 +296,13 @@ function HomeContent() {
       <div className="container">
         <div className="card">
           <div className="logo-section">
-            <div className="logo">
-              <div className="logo-icon">Z</div>
-              <span className="logo-text">ZopperTrack</span>
+          <div className="logo">
+            <div className="logo-icon">S</div>
+            <div className="logo-text-container">
+              <span className="logo-text">SalesDost</span>
+              <span className="logo-tagline">Safalta ka Sathi</span>
             </div>
+          </div>
           </div>
           <div className="form-section">
             <div style={{ 
@@ -325,8 +328,11 @@ function HomeContent() {
       <div className="card">
         <div className="logo-section">
           <div className="logo">
-            <div className="logo-icon">Z</div>
-            <span className="logo-text">ZopperTrack</span>
+            <div className="logo-icon">S</div>
+            <div className="logo-text-container">
+              <span className="logo-text">SalesDost</span>
+              <span className="logo-tagline">Safalta ka Sathi</span>
+            </div>
           </div>
         </div>
         
@@ -550,8 +556,11 @@ export default function Home() {
         <div className="card">
           <div className="logo-section">
             <div className="logo">
-              <div className="logo-icon">Z</div>
-              <span className="logo-text">ZopperTrack</span>
+              <div className="logo-icon">S</div>
+              <div className="logo-text-container">
+                <span className="logo-text">SalesDost</span>
+                <span className="logo-tagline">Safalta ka Sathi</span>
+              </div>
             </div>
           </div>
           <div className="form-section">

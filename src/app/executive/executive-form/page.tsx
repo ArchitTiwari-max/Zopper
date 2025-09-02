@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ImageUpload from '@/components/ImageUpload';
 import VisitDetailsModal from '@/components/VisitDetailsModal';
@@ -58,7 +58,7 @@ interface StoreData {
   partnerBrands: string[];
 }
 
-const ExecutiveForm: React.FC = () => {
+const ExecutiveFormContent: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const storeId = searchParams.get('storeId');
@@ -747,6 +747,22 @@ const ExecutiveForm: React.FC = () => {
         />
       </div>
     </div>
+  );
+};
+
+const ExecutiveForm: React.FC = () => {
+  return (
+    <Suspense fallback={
+      <div className="executive-form-container">
+        <div className="executive-form-content">
+          <div className="loading-text">
+            Loading form...
+          </div>
+        </div>
+      </div>
+    }>
+      <ExecutiveFormContent />
+    </Suspense>
   );
 };
 

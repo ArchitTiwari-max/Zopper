@@ -73,8 +73,11 @@ const Header: React.FC = () => {
   return (
     <div className="header">
       <div className="logo-container">
-        <div className="logo-icon">Z</div>
-        <span className="logo-text">ZopperTrack</span>
+        <div className="logo-icon">S</div>
+        <div className="logo-text-container">
+          <span className="logo-text">SalesDost</span>
+          <span className="logo-tagline">Safalta ka Sathi</span>
+        </div>
       </div>
       <div className="header-right">
         <div className="notification-container">
