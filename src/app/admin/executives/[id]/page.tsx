@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ExecutiveDetailData, ExecutiveDetailFilters, ExecutiveVisitDetail } from '../../types';
-import '../../styles.css';
+import './page.css';
 
 // Mock data for executive details
 const mockExecutiveDetailData: Record<number, ExecutiveDetailData> = {

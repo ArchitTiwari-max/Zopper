@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { StoreVisitReport, ExecutiveVisit, VisitFilters, VisitStatusOption } from '../../types';
-import '../../styles.css';
+import './page.css';
 
 // Mock data for store visit report
 const getStoreVisitReport = (storeId: string): StoreVisitReport => {

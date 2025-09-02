@@ -1,0 +1,627 @@
+/* Store Detail Page Specific Styles */
+
+/* Visit Report Page Styles */
+.visit-report-overview {
+  padding: 2rem;
+  background-color: #f8fafc;
+  min-height: calc(100vh - 80px);
+}
+
+/* Header Section */
+.visit-report-header {
+  margin-bottom: 2rem;
+}
+
+.visit-report-title h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.visit-report-title p {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Store Info Card */
+.store-info-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.store-basic-info {
+  margin-bottom: 1rem;
+}
+
+.store-basic-info h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.75rem 0;
+}
+
+.store-brands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.store-contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.contact-phone {
+  font-family: monospace;
+  background: #f1f5f9;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+/* Store Details Toggle Styles */
+.store-name-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.store-name-section span {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.view-details-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-details-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.store-details {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.store-details div {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.store-details div:last-child {
+  margin-bottom: 0;
+}
+
+.store-details strong {
+  color: #1e293b;
+  margin-right: 0.5rem;
+}
+
+/* Visit Filters */
+.visit-filters-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.visit-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+/* Visits Table */
+.visits-table-section {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.visits-table {
+  width: 100%;
+}
+
+.visits-table .table-header {
+  background: #6b7280;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.5fr 1.5fr 1fr 1fr 1.5fr 1.5fr;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.visits-table .table-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.visits-table .table-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.5fr 1.5fr 1fr 1fr 1.5fr 1.5fr;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  align-items: center;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.visits-table .table-row:hover {
+  background-color: #f8fafc;
+}
+
+.visits-table .table-row:last-child {
+  border-bottom: none;
+}
+
+.visits-table .cell {
+  font-size: 0.875rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+}
+
+/* Executive Cell */
+.executive-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.executive-name {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+/* Person Met Cell */
+.person-met-cell .person-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.person-name {
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 0.875rem;
+}
+
+.person-role {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Visit Info Cell */
+.visit-info-cell .visit-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.visit-date,
+.visit-display,
+.visit-photos {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Visit Context Section Styles */
+.visit-context-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.visit-context-section h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.visit-context-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.visit-context-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.visit-context-header h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.visit-icon {
+  font-size: 1.5rem;
+}
+
+.visit-info {
+  flex: 1;
+}
+
+.visit-info h5 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
+}
+
+.visit-info p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.view-store-visit-btn {
+  background: #3b82f6;
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.view-store-visit-btn:hover {
+  background: #2563eb;
+  text-decoration: none;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.visit-context-details {
+  padding: 1rem;
+}
+
+.visit-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.visit-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.detail-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  min-width: 100px;
+}
+
+.detail-value {
+  font-size: 0.875rem;
+  color: #1e293b;
+}
+
+.executive-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.executive-avatar-mini {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.visit-feedback {
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.feedback-content {
+  font-style: italic;
+  color: #475569;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+  border-left: 3px solid #3b82f6;
+}
+
+/* Feedback Cell */
+.feedback-cell {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* Issues Cell */
+.issues-cell .no-issues {
+  color: #10b981;
+}
+
+.issues-cell .has-issues {
+  color: #ef4444;
+}
+
+/* Status Cell */
+.status-cell .status-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.status-pending-review {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.status-reviewed {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.status-pending-issue {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.review-status-badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.review-status-resolved {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.review-status-pending-review {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.review-status-pending-issue {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+/* Actions Cell */
+.actions-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.view-details-btn,
+.mark-reviewed-btn {
+  padding: 0.25rem 0.75rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.view-details-btn {
+  background: transparent;
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+.view-details-btn:hover {
+  color: #2563eb;
+}
+
+.mark-reviewed-btn {
+  background: #10b981;
+  color: white;
+}
+
+.mark-reviewed-btn:hover {
+  background: #059669;
+}
+
+/* Visit Context Toggle Buttons */
+.show-visit-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 1rem 0;
+  display: block;
+}
+
+.show-visit-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.hide-visit-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hide-visit-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+/* Export Section */
+.export-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.export-info h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.export-info p {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.export-btn {
+  padding: 0.75rem 1.5rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.export-btn:hover {
+  background: #059669;
+}
+
+/* Responsive Design for Store Detail */
+@media (max-width: 1024px) {
+  .visits-table .table-header,
+  .visits-table .table-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .visits-table .header-cell {
+    display: none;
+  }
+  
+  .visits-table .cell {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  .visits-table .cell:last-child {
+    border-bottom: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .visit-report-overview {
+    padding: 1rem;
+  }
+  
+  .store-info-card {
+    padding: 1rem;
+  }
+  
+  .visit-filters-section {
+    padding: 1rem;
+  }
+  
+  .visit-filters-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .export-section {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .export-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

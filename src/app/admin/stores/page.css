@@ -1,0 +1,237 @@
+/* Stores Page Specific Styles */
+
+/* Stores Overview */
+.stores-overview {
+  padding: 2rem;
+  background-color: #f8fafc;
+  min-height: calc(100vh - 80px);
+}
+
+.stores-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.stores-header-content h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* Filters Section */
+.filters-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.filters-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 1rem 0;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.875rem;
+  color: #374151;
+  outline: none;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.filter-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Stores Table */
+.stores-table-section {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.stores-table {
+  width: 100%;
+}
+
+.stores-table .table-header {
+  background: #6b7280;
+  display: grid;
+  grid-template-columns: 1.8fr 1.2fr 1.8fr 1fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.stores-table .header-cell {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stores-table .table-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.stores-table .table-row {
+  display: grid;
+  grid-template-columns: 1.8fr 1.2fr 1.8fr 1fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  align-items: center;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.stores-table .table-row:hover {
+  background-color: #f8fafc;
+}
+
+.stores-table .table-row:last-child {
+  border-bottom: none;
+}
+
+.stores-table .cell {
+  font-size: 0.875rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+}
+
+.store-name-cell {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.store-name-link {
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  cursor: pointer;
+}
+
+.store-name-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.store-name-link:visited {
+  color: #3b82f6;
+}
+
+.partner-brands-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.brand-tag {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: white;
+  text-transform: capitalize;
+}
+
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+}
+
+.reviews-badge {
+  background-color: #10b981;
+}
+
+.issues-badge {
+  background-color: #ef4444;
+}
+
+.count-zero {
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+/* Responsive Design for Stores */
+@media (max-width: 1024px) {
+  .stores-table .table-header,
+  .stores-table .table-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .stores-table .header-cell {
+    display: none;
+  }
+  
+  .stores-table .cell {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  .stores-table .cell:last-child {
+    border-bottom: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .stores-overview {
+    padding: 1rem;
+  }
+  
+  .filters-section {
+    padding: 1rem;
+  }
+  
+  .filters-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .stores-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

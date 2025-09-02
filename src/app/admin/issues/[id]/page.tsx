@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { IssueData, IssueComment } from '../../types';
-import '../../styles.css';
+import './page.css';
 
 // Mock data for issues
 const mockIssueData: Record<number, IssueData> = {

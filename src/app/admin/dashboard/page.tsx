@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { DashboardData, TimeframeOption, BrandFilterOption } from '../types';
-import '../styles.css';
+import './page.css';
 
 // Mock data for demonstration
 const mockDashboardData: DashboardData = {

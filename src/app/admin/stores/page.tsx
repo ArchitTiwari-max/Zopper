@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { StoreData, StoreFilters, PartnerBrandOption, CityFilterOption, StoreNameFilterOption, ExecutiveFilterOption, StatusFilterOption, TimeframeOption } from '../types';
-import '../styles.css';
+import './page.css';
 
 // Mock data for stores
 const mockStoresData: StoreData[] = [
