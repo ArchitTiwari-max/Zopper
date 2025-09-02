@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       storeId,
       personMet,
       displayChecked,
-      issuesReported,
+      issuesRaised,
       brandsVisited,
       remarks,
       imageUrls
@@ -184,16 +184,26 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Create issue if issuesReported is not null/empty
-    let createdIssue = null;
-    if (issuesReported && issuesReported.trim() !== '') {
-      createdIssue = await prisma.issue.create({
-        data: {
-          details: issuesReported.trim(),
-          visitId: visit.id,
-          status: 'Pending' // Default status
+    // Create issues if any are raised
+    let createdIssues: any[] = [];
+    if (issuesRaised && Array.isArray(issuesRaised) && issuesRaised.length > 0) {
+      // Create multiple issues
+      for (const issueDetail of issuesRaised) {
+        if (issueDetail && issueDetail.trim() !== '') {
+          const createdIssue = await prisma.issue.create({
+            data: {
+              details: issueDetail.trim(),
+              visitId: visit.id,
+              status: 'Pending' // Default status
+            }
+          });
+          createdIssues.push({
+            id: createdIssue.id,
+            details: createdIssue.details,
+            status: createdIssue.status
+          });
         }
-      });
+      }
     }
 
     return NextResponse.json({
@@ -204,11 +214,7 @@ export async function POST(request: NextRequest) {
           status: visit.status,
           createdAt: visit.createdAt
         },
-        issue: createdIssue ? {
-          id: createdIssue.id,
-          details: createdIssue.details,
-          status: createdIssue.status
-        } : null
+        issues: createdIssues
       }
     });
 

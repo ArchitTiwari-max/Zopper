@@ -624,6 +624,222 @@
   }
 }
 
+/* Issues Input - scoped to visit form */
+.visit-form-card .issues-input-container {
+  width: 100%;
+}
+
+.visit-form-card .issue-input-wrapper {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.visit-form-card .issue-input-wrapper .form-input.issue-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  background-color: white;
+  min-width: 200px;
+}
+
+.visit-form-card .issue-input-wrapper .form-input.issue-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.visit-form-card .add-issue-btn {
+  padding: 12px 20px;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.visit-form-card .add-issue-btn:hover:not(:disabled) {
+  background-color: #4338ca;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.visit-form-card .add-issue-btn:disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.visit-form-card .issues-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  min-height: 50px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.visit-form-card .issues-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.visit-form-card .issues-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.visit-form-card .issues-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.visit-form-card .issues-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.visit-form-card .issue-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  background: white;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  animation: issueFadeIn 0.2s ease-out;
+  line-height: 1.4;
+  gap: 8px;
+}
+
+.visit-form-card .issue-text {
+  flex: 1;
+  font-size: 14px;
+  color: #212529;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.visit-form-card .remove-issue-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px; /* Slight adjustment for visual alignment */
+}
+
+.visit-form-card .remove-issue-btn:hover {
+  background-color: #dc3545;
+  color: white;
+  transform: scale(1.1);
+}
+
+.visit-form-card .empty-issues-placeholder {
+  color: #9ca3af;
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
+
+@keyframes issueFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Phone number input for persons met */
+.visit-form-card .person-phone-input {
+  flex: 1;
+  min-width: 140px;
+}
+
+/* Responsive adjustments for people input with phone numbers */
+@media (max-width: 768px) {
+  .visit-form-card .person-input-wrapper {
+    flex-direction: column;
+  }
+  
+  .visit-form-card .person-name-input,
+  .visit-form-card .person-designation-input,
+  .visit-form-card .person-phone-input {
+    min-width: 100%;
+    flex: none;
+  }
+  
+  .visit-form-card .issue-input-wrapper {
+    flex-direction: column;
+  }
+  
+  .visit-form-card .issue-input-wrapper .form-input.issue-input {
+    min-width: 100%;
+    flex: none;
+    margin-bottom: 8px;
+  }
+  
+  .visit-form-card .add-issue-btn {
+    width: 100%;
+  }
+  
+  .visit-form-card .issue-text {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .visit-form-card .issues-list {
+    max-height: 250px;
+    padding: 8px;
+  }
+  
+  .visit-form-card .issue-item {
+    padding: 8px 10px;
+  }
+  
+  .visit-form-card .issue-text {
+    font-size: 12px;
+  }
+  
+  .visit-form-card .remove-issue-btn {
+    font-size: 14px;
+    width: 18px;
+    height: 18px;
+  }
+  
+  .visit-form-card .empty-issues-placeholder {
+    font-size: 12px;
+    padding: 16px;
+  }
+}
+
 /* Form Actions */
 .form-actions {
   display: flex;

@@ -116,8 +116,24 @@ const Store: React.FC = () => {
       return;
     }
     
-    // Navigate to executive form
-    router.push(`/executive/executive-form?storeId=${storeId}`);
+    // Find the store data for this storeId
+    const store = storeData.find(s => s.id === storeId);
+    if (!store) {
+      alert('Store data not found');
+      return;
+    }
+    
+    // Create URL with store data as parameters
+    const params = new URLSearchParams({
+      storeId: store.id,
+      storeName: store.storeName,
+      city: store.city,
+      fullAddress: store.fullAddress || '',
+      partnerBrands: JSON.stringify(store.partnerBrands)
+    });
+    
+    // Navigate to executive form with store data
+    router.push(`/executive/executive-form?${params.toString()}`);
   };
 
   const handleFilterChange = (filterType: string, value: string) => {

@@ -2,11 +2,6 @@ import { prisma } from '../../lib/prisma';
 import * as XLSX from "xlsx";
 
 
-interface BrandRow {
-  brandName: string;
-  category?: string;
-}
-
 async function main(): Promise<void> {
   // 1. Read Excel file
   const workbook = XLSX.readFile("src/querryRunner/Brands/brands.xlsx");
@@ -14,19 +9,20 @@ async function main(): Promise<void> {
   const sheet = workbook.Sheets[sheetName];
 
   // 2. Convert sheet → JSON
-  const brands: BrandRow[] = XLSX.utils.sheet_to_json(sheet);
+  const brands: any[] = XLSX.utils.sheet_to_json(sheet);
 
   // 3. Insert into MongoDB with Prisma
   for (const brand of brands) {
     await prisma.brand.create({
       data: {
+        id: brand.Brand_id,
         brandName: brand.brandName,
         category: brand.category ?? null, // optional
       },
     });
-  }
-
-  console.log("✅ Brands imported successfully!");
+    console.log(`Inserted brand: ${brand.brandName}`);
+  } 
+   console.log("Brands imported successfully!");
 }
 
 // Run main()

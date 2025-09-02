@@ -10,28 +10,66 @@ async function main() {
   const data: any[] = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
   for (const row of data) {
-    const newExecutive = await prisma.user.create({
-      data: {
-        email: row.email,
-        username: row.username,
-        password: row["password"], // already hashed in Excel
-        role: row.role,
-        executive: {
-          create: {
-            name: row.name,
-            region: row.region,
-            assignedStoreIds: row.assignedStoreIds
-              ? row.assignedStoreIds.split(",").map((id: string) => id.trim())
-              : [],
-          },
-        },
-      },
-      include: {
-        executive: true,
-      },
-    });
+    try {
+      let newUser;
 
-    console.log(`✅ Inserted user + executive: ${newExecutive.username}`);
+      if (row.role?.toUpperCase() === "EXECUTIVE") {
+        // ✅ Create User + Executive
+        newUser = await prisma.user.create({
+          data: {
+            id: row.User_id, // use custom id from Excel
+            email: row.email,
+            username: row.username,
+            password: row.password, // assuming already hashed
+            role: "EXECUTIVE",
+            executive: {
+              create: {
+                id: row.Executive_id,
+                name: row.name,
+                contact_number:String(row.contact_number || ""),
+                region: row.region,
+                assignedStoreIds: row.assignedStoreIds
+                  ? row.assignedStoreIds.split(",").map((id: string) => id.trim())
+                  : [],
+              },
+            },
+          },
+          include: {
+            executive: true,
+          },
+        });
+
+        console.log(`✅ Inserted Executive user: ${newUser.username}`);
+      } else if (row.role?.toUpperCase() === "ADMIN") {
+        // ✅ Create User + Admin
+        newUser = await prisma.user.create({
+          data: {
+            id: row.User_id,
+            email: row.email,
+            username: row.username,
+            password: row.password,
+            role: "ADMIN",
+            admin: {
+              create: {
+                id: row.Admin_id,
+                name: row.name,
+                contact_number: String(row.contact_number || ""),
+                region: row.region,
+              },
+            },
+          },
+          include: {
+            admin: true,
+          },
+        });
+
+        console.log(`✅ Inserted Admin user: ${newUser.username}`);
+      } else {
+        console.warn(`⚠️ Skipped row with unknown role: ${row.role}`);
+      }
+    } catch (err) {
+      console.error(`❌ Failed to insert row for username: ${row.username}`);
+    }
   }
 }
 

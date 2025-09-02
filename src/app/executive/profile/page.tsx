@@ -9,6 +9,7 @@ interface UserProfile {
   name: string;
   email: string;
   username: string;
+  contact_number: string | null;
   region: string | null;
 }
 
@@ -67,6 +68,7 @@ const Settings: React.FC = () => {
             name: userData.executive?.name || userData.admin?.name || 'Unknown',
             email: userData.email,
             username: userData.username,
+            contact_number: userData.executive?.contact_number || userData.admin?.contact_number || null,
             region: userData.executive?.region || userData.admin?.region || null
           };
           
@@ -181,6 +183,18 @@ const Settings: React.FC = () => {
                   readOnly
                 />
                 <span className="form-helper">Username cannot be changed</span>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Contact Number</label>
+                <input
+                  type="tel"
+                  className="form-input disabled"
+                  value={profile.contact_number || 'Not provided'}
+                  disabled
+                  readOnly
+                />
+                <span className="form-helper">Contact admin to update contact number</span>
               </div>
 
               <div className="form-group">

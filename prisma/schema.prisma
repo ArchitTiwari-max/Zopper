@@ -16,7 +16,7 @@ enum Role {
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @map("_id")
   email     String   @unique
   username  String   @unique
   password  String
@@ -31,37 +31,39 @@ model User {
 }
 
 model Executive {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @map("_id") 
   name      String
+  contact_number String
   region    String?
   visits    Visit[]
   assigned  Assigned[]
-  userId String @unique @db.ObjectId
+  userId String @unique 
   user   User   @relation(fields: [userId], references: [id])
-  assignedStoreIds String[] @db.ObjectId
+  assignedStoreIds String[] 
 }
 
 model Admin {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @map("_id") 
   name      String
+  contact_number String
   region    String?
-  userId String @unique @db.ObjectId
+  userId String @unique 
   user   User   @relation(fields: [userId], references: [id])
 }
 //
 // Store & Brand 
 //
 model Store {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  id             String   @id @map("_id") 
   storeName      String
   city           String
   fullAddress    String?
   visits Visit[]
-  partnerBrandIds String[] @db.ObjectId
+  partnerBrandIds String[] 
 }
 
 model Brand {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  id         String   @id @map("_id")
   brandName  String
   category   String?
 }
@@ -75,7 +77,7 @@ enum viststatus {
 }
 model Visit {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  personMet      Json     // [{ name: "Rajesh", designation: "Manager" }]
+  personMet      Json     // [{ name: "Rajesh", designation: "Manager", phone: "1234567890" }]
   displayChecked Boolean
   remarks        String?
   imageUrls      String[]   // Array of image URLs
@@ -84,12 +86,12 @@ model Visit {
   status         viststatus @default(PENDING_REVIEW)
   adminComment   String?
   // relations
-  executiveId String   @db.ObjectId
+  executiveId String  
   executive   Executive @relation(fields: [executiveId], references: [id])
 
-  storeId String @db.ObjectId
+  storeId String 
   store   Store  @relation(fields: [storeId], references: [id])
-  brandIds String[] @db.ObjectId
+  brandIds String[] 
 
   issues   Issue[]   // One Visit can have multiple Issues or none
 }
@@ -131,7 +133,7 @@ model Assigned {
   issue   Issue  @relation(fields: [issueId], references: [id])
 
   // relation to Executive
-  executiveId String     @db.ObjectId
+  executiveId String    
   executive   Executive  @relation(fields: [executiveId], references: [id])
 
   // relation to AssignReport

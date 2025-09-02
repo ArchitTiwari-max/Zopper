@@ -40,6 +40,7 @@ interface IssueAssignment {
 interface PersonMet {
   name: string;
   designation: string;
+  phoneNumber: string;
 }
 
 interface UploadedImage {
@@ -62,16 +63,45 @@ const ExecutiveForm: React.FC = () => {
   const searchParams = useSearchParams();
   const storeId = searchParams.get('storeId');
   
+  // Extract store data from URL parameters
+  const getStoreDataFromParams = (): StoreData | null => {
+    const storeName = searchParams.get('storeName');
+    const city = searchParams.get('city');
+    const fullAddress = searchParams.get('fullAddress');
+    const partnerBrandsParam = searchParams.get('partnerBrands');
+    
+    if (!storeId || !storeName || !city) {
+      return null;
+    }
+    
+    let partnerBrands: string[] = [];
+    try {
+      partnerBrands = partnerBrandsParam ? JSON.parse(partnerBrandsParam) : [];
+    } catch (error) {
+      console.error('Error parsing partner brands:', error);
+      partnerBrands = [];
+    }
+    
+    return {
+      id: storeId,
+      storeName,
+      city,
+      fullAddress: fullAddress || undefined,
+      partnerBrands
+    };
+  };
+  
   const [formData, setFormData] = useState({
     peopleMet: [] as PersonMet[],
     displayChecked: false,
-    issuesReported: '',
+    issuesRaised: [] as string[],
     brandsVisited: [] as string[],
     remarks: '',
     uploadedImages: [] as UploadedImage[]
   });
   const [currentBrand, setCurrentBrand] = useState('');
-  const [currentPerson, setCurrentPerson] = useState({ name: '', designation: '' });
+  const [currentPerson, setCurrentPerson] = useState({ name: '', designation: '', phoneNumber: '' });
+  const [currentIssue, setCurrentIssue] = useState('');
   const [storeData, setStoreData] = useState<StoreData | null>(null);
   const [pastVisits, setPastVisits] = useState<PastVisit[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +138,7 @@ const ExecutiveForm: React.FC = () => {
   const [storeLoading, setStoreLoading] = useState(true);
   const [visitsLoading, setVisitsLoading] = useState(true);
   
-  // Fetch store data and past visits
+  // Load store data from URL parameters and fetch past visits
   useEffect(() => {
     if (!storeId) {
       setError('Store ID is required');
@@ -116,22 +146,19 @@ const ExecutiveForm: React.FC = () => {
       return;
     }
 
-    const fetchStoreData = async () => {
-      try {
-        setStoreLoading(true);
-        const response = await fetch(`/api/executive/stores/${storeId}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch store data');
-        }
-        const data = await response.json();
-        setStoreData(data);
+    // Load store data from URL parameters
+    const loadStoreData = () => {
+      setStoreLoading(true);
+      const storeDataFromParams = getStoreDataFromParams();
+      
+      if (storeDataFromParams) {
+        setStoreData(storeDataFromParams);
         setError(null);
-      } catch (error) {
-        console.error('Error fetching store data:', error);
-        setError('Failed to load store information');
-      } finally {
-        setStoreLoading(false);
+      } else {
+        setError('Store information is missing. Please go back and select a store again.');
       }
+      
+      setStoreLoading(false);
     };
 
     const fetchPastVisits = async () => {
@@ -155,9 +182,9 @@ const ExecutiveForm: React.FC = () => {
       }
     };
 
-    fetchStoreData();
+    loadStoreData();
     fetchPastVisits();
-  }, [storeId]);
+  }, [storeId, searchParams]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
@@ -200,9 +227,9 @@ const ExecutiveForm: React.FC = () => {
         remarks: formData.remarks
       };
 
-      // Only include issuesReported if it's not empty
-      if (formData.issuesReported.trim()) {
-        visitData.issuesReported = formData.issuesReported.trim();
+      // Include issues if any are raised
+      if (formData.issuesRaised.length > 0) {
+        visitData.issuesRaised = formData.issuesRaised;
       }
 
       const response = await fetch('/api/executive/visitform', {
@@ -277,7 +304,7 @@ const ExecutiveForm: React.FC = () => {
         ...prev,
         peopleMet: [...prev.peopleMet, { ...currentPerson }]
       }));
-      setCurrentPerson({ name: '', designation: '' });
+      setCurrentPerson({ name: '', designation: '', phoneNumber: '' });
     }
   };
 
@@ -288,11 +315,36 @@ const ExecutiveForm: React.FC = () => {
     }));
   };
 
-  const handlePersonInputChange = (field: 'name' | 'designation', value: string) => {
+  const handlePersonInputChange = (field: 'name' | 'designation' | 'phoneNumber', value: string) => {
     setCurrentPerson(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  // Issue management functions
+  const addIssue = () => {
+    if (currentIssue.trim() && !formData.issuesRaised.includes(currentIssue.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        issuesRaised: [...prev.issuesRaised, currentIssue.trim()]
+      }));
+      setCurrentIssue('');
+    }
+  };
+
+  const removeIssue = (indexToRemove: number) => {
+    setFormData(prev => ({
+      ...prev,
+      issuesRaised: prev.issuesRaised.filter((_, index) => index !== indexToRemove)
+    }));
+  };
+
+  const handleIssueKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addIssue();
+    }
   };
 
   // Image upload handler
@@ -425,6 +477,13 @@ const ExecutiveForm: React.FC = () => {
                   value={currentPerson.designation}
                   onChange={(e) => handlePersonInputChange('designation', e.target.value)}
                 />
+                <input
+                  type="tel"
+                  className="form-input person-phone-input"
+                  placeholder="Enter phone number (optional)"
+                  value={currentPerson.phoneNumber}
+                  onChange={(e) => handlePersonInputChange('phoneNumber', e.target.value)}
+                />
                 <button
                   type="button"
                   className="add-person-btn"
@@ -441,6 +500,9 @@ const ExecutiveForm: React.FC = () => {
                       <div className="person-details">
                         <span className="person-name">{person.name}</span>
                         <span className="person-designation">({person.designation})</span>
+                        {person.phoneNumber && (
+                          <span className="person-phone"> - {person.phoneNumber}</span>
+                        )}
                       </div>
                       <button
                         type="button"
@@ -470,14 +532,44 @@ const ExecutiveForm: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Issues Reported</label>
-            <textarea
-              className="form-textarea"
-              placeholder="Describe any issues or observations..."
-              value={formData.issuesReported}
-              onChange={(e) => handleInputChange('issuesReported', e.target.value)}
-              rows={4}
-            />
+            <label className="form-label">Raise Issues</label>
+            <div className="issues-input-container">
+              <div className="issue-input-wrapper">
+                <input
+                  type="text"
+                  className="form-input issue-input"
+                  placeholder="Describe an issue or observation..."
+                  value={currentIssue}
+                  onChange={(e) => setCurrentIssue(e.target.value)}
+                  onKeyPress={handleIssueKeyPress}
+                />
+                <button
+                  type="button"
+                  className="add-issue-btn"
+                  onClick={addIssue}
+                  disabled={!currentIssue.trim()}
+                >
+                  Add Issue
+                </button>
+              </div>
+              {formData.issuesRaised.length > 0 && (
+                <div className="issues-list">
+                  {formData.issuesRaised.map((issue, index) => (
+                    <div key={index} className="issue-item">
+                      <span className="issue-text">{issue}</span>
+                      <button
+                        type="button"
+                        className="remove-issue-btn"
+                        onClick={() => removeIssue(index)}
+                        title="Remove issue"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="form-group">
@@ -635,6 +727,7 @@ const ExecutiveForm: React.FC = () => {
                       {visit.personMet.map((person, index) => (
                         <span key={index} className="person-met">
                           {person.name} ({person.designation})
+                          {person.phoneNumber && ` - ${person.phoneNumber}`}
                           {index < visit.personMet.length - 1 && ', '}
                         </span>
                       ))}

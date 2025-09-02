@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/auth';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,78 +28,83 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
-    // Get all stores assigned to this executive
-    const stores = await prisma.store.findMany({
-      where: {
-        id: {
-          in: executive.assignedStoreIds
+    // Get all stores and all brands in parallel to avoid N+1 queries
+    const [stores, allBrands] = await Promise.all([
+      // Get all stores assigned to this executive
+      prisma.store.findMany({
+        where: {
+          id: {
+            in: executive.assignedStoreIds
+          }
+        },
+        include: {
+          visits: {
+            where: {
+              executiveId: executive.id
+            },
+            orderBy: {
+              createdAt: 'desc'
+            },
+            take: 1 // Get only the most recent visit
+          }
         }
-      },
-      include: {
-        visits: {
-          where: {
-            executiveId: executive.id
-          },
-          orderBy: {
-            createdAt: 'desc'
-          },
-          take: 1 // Get only the most recent visit
+      }),
+      
+      // Get all brands that might be used by these stores (single query)
+      prisma.brand.findMany({
+        select: {
+          id: true,
+          brandName: true
+        }
+      })
+    ]);
+
+    // Create a Map for fast brand lookups
+    const brandMap = new Map(allBrands.map(brand => [brand.id, brand]));
+
+    // Transform the data (now synchronous - no more database queries in loop)
+    const transformedStores = stores.map((store) => {
+      // Get partner brands for this store from the brandMap
+      const partnerBrands = store.partnerBrandIds
+        .map(brandId => brandMap.get(brandId))
+        .filter(Boolean) // Remove undefined brands
+        .map(brand => brand!.brandName);
+
+      // Calculate visit status dynamically
+      let visitStatus = 'No visit';
+      let lastVisitDate = null;
+      
+      if (store.visits.length > 0) {
+        const lastVisit = store.visits[0];
+        lastVisitDate = lastVisit.createdAt;
+        const now = new Date();
+        const visitDate = new Date(lastVisit.createdAt);
+        
+        // Calculate difference in days
+        const diffTime = Math.abs(now.getTime() - visitDate.getTime());
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) {
+          visitStatus = 'Today';
+        } else if (diffDays === 1) {
+          visitStatus = '1 day ago';
+        } else {
+          visitStatus = `${diffDays} days ago`;
         }
       }
+
+      return {
+        id: store.id,
+        storeName: store.storeName,
+        city: store.city,
+        fullAddress: store.fullAddress,
+        partnerBrands: partnerBrands,
+        visited: visitStatus,
+        lastVisitDate: lastVisitDate,
+        // For sorting purposes - stores with no visits go to the end
+        sortOrder: lastVisitDate ? new Date(lastVisitDate).getTime() : 0
+      };
     });
-
-    // Transform the data
-    const transformedStores = await Promise.all(
-      stores.map(async (store) => {
-        // Get partner brands for this store
-        const partnerBrands = await prisma.brand.findMany({
-          where: {
-            id: {
-              in: store.partnerBrandIds
-            }
-          },
-          select: {
-            id: true,
-            brandName: true
-          }
-        });
-
-        // Calculate visit status dynamically
-        let visitStatus = 'No visit';
-        let lastVisitDate = null;
-        
-        if (store.visits.length > 0) {
-          const lastVisit = store.visits[0];
-          lastVisitDate = lastVisit.createdAt;
-          const now = new Date();
-          const visitDate = new Date(lastVisit.createdAt);
-          
-          // Calculate difference in days
-          const diffTime = Math.abs(now.getTime() - visitDate.getTime());
-          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          
-          if (diffDays === 0) {
-            visitStatus = 'Today';
-          } else if (diffDays === 1) {
-            visitStatus = '1 day ago';
-          } else {
-            visitStatus = `${diffDays} days ago`;
-          }
-        }
-
-        return {
-          id: store.id,
-          storeName: store.storeName,
-          city: store.city,
-          fullAddress: store.fullAddress,
-          partnerBrands: partnerBrands.map(brand => brand.brandName),
-          visited: visitStatus,
-          lastVisitDate: lastVisitDate,
-          // For sorting purposes - stores with no visits go to the end
-          sortOrder: lastVisitDate ? new Date(lastVisitDate).getTime() : 0
-        };
-      })
-    );
 
     // Sort by recently visited first (stores with recent visits first, then no visits)
     transformedStores.sort((a, b) => {
@@ -147,8 +150,6 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch stores' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -192,7 +193,5 @@ export async function PUT(request: NextRequest) {
       { error: 'Failed to update store' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

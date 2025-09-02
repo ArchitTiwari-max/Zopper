@@ -16,15 +16,16 @@ async function main() {
     const brandIds = rawBrands
       ? rawBrands.toString().split(",").map((id: string) => id.trim())
       : [];
-
     await prisma.store.create({
       data: {
-        storeName: store.storeName || store["Store Name"],
+        id: store.Store_ID,
+        storeName: store.Store_Name || store["Store_Name"],
         city: store.city || store["City"] || null,
         fullAddress: store.fullAddress || store["Full Address"] || null,
         partnerBrandIds: brandIds,
       },
     });
+    console.log(`Inserted store: ${store.Store_Name || store["Store_Name"]}`);
   }
 
   console.log("Stores imported successfully!");

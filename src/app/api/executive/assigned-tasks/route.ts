@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/auth';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,22 +28,40 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch assigned tasks for this executive
+    // Fetch assigned tasks for this executive with optimized query (select only needed fields)
     const assignedTasks = await prisma.assigned.findMany({
       where: {
         executiveId: executive.id
       },
-      include: {
+      select: {
+        id: true,
+        status: true,
+        createdAt: true,
         issue: {
-          include: {
+          select: {
+            id: true,
+            details: true,
             visit: {
-              include: {
-                store: true
+              select: {
+                id: true,
+                store: {
+                  select: {
+                    id: true,
+                    storeName: true,
+                    city: true,
+                    fullAddress: true,
+                    partnerBrandIds: true
+                  }
+                }
               }
             }
           }
         },
-        assignReport: true
+        assignReport: {
+          select: {
+            id: true
+          }
+        }
       },
       orderBy: {
         createdAt: 'desc'
@@ -130,8 +146,6 @@ export async function GET(request: NextRequest) {
       { success: false, error: 'Failed to fetch assigned tasks' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -246,7 +260,5 @@ export async function PUT(request: NextRequest) {
       { success: false, error: 'Failed to fetch task details' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

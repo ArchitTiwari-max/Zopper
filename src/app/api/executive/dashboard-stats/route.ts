@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/auth';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,70 +49,73 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    // Get all brands
-    const brands = await prisma.brand.findMany({
-      select: {
-        id: true,
-        brandName: true,
-        category: true
-      },
-      orderBy: {
-        brandName: 'asc'
-      }
-    });
-
-    // Get visit counts by brand for this executive within the date range
-    const brandVisitCounts = await Promise.all(
-      brands.map(async (brand) => {
-        const visitCount = await prisma.visit.count({
-          where: {
-            executiveId: executive.id,
-            brandIds: {
-              has: brand.id
-            },
-            createdAt: {
-              gte: startDate,
-              lte: now
-            }
+    // Execute all queries in parallel for maximum performance
+    const [brands, visits, taskStats] = await Promise.all([
+      // Get all brands
+      prisma.brand.findMany({
+        select: {
+          id: true,
+          brandName: true,
+          category: true
+        },
+        orderBy: {
+          brandName: 'asc'
+        }
+      }),
+      
+      // Get all executive visits in date range (single query)
+      prisma.visit.findMany({
+        where: {
+          executiveId: executive.id,
+          createdAt: {
+            gte: startDate,
+            lte: now
           }
-        });
-
-        return {
-          id: brand.id,
-          name: brand.brandName,
-          category: brand.category,
-          visits: visitCount
-        };
+        },
+        select: {
+          brandIds: true
+        }
+      }),
+      
+      // Get task counts using groupBy (single query)
+      prisma.assigned.groupBy({
+        by: ['status'],
+        where: {
+          executiveId: executive.id
+        },
+        _count: {
+          id: true
+        }
       })
-    );
+    ]);
 
-    // Get total visits for this executive in the period
-    const totalVisits = await prisma.visit.count({
-      where: {
-        executiveId: executive.id,
-        createdAt: {
-          gte: startDate,
-          lte: now
-        }
-      }
+    // Calculate brand visit counts from the single visits query
+    const brandVisitMap = new Map<string, number>();
+    
+    // Count visits for each brand
+    visits.forEach(visit => {
+      visit.brandIds.forEach(brandId => {
+        brandVisitMap.set(brandId, (brandVisitMap.get(brandId) || 0) + 1);
+      });
     });
 
-    // Get assigned tasks counts
-    const pendingTasks = await prisma.assigned.count({
-      where: {
-        executiveId: executive.id,
-        status: {
-          in: ['Assigned', 'In_Progress']
-        }
-      }
-    });
+    // Build brand visit counts array
+    const brandVisitCounts = brands.map(brand => ({
+      id: brand.id,
+      name: brand.brandName,
+      category: brand.category,
+      visits: brandVisitMap.get(brand.id) || 0
+    }));
 
-    const completedTasks = await prisma.assigned.count({
-      where: {
-        executiveId: executive.id,
-        status: 'Completed'
-      }
-    });
+    // Calculate task statistics
+    const pendingTasks = taskStats
+      .filter(stat => ['Assigned', 'In_Progress'].includes(stat.status))
+      .reduce((sum, stat) => sum + stat._count.id, 0);
+      
+    const completedTasks = taskStats
+      .find(stat => stat.status === 'Completed')?._count.id || 0;
+      
+    const totalVisits = visits.length;
 
     return NextResponse.json({
       success: true,
@@ -136,7 +137,5 @@ export async function GET(request: NextRequest) {
       { success: false, error: 'Failed to fetch dashboard statistics' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

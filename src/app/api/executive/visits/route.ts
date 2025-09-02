@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient} from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/auth';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 // GET endpoint to fetch all visits of the authenticated executive (for visit history page)
 export async function GET(request: NextRequest) {
@@ -27,35 +25,67 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
-    // Get all visits for this executive
+    // Add pagination support
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '50'); // Default 50 visits
+    const skip = (page - 1) * limit;
+
+    // Get visits for this executive with optimized query (select only needed fields)
     const visits = await prisma.visit.findMany({
       where: {
         executiveId: executive.id
       },
-      include: {
+      select: {
+        id: true,
+        status: true,
+        personMet: true,
+        displayChecked: true,
+        remarks: true,
+        imageUrls: true,
+        adminComment: true,
+        createdAt: true,
+        updatedAt: true,
+        store: {
+          select: {
+            id: true,
+            storeName: true
+          }
+        },
+        executive: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
         issues: {
-          include: {
+          select: {
+            id: true,
+            details: true,
+            status: true,
+            createdAt: true,
             assigned: {
-              include: {
+              select: {
+                id: true,
+                adminComment: true,
+                status: true,
+                createdAt: true,
                 executive: {
-                  include: {
-                    user: true
+                  select: {
+                    id: true,
+                    name: true
                   }
                 }
               }
             }
           }
-        },
-        store: true,
-        executive: {
-          include: {
-            user: true
-          }
         }
       },
       orderBy: {
         createdAt: 'desc'
-      }
+      },
+      skip: skip,
+      take: limit
     });
 
     // Transform visits data
@@ -104,8 +134,6 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch executive visits' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -218,7 +246,5 @@ export async function POST(request: NextRequest) {
       { error: 'Failed to create visit' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

@@ -65,9 +65,7 @@ export async function POST(request: NextRequest) {
 
     // Create comprehensive user payload for cookie storage
     let userPayload: any = {
-      id: user.id,
       email: user.email,
-      username: user.username,
       role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt
@@ -78,6 +76,7 @@ export async function POST(request: NextRequest) {
       userPayload.executive = {
         id: user.executive.id,
         name: user.executive.name,
+        contact_number: user.executive.contact_number,
         region: user.executive.region,
         assignedStoreIds: user.executive.assignedStoreIds
       };
@@ -85,6 +84,7 @@ export async function POST(request: NextRequest) {
       userPayload.admin = {
         id: user.admin.id,
         name: user.admin.name,
+        contact_number: user.admin.contact_number,
         region: user.admin.region
       };
     }
