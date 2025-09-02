@@ -49,21 +49,30 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    // Execute all queries in parallel for maximum performance
-    const [brands, visits, taskStats] = await Promise.all([
-      // Get all brands
+    // Execute ALL queries in parallel for maximum performance (CRITICAL for N+1 prevention)
+    const [storeData, allBrands, visits, taskStats] = await Promise.all([
+      // Get stores assigned to this executive
+      prisma.store.findMany({
+        where: {
+          id: {
+            in: executive.assignedStoreIds
+          }
+        },
+        select: {
+          partnerBrandIds: true
+        }
+      }),
+      
+      // Get all brands (we'll filter after to avoid sequential dependency)
       prisma.brand.findMany({
         select: {
           id: true,
           brandName: true,
           category: true
-        },
-        orderBy: {
-          brandName: 'asc'
         }
       }),
       
-      // Get all executive visits in date range (single query)
+      // Get executive visits with brand filtering for efficiency
       prisma.visit.findMany({
         where: {
           executiveId: executive.id,
@@ -89,18 +98,35 @@ export async function GET(request: NextRequest) {
       })
     ]);
 
-    // Calculate brand visit counts from the single visits query
+    // Extract unique brand IDs from the executive's assigned stores
+    const uniqueBrandIds = Array.from(
+      new Set(storeData.flatMap(store => store.partnerBrandIds))
+    );
+
+    // Filter brands to only include those assigned to the executive's stores
+    const relevantBrands = allBrands.filter(brand => uniqueBrandIds.includes(brand.id));
+    
+    // Sort brands alphabetically
+    relevantBrands.sort((a, b) => a.brandName.localeCompare(b.brandName));
+
+    // Create a Set of relevant brand IDs for fast lookup
+    const relevantBrandIds = new Set(uniqueBrandIds);
+
+    // Calculate brand visit counts with filtering for only relevant brands
     const brandVisitMap = new Map<string, number>();
     
-    // Count visits for each brand
+    // Count visits for each relevant brand only
     visits.forEach(visit => {
       visit.brandIds.forEach(brandId => {
-        brandVisitMap.set(brandId, (brandVisitMap.get(brandId) || 0) + 1);
+        // Only count visits for brands that are relevant to this executive
+        if (relevantBrandIds.has(brandId)) {
+          brandVisitMap.set(brandId, (brandVisitMap.get(brandId) || 0) + 1);
+        }
       });
     });
 
-    // Build brand visit counts array
-    const brandVisitCounts = brands.map(brand => ({
+    // Build brand visit counts array using only relevant brands
+    const brandVisitCounts = relevantBrands.map(brand => ({
       id: brand.id,
       name: brand.brandName,
       category: brand.category,
