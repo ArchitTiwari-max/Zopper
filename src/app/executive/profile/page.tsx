@@ -64,10 +64,10 @@ const Settings: React.FC = () => {
           
           // Map the cookie data to profile format
           const profileData: UserProfile = {
-            id: userData.id,
-            name: userData.executive?.name || userData.admin?.name || 'Unknown',
-            email: userData.email,
-            username: userData.username,
+            id: userData.id || 'N/A',
+            name: userData.executive?.name || userData.admin?.name || 'Not provided',
+            email: userData.email || 'N/A',
+            username: userData.username || 'N/A', // This should now work
             contact_number: userData.executive?.contact_number || userData.admin?.contact_number || null,
             region: userData.executive?.region || userData.admin?.region || null
           };
@@ -178,7 +178,7 @@ const Settings: React.FC = () => {
                 <input
                   type="text"
                   className="form-input disabled"
-                  value={profile.username}
+                  value={profile.username || 'Not available'}
                   disabled
                   readOnly
                 />

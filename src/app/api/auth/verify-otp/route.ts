@@ -65,7 +65,9 @@ export async function POST(request: NextRequest) {
 
     // Create comprehensive user payload for cookie storage
     let userPayload: any = {
+      id: user.id,
       email: user.email,
+      username: user.username, // Add missing username
       role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt
