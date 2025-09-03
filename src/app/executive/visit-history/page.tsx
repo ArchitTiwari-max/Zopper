@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import VisitDetailsModal from '@/components/VisitDetailsModal';
+import * as XLSX from 'xlsx';
 import './VisitHistory.css';
 
 interface VisitDetail {
@@ -110,9 +111,79 @@ const VisitHistory: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleExportToPDF = () => {
-    alert('Exporting to PDF...');
-    // Implement PDF export logic here
+  const handleExportToExcel = () => {
+    if (filteredVisits.length === 0) {
+      alert('No data to export');
+      return;
+    }
+
+    try {
+      // Prepare data for Excel export
+      const excelData = filteredVisits.map((visit, index) => {
+        return {
+          'S.No': index + 1,
+          'Visit ID': visit.id,
+          'Store Name': visit.storeName || 'N/A',
+          'Status': visit.status === 'PENDING_REVIEW' ? 'Pending Review' : 'Reviewed',
+          'Display Checked': visit.displayChecked ? 'Yes' : 'No',
+          'Visit Date': formatDate(visit.createdAt),
+          'Person Met - Names': visit.personMet?.map(p => p.name).join(', ') || 'N/A',
+          'Person Met - Designations': visit.personMet?.map(p => p.designation).join(', ') || 'N/A',
+          'Remarks': visit.remarks || 'No remarks',
+          'Admin Comment': visit.adminComment || 'No admin comment',
+          'Representative': visit.representative || 'N/A',
+          'Image URLs': visit.imageUrls?.join('; ') || 'No images',
+          'Number of Images': visit.imageUrls?.length || 0,
+          'Issues Count': visit.issues?.length || 0,
+          'Issues Details': visit.issues?.map(issue => 
+            `${issue.details} (Status: ${issue.status})`
+          ).join('; ') || 'No issues',
+          'Created At': new Date(visit.createdAt).toLocaleString(),
+          'Updated At': new Date(visit.updatedAt).toLocaleString()
+        };
+      });
+
+      // Create workbook and worksheet
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+      // Set column widths for better readability
+      const columnWidths = [
+        { wch: 8 },   // S.No
+        { wch: 20 },  // Visit ID
+        { wch: 25 },  // Store Name
+        { wch: 15 },  // Status
+        { wch: 12 },  // Display Checked
+        { wch: 12 },  // Visit Date
+        { wch: 30 },  // Person Met - Names
+        { wch: 30 },  // Person Met - Designations
+        { wch: 40 },  // Remarks
+        { wch: 30 },  // Admin Comment
+        { wch: 20 },  // Representative
+        { wch: 50 },  // Image URLs
+        { wch: 12 },  // Number of Images
+        { wch: 12 },  // Issues Count
+        { wch: 50 },  // Issues Details
+        { wch: 20 },  // Created At
+        { wch: 20 }   // Updated At
+      ];
+      worksheet['!cols'] = columnWidths;
+
+      // Add the worksheet to workbook
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Visit History');
+
+      // Generate filename with current date
+      const currentDate = new Date().toISOString().split('T')[0];
+      const filename = `Visit_History_Report_${currentDate}.xlsx`;
+
+      // Write and download the file
+      XLSX.writeFile(workbook, filename);
+      
+      console.log(`Excel report exported successfully: ${filename}`);
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      alert('Failed to export Excel report. Please try again.');
+    }
   };
 
   return (
@@ -252,11 +323,14 @@ const VisitHistory: React.FC = () => {
         <div className="export-section">
           <h3 className="export-title">Export Report</h3>
           <p className="export-subtitle">
-            Download a comprehensive PDF report of all visit data
+            Download a comprehensive excel report with all visit data
           </p>
-          <button className="export-btn" onClick={handleExportToPDF}>
-            Export to PDF
+          <button className="export-btn" onClick={handleExportToExcel}>
+            📊 Export Report
           </button>
+          <div className="export-info">
+            <small>Exports {filteredVisits.length} visits with complete details</small>
+          </div>
         </div>
 
         {/* Visit Details Modal */}

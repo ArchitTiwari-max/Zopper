@@ -519,7 +519,7 @@ const ExecutiveFormContent: React.FC = () => {
             </div>
           </div>
 
-          <div className="form-group">
+          {/* <div className="form-group">
             <label className="checkbox-container">
               <input
                 type="checkbox"
@@ -529,16 +529,16 @@ const ExecutiveFormContent: React.FC = () => {
               <span className="checkmark"></span>
               Display Checked
             </label>
-          </div>
+          </div> */}
 
           <div className="form-group">
-            <label className="form-label">Raise Issues</label>
+            <label className="form-label">Raise Issues if</label>
             <div className="issues-input-container">
               <div className="issue-input-wrapper">
                 <input
                   type="text"
                   className="form-input issue-input"
-                  placeholder="Describe an issue or observation..."
+                  placeholder="Describe an issue encountered"
                   value={currentIssue}
                   onChange={(e) => setCurrentIssue(e.target.value)}
                   onKeyPress={handleIssueKeyPress}

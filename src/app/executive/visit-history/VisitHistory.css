@@ -507,6 +507,12 @@
   background-color: #218838;
 }
 
+.export-info {
+  margin-top: 12px;
+  color: #6c757d;
+  font-size: 12px;
+}
+
 /* Desktop Responsive */
 @media (min-width: 1200px) {
   .visit-history-content {
