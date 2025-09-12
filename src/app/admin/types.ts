@@ -6,7 +6,7 @@ export interface MetricData {
 }
 
 export interface BrandData {
-  id: number;
+  id: string;
   name: string;
   logo: string;
   uniqueStores: number;
@@ -17,7 +17,6 @@ export interface BrandData {
 export interface DashboardData {
   totalVisits: MetricData;
   pendingReviews: MetricData;
-  activeExecutives: MetricData;
   issuesReported: MetricData;
   brandData: BrandData[];
 }
@@ -40,7 +39,7 @@ export type BrandFilterOption = 'All Brands' | string;
 
 // Store-related types
 export interface StoreData {
-  id: number;
+  id: string;
   storeName: string;
   partnerBrands: string[];
   address: string;
@@ -57,7 +56,8 @@ export interface StoreFilters {
   city: string;
   storeName: string;
   executiveName: string;
-  status: string;
+  visitStatus: string;
+  issueStatus: string;
 }
 
 export type PartnerBrandOption = 'All Brands' | 'Samsung' | 'Vivo' | 'Oppo' | 'OnePlus' | 'Realme' | 'Xiaomi';
@@ -68,7 +68,7 @@ export type StatusFilterOption = 'All Status' | 'Active' | 'Inactive' | 'Pending
 
 // Executive-related types
 export interface ExecutiveData {
-  id: number;
+  id: string;
   name: string;
   initials: string;
   region: string;
@@ -76,19 +76,16 @@ export interface ExecutiveData {
   totalVisits: number;
   lastVisit: string;
   assignedStores: string;
-  status: 'Active' | 'Inactive';
   avatarColor: string;
 }
 
 export interface ExecutiveFilters {
   executiveName: string;
   storeName: string;
-  region: string;
-  status: string;
+  brand: string;
 }
 
 export type RegionFilterOption = 'All Regions' | 'East Delhi' | 'West Delhi' | 'South Delhi' | 'North Delhi' | 'Central Delhi';
-export type ExecutiveStatusFilterOption = 'All' | 'Active' | 'Inactive';
 
 // Settings-related types
 export interface SettingsData {
@@ -105,7 +102,7 @@ export type TimeZoneOption = 'IST (Indian Standard Time)' | 'UTC' | 'GMT';
 
 // Visit Report related types
 export interface StoreVisitReport {
-  storeId: number;
+  storeId: string;
   storeName: string;
   address: string;
   brands: string[];
@@ -113,7 +110,7 @@ export interface StoreVisitReport {
 }
 
 export interface ExecutiveVisit {
-  id: number;
+  id: string;
   executiveName: string;
   executiveInitials: string;
   avatarColor: string;
@@ -127,7 +124,7 @@ export interface ExecutiveVisit {
   issues: string;
   status: 'Pending Review' | 'Reviewed' | 'Pending Issue';
   reviewStatus: 'Resolved' | 'Pending Review' | 'Pending Issue';
-  issueId?: number; // Reference to created issue
+  issueId?: string; // Reference to created issue
   hasUnresolvedIssue?: boolean; // Quick check for issues that need attention
 }
 
@@ -136,11 +133,12 @@ export interface VisitFilters {
   status: string;
 }
 
-export type VisitStatusOption = 'All Status' | 'Pending Review' | 'Reviewed' | 'Pending Issue';
+export type VisitStatusOption = 'All Status' | 'PENDING_REVIEW' | 'REVIEWD';
+export type IssueStatusFilterOption = 'All Status' | 'Pending' | 'Assigned' | 'Resolved';
 
 // Executive Detail interfaces
 export interface ExecutiveDetailData {
-  id: number;
+  id: string;
   name: string;
   employeeId: string;
   region: string;
@@ -158,7 +156,7 @@ export interface ExecutiveDetailData {
 }
 
 export interface ExecutiveStore {
-  id: number;
+  id: string;
   name: string;
   address: string;
   lastVisit: string;
@@ -179,8 +177,8 @@ export interface ExecutiveMetrics {
 }
 
 export interface ExecutiveVisitDetail {
-  id: number;
-  storeId: number;
+  id: string;
+  storeId: string;
   storeName: string;
   visitDate: string;
   visitTime: string;
@@ -203,19 +201,17 @@ export interface ExecutiveDetailFilters {
 
 // Issue Management interfaces
 export interface IssueData {
-  id: number;
+  id: string;
   issueId: string;
   storeName: string;
-  storeId: number;
+  storeId: string;
   location: string;
   brandAssociated: string;
   city: string;
   dateReported: string;
   reportedBy: string;
   reportedByRole: string;
-  status: 'Pending' | 'Assigned' | 'In Progress' | 'Resolved' | 'Closed';
-  priority: 'Low' | 'Medium' | 'High' | 'Critical';
-  category: 'Display' | 'Technical' | 'Inventory' | 'Customer Service' | 'Other';
+  status: 'Pending' | 'Assigned' | 'Resolved';
   description: string;
   assignmentHistory: IssueAssignment[];
   comments: IssueComment[];
@@ -225,7 +221,7 @@ export interface IssueData {
   createdAt: string;
   updatedAt: string;
   // Visit context information
-  relatedVisitId?: number;
+  relatedVisitId?: string;
   visitContext?: {
     visitDate: string;
     executiveName: string;
@@ -239,8 +235,8 @@ export interface IssueData {
 }
 
 export interface IssueAssignment {
-  id: number;
-  executiveId: number;
+  id: string;
+  executiveId: string;
   executiveName: string;
   executiveInitials: string;
   dateAssigned: string;
@@ -250,8 +246,8 @@ export interface IssueAssignment {
 }
 
 export interface IssueComment {
-  id: number;
-  authorId: number;
+  id: string;
+  authorId: string;
   authorName: string;
   authorRole: 'Admin' | 'Executive' | 'Store Manager';
   comment: string;
@@ -262,8 +258,6 @@ export interface IssueComment {
 export interface IssueFilters {
   storeName: string;
   status: string;
-  priority: string;
-  category: string;
   assignedTo: string;
   dateRange: string;
 }

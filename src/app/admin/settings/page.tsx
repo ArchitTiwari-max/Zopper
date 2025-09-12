@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SettingsData, ApprovalTimeOption, RegionOption, TimeZoneOption } from '../types';
 import './page.css';
@@ -18,6 +18,67 @@ const AdminSettingsPage: React.FC = () => {
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userInitials, setUserInitials] = useState('AD');
+
+  // Helper function to get cookie value
+  const getCookie = (name: string): string | null => {
+    if (typeof document === 'undefined') return null;
+    
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+      const cookieValue = parts.pop()?.split(';').shift();
+      return cookieValue ? decodeURIComponent(cookieValue) : null;
+    }
+    return null;
+  };
+
+  // Function to generate initials from name
+  const generateInitials = (name: string): string => {
+    if (!name || name.trim() === '') return 'AD';
+    
+    const nameParts = name.trim().split(' ').filter(part => part.length > 0);
+    
+    if (nameParts.length === 0) return 'AD';
+    if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
+    
+    // Get first letter of first name and first letter of last name
+    const firstInitial = nameParts[0].charAt(0).toUpperCase();
+    const lastInitial = nameParts[nameParts.length - 1].charAt(0).toUpperCase();
+    
+    return firstInitial + lastInitial;
+  };
+
+  // Load user data from cookie on component mount
+  useEffect(() => {
+    const loadUserProfile = () => {
+      try {
+        const userInfoCookie = getCookie('userInfo');
+        
+        if (userInfoCookie) {
+          const userData = JSON.parse(userInfoCookie);
+          // Remove ID from the data before setting
+          const profileData = { ...userData };
+          if (profileData.id) delete profileData.id;
+          if (profileData.admin?.id) delete profileData.admin.id;
+          
+          setUserProfile(profileData);
+          
+          // Generate initials for avatar
+          const userName = userData.admin?.name || userData.name || '';
+          const initials = generateInitials(userName);
+          setUserInitials(initials);
+        }
+      } catch (error) {
+        console.error('Error parsing user cookie in settings:', error);
+        setUserInitials('AD'); // Fallback
+      }
+    };
+    
+    // Add a small delay to ensure cookies are available
+    setTimeout(loadUserProfile, 100);
+  }, []);
 
   const handleSettingChange = (key: keyof SettingsData, value: string | boolean) => {
     setSettings(prev => ({
@@ -81,16 +142,90 @@ const AdminSettingsPage: React.FC = () => {
 
   return (
     <div className="settings-overview">
-      {/* Header Section */}
-      <div className="settings-header">
-        <div className="settings-header-content">
-          <h2>Setting</h2>
-          <p>Manage your system preferences and configurations</p>
-        </div>
-      </div>
 
       {/* Settings Sections */}
       <div className="settings-content">
+        {/* User Profile Section */}
+        <div className="settings-section profile-section">
+          <div className="section-icon-header">
+            <div className="section-icon profile">
+              <div className="profile-avatar">
+                {userInitials}
+              </div>
+            </div>
+            <div className="section-content">
+              <h3>Profile Information</h3>
+              <p>Your account details and profile information from the system.</p>
+            </div>
+          </div>
+
+          <div className="profile-details">
+            {userProfile ? (
+              <div className="profile-form">
+                {/* Name Field */}
+                <div className="profile-field">
+                  <label className="profile-field-label">Full Name</label>
+                  <input 
+                    type="text" 
+                    value={userProfile.admin?.name || userProfile.name || ''} 
+                    disabled 
+                    className="profile-input"
+                  />
+                </div>
+
+                {/* Username Field */}
+                <div className="profile-field">
+                  <label className="profile-field-label">Username</label>
+                  <input 
+                    type="text" 
+                    value={userProfile.admin?.username || userProfile.username || 'N/A'} 
+                    disabled 
+                    className="profile-input"
+                  />
+                </div>
+
+                {/* Region Field */}
+                <div className="profile-field">
+                  <label className="profile-field-label">Region</label>
+                  <input 
+                    type="text" 
+                    value={userProfile.admin?.region || userProfile.region || 'N/A'} 
+                    disabled 
+                    className="profile-input"
+                  />
+                </div>
+
+                {/* Email Field */}
+                <div className="profile-field">
+                  <label className="profile-field-label">Registered Email Address</label>
+                  <input 
+                    type="email" 
+                    value={userProfile.admin?.email || userProfile.email || 'N/A'} 
+                    disabled 
+                    className="profile-input"
+                  />
+                </div>
+
+                {/* Phone Number Field */}
+                <div className="profile-field">
+                  <label className="profile-field-label">Phone Number</label>
+                  <input 
+                    type="tel" 
+                    value={userProfile.admin?.contact_number || 'N/A'}
+                    disabled 
+                    className="profile-input"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="profile-loading">
+                <div className="loading-spinner"></div>
+                <span>Loading profile information...</span>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Auto-approval Time Section */}
         <div className="settings-section">
           <div className="section-icon-header">
@@ -265,24 +400,6 @@ const AdminSettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="settings-actions">
-        <button
-          type="button"
-          onClick={handleCancel}
-          className="cancel-btn"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={handleSaveSettings}
-          className="save-btn"
-          disabled={!hasUnsavedChanges}
-        >
-          Save Settings
-        </button>
-      </div>
     </div>
   );
 };

@@ -4,6 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import './ExecutiveTodoList.css';
 import SubmitTaskModal from './SubmitTaskModal';
+import TaskDetailModal from './components/TaskDetailModal';
+import ViewReportModal from './components/ViewReportModal';
+import IssuesTab from './tabs/IssuesTab';
+import VisitsTab from './tabs/VisitsTab';
+import TrainingTab from './tabs/TrainingTab';
 
 interface AssignedTask {
   id: string;
@@ -21,6 +26,7 @@ interface AssignedTask {
   hasReport: boolean;
   createdAt: string;
   assignedAt: string;
+  adminComment?: string;
   issueId: string;
   visitId: string;
   storeId: string;
@@ -37,14 +43,25 @@ interface TasksResponse {
   error?: string;
 }
 
+type TaskCategory = 'visit' | 'issues' | 'training';
+
 const ExecutiveTodoList: React.FC = () => {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TaskCategory>('issues');
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [expandedIssues, setExpandedIssues] = useState<Set<string>>(new Set());
   const [tasks, setTasks] = useState<AssignedTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [taskDetailModal, setTaskDetailModal] = useState<{
+    isOpen: boolean;
+    task: any;
+  }>({ isOpen: false, task: null });
+  const [viewReportModal, setViewReportModal] = useState<{
+    isOpen: boolean;
+    taskId: string;
+    storeName: string;
+  }>({ isOpen: false, taskId: '', storeName: '' });
 
   // Fetch assigned tasks from API
   useEffect(() => {
@@ -145,21 +162,40 @@ const ExecutiveTodoList: React.FC = () => {
     handleCloseModal();
   };
 
-  const toggleIssueExpansion = (taskId: string) => {
-    setExpandedIssues(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(taskId)) {
-        newSet.delete(taskId);
-      } else {
-        newSet.add(taskId);
-      }
-      return newSet;
-    });
+
+  // Task Detail Modal handlers
+  const handleViewDetails = (task: AssignedTask) => {
+    setTaskDetailModal({ isOpen: true, task });
   };
 
-  const truncateText = (text: string, maxLength: number = 50) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
+  const handleCloseTaskDetail = () => {
+    setTaskDetailModal({ isOpen: false, task: null });
+  };
+
+  // View Report Modal handlers
+  const handleViewReport = (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      setViewReportModal({
+        isOpen: true,
+        taskId,
+        storeName: task.storeName
+      });
+    }
+  };
+
+  const handleCloseViewReport = () => {
+    setViewReportModal({ isOpen: false, taskId: '', storeName: '' });
+  };
+
+  // Calculate pending tasks count
+  const pendingTasksCount = tasks.filter(task => 
+    !task.hasReport && task.status !== 'Completed'
+  ).length;
+
+  // Retry handler
+  const handleRetry = () => {
+    window.location.reload();
   };
 
   return (
@@ -169,94 +205,62 @@ const ExecutiveTodoList: React.FC = () => {
       {/* Main Content */}
       <main>
         <div className="pending-tasks-section">
-          <h2 className="section-title">Assigned Tasks</h2>
-          <p className="section-subtitle">Complete your assigned store visits and reports</p>
+          <div className="task-header">
+            <div className="task-title-section">
+              <h1 className="task-title">Assigned Tasks</h1>
+              <p className="task-subtitle">Complete your assigned tasks across different categories</p>
+            </div>
+          </div>
 
-          {/* Table */}
-          <div className="table-container">
-            <table className="tasks-table">
-              <thead>
-                <tr>
-                  <th>STORE NAME</th>
-                  <th>ISSUE</th>
-                  <th>CITY</th>
-                  <th className="action-header">ACTION</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={4}>
-                      <div className="loading-state">
-                        <div className="loading-spinner-large"></div>
-                        <span className="loading-text">Loading assigned tasks...</span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : error ? (
-                  <tr>
-                    <td colSpan={4}>
-                      <div className="error-state">
-                        <p>Error: {error}</p>
-                        <button 
-                          onClick={() => window.location.reload()} 
-                          className="retry-btn"
-                        >
-                          Retry
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ) : tasks.length === 0 ? (
-                  <tr>
-                    <td colSpan={4}>
-                      <div className="no-data-state">
-                        <span>No assigned tasks</span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  tasks.map((task) => {
-                    const displayStatus = task.status === 'Completed' || task.hasReport ? 'Submitted' : 'Pending';
-                    const isPending = !task.hasReport && task.status !== 'Completed';
-                    
-                    return (
-                      <tr key={task.id} className={expandedIssues.has(task.id) ? 'expanded-row' : ''}>
-                        <td className="store-name">{task.storeName}</td>
-                        <td className="issue">
-                          <div className="issue-container">
-                            <span 
-                              className={`issue-text ${task.issue.length > 50 ? 'expandable' : ''}`}
-                              onClick={() => task.issue.length > 50 ? toggleIssueExpansion(task.id) : null}
-                            >
-                              {expandedIssues.has(task.id) ? task.issue : truncateText(task.issue, 50)}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="city">{task.city}</td>
-                        <td className="action-column">
-                          <div className="action-content">
-                            <span 
-                              className={`status-badge ${displayStatus.toLowerCase()}`}
-                            >
-                              {displayStatus}
-                            </span>
-                            {isPending && (
-                              <button 
-                                className="view-task-btn"
-                                onClick={() => handleSubmitTask(task.id)}
-                              >
-                                Submit Task
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
+          {/* Task Tabs */}
+          <div className="task-tabs">
+            <button 
+              className={`tab-btn ${activeTab === 'visit' ? 'active' : ''}`}
+              onClick={() => setActiveTab('visit')}
+            >
+              <span className="tab-icon">🏪</span>
+              <span className="tab-label">Pending Visits</span>
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'issues' ? 'active' : ''}`}
+              onClick={() => setActiveTab('issues')}
+            >
+              <span className="tab-icon">⚠️</span>
+              <span className="tab-label">
+                Pending Issues
+                {pendingTasksCount > 0 && (
+                  <span className="tab-count">({pendingTasksCount})</span>
                 )}
-              </tbody>
-            </table>
+              </span>
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'training' ? 'active' : ''}`}
+              onClick={() => setActiveTab('training')}
+            >
+              <span className="tab-icon">📚</span>
+              <span className="tab-label">Training Tasks</span>
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          <div className="tab-content">
+            {activeTab === 'visit' && (
+              <VisitsTab />
+            )}
+
+            {activeTab === 'issues' && (
+              <IssuesTab
+                tasks={tasks}
+                loading={loading}
+                error={error}
+                onViewDetails={handleViewDetails}
+                onRetry={handleRetry}
+              />
+            )}
+
+            {activeTab === 'training' && (
+              <TrainingTab />
+            )}
           </div>
         </div>
       </main>
@@ -282,10 +286,31 @@ const ExecutiveTodoList: React.FC = () => {
         <SubmitTaskModal
           isOpen={isSubmitModalOpen}
           onClose={handleCloseModal}
-          taskId={parseInt(selectedTaskId)}
+          taskId={selectedTaskId}
           storeName={tasks.find(t => t.id === selectedTaskId)?.storeName || ''}
           storeDetails={tasks.find(t => t.id === selectedTaskId)?.storeDetails}
           onTaskSubmitted={handleTaskSubmitted}
+        />
+      )}
+
+      {/* Task Detail Modal */}
+      {taskDetailModal.isOpen && taskDetailModal.task && (
+        <TaskDetailModal
+          isOpen={taskDetailModal.isOpen}
+          onClose={handleCloseTaskDetail}
+          task={taskDetailModal.task}
+          onSubmitTask={handleSubmitTask}
+          onViewReport={handleViewReport}
+        />
+      )}
+
+      {/* View Report Modal */}
+      {viewReportModal.isOpen && (
+        <ViewReportModal
+          isOpen={viewReportModal.isOpen}
+          onClose={handleCloseViewReport}
+          taskId={viewReportModal.taskId}
+          storeName={viewReportModal.storeName}
         />
       )}
     </div>

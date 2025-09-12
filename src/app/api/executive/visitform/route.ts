@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { generateUniqueIssueId } from '@/lib/issueIdGenerator';
 
 const prisma = new PrismaClient();
 
@@ -190,8 +191,12 @@ export async function POST(request: NextRequest) {
       // Create multiple issues
       for (const issueDetail of issuesRaised) {
         if (issueDetail && issueDetail.trim() !== '') {
+          // Generate unique 7-character issue ID
+          const uniqueIssueId = await generateUniqueIssueId();
+          
           const createdIssue = await prisma.issue.create({
             data: {
+              id: uniqueIssueId,
               details: issueDetail.trim(),
               visitId: visit.id,
               status: 'Pending' // Default status

@@ -27,7 +27,7 @@ interface StoreDetails {
 interface SubmitTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  taskId: number;
+  taskId: string;
   storeName: string;
   storeDetails?: StoreDetails;
   onTaskSubmitted: () => void;

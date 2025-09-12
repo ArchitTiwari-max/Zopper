@@ -384,6 +384,29 @@
   gap: 0.75rem;
 }
 
+/* Loading button styles */
+.send-task-btn,
+.mark-solved-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Lucide loader animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
 .send-task-btn {
   padding: 0.75rem 1rem;
   background: #3b82f6;
@@ -417,8 +440,13 @@
   transition: background-color 0.15s ease-in-out;
 }
 
-.mark-solved-btn:hover {
+.mark-solved-btn:hover:not(:disabled) {
   background: #059669;
+}
+
+.mark-solved-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
 }
 
 /* Comments Section */
@@ -527,11 +555,33 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .view-details-btn:hover {
   background: #2563eb;
+}
+
+/* View Report Button */
+.view-report-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.view-report-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.view-report-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
 }
 
 .store-details {

@@ -191,11 +191,9 @@ const VisitHistory: React.FC = () => {
       <div className="visit-history-content">
         {/* Header */}
         <div className="history-header">
-  
-          
-          <div className="header-subtitle-section">
-            <h2 className="detailed-report-title">Detailed Report</h2>
-            <p className="detailed-report-subtitle">
+          <div className="history-title-section">
+            <h1 className="history-title">Visit History</h1>
+            <p className="history-subtitle">
               Comprehensive overview of store visits and executive feedback
             </p>
           </div>

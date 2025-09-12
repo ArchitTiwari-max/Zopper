@@ -2,162 +2,182 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ExecutiveData, ExecutiveFilters, RegionFilterOption, ExecutiveStatusFilterOption, TimeframeOption } from '../types';
+import { useSearchParams } from 'next/navigation';
+import { ExecutiveData, ExecutiveFilters, RegionFilterOption, TimeframeOption } from '../types';
 import './page.css';
 
-// Mock data for executives
-const mockExecutivesData: ExecutiveData[] = [
-  {
-    id: 1,
-    name: 'Ramesh Kumar',
-    initials: 'RK',
-    region: 'East Delhi',
-    partnerBrands: ['Samsung', 'Vivo'],
-    totalVisits: 42,
-    lastVisit: '2025-08-01',
-    assignedStores: 'View All',
-    status: 'Active',
-    avatarColor: '#8B5CF6'
-  },
-  {
-    id: 2,
-    name: 'Neha Sharma',
-    initials: 'NS',
-    region: 'West Delhi',
-    partnerBrands: ['Samsung', 'Vivo'],
-    totalVisits: 35,
-    lastVisit: '2025-07-28',
-    assignedStores: 'View All',
-    status: 'Active',
-    avatarColor: '#EC4899'
-  },
-  {
-    id: 3,
-    name: 'Priya Singh',
-    initials: 'PS',
-    region: 'East Delhi',
-    partnerBrands: ['Samsung', 'Vivo', 'Oppo'],
-    totalVisits: 38,
-    lastVisit: '2025-07-30',
-    assignedStores: 'View All',
-    status: 'Active',
-    avatarColor: '#F59E0B'
-  },
-  {
-    id: 4,
-    name: 'Sunita Yadav',
-    initials: 'SY',
-    region: 'South Delhi',
-    partnerBrands: ['Vivo', 'Oppo'],
-    totalVisits: 44,
-    lastVisit: '2025-08-01',
-    assignedStores: 'View All',
-    status: 'Active',
-    avatarColor: '#8B5CF6'
-  },
-  {
-    id: 5,
-    name: 'Ankit Verma',
-    initials: 'AV',
-    region: 'South Delhi',
-    partnerBrands: ['Vivo', 'Oppo'],
-    totalVisits: 50,
-    lastVisit: '2025-08-02',
-    assignedStores: 'View All',
-    status: 'Active',
-    avatarColor: '#10B981'
-  },
-  {
-    id: 6,
-    name: 'Vikash Gupta',
-    initials: 'VG',
-    region: 'West Delhi',
-    partnerBrands: ['Vivo', 'Oppo'],
-    totalVisits: 29,
-    lastVisit: '2025-07-26',
-    assignedStores: 'View All',
-    status: 'Inactive',
-    avatarColor: '#6B7280'
-  },
-  {
-    id: 7,
-    name: 'Rohit Sharma',
-    initials: 'RS',
-    region: 'North Delhi',
-    partnerBrands: ['Vivo', 'Oppo'],
-    totalVisits: 33,
-    lastVisit: '2025-07-29',
-    assignedStores: 'View All',
-    status: 'Inactive',
-    avatarColor: '#6B7280'
-  },
-  {
-    id: 8,
-    name: 'Kavita Jain',
-    initials: 'KJ',
-    region: 'Central Delhi',
-    partnerBrands: ['Vivo', 'Oppo'],
-    totalVisits: 43,
-    lastVisit: '2025-08-01',
-    assignedStores: 'View All',
-    status: 'Inactive',
-    avatarColor: '#6B7280'
-  }
-];
 
 const AdminExecutivesPage: React.FC = () => {
-  const [selectedTimeframe, setSelectedTimeframe] = useState<TimeframeOption>('Last 30 Days');
-  const [executivesData, setExecutivesData] = useState<ExecutiveData[]>(mockExecutivesData);
-  const [filteredExecutives, setFilteredExecutives] = useState<ExecutiveData[]>(mockExecutivesData);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const searchParams = useSearchParams();
+  const [executivesData, setExecutivesData] = useState<ExecutiveData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoadingFilters, setIsLoadingFilters] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filterError, setFilterError] = useState<string | null>(null);
+  const [isFiltersVisible, setIsFiltersVisible] = useState<boolean>(true);
+
+  // Filter data from API
+  const [filterData, setFilterData] = useState<{
+    executives: Array<{id: number, name: string, region: string}>;
+    stores: Array<{id: number, name: string, city: string}>;
+    brands: Array<{id: number, name: string}>;
+    cities: string[];
+  }>({executives: [], stores: [], brands: [], cities: []});
 
   const [filters, setFilters] = useState<ExecutiveFilters>({
-    executiveName: '',
-    storeName: '',
-    region: 'All Regions',
-    status: 'All'
+    executiveName: 'All Executive',
+    storeName: 'All Store',
+    brand: 'All Brands'
   });
 
-  // Simulate data loading
-  useEffect(() => {
+  // Fetch filter data from API (fast)
+  const fetchFilterData = async () => {
+    setIsLoadingFilters(true);
+    setFilterError(null);
+    try {
+      const response = await fetch('/api/admin/executives/filters', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setFilterData(data);
+    } catch (error) {
+      console.error('Failed to fetch filter data:', error);
+      setFilterError(error instanceof Error ? error.message : 'Failed to load filter data');
+    } finally {
+      setIsLoadingFilters(false);
+    }
+  };
+
+  // Fetch executives data from API
+  const fetchExecutivesData = async () => {
     setIsLoading(true);
-    setTimeout(() => {
-      setExecutivesData(mockExecutivesData);
+    setError(null);
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      
+      // URL parameters (from navigation) take precedence
+      const urlStoreId = searchParams.get('storeId');
+      const urlExecutiveId = searchParams.get('executiveId');
+      const urlStoreName = searchParams.get('storeName');
+      const urlExecutiveName = searchParams.get('executiveName');
+      
+      // Use URL params if available, otherwise use filter state
+      if (urlStoreId) {
+        params.append('urlStoreId', urlStoreId);
+      } else if (filters.storeName !== 'All Store') {
+        params.append('storeId', filters.storeName); // filters.storeName contains store ID
+      }
+      
+      if (urlExecutiveId) {
+        params.append('urlExecutiveId', urlExecutiveId);
+      } else if (filters.executiveName !== 'All Executive') {
+        params.append('executiveId', filters.executiveName); // filters.executiveName contains executive ID
+      }
+      
+      // Add URL name params if available (convert to IDs)
+      if (urlStoreName && !urlStoreId) {
+        const store = filterData.stores.find(s => s.name === urlStoreName);
+        if (store) {
+          params.append('storeId', store.id.toString());
+        }
+      }
+      if (urlExecutiveName && !urlExecutiveId) {
+        const executive = filterData.executives.find(e => e.name === urlExecutiveName);
+        if (executive) {
+          params.append('executiveId', executive.id.toString());
+        }
+      }
+      
+      // Other filters always come from filter state
+      if (filters.brand !== 'All Brands') {
+        params.append('brandId', filters.brand); // filters.brand contains brand ID
+      }
+
+      const response = await fetch(`/api/admin/executives/data?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setExecutivesData(data.executives || []);
+    } catch (error) {
+      console.error('Failed to fetch executives data:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load executives data');
+      setExecutivesData([]);
+    } finally {
       setIsLoading(false);
-    }, 500);
-  }, [selectedTimeframe]);
+    }
+  };
 
-  // Apply filters when filters change
+  // Handle URL query parameters and update filter state
   useEffect(() => {
-    let filtered = executivesData;
-
-    if (filters.executiveName && filters.executiveName.trim() !== '') {
-      filtered = filtered.filter(executive =>
-        executive.name.toLowerCase().includes(filters.executiveName.toLowerCase())
-      );
+    const storeId = searchParams.get('storeId');
+    const executiveId = searchParams.get('executiveId');
+    const storeName = searchParams.get('storeName');
+    const executiveName = searchParams.get('executiveName');
+    
+    // Update filter state based on URL params so dropdowns show correct values
+    // Only update if the values are different to avoid infinite loops
+    if (storeName && filters.storeName !== storeName) {
+      // URL storeName is a name, need to find corresponding ID for filter state
+      const store = filterData.stores.find(s => s.name === storeName);
+      if (store && filters.storeName !== store.id.toString()) {
+        setFilters(prev => ({ ...prev, storeName: store.id.toString() }));
+      }
+    } else if (storeId && filterData.stores.length > 0) {
+      // URL has storeId, use that ID directly for filter state
+      if (filters.storeName !== storeId) {
+        setFilters(prev => ({ ...prev, storeName: storeId }));
+      }
     }
-
-    if (filters.region !== 'All Regions') {
-      filtered = filtered.filter(executive => executive.region === filters.region);
+    
+    if (executiveName && filters.executiveName !== executiveName) {
+      // URL executiveName is a name, need to find corresponding ID for filter state
+      const executive = filterData.executives.find(e => e.name === executiveName);
+      if (executive && filters.executiveName !== executive.id.toString()) {
+        setFilters(prev => ({ ...prev, executiveName: executive.id.toString() }));
+      }
+    } else if (executiveId && filterData.executives.length > 0) {
+      // URL has executiveId, use that ID directly for filter state
+      if (filters.executiveName !== executiveId) {
+        setFilters(prev => ({ ...prev, executiveName: executiveId }));
+      }
     }
+  }, [searchParams, filterData]);
 
-    if (filters.status !== 'All') {
-      filtered = filtered.filter(executive => executive.status === filters.status);
-    }
+  // OPTIMIZED LOADING: Load both table and filter data concurrently, but prioritize table UI
+  useEffect(() => {
+    // Load table data first (higher priority for user experience)
+    fetchExecutivesData();
+    
+    // Load filter data concurrently (no delay needed since no loading state shown)
+    fetchFilterData();
+  }, []);
 
-    setFilteredExecutives(filtered);
-  }, [filters, executivesData]);
+  // Refetch data when filters or search params change
+  useEffect(() => {
+    fetchExecutivesData(); // Always prioritize table data
+  }, [filters, searchParams]);
 
-  const handleTimeframeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedTimeframe(event.target.value as TimeframeOption);
-  };
-
-  const handleFilterChange = (filterType: keyof ExecutiveFilters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [filterType]: value
-    }));
-  };
 
   const getBrandColor = (brand: string): string => {
     const brandColors: Record<string, string> = {
@@ -171,110 +191,148 @@ const AdminExecutivesPage: React.FC = () => {
     return brandColors[brand] || '#64748b';
   };
 
-  const getUniqueValues = (key: keyof ExecutiveData): string[] => {
-    if (key === 'region') {
-      return [...new Set(executivesData.map(executive => executive.region))];
+  const handleFilterChange = (filterType: keyof ExecutiveFilters, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+    
+    // When user manually changes filters, clear URL params so their selections take precedence
+    if ((filterType === 'storeName' || filterType === 'executiveName') && 
+        (searchParams.get('storeId') || searchParams.get('executiveId'))) {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('storeId');
+      newUrl.searchParams.delete('executiveId');
+      newUrl.searchParams.delete('storeName');
+      newUrl.searchParams.delete('executiveName');
+      window.history.replaceState({}, '', newUrl.toString());
     }
-    if (key === 'status') {
-      return [...new Set(executivesData.map(executive => executive.status))];
-    }
-    return [];
   };
 
-  if (isLoading) {
+  // Show critical errors immediately
+  if (error) {
     return (
       <div className="executives-overview">
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
-          <div style={{ fontSize: '1.2rem', color: '#64748b' }}>Loading executives...</div>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '400px', gap: '1rem' }}>
+          <div style={{ fontSize: '1.2rem', color: '#ef4444' }}>Error loading executives</div>
+          <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{error}</div>
+          <button 
+            onClick={() => fetchExecutivesData()}
+            style={{ padding: '0.5rem 1rem', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
   }
 
+  // OPTIMIZED: Show UI immediately, use separate loading states
+
+  // Get store name for display when filtering by storeId
+  const getStoreNameFromId = (storeId: string): string => {
+    const store = filterData.stores.find(s => s.id.toString() === storeId);
+    return store ? store.name : 'Unknown Store';
+  };
+
+  // Check if we're filtering by a specific store from URL
+  const urlStoreId = searchParams.get('storeId');
+  const isFilteringByStore = urlStoreId || (filters.storeName !== 'All Store' && filters.storeName !== 'All Store');
+  const currentStoreName = urlStoreId 
+    ? getStoreNameFromId(urlStoreId)
+    : filters.storeName !== 'All Store' 
+      ? getStoreNameFromId(filters.storeName)
+      : null;
+
   return (
     <div className="executives-overview">
-      {/* Header Section */}
-      <div className="executives-header">
-        <div className="executives-header-content">
-          <h2>Executive Dashboard</h2>
+      {/* Store Filter Header */}
+      {isFilteringByStore && currentStoreName && (
+        <div className="store-filter-header">
+          <h2>Executives assigned to {currentStoreName}</h2>
         </div>
-        <div className="date-selector">
-          <label htmlFor="timeframe-select">Date</label>
-          <select 
-            id="timeframe-select"
-            value={selectedTimeframe} 
-            onChange={handleTimeframeChange}
-            className="timeframe-select"
-          >
-            <option value="Last 7 Days">Last 7 Days</option>
-            <option value="Last 30 Days">Last 30 Days</option>
-            <option value="Last 90 Days">Last 90 Days</option>
-            <option value="Last Year">Last Year</option>
-          </select>
-        </div>
-      </div>
-
+      )}
+      
       {/* Filters Section */}
       <div className="filters-section">
         <div className="filters-header">
-          <h3>Filters</h3>
+          <h3 
+            onClick={() => setIsFiltersVisible(!isFiltersVisible)}
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            Filters 
+            <span style={{ 
+              transform: isFiltersVisible ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.2s ease'
+            }}>
+              ▼
+            </span>
+          </h3>
         </div>
+        {isFiltersVisible && (
+          filterError ? (
+            <div style={{ padding: '1rem', background: '#fee2e2', color: '#dc2626', borderRadius: '6px', margin: '0.5rem 0' }}>
+              Error loading filters: {filterError}
+              <button 
+                onClick={() => fetchFilterData()}
+                style={{ marginLeft: '1rem', padding: '0.25rem 0.5rem', backgroundColor: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
         <div className="executives-filters-grid">
           <div className="filter-group">
             <label>Filter by Executive Name</label>
-            <input
-              type="text"
-              placeholder="Search by name..."
+            <select 
               value={filters.executiveName}
               onChange={(e) => handleFilterChange('executiveName', e.target.value)}
-              className="filter-input"
-            />
+              className="filter-select"
+            >
+              <option value="All Executive">All Executive</option>
+              {filterData.executives.map(executive => (
+                <option key={executive.id} value={executive.id}>{executive.name}</option>
+              ))}
+            </select>
           </div>
 
           <div className="filter-group">
-            <label>Filter by Store Name</label>
-            <input
-              type="text"
-              placeholder="Search by store name..."
+            <label>Filter by Store Assignment</label>
+            <select
               value={filters.storeName}
               onChange={(e) => handleFilterChange('storeName', e.target.value)}
-              className="filter-input"
-            />
-          </div>
-
-          <div className="filter-group">
-            <label>Filter by Region</label>
-            <select 
-              value={filters.region}
-              onChange={(e) => handleFilterChange('region', e.target.value)}
               className="filter-select"
             >
-              <option value="All Regions">All Regions</option>
-              {getUniqueValues('region').map(region => (
-                <option key={region} value={region}>{region}</option>
+              <option value="All Store">All Store</option>
+              {filterData.stores.map(store => (
+                <option key={store.id} value={store.id}>{store.name}</option>
               ))}
             </select>
           </div>
 
           <div className="filter-group">
-            <label>Filter by Status</label>
+            <label>Filter by Brand</label>
             <select 
-              value={filters.status}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
+              value={filters.brand}
+              onChange={(e) => handleFilterChange('brand', e.target.value)}
               className="filter-select"
             >
-              <option value="All">All</option>
-              {getUniqueValues('status').map(status => (
-                <option key={status} value={status}>{status}</option>
+              <option value="All Brands">All Brands</option>
+              {filterData.brands.map(brand => (
+                <option key={brand.id} value={brand.id}>{brand.name}</option>
               ))}
             </select>
           </div>
+
         </div>
+          )
+        )}
       </div>
 
       {/* Executives Table */}
       <div className="executives-table-section">
         <div className="executives-table">
+          {/* Always show table header for context */}
           <div className="table-header">
             <div className="header-cell">Name</div>
             <div className="header-cell">Region</div>
@@ -284,56 +342,63 @@ const AdminExecutivesPage: React.FC = () => {
             <div className="header-cell">Assigned Stores</div>
           </div>
           
+          {/* Table body with loading state */}
           <div className="table-body">
-            {filteredExecutives.map(executive => (
-              <div key={executive.id} className="table-row">
-                <div className="cell executive-name-cell">
-                  <div className="executive-avatar-container">
-                    <div 
-                      className="executive-avatar"
-                      style={{ backgroundColor: executive.avatarColor }}
-                    >
-                      {executive.initials}
-                    </div>
-                    <div className="executive-info">
-                      <Link href={`/admin/executives/${executive.id}`} className="executive-name-link">
-                        <span className="executive-name">{executive.name}</span>
-                      </Link>
-                      <span 
-                        className={`status-badge ${executive.status.toLowerCase()}`}
+            {isLoading ? (
+              <div className="table-loading">
+                <div className="loading-spinner-large"></div>
+                <span className="loading-text">Loading executives data...</span>
+              </div>
+            ) : executivesData.length > 0 ? (
+              executivesData.map(executive => (
+                <div key={executive.id} className="table-row">
+                  <div className="cell executive-name-cell">
+                    <div className="executive-avatar-container">
+                      <div 
+                        className="executive-avatar"
+                        style={{ backgroundColor: executive.avatarColor }}
                       >
-                        {executive.status}
-                      </span>
+                        {executive.initials}
+                      </div>
+                      <div className="executive-info">
+                        <Link href={`/admin/visit-report?executiveId=${executive.id}`} className="executive-name-link">
+                          <span className="executive-name">{executive.name}</span>
+                        </Link>
+                      </div>
                     </div>
                   </div>
+                  <div className="cell">{executive.region}</div>
+                  <div className="cell partner-brands-cell">
+                    {executive.partnerBrands.map((brand, index) => (
+                      <span 
+                        key={index}
+                        className="brand-tag"
+                        style={{ backgroundColor: getBrandColor(brand) }}
+                      >
+                        {brand}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="cell">{executive.totalVisits}</div>
+                  <div className="cell">{executive.lastVisit}</div>
+                  <div className="cell">
+                    <Link href={`/admin/stores?executiveId=${executive.id}`} className="view-all-link">
+                      View All
+                    </Link>
+                  </div>
                 </div>
-                <div className="cell">{executive.region}</div>
-                <div className="cell partner-brands-cell">
-                  {executive.partnerBrands.map((brand, index) => (
-                    <span 
-                      key={index}
-                      className="brand-tag"
-                      style={{ backgroundColor: getBrandColor(brand) }}
-                    >
-                      {brand}
-                    </span>
-                  ))}
-                </div>
-                <div className="cell">{executive.totalVisits}</div>
-                <div className="cell">{executive.lastVisit}</div>
-                <div className="cell">
-                  <button 
-                    className="view-all-btn"
-                    onClick={() => {
-                      console.log(`View stores for ${executive.name}`);
-                    }}
-                    type="button"
-                  >
-                    {executive.assignedStores}
-                  </button>
-                </div>
+              ))
+            ) : (
+              <div style={{ 
+                padding: '3rem', 
+                textAlign: 'center', 
+                color: '#64748b', 
+                fontSize: '1rem',
+                gridColumn: '1 / -1'
+              }}>
+                No executives found matching the selected filters.
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>

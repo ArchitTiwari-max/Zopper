@@ -3,22 +3,45 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export interface Notification {
-  id: number;
-  type: 'task' | 'approval' | 'system';
+  id: string;
   title: string;
-  description?: string;
-  timeAgo: string;
-  isRead: boolean;
-  icon: string;
+  message: string;
+  type: 'VISIT_REVIEWED' | 'ISSUE_ASSIGNED' | 'ADMIN_COMMENT_ADDED' | 'SYSTEM_ANNOUNCEMENT' | 'VISIT_PLAN_ASSIGNED';
+  status: 'UNREAD' | 'READ' | 'ARCHIVED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  createdAt: string;
+  readAt?: string;
+  actionUrl?: string;
+  metadata?: Record<string, any>;
+  // Related entities
+  visit?: {
+    id: string;
+    store: {
+      storeName: string;
+    };
+  };
+  assigned?: {
+    id: string;
+    issue: {
+      details: string;
+      visit: {
+        store: {
+          storeName: string;
+        };
+      };
+    };
+  };
 }
 
 interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
-  markAsRead: (id: number) => void;
-  markAllAsRead: () => void;
-  addNotification: (notification: Omit<Notification, 'id'>) => void;
-  removeNotification: (id: number) => void;
+  loading: boolean;
+  error: string | null;
+  refreshNotifications: () => Promise<void>;
+  markAsRead: (notificationId: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
+  archiveNotification: (notificationId: string) => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -28,123 +51,178 @@ interface NotificationProviderProps {
 }
 
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      type: 'task',
-      title: 'Admin assigned you a new Task',
-      timeAgo: '2m ago',
-      isRead: false,
-      icon: '👤'
-    },
-    {
-      id: 2,
-      type: 'approval',
-      title: 'Admin approved your visit plan',
-      description: 'Talk To Store Owner And send the report to me personally',
-      timeAgo: '1 day ago',
-      isRead: false,
-      icon: '👤'
-    },
-    {
-      id: 3,
-      type: 'approval',
-      title: 'Admin approved your visit plan',
-      timeAgo: '2 day ago',
-      isRead: true,
-      icon: '👤'
-    },
-    {
-      id: 4,
-      type: 'system',
-      title: 'System maintenance scheduled',
-      description: 'Maintenance on 18th Aug, 1 AM - 3 AM',
-      timeAgo: '3 day ago',
-      isRead: true,
-      icon: '🔧'
-    }
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const markAsRead = (id: number) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, isRead: true }
-          : notification
-      )
-    );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, isRead: true }))
-    );
-  };
-
-  const addNotification = (notification: Omit<Notification, 'id'>) => {
-    const newNotification: Notification = {
-      ...notification,
-      id: Date.now() // Simple ID generation
-    };
-    setNotifications(prev => [newNotification, ...prev]);
-  };
-
-  const removeNotification = (id: number) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
-  };
-
-  const unreadCount = notifications.filter(notification => !notification.isRead).length;
-
-  // Simulate real-time notifications (optional)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // This is just for demo - in real app, you'd listen to WebSocket or polling
-      const shouldAddNotification = Math.random() < 0.05; // 5% chance every 30 seconds
+  const fetchNotifications = async () => {
+    try {
+      setError(null);
+      const response = await fetch('/api/notifications?limit=20', {
+        credentials: 'include'
+      });
       
-      if (shouldAddNotification && notifications.length < 10) {
-        const randomNotifications = [
-          {
-            type: 'task' as const,
-            title: 'New task assigned by Admin',
-            timeAgo: 'Just now',
-            isRead: false,
-            icon: '📋'
-          },
-          {
-            type: 'approval' as const,
-            title: 'Visit report approved',
-            description: 'Your visit report has been reviewed and approved',
-            timeAgo: 'Just now',
-            isRead: false,
-            icon: '✅'
-          },
-          {
-            type: 'system' as const,
-            title: 'System update available',
-            timeAgo: 'Just now',
-            isRead: false,
-            icon: '🔄'
-          }
-        ];
-        
-        const randomNotification = randomNotifications[
-          Math.floor(Math.random() * randomNotifications.length)
-        ];
-        
-        addNotification(randomNotification);
+      if (!response.ok) {
+        throw new Error('Failed to fetch notifications');
       }
-    }, 30000); // Check every 30 seconds
+      
+      const data = await response.json();
+      if (data.success) {
+        setNotifications(data.data || []);
+      } else {
+        throw new Error(data.error || 'Failed to fetch notifications');
+      }
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await fetch('/api/notifications/count', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setUnreadCount(data.count || 0);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching unread count:', err);
+    }
+  };
+
+  const refreshNotifications = async () => {
+    setLoading(true);
+    await Promise.all([fetchNotifications(), fetchUnreadCount()]);
+  };
+
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const response = await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          notificationIds: [notificationId],
+          action: 'markAsRead'
+        }),
+      });
+
+      if (response.ok) {
+        // Optimistically update the UI
+        setNotifications(prev =>
+          prev.map(notif =>
+            notif.id === notificationId
+              ? { ...notif, status: 'READ' as const, readAt: new Date().toISOString() }
+              : notif
+          )
+        );
+        
+        // Update unread count
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (err) {
+      console.error('Error marking notification as read:', err);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      const unreadIds = notifications
+        .filter(notif => notif.status === 'UNREAD')
+        .map(notif => notif.id);
+
+      if (unreadIds.length === 0) return;
+
+      const response = await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          notificationIds: unreadIds,
+          action: 'markAsRead'
+        }),
+      });
+
+      if (response.ok) {
+        // Optimistically update the UI
+        setNotifications(prev =>
+          prev.map(notif =>
+            notif.status === 'UNREAD'
+              ? { ...notif, status: 'READ' as const, readAt: new Date().toISOString() }
+              : notif
+          )
+        );
+        
+        // Reset unread count
+        setUnreadCount(0);
+      }
+    } catch (err) {
+      console.error('Error marking all notifications as read:', err);
+    }
+  };
+
+  const archiveNotification = async (notificationId: string) => {
+    try {
+      const response = await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          notificationIds: [notificationId],
+          action: 'archive'
+        }),
+      });
+
+      if (response.ok) {
+        // Remove from current list
+        setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
+        
+        // Update unread count if it was unread
+        const notification = notifications.find(n => n.id === notificationId);
+        if (notification && notification.status === 'UNREAD') {
+          setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+      }
+    } catch (err) {
+      console.error('Error archiving notification:', err);
+    }
+  };
+
+  // Initial load and periodic refresh
+  useEffect(() => {
+    refreshNotifications();
+    
+    // Set up periodic refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+    }, 30000);
 
     return () => clearInterval(interval);
-  }, [notifications.length]);
+  }, []);
 
-  const value: NotificationContextType = {
+  const value = {
     notifications,
     unreadCount,
+    loading,
+    error,
+    refreshNotifications,
     markAsRead,
     markAllAsRead,
-    addNotification,
-    removeNotification
+    archiveNotification,
   };
 
   return (

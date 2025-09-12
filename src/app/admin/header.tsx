@@ -1,15 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useDateFilter } from './contexts/DateFilterContext';
+import { useNotifications } from './notifications/components/contexts/NotificationContext';
 
 interface PageInfo {
   title: string;
   subtitle: string;
-  showTimeframe?: boolean;
-  showExport?: boolean;
-  showSearch?: boolean;
-  customActions?: React.ReactNode;
 }
 
 interface HeaderProps {
@@ -18,6 +17,60 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ currentPage }) => {
   const pathname = usePathname();
+  const { selectedDateFilter, setSelectedDateFilter } = useDateFilter();
+  const { unreadCount } = useNotifications();
+  const [userInitials, setUserInitials] = useState('AD');
+  
+  // Helper function to get cookie value
+  const getCookie = (name: string): string | null => {
+    if (typeof document === 'undefined') return null;
+    
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+      const cookieValue = parts.pop()?.split(';').shift();
+      return cookieValue ? decodeURIComponent(cookieValue) : null;
+    }
+    return null;
+  };
+  
+  // Function to generate initials from name
+  const generateInitials = (name: string): string => {
+    if (!name || name.trim() === '') return 'AD';
+    
+    const nameParts = name.trim().split(' ').filter(part => part.length > 0);
+    
+    if (nameParts.length === 0) return 'AD';
+    if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
+    
+    // Get first letter of first name and first letter of last name
+    const firstInitial = nameParts[0].charAt(0).toUpperCase();
+    const lastInitial = nameParts[nameParts.length - 1].charAt(0).toUpperCase();
+    
+    return firstInitial + lastInitial;
+  };
+  
+  // Load user data from cookie on component mount
+  useEffect(() => {
+    const loadUserInitials = () => {
+      try {
+        const userInfoCookie = getCookie('userInfo');
+        
+        if (userInfoCookie) {
+          const userData = JSON.parse(userInfoCookie);
+          const userName = userData.admin?.name || userData.name || '';
+          const initials = generateInitials(userName);
+          setUserInitials(initials);
+        }
+      } catch (error) {
+        console.error('Error parsing user cookie in admin header:', error);
+        setUserInitials('AD'); // Fallback
+      }
+    };
+    
+    // Add a small delay to ensure cookies are available
+    setTimeout(loadUserInitials, 100);
+  }, []);
   
   // Dynamic page configuration based on current route
   const getPageInfo = (): PageInfo => {
@@ -25,16 +78,14 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
     if (pathname.startsWith('/admin/stores/') && pathname !== '/admin/stores') {
       return {
         title: 'Store Visit Report',
-        subtitle: 'Comprehensive overview of store visits and executive feedback',
-        showExport: true
+        subtitle: 'Comprehensive overview of store visits and executive feedback'
       };
     }
     
     if (pathname.startsWith('/admin/executives/') && pathname !== '/admin/executives') {
       return {
         title: 'Executive Profile',
-        subtitle: 'Detailed view of executive performance and activities',
-        showTimeframe: true
+        subtitle: 'Detailed view of executive performance and activities'
       };
     }
     
@@ -50,32 +101,37 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
       case '/admin/dashboard':
         return {
           title: 'Dashboard',
-          subtitle: 'Monitor field activities and track executive performance',
-          showTimeframe: true
+          subtitle: 'Monitor field activities and track executive performance'
         };
       case '/admin/stores':
         return {
           title: 'Stores',
-          subtitle: 'Manage and monitor partner store relationships',
-          showSearch: true,
-          showExport: true
+          subtitle: 'Manage and monitor partner store relationships'
         };
       case '/admin/executives':
         return {
           title: 'Executives',
-          subtitle: 'Track field executive performance and assignments',
-          showSearch: true
+          subtitle: 'Track field executive performance and assignments'
         };
       case '/admin/issues':
         return {
           title: 'Issues',
-          subtitle: 'Track and resolve store visit issues and concerns',
-          showSearch: true
+          subtitle: 'Track and resolve store visit issues and concerns'
+        };
+      case '/admin/visit-report':
+        return {
+          title: 'Visit Reports',
+          subtitle: 'Unified view of all store and executive visits across regions'
         };
       case '/admin/settings':
         return {
           title: 'Settings',
           subtitle: 'Configure system preferences and notifications'
+        };
+      case '/admin/notifications':
+        return {
+          title: 'Notification',
+          subtitle: 'Manage your notifications and alerts'
         };
       default:
         return {
@@ -87,6 +143,14 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
   
   const pageInfo = getPageInfo();
   
+  // Check if current page should show date filter
+  const shouldShowDateFilter = () => {
+    return pathname === '/admin/dashboard' ||
+           pathname === '/admin/issues' || 
+           pathname === '/admin/visit-report' ||
+           pathname.startsWith('/admin/issues/');
+  };
+  
   return (
     <header className="dashboard-header">
       <div className="header-left">
@@ -96,55 +160,45 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
         </div>
       </div>
       <div className="header-right">
-        {/* Dynamic actions based on page */}
-        <div className="header-actions">
-          
-          {pageInfo.showSearch && (
-            <div className="header-control">
-              <div className="header-search">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
-                  <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-                <input 
-                  type="text" 
-                  placeholder={`Search ${pageInfo.title.toLowerCase()}...`}
-                  className="header-search-input"
-                />
-              </div>
-            </div>
-          )}
-          
-          {pageInfo.showExport && (
-            <button className="header-export-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <polyline points="7,10 12,15 17,10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Export
-            </button>
-          )}
-          
-          {pageInfo.customActions && pageInfo.customActions}
-        </div>
+        {/* Conditional date filter - only show on issues and visit-report pages */}
+        {shouldShowDateFilter() && (
+          <div className="date-filter-wrapper">
+            <select
+              id="timeframe-select"
+              className="header-select"
+              value={selectedDateFilter}
+              onChange={(e) => setSelectedDateFilter(e.target.value as any)}
+            >
+              <option value="Last 7 Days">Last 7 Days</option>
+              <option value="Last 30 Days">Last 30 Days</option>
+              <option value="Last 90 Days">Last 90 Days</option>
+              <option value="Last Year">Last Year</option>
+            </select>
+          </div>
+        )}
         
         {/* Static elements */}
         <div className="header-static">
-          <div className="notifications">
-            <span className="notification-badge">2</span>
+          <Link 
+            href="/admin/notifications" 
+            className="notifications"
+            aria-label="View Notifications"
+            title="Notifications"
+          >
+            {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6981 21.5547 10.4458 21.3031 10.27 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-          </div>
-          <div className="user-profile">
-            <div className="user-avatar">AD</div>
-            <div className="user-info">
-              <span className="user-name">Admin User</span>
-              <span className="user-region">North Region</span>
-            </div>
-          </div>
+          </Link>
+          <Link 
+            href="/admin/settings" 
+            className="user-avatar"
+            aria-label="Go to Settings - Admin Profile"
+            title="Settings"
+          >
+            {userInitials}
+          </Link>
         </div>
       </div>
     </header>

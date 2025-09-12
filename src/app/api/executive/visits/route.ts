@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { generateUniqueIssueId } from '@/lib/issueIdGenerator';
 
 // GET endpoint to fetch all visits of the authenticated executive (for visit history page)
 export async function GET(request: NextRequest) {
@@ -23,6 +24,23 @@ export async function GET(request: NextRequest) {
 
     if (!executive) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
+    }
+
+    // Generate ETag for cache validation (1-minute intervals)
+    const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
+    const etag = `"${currentTime}-${executive.id}-visits"`;
+    
+    // Check if client has cached version (conditional request)
+    const ifNoneMatch = request.headers.get('if-none-match');
+    if (ifNoneMatch === etag) {
+      // Return 304 Not Modified if ETag matches
+      return new NextResponse(null, { 
+        status: 304,
+        headers: {
+          'Cache-Control': 'public, max-age=60, s-maxage=60',
+          'ETag': etag
+        }
+      });
     }
 
     // Add pagination support
@@ -123,10 +141,19 @@ export async function GET(request: NextRequest) {
       updatedAt: visit.updatedAt
     }));
 
-    return NextResponse.json({
+    // Create response with cache headers
+    const response = NextResponse.json({
       success: true,
       data: transformedVisits
     });
+
+    // Add caching headers - cache for 1 minute
+    response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+    response.headers.set('CDN-Cache-Control', 'public, max-age=60');
+    response.headers.set('Vary', 'User-Agent');
+    response.headers.set('ETag', etag);
+    
+    return response;
 
   } catch (error) {
     console.error('Error fetching executive visits:', error);
@@ -215,8 +242,12 @@ export async function POST(request: NextRequest) {
     // Create issue if issuesReported is not null/empty
     let createdIssue = null;
     if (issuesReported && issuesReported.trim() !== '') {
+      // Generate unique 7-character issue ID
+      const uniqueIssueId = await generateUniqueIssueId();
+      
       createdIssue = await prisma.issue.create({
         data: {
+          id: uniqueIssueId,
           details: issuesReported.trim(),
           visitId: visit.id,
           status: 'Pending' // Default status

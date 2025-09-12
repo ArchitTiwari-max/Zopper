@@ -28,6 +28,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
+    // Generate ETag for cache validation (1-minute intervals)
+    const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
+    const etag = `"${currentTime}-${executive.id}"`;
+    
+    // Check if client has cached version (conditional request)
+    const ifNoneMatch = request.headers.get('if-none-match');
+    if (ifNoneMatch === etag) {
+      // Return 304 Not Modified if ETag matches
+      return new NextResponse(null, { 
+        status: 304,
+        headers: {
+          'Cache-Control': 'public, max-age=60, s-maxage=60',
+          'ETag': etag
+        }
+      });
+    }
+
     // Get all stores and all brands in parallel to avoid N+1 queries
     const [stores, allBrands] = await Promise.all([
       // Get all stores assigned to this executive
@@ -122,7 +139,8 @@ export async function GET(request: NextRequest) {
     const uniqueBrands = ['All Brands', ...Array.from(new Set(allStoreBrands))];
     const brands = uniqueBrands;
 
-    return NextResponse.json({
+    // Create response with cache headers for maximum performance
+    const response = NextResponse.json({
       success: true,
       data: {
         stores: transformedStores,
@@ -143,6 +161,16 @@ export async function GET(request: NextRequest) {
         }
       }
     });
+
+    // Add caching headers - cache for 1 minute
+    response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+    response.headers.set('CDN-Cache-Control', 'public, max-age=60');
+    response.headers.set('Vary', 'User-Agent');
+    
+    // Add ETag for cache validation
+    response.headers.set('ETag', etag);
+    
+    return response;
 
   } catch (error) {
     console.error('Error fetching stores:', error);

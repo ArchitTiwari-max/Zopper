@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { AssignedStatus } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,6 +29,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Generate ETag for cache validation (1-minute intervals)
+    const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
+    const etag = `"${currentTime}-${executive.id}-tasks"`;
+    
+    // Check if client has cached version (conditional request)
+    const ifNoneMatch = request.headers.get('if-none-match');
+    if (ifNoneMatch === etag) {
+      // Return 304 Not Modified if ETag matches
+      return new NextResponse(null, { 
+        status: 304,
+        headers: {
+          'Cache-Control': 'public, max-age=60, s-maxage=60',
+          'ETag': etag
+        }
+      });
+    }
+
     // Fetch assigned tasks for this executive with optimized query (select only needed fields)
     const assignedTasks = await prisma.assigned.findMany({
       where: {
@@ -37,6 +55,7 @@ export async function GET(request: NextRequest) {
         id: true,
         status: true,
         createdAt: true,
+        adminComment: true,
         issue: {
           select: {
             id: true,
@@ -70,7 +89,7 @@ export async function GET(request: NextRequest) {
 
     // Handle empty tasks case
     if (assignedTasks.length === 0) {
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
         data: {
           tasks: [],
@@ -79,6 +98,13 @@ export async function GET(request: NextRequest) {
           completedTasks: 0
         }
       });
+      
+      // Add caching headers - cache for 1 minute
+      response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+      response.headers.set('CDN-Cache-Control', 'public, max-age=60');
+      response.headers.set('ETag', etag);
+      
+      return response;
     }
 
     // Transform the data to match the frontend interface
@@ -100,6 +126,7 @@ export async function GET(request: NextRequest) {
           hasReport: !!assigned.assignReport,
           createdAt: assigned.createdAt,
           assignedAt: assigned.createdAt,
+          adminComment: assigned.adminComment,
           issueId: assigned.issue.id,
           visitId: assigned.issue.visit.id,
           storeId: assigned.issue.visit.store.id
@@ -130,15 +157,24 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    return NextResponse.json({
+    // Create response with cache headers
+    const response = NextResponse.json({
       success: true,
       data: {
         tasks: transformedTasks,
         totalTasks: transformedTasks.length,
-        pendingTasks: transformedTasks.filter(task => task.status === 'Assigned' || task.status === 'In_Progress').length,
-        completedTasks: transformedTasks.filter(task => task.status === 'Completed').length
+        pendingTasks: transformedTasks.filter(task => task.status === AssignedStatus.Assigned || task.status === AssignedStatus.In_Progress).length,
+        completedTasks: transformedTasks.filter(task => task.status === AssignedStatus.Completed).length
       }
     });
+
+    // Add caching headers - cache for 1 minute
+    response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+    response.headers.set('CDN-Cache-Control', 'public, max-age=60');
+    response.headers.set('Vary', 'User-Agent');
+    response.headers.set('ETag', etag);
+    
+    return response;
 
   } catch (error) {
     console.error('Fetch assigned tasks error:', error);

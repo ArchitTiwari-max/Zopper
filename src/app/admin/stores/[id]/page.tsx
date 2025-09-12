@@ -6,129 +6,6 @@ import { useParams } from 'next/navigation';
 import { StoreVisitReport, ExecutiveVisit, VisitFilters, VisitStatusOption } from '../../types';
 import './page.css';
 
-// Mock data for store visit report
-const getStoreVisitReport = (storeId: string): StoreVisitReport => {
-  return {
-    storeId: parseInt(storeId),
-    storeName: 'Lucky Electronics',
-    address: 'I-441, Govindpuram Ghaziabad, UP',
-    brands: ['Godrej', 'Havells', 'Philips'],
-    visits: [
-      {
-        id: 1,
-        executiveName: 'Ramesh Kumar',
-        executiveInitials: 'RK',
-        avatarColor: '#3B82F6',
-        personMet: 'Mr. Kumar',
-        role: 'Store Owner',
-        visitDate: '2025-08-01',
-        visitTime: '2025-08-01',
-        displayChecked: true,
-        photosCount: 2,
-        feedback: 'Asked for new standee',
-        issues: 'No flyer stock',
-        status: 'Pending Review',
-        reviewStatus: 'Pending Issue'
-      },
-      {
-        id: 2,
-        executiveName: 'Neha Sharma',
-        executiveInitials: 'NS',
-        avatarColor: '#EC4899',
-        personMet: 'Mr. Kumar',
-        role: 'Store Manager',
-        visitDate: '2025-08-15',
-        visitTime: '2025-07-30',
-        displayChecked: true,
-        photosCount: 1,
-        feedback: 'Happy with current setup',
-        issues: 'None',
-        status: 'Reviewed',
-        reviewStatus: 'Resolved'
-      },
-      {
-        id: 3,
-        executiveName: 'Sunita Yadav',
-        executiveInitials: 'SY',
-        avatarColor: '#8B5CF6',
-        personMet: 'Mr. Kumar',
-        role: 'Store Owner',
-        visitDate: '2025-08-08',
-        visitTime: '2025-07-28',
-        displayChecked: false,
-        photosCount: 2,
-        feedback: 'Need better product visibility',
-        issues: 'Display demo req',
-        status: 'Reviewed',
-        reviewStatus: 'Pending Issue'
-      },
-      {
-        id: 4,
-        executiveName: 'Rajesh Singh',
-        executiveInitials: 'RS',
-        avatarColor: '#F59E0B',
-        personMet: 'Mr. Kumar',
-        role: 'Store Owner',
-        visitDate: '2025-08-12',
-        visitTime: '2025-07-26',
-        displayChecked: true,
-        photosCount: 0,
-        feedback: 'Satisfied with service',
-        issues: 'Low stock shelf',
-        status: 'Pending Review',
-        reviewStatus: 'Pending Issue'
-      },
-      {
-        id: 5,
-        executiveName: 'Priya Gupta',
-        executiveInitials: 'PG',
-        avatarColor: '#10B981',
-        personMet: 'Mr. Kumar',
-        role: 'Store Owner',
-        visitDate: '2025-08-20',
-        visitTime: '2025-07-22',
-        displayChecked: true,
-        photosCount: 5,
-        feedback: 'Excellent product placement',
-        issues: 'WiFi connectivity issues',
-        status: 'Reviewed',
-        reviewStatus: 'Resolved'
-      },
-      {
-        id: 6,
-        executiveName: 'Amit Verma',
-        executiveInitials: 'AV',
-        avatarColor: '#EF4444',
-        personMet: 'Mr. Kumar',
-        role: 'Store Owner',
-        visitDate: '2025-08-08',
-        visitTime: '2025-07-20',
-        displayChecked: false,
-        photosCount: 1,
-        feedback: 'Needs promotional materials',
-        issues: 'Missing price tags',
-        status: 'Pending Review',
-        reviewStatus: 'Pending Issue'
-      },
-      {
-        id: 7,
-        executiveName: 'Kavita Sharma',
-        executiveInitials: 'KS',
-        avatarColor: '#8B5CF6',
-        personMet: 'Mr. Kumar',
-        role: 'Store Owner',
-        visitDate: '2025-08-18',
-        visitTime: '2025-07-18',
-        displayChecked: true,
-        photosCount: 2,
-        feedback: 'Good customer response',
-        issues: 'WiFi connectivity issues',
-        status: 'Reviewed',
-        reviewStatus: 'Resolved'
-      }
-    ]
-  };
-};
 
 const StoreVisitReportPage: React.FC = () => {
   const params = useParams();
@@ -146,13 +23,11 @@ const StoreVisitReportPage: React.FC = () => {
   useEffect(() => {
     if (storeId) {
       setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        const data = getStoreVisitReport(storeId);
-        setStoreData(data);
-        setFilteredVisits(data.visits);
-        setIsLoading(false);
-      }, 500);
+      // TODO: Replace with actual API call
+      // Example: fetchStoreVisitReport(storeId)
+      setStoreData(null);
+      setFilteredVisits([]);
+      setIsLoading(false);
     }
   }, [storeId]);
 

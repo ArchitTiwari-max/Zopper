@@ -1,0 +1,473 @@
+/* View Report Modal Styles */
+.view-report-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+}
+
+.view-report-modal {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Modal Header */
+.view-report-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px 12px 0 0;
+}
+
+.view-report-modal .header-content {
+  flex: 1;
+}
+
+.view-report-modal .modal-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.75rem 0;
+}
+
+.view-report-modal .report-meta {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.view-report-modal .executive-name,
+.view-report-modal .store-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.view-report-modal .executive-name svg,
+.view-report-modal .store-name svg {
+  color: #3b82f6;
+}
+
+.view-report-modal .close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  color: #64748b;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-report-modal .close-btn:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+/* Modal Content */
+.view-report-modal .modal-content {
+  padding: 2rem;
+}
+
+/* Loading and Error States */
+.view-report-modal .loading-state,
+.view-report-modal .error-state,
+.view-report-modal .no-data-state {
+  text-align: center;
+  padding: 3rem;
+}
+
+.view-report-modal .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-left-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.view-report-modal .error-message {
+  color: #ef4444;
+  margin-bottom: 1rem;
+}
+
+.view-report-modal .retry-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.view-report-modal .retry-btn:hover {
+  background: #2563eb;
+}
+
+/* Report Content */
+.view-report-modal .report-content {
+  space-y: 2rem;
+}
+
+.view-report-modal .report-header {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.view-report-modal .report-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.view-report-modal .info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.view-report-modal .info-item svg {
+  color: #3b82f6;
+}
+
+.view-report-modal .status-badge {
+  background: #10b981;
+  color: white;
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.view-report-modal .status-badge.completed {
+  background: #10b981;
+}
+
+/* Report Sections */
+.view-report-modal .report-section {
+  margin-bottom: 2rem;
+}
+
+.view-report-modal .section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.view-report-modal .section-title svg {
+  color: #3b82f6;
+}
+
+/* Person Met Info */
+.view-report-modal .person-met-info {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.view-report-modal .person-detail {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.view-report-modal .person-detail label {
+  font-weight: 600;
+  color: #374151;
+  min-width: 100px;
+}
+
+.view-report-modal .person-detail span {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+/* Remarks Content */
+.view-report-modal .remarks-content {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+}
+
+.view-report-modal .remarks-content p {
+  color: #1e293b;
+  line-height: 1.6;
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Photos Grid */
+.view-report-modal .photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.view-report-modal .photo-thumbnail {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.view-report-modal .photo-thumbnail:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.view-report-modal .photo-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.view-report-modal .photo-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.view-report-modal .photo-thumbnail:hover .photo-overlay {
+  opacity: 1;
+}
+
+.view-report-modal .photo-overlay span {
+  color: white;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.8);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+/* Issue Details */
+.view-report-modal .issue-details {
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.view-report-modal .issue-details p {
+  color: #92400e;
+  margin: 0;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+/* Photo Viewer Modal */
+.photo-viewer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+.photo-viewer-modal {
+  width: 90%;
+  height: 90%;
+  max-width: 1200px;
+  max-height: 800px;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.photo-viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: #1e293b;
+  color: white;
+}
+
+.photo-counter {
+  font-weight: 500;
+}
+
+.photo-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.photo-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.photo-viewer-content {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+}
+
+.photo-viewer-content img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.photo-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  padding: 1rem 1.5rem;
+  font-size: 2rem;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  z-index: 1;
+}
+
+.photo-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.photo-nav-btn.prev {
+  left: 2rem;
+}
+
+.photo-nav-btn.next {
+  right: 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .view-report-modal {
+    width: 95%;
+    margin: 1rem;
+    max-height: 95vh;
+  }
+
+  .view-report-modal .modal-header {
+    padding: 1.5rem;
+  }
+
+  .view-report-modal .modal-title {
+    font-size: 1.5rem;
+  }
+
+  .view-report-modal .modal-content {
+    padding: 1.5rem;
+  }
+
+  .view-report-modal .report-meta {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .view-report-modal .photos-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .photo-nav-btn {
+    padding: 0.75rem 1rem;
+    font-size: 1.5rem;
+  }
+
+  .photo-nav-btn.prev {
+    left: 1rem;
+  }
+
+  .photo-nav-btn.next {
+    right: 1rem;
+  }
+
+  .view-report-modal .person-detail {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .view-report-modal .person-detail label {
+    min-width: auto;
+  }
+}

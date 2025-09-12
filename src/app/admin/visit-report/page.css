@@ -1,0 +1,566 @@
+/* Visit Report Page Styles */
+
+.visit-report-overview {
+  padding: 1rem;
+  background-color: #f8fafc;
+  min-height: calc(100vh - 80px);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Filters Section */
+.filters-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.filters-header {
+  margin-bottom: 1rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease-in-out;
+  padding: 0.5rem;
+  border-radius: 6px;
+  margin: -0.5rem -0.5rem 1rem -0.5rem;
+}
+
+.filters-header:hover {
+  background-color: #f1f5f9;
+}
+
+.filters-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  cursor: pointer;
+  transition: color 0.15s ease-in-out;
+}
+
+.filters-header:hover h3 {
+  color: #0f172a;
+}
+
+/* Filter content transition */
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: white;
+  color: #374151;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Visit Reports Table */
+.visits-table-section {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  overflow-x: auto;
+  margin-bottom: 2rem;
+  width: 100%;
+  position: relative;
+}
+
+.visits-table-section::-webkit-scrollbar {
+  height: 8px;
+}
+
+.visits-table-section::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.visits-table-section::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.visits-table-section::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.visits-table {
+  width: 100%;
+  min-width: 1050px;
+}
+
+.visits-table .table-header {
+  background: #6b7280;
+  display: grid;
+  grid-template-columns: 1.6fr 1.5fr 1.2fr 1.1fr 1.3fr 1.5fr 1.8fr;
+  gap: 2rem;
+  padding: 1rem;
+  width: 100%;
+}
+
+.visits-table .header-cell {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.visits-table .table-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.visits-table .table-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1.5fr 1.2fr 1.1fr 1.3fr 1.5fr 1.8fr;
+  gap: 2rem;
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  align-items: center;
+  transition: background-color 0.15s ease-in-out;
+  width: 100%;
+}
+
+.visits-table .table-row:hover {
+  background-color: #f8fafc;
+}
+
+.visits-table .table-row:last-child {
+  border-bottom: none;
+}
+
+.visits-table .cell {
+  font-size: 0.875rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+/* Executive Cell */
+.executive-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.executive-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.executive-name {
+  font-weight: 500;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Store Name Cell */
+.store-name-cell {
+  display: flex;
+  align-items: center;
+}
+
+.store-name-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease-in-out;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  display: block;
+}
+
+.store-name-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* Partner Brands Cell */
+.partner-brands-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.brand-tag {
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  text-align: center;
+}
+
+/* Date Cell */
+.date-cell {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.issue-date {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Status Cell */
+.status-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+}
+
+.status-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Visit Status Badges */
+.visit-status-pending {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.visit-status-reviewed {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+/* Issue Status Badges */
+.issue-status-pending {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.issue-status-assigned {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.issue-status-resolved {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+/* Legacy status badges for backwards compatibility */
+.status-pending-review {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.status-reviewed {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.status-pending-issue {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.status-resolved {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+/* Visit Date Cell */
+.visit-date {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Actions Cell */
+.actions-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.action-buttons-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.view-details-btn,
+.view-issue-btn,
+.mark-reviewed-btn {
+  padding: 0.25rem 0.75rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-details-btn {
+  background: transparent;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+}
+
+.view-details-btn:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+.view-issue-btn {
+  background: #f59e0b;
+  color: white;
+}
+
+.view-issue-btn:hover {
+  background: #d97706;
+  text-decoration: none;
+}
+
+.mark-reviewed-btn {
+  background: #10b981;
+  color: white;
+}
+
+.mark-reviewed-btn:hover {
+  background: #059669;
+}
+
+/* Issues Cell - From store[id] page */
+.issues-cell {
+  display: flex;
+  align-items: center;
+}
+
+.issues-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.issue-link-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.issue-icon {
+  font-size: 1rem;
+}
+
+.issue-link {
+  color: #ef4444;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease-in-out;
+}
+
+.issue-link:hover {
+  color: #dc2626;
+  text-decoration: underline;
+}
+
+.has-issues {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.no-issues {
+  color: #10b981;
+  font-weight: 500;
+}
+
+/* No Data Message */
+.no-data-message {
+  padding: 3rem;
+  text-align: center;
+  color: #6b7280;
+  background: #f9fafb;
+  border-top: 1px solid #f1f5f9;
+}
+
+.no-data-message p {
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .visit-report-overview {
+    padding: 0.5rem;
+  }
+  
+  .visits-table-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .visits-table .table-header,
+  .visits-table .table-row {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .filters-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  
+  .visits-table-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 768px) {
+  .visit-report-overview {
+    padding: 1rem;
+  }
+  
+  .filters-section {
+    padding: 1rem;
+  }
+  
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .visits-table .table-header {
+    display: none;
+  }
+  
+  .visits-table .table-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    background: #f9fafb;
+  }
+  
+  .visits-table .cell {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  .visits-table .cell:last-child {
+    border-bottom: none;
+  }
+  
+  .visits-table .cell:before {
+    content: attr(data-label) ': ';
+    font-weight: 600;
+    color: #374151;
+    display: inline-block;
+    width: 120px;
+  }
+  
+  .action-buttons-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .view-details-btn,
+  .view-issue-btn,
+  .mark-reviewed-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .visit-report-title h2 {
+    font-size: 1.5rem;
+  }
+  
+  .executive-cell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .partner-brands-cell {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

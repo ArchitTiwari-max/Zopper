@@ -31,6 +31,24 @@ export async function GET(request: NextRequest) {
     // Get date period from query params
     const url = new URL(request.url);
     const period = url.searchParams.get('period') || 'Last 30 Days';
+    
+    // Generate cache key for ETag validation
+    const cacheKey = `dashboard-${executive.id}-${period}`;
+    const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000); // Round to 1-minute intervals
+    const etag = `"${currentTime}-${executive.id}-${period}"`;
+    
+    // Check if client has cached version (conditional request)
+    const ifNoneMatch = request.headers.get('if-none-match');
+    if (ifNoneMatch === etag) {
+      // Return 304 Not Modified if ETag matches
+      return new NextResponse(null, { 
+        status: 304,
+        headers: {
+          'Cache-Control': 'public, max-age=60, s-maxage=60',
+          'ETag': etag
+        }
+      });
+    }
 
     // Calculate date range based on period
     const now = new Date();
@@ -143,7 +161,8 @@ export async function GET(request: NextRequest) {
       
     const totalVisits = visits.length;
 
-    return NextResponse.json({
+    // Create response with cache headers for maximum performance
+    const response = NextResponse.json({
       success: true,
       data: {
         brandVisits: brandVisitCounts,
@@ -156,6 +175,16 @@ export async function GET(request: NextRequest) {
         period: period
       }
     });
+
+    // Add caching headers - cache for 1 minute
+    response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+    response.headers.set('CDN-Cache-Control', 'public, max-age=60');
+    response.headers.set('Vary', 'User-Agent');
+    
+    // Add ETag for cache validation (use consistent etag from earlier)
+    response.headers.set('ETag', etag);
+    
+    return response;
 
   } catch (error) {
     console.error('Fetch dashboard stats error:', error);

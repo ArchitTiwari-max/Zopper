@@ -33,6 +33,125 @@ body {
   }
 }
 
+/* Enhanced Loading States for Admin Section */
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-spinner-large {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.table-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  margin: 1rem 0;
+  min-height: 300px;
+}
+
+.filter-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+  background: #f3f4f6;
+  border-radius: 6px;
+  margin: 0.5rem 0;
+  min-height: 80px;
+}
+
+.loading-text {
+  margin-left: 0.75rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.skeleton-row {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.skeleton-cell {
+  height: 1.25rem;
+  border-radius: 4px;
+}
+
+.skeleton-cell:nth-child(1) { flex: 2; }
+.skeleton-cell:nth-child(2) { flex: 1.5; }
+.skeleton-cell:nth-child(3) { flex: 1; }
+.skeleton-cell:nth-child(4) { flex: 1; }
+.skeleton-cell:nth-child(5) { flex: 1; }
+.skeleton-cell:nth-child(6) { flex: 1.2; }
+
+.table-skeleton {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.skeleton-header {
+  background: #f9fafb;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  gap: 1rem;
+}
+
+.skeleton-header-cell {
+  height: 1rem;
+  border-radius: 4px;
+  background: #d1d5db;
+}
+
+.filter-skeleton {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.filter-skeleton-item {
+  flex: 1;
+  height: 2.5rem;
+  border-radius: 4px;
+}
+
 /* Utility Classes */
 .mr-2 {
   margin-right: 8px;

@@ -4,347 +4,188 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { IssueData, IssueComment } from '../../types';
+import { Loader2 } from 'lucide-react';
+import ViewReportModal from './components/ViewReportModal';
 import './page.css';
 
-// Mock data for issues
-const mockIssueData: Record<number, IssueData> = {
-  1322: {
-    id: 1322,
-    issueId: '#Issue_Id 1322',
-    storeName: 'Lucky Electronics',
-    storeId: 2,
-    location: 'I-441, Govindpuram Ghaziabad, UP',
-    brandAssociated: 'Philips',
-    city: 'Ghaziabad',
-    dateReported: '2025-08-20',
-    reportedBy: 'Priya Gupta',
-    reportedByRole: 'Executive',
-    status: 'Pending',
-    priority: 'High',
-    category: 'Technical',
-    description: 'WiFi connectivity issues affecting digital promotional displays. Customers unable to access interactive content and promotional offers. Network stability issues causing intermittent disconnections throughout the day.',
-    assignmentHistory: [
-      {
-        id: 1,
-        executiveId: 1,
-        executiveName: 'Rajesh Kumar',
-        executiveInitials: 'RK',
-        dateAssigned: '2025-08-21',
-        adminComment: 'Investigate network infrastructure and coordinate with IT team',
-        status: 'Assigned',
-        assignedBy: 'Admin'
-      }
-    ],
-    comments: [
-      {
-        id: 1,
-        authorId: 1,
-        authorName: 'Admin User',
-        authorRole: 'Admin',
-        comment: 'Priority issue - WiFi connectivity affecting customer experience',
-        createdAt: '2025-08-21T09:00:00Z'
-      },
-      {
-        id: 2,
-        authorId: 3,
-        authorName: 'Priya Gupta',
-        authorRole: 'Executive',
-        comment: 'Store owner reports frequent disconnections during peak hours',
-        createdAt: '2025-08-20T15:30:00Z'
-      }
-    ],
-    relatedVisitId: 5,
-    visitContext: {
-      visitDate: '2025-08-20',
-      executiveName: 'Priya Gupta',
-      executiveInitials: 'PG',
-      personMet: 'Mr. Kumar',
-      personRole: 'Store Owner',
-      feedback: 'Excellent product placement',
-      photosCount: 5,
-      displayChecked: true
-    },
-    createdAt: '2025-08-20T14:00:00Z',
-    updatedAt: '2025-08-21T09:00:00Z'
-  },
-  1323: {
-    id: 1323,
-    issueId: '#Issue_Id 1323',
-    storeName: 'Lucky Electronics',
-    storeId: 2,
-    location: 'I-441, Govindpuram Ghaziabad, UP',
-    brandAssociated: 'Godrej',
-    city: 'Ghaziabad',
-    dateReported: '2025-08-01',
-    reportedBy: 'Ramesh Kumar',
-    reportedByRole: 'Executive',
-    status: 'Pending',
-    priority: 'Medium',
-    category: 'Inventory',
-    description: 'Store is completely out of promotional flyers and brochures for new product launches. Customer inquiries about product features cannot be properly addressed without marketing materials. Urgent restocking required.',
-    assignmentHistory: [
-      {
-        id: 1,
-        executiveId: 2,
-        executiveName: 'Neha Sharma',
-        executiveInitials: 'NS',
-        dateAssigned: '2025-08-02',
-        adminComment: 'Coordinate with marketing team for flyer restocking',
-        status: 'In Progress',
-        assignedBy: 'Admin'
-      }
-    ],
-    comments: [
-      {
-        id: 1,
-        authorId: 1,
-        authorName: 'Admin User',
-        authorRole: 'Admin',
-        comment: 'Coordinating with marketing department for immediate flyer replenishment',
-        createdAt: '2025-08-02T10:00:00Z'
-      }
-    ],
-    relatedVisitId: 1,
-    visitContext: {
-      visitDate: '2025-08-01',
-      executiveName: 'Ramesh Kumar',
-      executiveInitials: 'RK',
-      personMet: 'Mr. Kumar',
-      personRole: 'Store Owner',
-      feedback: 'Asked for new standee',
-      photosCount: 2,
-      displayChecked: true
-    },
-    createdAt: '2025-08-01T16:00:00Z',
-    updatedAt: '2025-08-02T10:00:00Z'
-  },
-  1324: {
-    id: 1324,
-    issueId: '#Issue_Id 1324',
-    storeName: 'Lucky Electronics',
-    storeId: 2,
-    location: 'I-441, Govindpuram Ghaziabad, UP',
-    brandAssociated: 'Havells',
-    city: 'Ghaziabad',
-    dateReported: '2025-08-08',
-    reportedBy: 'Sunita Yadav',
-    reportedByRole: 'Executive',
-    status: 'Pending',
-    priority: 'High',
-    category: 'Display',
-    description: 'Customer requesting live product demonstration for new electrical appliances. Current display setup does not allow for proper product showcase. Need to arrange demo unit installation and training for store staff.',
-    assignmentHistory: [
-      {
-        id: 1,
-        executiveId: 3,
-        executiveName: 'Priya Sharma',
-        executiveInitials: 'PS',
-        dateAssigned: '2025-08-09',
-        adminComment: 'Arrange demo unit setup and staff training session',
-        status: 'Assigned',
-        assignedBy: 'Admin'
-      }
-    ],
-    comments: [
-      {
-        id: 1,
-        authorId: 1,
-        authorName: 'Admin User',
-        authorRole: 'Admin',
-        comment: 'Demo unit request approved. Coordinating with product team.',
-        createdAt: '2025-08-09T11:15:00Z'
-      }
-    ],
-    relatedVisitId: 3,
-    visitContext: {
-      visitDate: '2025-08-08',
-      executiveName: 'Sunita Yadav',
-      executiveInitials: 'SY',
-      personMet: 'Mr. Kumar',
-      personRole: 'Store Owner',
-      feedback: 'Need better product visibility',
-      photosCount: 2,
-      displayChecked: false
-    },
-    createdAt: '2025-08-08T17:30:00Z',
-    updatedAt: '2025-08-09T11:15:00Z'
-  },
-  1325: {
-    id: 1325,
-    issueId: '#Issue_Id 1325',
-    storeName: 'Lucky Electronics',
-    storeId: 2,
-    location: 'I-441, Govindpuram Ghaziabad, UP',
-    brandAssociated: 'Godrej',
-    city: 'Ghaziabad',
-    dateReported: '2025-08-12',
-    reportedBy: 'Rajesh Singh',
-    reportedByRole: 'Executive',
-    status: 'Pending',
-    priority: 'Medium',
-    category: 'Inventory',
-    description: 'Product shelf positioned too low for customer visibility. Popular items are not easily accessible to customers, affecting sales potential. Shelf reorganization and height adjustment required for better product exposure.',
-    assignmentHistory: [
-      {
-        id: 1,
-        executiveId: 5,
-        executiveName: 'Amit Verma',
-        executiveInitials: 'AV',
-        dateAssigned: '2025-08-13',
-        adminComment: 'Assess current shelf layout and recommend improvements',
-        status: 'Assigned',
-        assignedBy: 'Admin'
-      }
-    ],
-    comments: [
-      {
-        id: 1,
-        authorId: 1,
-        authorName: 'Admin User',
-        authorRole: 'Admin',
-        comment: 'Shelf optimization needed to improve product visibility and accessibility',
-        createdAt: '2025-08-13T09:45:00Z'
-      }
-    ],
-    relatedVisitId: 4,
-    visitContext: {
-      visitDate: '2025-08-12',
-      executiveName: 'Rajesh Singh',
-      executiveInitials: 'RS',
-      personMet: 'Mr. Kumar',
-      personRole: 'Store Owner',
-      feedback: 'Satisfied with service',
-      photosCount: 0,
-      displayChecked: true
-    },
-    createdAt: '2025-08-12T18:00:00Z',
-    updatedAt: '2025-08-13T09:45:00Z'
-  },
-  1326: {
-    id: 1326,
-    issueId: '#Issue_Id 1326',
-    storeName: 'Lucky Electronics',
-    storeId: 2,
-    location: 'I-441, Govindpuram Ghaziabad, UP',
-    brandAssociated: 'Philips',
-    city: 'Ghaziabad',
-    dateReported: '2025-08-08',
-    reportedBy: 'Amit Verma',
-    reportedByRole: 'Executive',
-    status: 'Pending',
-    priority: 'Medium',
-    category: 'Display',
-    description: 'Multiple products displayed without proper price tags or product information labels. Customers unable to identify prices and specifications, leading to confusion and potential sales loss. Complete price tag update required.',
-    assignmentHistory: [
-      {
-        id: 1,
-        executiveId: 4,
-        executiveName: 'Sunita Yadav',
-        executiveInitials: 'SY',
-        dateAssigned: '2025-08-09',
-        adminComment: 'Provide updated price tags and ensure proper labeling',
-        status: 'In Progress',
-        assignedBy: 'Admin'
-      }
-    ],
-    comments: [
-      {
-        id: 1,
-        authorId: 1,
-        authorName: 'Admin User',
-        authorRole: 'Admin',
-        comment: 'Updated price list being prepared. Installation scheduled for next visit.',
-        createdAt: '2025-08-09T14:20:00Z'
-      }
-    ],
-    relatedVisitId: 6,
-    visitContext: {
-      visitDate: '2025-08-08',
-      executiveName: 'Amit Verma',
-      executiveInitials: 'AV',
-      personMet: 'Mr. Kumar',
-      personRole: 'Store Owner',
-      feedback: 'Needs promotional materials',
-      photosCount: 1,
-      displayChecked: false
-    },
-    createdAt: '2025-08-08T19:15:00Z',
-    updatedAt: '2025-08-09T14:20:00Z'
-  }
-};
 
-// Mock executive data for assignment
-const mockExecutives = [
-  { id: 1, name: 'Rajesh Kumar', initials: 'RK' },
-  { id: 2, name: 'Neha Sharma', initials: 'NS' },
-  { id: 3, name: 'Priya Singh', initials: 'PS' },
-  { id: 4, name: 'Sunita Yadav', initials: 'SY' },
-  { id: 5, name: 'Ankit Verma', initials: 'AV' }
-];
+interface Executive {
+  id: string;
+  name: string;
+  region?: string;
+}
 
 const IssueDetailPage: React.FC = () => {
   const params = useParams();
-  const issueId = parseInt(params.id as string);
+  const issueId = params.id as string;
   
   const [issueData, setIssueData] = useState<IssueData | null>(null);
+  const [executives, setExecutives] = useState<Executive[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState<string>('');
   const [selectedExecutive, setSelectedExecutive] = useState<string>('');
   const [showStoreDetails, setShowStoreDetails] = useState<boolean>(false);
   const [showVisitContext, setShowVisitContext] = useState<boolean>(false);
+  const [isAssigning, setIsAssigning] = useState<boolean>(false);
+  const [isMarkingSolved, setIsMarkingSolved] = useState<boolean>(false);
+  const [viewReportModal, setViewReportModal] = useState<{
+    isOpen: boolean;
+    assignmentId: string;
+    executiveName: string;
+  }>({ isOpen: false, assignmentId: '', executiveName: '' });
 
-  // Load issue data
+  // Load issue data and executives from API
   useEffect(() => {
-    setIsLoading(true);
-    setTimeout(() => {
-      const data = mockIssueData[issueId];
-      setIssueData(data || null);
-      setIsLoading(false);
-    }, 500);
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Fetch issue data and executives in parallel
+        const [issueResponse, executivesResponse] = await Promise.all([
+          fetch(`/api/admin/issues/${issueId}`),
+          fetch('/api/admin/executives/filters')
+        ]);
+        
+        if (!issueResponse.ok) {
+          throw new Error(`Failed to fetch issue: ${issueResponse.status}`);
+        }
+        
+        if (!executivesResponse.ok) {
+          throw new Error(`Failed to fetch executives: ${executivesResponse.status}`);
+        }
+        
+        const [issueData, executivesData] = await Promise.all([
+          issueResponse.json(),
+          executivesResponse.json()
+        ]);
+        
+        setIssueData(issueData);
+        setExecutives(executivesData.executives || []);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (issueId) {
+      fetchData();
+    }
   }, [issueId]);
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!issueData || !newComment.trim()) return;
 
-    const comment: IssueComment = {
-      id: issueData.comments.length + 1,
-      authorId: 0,
-      authorName: 'Admin User',
-      authorRole: 'Admin',
-      comment: newComment.trim(),
-      createdAt: new Date().toISOString()
-    };
+    try {
+      const response = await fetch(`/api/admin/issues/${issueId}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          comment: newComment.trim()
+        })
+      });
 
-    setIssueData({
-      ...issueData,
-      comments: [...issueData.comments, comment],
-      updatedAt: new Date().toISOString()
-    });
-    
-    setNewComment('');
+      if (!response.ok) {
+        throw new Error('Failed to add comment');
+      }
+
+      const newCommentData = await response.json();
+
+      // Update the issue data with the new comment
+      setIssueData({
+        ...issueData,
+        comments: [...issueData.comments, newCommentData],
+        updatedAt: new Date().toISOString()
+      });
+      
+      setNewComment('');
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      alert('Failed to add comment. Please try again.');
+    }
   };
 
-  const handleSendTask = () => {
-    if (!issueData || !selectedExecutive) return;
+  const handleSendTask = async () => {
+    if (!issueData || !selectedExecutive || isAssigning) return;
 
-    const executive = mockExecutives.find(exec => exec.id.toString() === selectedExecutive);
+    const executive = executives.find(exec => exec.id === selectedExecutive);
     if (!executive) return;
 
-    console.log(`Sending task to ${executive.name} for issue ${issueData.issueId}`);
+    setIsAssigning(true);
+    try {
+      const response = await fetch(`/api/admin/issues/${issueId}/assign`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          executiveId: selectedExecutive,
+          adminComment: newComment.trim() || `Task assigned to ${executive.name}`
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to assign task');
+      }
+
+      const result = await response.json();
+
+      // Update the issue data with the new assignment
+      setIssueData({
+        ...issueData,
+        status: 'Assigned',
+        assignmentHistory: [...issueData.assignmentHistory, result.assignment],
+        updatedAt: new Date().toISOString()
+      });
+      
+      setSelectedExecutive('');
+      setNewComment('');
+      alert(`Task successfully assigned to ${executive.name}`);
+    } catch (error) {
+      console.error('Error assigning task:', error);
+      alert('Failed to assign task. Please try again.');
+    } finally {
+      setIsAssigning(false);
+    }
   };
 
-  const handleMarkSolved = () => {
-    if (!issueData) return;
+  const handleMarkSolved = async () => {
+    if (!issueData || isMarkingSolved) return;
 
-    setIssueData({
-      ...issueData,
-      status: 'Resolved',
-      resolvedBy: 'Admin User',
-      resolvedDate: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
+    setIsMarkingSolved(true);
+    try {
+      const response = await fetch(`/api/admin/issues/${issueId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'Resolved',
+          resolution: 'Issue resolved by admin'
+        })
+      });
 
-    console.log(`Issue ${issueData.issueId} marked as resolved`);
+      if (!response.ok) {
+        throw new Error('Failed to mark issue as resolved');
+      }
+
+      const result = await response.json();
+
+      // Update the issue data with the updated issue
+      setIssueData(result.issue);
+      
+      alert(`Issue ${issueData.issueId} marked as resolved`);
+    } catch (error) {
+      console.error('Error marking issue as resolved:', error);
+      alert('Failed to mark issue as resolved. Please try again.');
+    } finally {
+      setIsMarkingSolved(false);
+    }
   };
 
   const handleExportReport = () => {
@@ -352,15 +193,18 @@ const IssueDetailPage: React.FC = () => {
     console.log(`Exporting report for issue ${issueData.issueId}`);
   };
 
-  const getPriorityColor = (priority: string): string => {
-    const colors: Record<string, string> = {
-      'Low': '#10b981',
-      'Medium': '#f59e0b',
-      'High': '#ef4444',
-      'Critical': '#dc2626'
-    };
-    return colors[priority] || '#64748b';
+  const handleViewReport = (assignmentId: string, executiveName: string) => {
+    setViewReportModal({
+      isOpen: true,
+      assignmentId,
+      executiveName
+    });
   };
+
+  const handleCloseViewReport = () => {
+    setViewReportModal({ isOpen: false, assignmentId: '', executiveName: '' });
+  };
+
 
   const getStatusColor = (status: string): string => {
     const colors: Record<string, string> = {
@@ -393,6 +237,16 @@ const IssueDetailPage: React.FC = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="issue-management-overview">
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+          <div style={{ fontSize: '1.2rem', color: '#ef4444' }}>Error: {error}</div>
+        </div>
+      </div>
+    );
+  }
+
   if (!issueData) {
     return (
       <div className="issue-management-overview">
@@ -406,7 +260,7 @@ const IssueDetailPage: React.FC = () => {
   return (
     <div className="issue-management-overview">
       {/* Header Section */}
-      {/* <div className="issue-management-header">
+      <div className="issue-management-header">
         <div className="back-navigation">
           <Link href="/admin/issues" className="back-link">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -415,7 +269,7 @@ const IssueDetailPage: React.FC = () => {
             Back to Issues
           </Link>
         </div>
-      </div> */}
+      </div>
 
       <div className="issue-content-grid">
         {/* Left Side - Issue Details */}
@@ -545,7 +399,11 @@ const IssueDetailPage: React.FC = () => {
                     </div>
                     <div className="cell">
                       {assignment.status === 'Completed' ? (
-                        <button className="view-report-btn" type="button">
+                        <button 
+                          className="view-report-btn" 
+                          type="button"
+                          onClick={() => handleViewReport(assignment.id, assignment.executiveName)}
+                        >
                           View Report
                         </button>
                       ) : (
@@ -592,7 +450,7 @@ const IssueDetailPage: React.FC = () => {
                 className="executive-select"
               >
                 <option value="">Choose an executive...</option>
-                {mockExecutives.map(executive => (
+                {executives.map(executive => (
                   <option key={executive.id} value={executive.id}>
                     {executive.name}
                   </option>
@@ -605,17 +463,32 @@ const IssueDetailPage: React.FC = () => {
               <button 
                 className="send-task-btn"
                 onClick={handleSendTask}
-                disabled={!selectedExecutive}
+                disabled={!selectedExecutive || isAssigning || isMarkingSolved}
                 type="button"
               >
-                Send Task
+                {isAssigning ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                    Sending Task...
+                  </>
+                ) : (
+                  'Send Task'
+                )}
               </button>
               <button 
                 className="mark-solved-btn"
                 onClick={handleMarkSolved}
+                disabled={isAssigning || isMarkingSolved}
                 type="button"
               >
-                Mark as Solved
+                {isMarkingSolved ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                    Marking as Solved...
+                  </>
+                ) : (
+                  'Mark as Solved'
+                )}
               </button>
             </div>
           </div>
@@ -639,6 +512,17 @@ const IssueDetailPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* View Report Modal */}
+      {viewReportModal.isOpen && (
+        <ViewReportModal
+          isOpen={viewReportModal.isOpen}
+          onClose={handleCloseViewReport}
+          assignmentId={viewReportModal.assignmentId}
+          executiveName={viewReportModal.executiveName}
+          storeName={issueData?.storeName || ''}
+        />
+      )}
     </div>
   );
 };

@@ -459,7 +459,7 @@ const ExecutiveFormContent: React.FC = () => {
           
           <div className="form-group">
             <label className="form-label">
-              People Met <span className="required">*</span>
+              Contact Person <span className="required">*</span>
             </label>
             <div className="people-input-container">
               <div className="person-input-wrapper">
@@ -723,7 +723,7 @@ const ExecutiveFormContent: React.FC = () => {
                   )}
                   {visit.personMet && visit.personMet.length > 0 && (
                     <div className="visit-people">
-                      <strong>People Met:</strong>
+                      <strong>Contact Person:</strong>
                       {visit.personMet.map((person, index) => (
                         <span key={index} className="person-met">
                           {person.name} ({person.designation})

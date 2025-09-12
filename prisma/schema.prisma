@@ -37,6 +37,7 @@ model Executive {
   region    String?
   visits    Visit[]
   assigned  Assigned[]
+  visitPlans VisitPlan[]
   userId String @unique 
   user   User   @relation(fields: [userId], references: [id])
   assignedStoreIds String[] 
@@ -94,6 +95,7 @@ model Visit {
   brandIds String[] 
 
   issues   Issue[]   // One Visit can have multiple Issues or none
+  notifications Notification[] // Notifications related to this visit
   
   // Critical performance indexes based on actual queries
   @@index([executiveId, createdAt])
@@ -107,7 +109,7 @@ enum IssueStatus {
 }
 
 model Issue {
-  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  id        String      @id @map("_id")
   details   String
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
@@ -118,6 +120,7 @@ model Issue {
   visit     Visit       @relation(fields: [visitId], references: [id])
 
   assigned  Assigned[]  // One Issue can have multiple Assigned records
+  notifications Notification[] // Notifications related to this issue
   
   // Critical performance indexes based on actual queries
   @@index([visitId])
@@ -136,7 +139,7 @@ model Assigned {
   status       AssignedStatus @default(Assigned)
 
   // relation to Issue
-  issueId String @db.ObjectId
+  issueId String
   issue   Issue  @relation(fields: [issueId], references: [id])
 
   // relation to Executive
@@ -145,6 +148,7 @@ model Assigned {
 
   // relation to AssignReport
   assignReport AssignReport?
+  notifications Notification[] // Notifications related to this assignment
   
   // Critical performance indexes based on actual queries
   @@index([executiveId, status])
@@ -165,6 +169,39 @@ model AssignReport {
   @@map("AssignReport")
 }
 
+//
+// Visit Plan (PJP)
+//
+
+enum VisitPlanStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+model VisitPlan {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  executiveId   String
+  executive     Executive @relation(fields: [executiveId], references: [id])
+  storeIds      String[]
+  storesSnapshot Json?    // Optional snapshot of store details at submission time
+  status        VisitPlanStatus @default(SUBMITTED)
+  submittedAt   DateTime @default(now())
+  reviewedAt    DateTime?
+  reviewNote    String?
+  
+  // Admin creation support
+  createdByAdminId String?  // Admin ID who created this plan (null for executive-created)
+  adminComment     String?  // Comment from admin when creating the plan
+  createdByRole    Role @default(EXECUTIVE) // ADMIN or EXECUTIVE
+
+  // Notifications related to this plan
+  notifications Notification[]
+
+  @@index([executiveId, submittedAt])
+  @@index([createdByAdminId, submittedAt])
+  @@map("VisitPlan")
+}
 
 model OTP {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -174,4 +211,79 @@ model OTP {
   createdAt DateTime @default(now())
   
   @@map("Otp")
+}
+
+//
+// Notification System
+//
+
+enum NotificationType {
+  VISIT_SUBMITTED         // Executive submits a visit -> Admin
+  VISIT_REVIEWED          // Admin reviews a visit -> Executive  
+  ISSUE_REPORTED          // Executive reports an issue -> Admin
+  ISSUE_ASSIGNED          // Admin assigns issue -> Executive
+  ISSUE_STATUS_UPDATED    // Executive updates issue status -> Admin
+  ISSUE_RESOLVED          // Executive resolves issue -> Admin
+  ADMIN_COMMENT_ADDED     // Admin adds comment -> Executive
+  SYSTEM_ANNOUNCEMENT     // System-wide announcements
+  VISIT_PLAN_SUBMITTED    // Executive submits a PJP/visit plan -> Admin
+  VISIT_PLAN_ASSIGNED     // Admin assigns visit plan to Executive -> Executive
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+enum NotificationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Notification {
+  id          String             @id @default(auto()) @map("_id") @db.ObjectId
+  title       String             // Short notification title
+  message     String             // Detailed notification message
+  type        NotificationType   // Type of notification
+  status      NotificationStatus @default(UNREAD)
+  priority    NotificationPriority @default(MEDIUM)
+  
+  // Recipient information
+  recipientId String             // User ID who receives the notification
+  recipientRole Role            // ADMIN or EXECUTIVE
+  
+  // Sender information (optional for system notifications)
+  senderId    String?            // User ID who triggered the notification
+  senderRole  Role?              // ADMIN or EXECUTIVE
+  
+  // Related entity references (for deep linking)
+  visitId     String?   @db.ObjectId  // Related visit ID
+  issueId     String?     // Related issue ID
+  assignedId  String?   @db.ObjectId  // Related assignment ID
+  visitPlanId String?   @db.ObjectId  // Related visit plan (PJP) ID
+  
+  // Metadata
+  metadata    Json?              // Additional contextual data
+  actionUrl   String?            // Deep link to related page
+  
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  readAt      DateTime?          // When notification was read
+  archivedAt  DateTime?          // When notification was archived
+  expiresAt   DateTime?          // Optional expiration for temporary notifications
+  
+  // Relations (optional - for referential integrity)
+  visit       Visit?    @relation(fields: [visitId], references: [id])
+  issue       Issue?    @relation(fields: [issueId], references: [id])
+  assigned    Assigned? @relation(fields: [assignedId], references: [id])
+  visitPlan   VisitPlan? @relation(fields: [visitPlanId], references: [id])
+  
+  // Indexes for performance
+  @@index([recipientId, status, createdAt])
+  @@index([type, createdAt])
+  @@index([recipientId, recipientRole])
+  @@map("Notification")
 }

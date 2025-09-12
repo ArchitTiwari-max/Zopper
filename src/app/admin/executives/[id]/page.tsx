@@ -6,104 +6,10 @@ import { useParams } from 'next/navigation';
 import { ExecutiveDetailData, ExecutiveDetailFilters, ExecutiveVisitDetail } from '../../types';
 import './page.css';
 
-// Mock data for executive details
-const mockExecutiveDetailData: Record<number, ExecutiveDetailData> = {
-  1: {
-    id: 1,
-    name: 'Ramesh Kumar',
-    employeeId: 'EMP001',
-    region: 'East Delhi',
-    email: 'ramesh.kumar@zoppertrack.com',
-    phone: '+91 9876543210',
-    joinDate: '2023-06-15',
-    status: 'Active',
-    initials: 'RK',
-    avatarColor: '#8B5CF6',
-    partnerBrands: ['Samsung', 'Vivo'],
-    assignedStores: [
-      { id: 1, name: 'Lucky Mobile Gallery', address: 'Ghaziabad, Uttar Pradesh', lastVisit: '2025-08-01', totalVisits: 15, pendingReviews: 2, status: 'Active' },
-      { id: 2, name: 'Techno Hub', address: 'Noida Sector 18', lastVisit: '2025-07-28', totalVisits: 12, pendingReviews: 1, status: 'Active' },
-      { id: 3, name: 'Digital Express', address: 'Lajpat Nagar, Delhi', lastVisit: '2025-07-25', totalVisits: 15, pendingReviews: 1, status: 'Active' }
-    ],
-    performanceMetrics: {
-      totalVisits: 42,
-      thisMonth: 8,
-      pendingReviews: 4,
-      completedReviews: 38,
-      averageRating: 4.2,
-      storesAssigned: 3,
-      issuesReported: 5,
-      issuesResolved: 4
-    },
-    recentVisits: [
-      {
-        id: 101,
-        storeId: 1,
-        storeName: 'Lucky Mobile Gallery',
-        visitDate: '2025-08-01',
-        visitTime: '2:30 PM',
-        personMet: 'Mr. Sharma',
-        personRole: 'Store Manager',
-        purpose: 'Monthly Review',
-        feedback: 'Store displays are well organized. Samsung section needs better lighting.',
-        issues: 'None',
-        photos: 5,
-        displaySetup: 'Excellent',
-        reviewStatus: 'Reviewed',
-        createdAt: '2025-08-01T14:30:00Z'
-      },
-      {
-        id: 102,
-        storeId: 2,
-        storeName: 'Techno Hub',
-        visitDate: '2025-07-28',
-        visitTime: '11:00 AM',
-        personMet: 'Ms. Anjali',
-        personRole: 'Assistant Manager',
-        purpose: 'Display Setup Check',
-        feedback: 'Good customer engagement. Need to improve Vivo display positioning.',
-        issues: 'Display positioning needs adjustment',
-        photos: 3,
-        displaySetup: 'Good',
-        reviewStatus: 'Pending Review',
-        createdAt: '2025-07-28T11:00:00Z'
-      }
-    ]
-  },
-  2: {
-    id: 2,
-    name: 'Neha Sharma',
-    employeeId: 'EMP002',
-    region: 'West Delhi',
-    email: 'neha.sharma@zoppertrack.com',
-    phone: '+91 9876543211',
-    joinDate: '2023-03-20',
-    status: 'Active',
-    initials: 'NS',
-    avatarColor: '#EC4899',
-    partnerBrands: ['Samsung', 'Vivo'],
-    assignedStores: [
-      { id: 4, name: 'Alpha Mobiles', address: 'Sector 62, Noida', lastVisit: '2025-07-28', totalVisits: 18, pendingReviews: 1, status: 'Active' },
-      { id: 5, name: 'Mobile World', address: 'Connaught Place, Delhi', lastVisit: '2025-07-26', totalVisits: 17, pendingReviews: 1, status: 'Active' }
-    ],
-    performanceMetrics: {
-      totalVisits: 35,
-      thisMonth: 6,
-      pendingReviews: 2,
-      completedReviews: 33,
-      averageRating: 4.5,
-      storesAssigned: 2,
-      issuesReported: 3,
-      issuesResolved: 3
-    },
-    recentVisits: []
-  }
-  // Add more executives as needed
-};
 
 const ExecutiveDetailPage: React.FC = () => {
   const params = useParams();
-  const executiveId = parseInt(params.id as string);
+  const executiveId = params.id as string;
   
   const [executiveData, setExecutiveData] = useState<ExecutiveDetailData | null>(null);
   const [filteredVisits, setFilteredVisits] = useState<ExecutiveVisitDetail[]>([]);
@@ -115,14 +21,13 @@ const ExecutiveDetailPage: React.FC = () => {
     dateRange: 'Last 30 Days'
   });
 
-  // Load executive data
+  // Load executive data - Replace with actual API call
   useEffect(() => {
     setIsLoading(true);
-    setTimeout(() => {
-      const data = mockExecutiveDetailData[executiveId];
-      setExecutiveData(data || null);
-      setIsLoading(false);
-    }, 500);
+    // TODO: Replace with actual API call
+    // Example: fetchExecutiveDetails(executiveId)
+    setExecutiveData(null);
+    setIsLoading(false);
   }, [executiveId]);
 
   // Apply filters to visits
@@ -151,7 +56,7 @@ const ExecutiveDetailPage: React.FC = () => {
     }));
   };
 
-  const handleMarkReviewed = (visitId: number) => {
+  const handleMarkReviewed = (visitId: string) => {
     if (!executiveData) return;
     
     const updatedVisits = executiveData.recentVisits.map(visit =>

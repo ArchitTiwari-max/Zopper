@@ -21,6 +21,8 @@ const Store: React.FC = () => {
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [filters, setFilters] = useState({
     storeName: '',
     city: 'All Cities',
@@ -86,12 +88,55 @@ const Store: React.FC = () => {
       alert('Please select at least one store before proceeding.');
       return;
     }
-    console.log('Selected stores:', selectedStores);
-    // Handle preview and send logic here
-    alert(`Sending visits for ${selectedStores.length} selected stores`);
-    // Reset after sending
-    setIsCreateMode(false);
-    setSelectedStores([]);
+    setShowPreview(true);
+  };
+
+  const handleSubmitVisitPlan = async () => {
+    if (selectedStores.length === 0) return;
+
+    try {
+      setSubmitting(true);
+      
+      // Submit visit plan to backend
+      const response = await fetch('/api/executive/visit-plan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          storeIds: selectedStores
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit visit plan');
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert(`✅ Visit plan submitted successfully! ${selectedStores.length} stores scheduled for visits.`);
+        // Reset state
+        setIsCreateMode(false);
+        setSelectedStores([]);
+        setShowPreview(false);
+      } else {
+        throw new Error(result.error || 'Failed to submit visit plan');
+      }
+    } catch (error) {
+      console.error('Error submitting visit plan:', error);
+      alert(`❌ Error: ${error instanceof Error ? error.message : 'Failed to submit visit plan'}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getSelectedStoreDetails = () => {
+    return selectedStores.map(storeId => {
+      const store = storeData.find(s => s.id === storeId);
+      return store;
+    }).filter(store => store !== undefined) as StoreData[];
   };
 
   const handleStoreSelection = (storeId: string) => {
@@ -173,7 +218,7 @@ const Store: React.FC = () => {
           {!isCreateMode ? (
             <button className="create-visit-btn" onClick={handleCreateVisit} disabled={loading}>
               <span className="plus-icon">+</span>
-              Create Visit
+              Create PJP
             </button>
           ) : (
             <div className="action-buttons">
@@ -326,6 +371,86 @@ const Store: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Preview Modal */}
+      {showPreview && (
+        <div className="modal-overlay">
+          <div className="preview-modal">
+            <div className="modal-header">
+              <h2 className="modal-title">📋 Visit Plan Preview</h2>
+              <button 
+                className="modal-close-btn"
+                onClick={() => setShowPreview(false)}
+                disabled={submitting}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="preview-summary">
+                <p className="summary-text">
+                  You have selected <strong>{selectedStores.length}</strong> {selectedStores.length === 1 ? 'store' : 'stores'} for visits:
+                </p>
+              </div>
+              
+              <div className="preview-stores-list">
+                {getSelectedStoreDetails().map((store, index) => (
+                  <div key={store.id} className="preview-store-item">
+                    <div className="store-number">{index + 1}</div>
+                    <div className="store-info">
+                      <h4 className="store-name">{store.storeName}</h4>
+                      <p className="store-details">
+                        📍 {store.city}
+                        {store.fullAddress && ` • ${store.fullAddress}`}
+                      </p>
+                      <p className="store-brands">
+                        🏢 {store.partnerBrands.length > 0 ? store.partnerBrands.join(', ') : 'No brands'}
+                      </p>
+                      <p className="store-status">
+                        📅 Last Visit: {store.visited}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="preview-note">
+                <p className="note-text">
+                  💡 <strong>Note:</strong> Submitting this visit plan will notify all admins about your intended store visits. 
+                  They will receive a notification with the list of selected stores.
+                </p>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button 
+                className="cancel-modal-btn"
+                onClick={() => setShowPreview(false)}
+                disabled={submitting}
+              >
+                Cancel
+              </button>
+              <button 
+                className="send-plan-btn"
+                onClick={handleSubmitVisitPlan}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <span className="loading-spinner"></span>
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    📤 Send Visit Plan
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
