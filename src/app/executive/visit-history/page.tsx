@@ -86,8 +86,7 @@ const VisitHistory: React.FC = () => {
         ...prev,
         partnerBrand: brandParam
       }));
-      // Auto-open filters when coming from dashboard
-      setFiltersOpen(true);
+      // Filter is applied automatically, but panel remains closed
     }
   }, [searchParams]);
 
