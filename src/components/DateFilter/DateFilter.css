@@ -1,0 +1,42 @@
+/* DateFilter Component Styles - Exactly matching Dashboard styling */
+.date-filter-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.date-filter-select {
+  padding: 10px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background-color: white;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.date-filter-select:hover {
+  border-color: #3b82f6;
+  background-color: #f8fafc;
+}
+
+.date-filter-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.date-filter-select:disabled {
+  background-color: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
+}
+
+.date-filter-select:disabled:hover {
+  border-color: #e2e8f0;
+  background-color: #f1f5f9;
+}

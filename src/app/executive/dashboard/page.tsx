@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useDateFilter } from '../contexts/DateFilterContext';
+import DateFilter from '@/components/DateFilter/DateFilter';
 import './Dashboard.css';
 
 interface Brand {
@@ -30,7 +32,7 @@ interface ApiResponse {
 
 const Dashboard: React.FC = () => {
   const router = useRouter();
-  const [datePeriod, setDatePeriod] = useState('Last 30 Days');
+  const { selectedPeriod } = useDateFilter();
   const [brandFilter, setBrandFilter] = useState('All Brands');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -93,8 +95,8 @@ const Dashboard: React.FC = () => {
 
   // Load stats on component mount and when date period changes
   useEffect(() => {
-    fetchDashboardStats(datePeriod);
-  }, [datePeriod]);
+    fetchDashboardStats(selectedPeriod);
+  }, [selectedPeriod]);
 
   // Filter brands based on selected filter
   const filteredBrandVisits = stats ? 
@@ -115,6 +117,14 @@ const Dashboard: React.FC = () => {
     router.push('/executive/assinged-task');
   };
 
+  const handleViewAllVisits = () => {
+    router.push('/executive/visit-history');
+  };
+
+  const handleBrandClick = (brandName: string) => {
+    router.push(`/executive/visit-history?brand=${encodeURIComponent(brandName)}`);
+  };
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-content">
@@ -125,15 +135,7 @@ const Dashboard: React.FC = () => {
             <p className="dashboard-subtitle">Track visits, tasks, and overall progress at a glance</p>
           </div>
           <div className="dashboard-date-filter">
-            <select 
-              className="date-period-select"
-              value={datePeriod}
-              onChange={(e) => setDatePeriod(e.target.value)}
-            >
-              <option value="Last 7 Days">Last 7 Days</option>
-              <option value="Last 30 Days">Last 30 Days</option>
-              <option value="Last 90 Days">Last 90 Days</option>
-            </select>
+            <DateFilter />
           </div>
         </div>
 
@@ -168,19 +170,19 @@ const Dashboard: React.FC = () => {
             ) : error ? (
               <div className="error-state">
                 <span>Error: {error}</span>
-                <button onClick={() => fetchDashboardStats(datePeriod)} className="retry-btn">
+                <button onClick={() => fetchDashboardStats(selectedPeriod)} className="retry-btn">
                   Retry
                 </button>
               </div>
             ) : filteredBrandVisits.length === 0 ? (
               <div className="no-data-state">
-                <span>No brand visits found for {datePeriod}</span>
+                <span>No brand visits found for {selectedPeriod}</span>
               </div>
             ) : (
               filteredBrandVisits.map((brand, index) => {
                 const brandStyle = getBrandStyle(index);
                 return (
-                  <div key={brand.id} className="brand-item">
+                  <div key={brand.id} className="brand-item clickable-brand" onClick={() => handleBrandClick(brand.name)}>
                     <div className="brand-info">
                       <div 
                         className="brand-icon"
@@ -204,7 +206,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Total Visits Section */}
-        <div className="dashboard-card">
+        <div className="dashboard-card clickable-card" onClick={handleViewAllVisits}>
           <div className="card-header">
             <div className="card-title-section">
               <div className="location-icon">📍</div>
@@ -221,12 +223,12 @@ const Dashboard: React.FC = () => {
               <div className="total-number">{stats?.totalVisits || 0}</div>
             )}
             <div className="total-description">Total store visits completed</div>
-            <button className="view-all-btn desktop-only" onClick={handleViewAllStores}>View All Stores</button>
+            <button className="view-all-btn desktop-only" onClick={(e) => {e.stopPropagation(); handleViewAllStores();}}>View All Stores</button>
           </div>
         </div>
 
         {/* Assigned Tasks Section */}
-        <div className="dashboard-card">
+        <div className="dashboard-card clickable-card" onClick={handleViewAllTasks}>
           <div className="card-header">
             <div className="card-title-section">
               <div className="tasks-icon">📋</div>
@@ -243,7 +245,7 @@ const Dashboard: React.FC = () => {
               <div className="pending-number">{stats?.tasks.pending || 0}</div>
             )}
             <div className="pending-description">Pending tasks to complete</div>
-            <button className="view-all-btn desktop-only" onClick={handleViewAllTasks}>View All Tasks</button>
+            <button className="view-all-btn desktop-only" onClick={(e) => {e.stopPropagation(); handleViewAllTasks();}}>View All Tasks</button>
           </div>
         </div>
       </div>

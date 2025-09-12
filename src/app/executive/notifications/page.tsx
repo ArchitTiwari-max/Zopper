@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import './Notifications.css';
 import { useNotifications } from './components/contexts/NotificationContext';
@@ -19,6 +19,11 @@ const Notifications: React.FC = () => {
   
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+
+  // Refresh notifications when page loads
+  useEffect(() => {
+    refreshNotifications();
+  }, []); // Empty dependency array means this runs once when component mounts
 
   const handleBackToDashboard = () => {
     router.push('/executive');

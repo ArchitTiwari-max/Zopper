@@ -1,0 +1,359 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthenticatedUser } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { generateUniqueIssueId } from '@/lib/issueIdGenerator';
+
+// GET endpoint to fetch all visits of the authenticated executive (for visit history page)
+// API Version: v2 - Added partnerBrand field to response structure
+export async function GET(request: NextRequest) {
+  try {
+    // Get authenticated user from token
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (user.role !== 'EXECUTIVE') {
+      return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
+    }
+
+    // Get executive data
+    const executive = await prisma.executive.findUnique({
+      where: { userId: user.userId }
+    });
+
+    if (!executive) {
+      return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
+    }
+
+    // Generate ETag for cache validation (1-minute intervals)
+    const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
+    const apiVersion = 'v2'; // Updated version to include partnerBrand field
+    const etag = `"${currentTime}-${executive.id}-visits-${apiVersion}"`;
+    
+    // Check if client has cached version (conditional request)
+    const ifNoneMatch = request.headers.get('if-none-match');
+    if (ifNoneMatch === etag) {
+      // Return 304 Not Modified if ETag matches
+      return new NextResponse(null, { 
+        status: 304,
+        headers: {
+          'Cache-Control': 'public, max-age=60, s-maxage=60',
+          'ETag': etag
+        }
+      });
+    }
+
+    // Add pagination support
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '50'); // Default 50 visits
+    const skip = (page - 1) * limit;
+
+    // Add date period filtering
+    const period = url.searchParams.get('period') || 'Last 30 Days';
+    
+    // Calculate date range based on period
+    const now = new Date();
+    let startDate: Date;
+    
+    switch (period) {
+      case 'Today':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        break;
+      case 'Last 7 Days':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case 'Last 30 Days':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case 'Last 90 Days':
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
+      case 'This Month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case 'Last Month':
+        const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+        startDate = lastMonth;
+        // For last month, we need both start and end date
+        break;
+      default:
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // Default to last 30 days
+    }
+
+    // Build where clause with date filtering
+    const whereClause: any = {
+      executiveId: executive.id,
+      createdAt: {
+        gte: startDate
+      }
+    };
+
+    // Special handling for "Last Month" - needs both start and end date
+    if (period === 'Last Month') {
+      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+      whereClause.createdAt = {
+        gte: lastMonth,
+        lte: lastMonthEnd
+      };
+    }
+
+    // Get visits for this executive with date filtering and optimized query
+    const visits = await prisma.visit.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        status: true,
+        personMet: true,
+        displayChecked: true,
+        remarks: true,
+        imageUrls: true,
+        adminComment: true,
+        brandIds: true,
+        createdAt: true,
+        updatedAt: true,
+        store: {
+          select: {
+            id: true,
+            storeName: true,
+            partnerBrandIds: true
+          }
+        },
+        executive: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        issues: {
+          select: {
+            id: true,
+            details: true,
+            status: true,
+            createdAt: true,
+            assigned: {
+              where: {
+                executiveId: executive.id // Only return assignments for this executive
+              },
+              select: {
+                id: true,
+                adminComment: true,
+                status: true,
+                createdAt: true,
+                executive: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      skip: skip,
+      take: limit
+    });
+
+    // Get all unique brand IDs from all visits
+    const allBrandIds = [...new Set(
+      visits.flatMap(visit => visit.store?.partnerBrandIds || [])
+    )];
+
+    // Fetch brand names for all brand IDs
+    const brands = allBrandIds.length > 0 ? await prisma.brand.findMany({
+      where: {
+        id: { in: allBrandIds }
+      },
+      select: {
+        id: true,
+        brandName: true
+      }
+    }) : [];
+
+    // Create a map for quick brand ID to name lookup
+    const brandMap = new Map(brands.map(brand => [brand.id, brand.brandName]));
+
+    // Transform visits data
+    const transformedVisits = visits.map(visit => ({
+      id: visit.id,
+      storeName: visit.store?.storeName || 'Unknown Store',
+      partnerBrand: visit.store?.partnerBrandIds && visit.store.partnerBrandIds.length > 0 
+        ? visit.store.partnerBrandIds.map(brandId => brandMap.get(brandId) || 'Unknown Brand').join(', ')
+        : 'N/A',
+      status: visit.status,
+      representative: visit.executive?.name || 'Unknown Executive',
+      personMet: visit.personMet,
+      displayChecked: visit.displayChecked,
+      remarks: visit.remarks,
+      imageUrls: visit.imageUrls,
+      adminComment: visit.adminComment,
+      date: visit.createdAt.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }), // Add date field for VisitDetailsModal compatibility
+      issues: visit.issues.map(issue => ({
+        id: issue.id,
+        details: issue.details,
+        status: issue.status,
+        createdAt: issue.createdAt,
+        assigned: issue.assigned
+          .filter(assignment => assignment.executive) // Filter out null executives
+          .map(assignment => ({
+            id: assignment.id,
+            adminComment: assignment.adminComment,
+            status: assignment.status,
+            createdAt: assignment.createdAt,
+            executiveName: assignment.executive?.name || 'Unknown Executive'
+          }))
+      })),
+      createdAt: visit.createdAt,
+      updatedAt: visit.updatedAt
+    }));
+
+    // Create response with cache headers
+    const response = NextResponse.json({
+      success: true,
+      data: transformedVisits
+    });
+
+    // Add caching headers - cache for 1 minute
+    response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+    response.headers.set('CDN-Cache-Control', 'public, max-age=60');
+    response.headers.set('Vary', 'User-Agent');
+    response.headers.set('ETag', etag);
+    
+    return response;
+
+  } catch (error) {
+    console.error('Error fetching executive visits:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch executive visits' },
+      { status: 500 }
+    );
+  }
+}
+
+// POST endpoint to create a new visit with optional issue
+export async function POST(request: NextRequest) {
+  try {
+    // Get authenticated user from token
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (user.role !== 'EXECUTIVE') {
+      return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
+    }
+
+    // Get executive data
+    const executive = await prisma.executive.findUnique({
+      where: { userId: user.userId }
+    });
+
+    if (!executive) {
+      return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
+    }
+
+    const {
+      storeId,
+      personMet,
+      displayChecked,
+      issuesReported,
+      brandsVisited,
+      remarks,
+      imageUrls
+    } = await request.json();
+
+    // Validate required fields
+    if (!storeId || !personMet || personMet.length === 0) {
+      return NextResponse.json({ 
+        error: 'Store ID and at least one person met are required' 
+      }, { status: 400 });
+    }
+
+    // Get brand IDs from brand names
+    const brandIds: string[] = [];
+    if (brandsVisited && brandsVisited.length > 0) {
+      const brands = await prisma.brand.findMany({
+        where: {
+          brandName: {
+            in: brandsVisited
+          }
+        }
+      });
+      brandIds.push(...brands.map(brand => brand.id));
+    }
+
+    // Create the visit
+    const visit = await prisma.visit.create({
+      data: {
+        personMet: personMet, // JSON array
+        displayChecked: displayChecked || false,
+        remarks: remarks || '',
+        imageUrls: imageUrls || [],
+        status: 'PENDING_REVIEW' as any, // Default status - using enum value
+        executiveId: executive.id,
+        storeId: storeId,
+        brandIds: brandIds
+      },
+      include: {
+        store: true,
+        executive: {
+          include: {
+            user: true
+          }
+        }
+      }
+    });
+
+    // Create issue if issuesReported is not null/empty
+    let createdIssue = null;
+    if (issuesReported && issuesReported.trim() !== '') {
+      // Generate unique 7-character issue ID
+      const uniqueIssueId = await generateUniqueIssueId();
+      
+      createdIssue = await prisma.issue.create({
+        data: {
+          id: uniqueIssueId,
+          details: issuesReported.trim(),
+          visitId: visit.id,
+          status: 'Pending' // Default status
+        }
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        visit: {
+          id: visit.id,
+          status: visit.status,
+          createdAt: visit.createdAt
+        },
+        issue: createdIssue ? {
+          id: createdIssue.id,
+          details: createdIssue.details,
+          status: createdIssue.status
+        } : null
+      }
+    });
+
+  } catch (error) {
+    console.error('Error creating visit:', error);
+    return NextResponse.json(
+      { error: 'Failed to create visit' },
+      { status: 500 }
+    );
+  }
+}

@@ -124,9 +124,6 @@ export async function GET(request: NextRequest) {
     // Filter brands to only include those assigned to the executive's stores
     const relevantBrands = allBrands.filter(brand => uniqueBrandIds.includes(brand.id));
     
-    // Sort brands alphabetically
-    relevantBrands.sort((a, b) => a.brandName.localeCompare(b.brandName));
-
     // Create a Set of relevant brand IDs for fast lookup
     const relevantBrandIds = new Set(uniqueBrandIds);
 
@@ -150,6 +147,9 @@ export async function GET(request: NextRequest) {
       category: brand.category,
       visits: brandVisitMap.get(brand.id) || 0
     }));
+
+    // Sort brands by visit count in descending order (most visits to least visits)
+    brandVisitCounts.sort((a, b) => b.visits - a.visits);
 
     // Calculate task statistics
     const pendingTasks = taskStats

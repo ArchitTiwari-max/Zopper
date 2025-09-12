@@ -214,7 +214,7 @@ main {
 }
 
 /* Table Cell Styles */
-.store-name {
+.stores-name {
   font-weight: 600;
   color: #212529;
   font-size: 14px;
@@ -356,54 +356,7 @@ main {
 
 /* Loading and Error States - Using styles from ../base.css */
 
-/* Bottom Navigation */
-.bottom-navigation {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: #2d3436;
-  display: flex;
-  justify-content: space-around;
-  padding: 12px 0;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 10000;
-}
-
-.nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  color: #636e72;
-  transition: color 0.2s;
-  flex: 1;
-  text-decoration: none;
-  background: none;
-  border: none;
-}
-
-.nav-item.active {
-  color: #74b9ff;
-}
-
-.nav-item:not(.active) {
-  color: #636e72;
-}
-
-.nav-item:hover {
-  color: #74b9ff;
-}
-
-.nav-icon {
-  font-size: 20px;
-}
-
-.nav-label {
-  font-size: 12px;
-  font-weight: 500;
-}
+/* Bottom Navigation styles are handled by footer.css - no duplication needed */
 
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
@@ -460,7 +413,7 @@ main {
     width: 25%;
   }
   
-  .store-name {
+  .stores-name {
     font-size: 11px;
     font-weight: 600;
     line-height: 1.3;
@@ -603,7 +556,7 @@ main {
     width: 25%;
   }
   
-  .store-name {
+  .stores-name {
     font-size: 8px;
     font-weight: 600;
     line-height: 1.1;

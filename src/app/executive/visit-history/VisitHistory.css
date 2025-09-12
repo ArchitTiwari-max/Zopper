@@ -14,12 +14,22 @@
 
 /* Header */
 .history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 24px;
 }
 
 .history-title-section {
   display: flex;
   flex-direction: column;
+  flex: 1;
+}
+
+.history-date-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .history-title {
@@ -88,38 +98,73 @@
   line-height: 1.4;
 }
 
-/* Search and Filter Section */
-.search-filter-section {
-  margin-bottom: 24px;
+/* Filters Section */
+.filters-section {
+  margin-bottom: 20px;
 }
 
-.search-group {
-  margin-bottom: 16px;
-}
-
-.search-input {
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
+}
+
+.filters-toggle {
+  background: none;
+  border: none;
+  color: #6c757d;
   font-size: 14px;
-  background-color: white;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  transition: color 0.2s;
 }
 
-.search-input:focus {
-  outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+.filters-toggle:hover {
+  color: #495057;
 }
 
-.search-input::placeholder {
-  color: #9ca3af;
+.filter-arrow {
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.filters-toggle.active .filter-arrow {
+  transform: rotate(180deg);
+}
+
+/* Filter Panel */
+.filters-panel {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .filter-group {
-  margin-bottom: 8px;
+  margin-bottom: 20px;
+}
+
+.filter-group:last-child {
+  margin-bottom: 0;
 }
 
 .filter-label {
@@ -130,27 +175,83 @@
   margin-bottom: 8px;
 }
 
+.filter-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: white;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.filter-input::placeholder {
+  color: #9ca3af;
+}
+
 .filter-select {
   width: 100%;
   padding: 12px 16px;
-  border: none;
-  border-radius: 0;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
   font-size: 14px;
-  background-color: transparent;
+  background-color: #f8f9fa;
   color: #495057;
   appearance: none;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 12px center;
   background-repeat: no-repeat;
   background-size: 16px;
-  transition: none;
+  transition: border-color 0.2s;
   box-sizing: border-box;
+  cursor: pointer;
 }
 
 .filter-select:focus {
   outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* Compact Export Button */
+.export-btn {
+  background-color: #28a745;
+  color: white;
   border: none;
-  box-shadow: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  min-width: auto;
+}
+
+.export-btn:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
+}
+
+.export-btn:active {
+  background-color: #1e7e34;
+  transform: translateY(0);
+}
+
+.export-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Override admin header-actions styling */
@@ -190,18 +291,21 @@
 /* Visit history uses global loading/error/no-data styles from base.css */
 /* Loading states are now handled within the table only */
 
-/* Visits Table */
+/* Visits Table - Mobile First */
 .visits-table-container {
   background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .visits-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 12px;
+  table-layout: fixed;
+  min-width: 100%;
 }
 
 .visits-table thead {
@@ -211,35 +315,58 @@
 }
 
 .visits-table th {
-  padding: 16px 20px;
+  padding: 12px 4px;
   text-align: left;
   font-weight: 600;
   color: #495057 !important;
-  border-bottom: 2px solid #e9ecef;
-  font-size: 14px;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 10px;
   background-color: #f8f9fa !important;
   position: relative;
   visibility: visible !important;
   display: table-cell !important;
   opacity: 1 !important;
+  word-wrap: break-word;
+  overflow: visible;
+  vertical-align: middle;
+  min-height: 40px;
 }
 
-/* Center align the Action column header */
-.visits-table th:nth-child(4) {
-  text-align: center;
-}
+/* Equal width columns - Mobile First */
+.visits-table th:nth-child(1) { width: 20%; } /* Store Name */
+.visits-table th:nth-child(2) { width: 20%; } /* Partner Brand */
+.visits-table th:nth-child(3) { width: 20%; } /* Person Met */
+.visits-table th:nth-child(4) { width: 20%; } /* Date */
+.visits-table th:nth-child(5) { width: 20%; text-align: center; } /* Action */
 
 .visits-table td {
-  padding: 16px 20px;
+  padding: 12px 4px;
   border-bottom: 1px solid #f1f3f4;
-  vertical-align: middle;
+  vertical-align: top;
+  word-wrap: break-word;
+  overflow: visible;
+  min-height: 48px;
+  line-height: 1.4;
 }
+
+/* Equal width columns for table data - Mobile First */
+.visits-table td:nth-child(1) { width: 20%; } /* Store Name */
+.visits-table td:nth-child(2) { width: 20%; } /* Partner Brand */
+.visits-table td:nth-child(3) { width: 20%; } /* Person Met */
+.visits-table td:nth-child(4) { width: 20%; } /* Date */
+.visits-table td:nth-child(5) { width: 20%; } /* Action */
 
 .visits-table tbody tr:hover {
   background-color: #f8f9fa;
 }
 
 .store-cell {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.brand-cell {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
@@ -262,42 +389,83 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   text-align: center;
+  min-height: 48px;
+  padding: 4px;
 }
 
 .store-name-cell {
   font-weight: 500;
   color: #212529;
-  font-size: 14px;
+  font-size: 11px;
+  word-wrap: break-word;
+  white-space: normal;
+  line-height: 1.3;
+}
+
+.partner-brand-cell {
+  font-weight: 400;
+  color: #495057;
+  font-size: 11px;
+  word-wrap: break-word;
+  white-space: normal;
+  line-height: 1.3;
 }
 
 .person-cell {
   color: #495057;
-  font-size: 14px;
+  font-size: 10px;
+  word-wrap: break-word;
+  white-space: normal;
+  line-height: 1.3;
+}
+
+.person-met-item {
+  margin-bottom: 2px;
+}
+
+.person-name {
+  display: block;
+  font-weight: 500;
+}
+
+.person-designation {
+  display: block;
+  font-size: 9px;
+  color: #6c757d;
+  font-style: italic;
 }
 
 .no-data {
   color: #9ca3af;
   font-style: italic;
+  font-size: 10px;
 }
 
 .visit-date-table {
   color: #495057;
-  font-size: 13px;
+  font-size: 10px;
+  word-wrap: break-word;
+  white-space: normal;
+  line-height: 1.3;
 }
 
 .view-details-btn-table {
   background: none;
   border: none;
   color: #4f46e5;
-  font-size: 12px;
+  font-size: 9px;
   font-weight: 500;
   cursor: pointer;
   text-decoration: underline;
-  padding: 4px 8px;
+  padding: 4px 6px;
   border-radius: 4px;
   transition: all 0.2s;
+  white-space: normal;
+  min-height: 32px;
+  word-wrap: break-word;
+  line-height: 1.2;
 }
 
 .view-details-btn-table:hover {
@@ -307,14 +475,14 @@
 
 /* Visit Status Badge in Action Column */
 .visit-status-badge {
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 6px;
+  font-size: 7px;
   font-weight: 600;
   color: white;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 4px;
+  letter-spacing: 0.01em;
+  margin-bottom: 2px;
   display: inline-block;
   white-space: nowrap;
 }
@@ -510,60 +678,6 @@
   text-transform: capitalize;
 }
 
-/* Export Section */
-.export-section {
-  text-align: center;
-  margin: 32px auto 0 auto;
-  padding: 24px 32px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  max-width: 800px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.export-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #212529;
-  margin: 0 0 8px 0;
-}
-
-.export-subtitle {
-  font-size: 16px;
-  color: #6c757d;
-  margin: 0 auto 20px auto;
-  line-height: 1.4;
-  max-width: 600px;
-}
-
-.export-btn {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 12px 28px;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  min-width: 200px;
-  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
-}
-
-.export-btn:hover {
-  background-color: #218838;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
-}
-
-.export-info {
-  margin-top: 12px;
-  color: #6c757d;
-  font-size: 14px;
-  font-weight: 500;
-}
 
 /* Desktop Responsive */
 @media (min-width: 1200px) {
@@ -572,16 +686,59 @@
     padding: 32px;
   }
 
+  .visits-table-container {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  .visits-table {
+    font-size: 14px;
+  }
+
+  .visits-table th {
+    padding: 20px 12px;
+    font-size: 14px;
+    min-height: 48px;
+  }
+
+  .visits-table td {
+    padding: 20px 12px;
+    min-height: 56px;
+  }
+
+  .store-name-cell {
+    font-size: 14px;
+  }
+
+  .partner-brand-cell {
+    font-size: 14px;
+  }
+
+  .person-cell {
+    font-size: 13px;
+  }
+
+  .visit-date-table {
+    font-size: 13px;
+  }
+
+  .view-details-btn-table {
+    font-size: 12px;
+    padding: 8px 12px;
+    min-height: 40px;
+  }
+
+  .visit-status-badge {
+    padding: 4px 10px;
+    font-size: 10px;
+  }
+
+  .action-cell {
+    gap: 6px;
+  }
+
   .history-title {
     font-size: 28px;
-  }
-
-  .detailed-report-title {
-    font-size: 22px;
-  }
-
-  .detailed-report-subtitle {
-    font-size: 16px;
   }
 
   .user-icon {
@@ -596,50 +753,6 @@
     font-size: 16px;
   }
 
-  .visit-card-header {
-    padding: 20px 24px;
-  }
-
-  .visit-details {
-    padding: 24px;
-  }
-
-  .store-name {
-    font-size: 18px;
-  }
-
-  .detail-value {
-    font-size: 16px;
-  }
-
-
-  .export-section {
-    margin: 40px auto 0 auto;
-    padding: 32px 48px;
-    max-width: 1000px;
-  }
-
-  .export-title {
-    font-size: 24px;
-    margin: 0 0 10px 0;
-  }
-
-  .export-subtitle {
-    font-size: 18px;
-    margin: 0 auto 24px auto;
-    max-width: 700px;
-  }
-
-  .export-btn {
-    padding: 14px 32px;
-    font-size: 18px;
-    min-width: 220px;
-  }
-
-  .export-info {
-    margin-top: 16px;
-    font-size: 16px;
-  }
 }
 
 @media (min-width: 992px) and (max-width: 1199px) {
@@ -676,33 +789,6 @@
     font-size: 15px;
   }
 
-  .export-section {
-    margin: 36px auto 0 auto;
-    padding: 28px 40px;
-    max-width: 900px;
-  }
-
-  .export-title {
-    font-size: 22px;
-    margin: 0 0 8px 0;
-  }
-
-  .export-subtitle {
-    font-size: 17px;
-    margin: 0 auto 20px auto;
-    max-width: 650px;
-  }
-
-  .export-btn {
-    padding: 13px 30px;
-    font-size: 17px;
-    min-width: 210px;
-  }
-
-  .export-info {
-    margin-top: 14px;
-    font-size: 15px;
-  }
 }
 
 /* Tablet Responsive */
@@ -712,13 +798,54 @@
     padding: 24px 32px;
   }
 
-  .history-title {
-    font-size: 24px;
+  .visits-table-container {
+    border-radius: 10px;
   }
 
-  .user-icon {
-    width: 38px;
-    height: 38px;
+  .visits-table {
+    font-size: 13px;
+  }
+
+  .visits-table th {
+    padding: 16px 8px;
+    font-size: 12px;
+    min-height: 44px;
+  }
+
+  .visits-table td {
+    padding: 16px 8px;
+    min-height: 52px;
+  }
+
+  .store-name-cell {
+    font-size: 13px;
+  }
+
+  .partner-brand-cell {
+    font-size: 13px;
+  }
+
+  .person-cell {
+    font-size: 12px;
+  }
+
+  .visit-date-table {
+    font-size: 12px;
+  }
+
+  .view-details-btn-table {
+    font-size: 11px;
+    padding: 6px 8px;
+    min-height: 36px;
+  }
+
+  .visit-status-badge {
+    padding: 3px 8px;
+    font-size: 9px;
+  }
+
+  .history-title {
+    font-size: 24px;
   }
 
   .search-input,
@@ -726,41 +853,6 @@
     padding: 12px 16px;
   }
 
-  .visit-card-header {
-    padding: 18px 22px;
-  }
-
-  .visit-details {
-    padding: 22px;
-  }
-
-  .export-section {
-    margin: 32px auto 0 auto;
-    padding: 28px 36px;
-    max-width: 750px;
-  }
-
-  .export-title {
-    font-size: 20px;
-    margin: 0 0 8px 0;
-  }
-
-  .export-subtitle {
-    font-size: 16px;
-    margin: 0 auto 20px auto;
-    max-width: 550px;
-  }
-
-  .export-btn {
-    padding: 12px 28px;
-    font-size: 16px;
-    min-width: 200px;
-  }
-
-  .export-info {
-    margin-top: 14px;
-    font-size: 14px;
-  }
 }
 
 /* Mobile Responsive */
@@ -770,13 +862,6 @@
     max-width: 100%;
   }
 
-  /* Reset export section for mobile */
-  .export-section {
-    margin: 24px 0 0 0;
-    padding: 24px 16px;
-    max-width: none;
-    border-radius: 8px;
-  }
 
   .search-input,
   .filter-select {
@@ -785,87 +870,8 @@
     min-height: 44px; /* Touch-friendly */
   }
   
-  .expand-btn,
-  .expand-btn-small {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  .export-btn {
-    min-height: 48px;
-  }
 
-  /* Mobile Table Responsive */
-  .visits-table-container {
-    border-radius: 8px;
-    overflow-x: auto; /* Enable horizontal scroll if needed */
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-  }
-
-  .visits-table {
-    width: 100%;
-    min-width: 320px; /* Minimum width to ensure content is readable */
-    font-size: 13px;
-    table-layout: auto; /* Auto layout for better content fitting */
-  }
-
-  .visits-table th {
-    padding: 12px 8px;
-    font-size: 12px;
-    background-color: #f8f9fa !important;
-    visibility: visible !important;
-    display: table-cell !important;
-    opacity: 1 !important;
-  }
-
-  .visits-table td {
-    padding: 12px 8px;
-  }
-
-  /* Column width distribution for mobile - more flexible */
-  .visits-table th:nth-child(1), .visits-table td:nth-child(1) { min-width: 80px; } /* Store Name */
-  .visits-table th:nth-child(2), .visits-table td:nth-child(2) { min-width: 100px; } /* Person Met */
-  .visits-table th:nth-child(3), .visits-table td:nth-child(3) { min-width: 70px; } /* Date */
-  .visits-table th:nth-child(4), .visits-table td:nth-child(4) { min-width: 90px; } /* Action */
-
-  .store-name-cell {
-    font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .person-cell {
-    font-size: 12px;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    line-height: 1.3;
-  }
-
-  .visit-date-table {
-    font-size: 11px;
-    white-space: nowrap;
-  }
-
-  .view-details-btn-table {
-    font-size: 11px;
-    padding: 4px 6px;
-    white-space: nowrap;
-    min-height: 32px;
-  }
-
-  /* Mobile status badge adjustments */
-  .visit-status-badge {
-    padding: 2px 6px;
-    font-size: 9px;
-    margin-bottom: 3px;
-  }
-
-  .action-cell {
-    gap: 4px;
-  }
+  /* Mobile styles are now defined as base styles above */
 
   .history-title {
     font-size: 20px;
@@ -962,23 +968,10 @@
   }
 
 
-  .export-title {
-    font-size: 15px;
-  }
-
-  .export-subtitle {
-    font-size: 13px;
-  }
-
-  .export-btn {
-    padding: 10px 20px;
-    font-size: 13px;
-    width: 100%;
-  }
 }
 
 /* Extra Small Mobile */
-@media (max-width: 480px) {
+@media (max-width: 450px) {
   .visit-history-content {
     padding: 12px;
   }
@@ -1041,23 +1034,27 @@
   }
 
 
-  /* Adjust column widths for very small screens */
-  .visits-table th:nth-child(1), .visits-table td:nth-child(1) { width: 25%; } /* Store Name */
-  .visits-table th:nth-child(2), .visits-table td:nth-child(2) { width: 40%; } /* Person Met */
-  .visits-table th:nth-child(3), .visits-table td:nth-child(3) { width: 20%; } /* Date */
-  .visits-table th:nth-child(4), .visits-table td:nth-child(4) { width: 15%; } /* Action */
+  /* Column widths remain equal for very small screens */
+  .visits-table th:nth-child(1), .visits-table td:nth-child(1) { width: 20%; } /* Store Name */
+  .visits-table th:nth-child(2), .visits-table td:nth-child(2) { width: 20%; } /* Partner Brand */
+  .visits-table th:nth-child(3), .visits-table td:nth-child(3) { width: 20%; } /* Person Met */
+  .visits-table th:nth-child(4), .visits-table td:nth-child(4) { width: 20%; } /* Date */
+  .visits-table th:nth-child(5), .visits-table td:nth-child(5) { width: 20%; } /* Action */
 
   .visits-table th {
-    padding: 10px 6px;
+    padding: 14px 6px;
     font-size: 11px;
+    min-height: 44px;
   }
 
   .visits-table td {
-    padding: 10px 6px;
+    padding: 4px 4px !important;
+    min-height: 28px !important;
+    line-height: 1.1 !important;
   }
 
   .store-name-cell {
-    font-size: 12px;
+    font-size: 9px;
   }
 
   .person-cell {
@@ -1069,35 +1066,88 @@
   }
 
   .view-details-btn-table {
-    font-size: 10px;
-    padding: 3px 4px;
+    font-size: 9px !important;
+    padding: 3px 4px !important;
+    min-height: 18px !important;
+    line-height: 1.1 !important;
+    margin-top: 1px !important;
+  }
+
+  .visit-status-badge {
+    font-size: 7px !important;
+    padding: 2px 4px !important;
+    border-radius: 4px !important;
+    margin-bottom: 0px !important;
+    letter-spacing: 0 !important;
+    line-height: 1.1 !important;
+    display: block !important;
+  }
+
+  .action-cell {
+    gap: 0px !important;
+    min-height: 24px !important;
+    padding: 1px !important;
+    justify-content: center !important;
+    align-items: center !important;
   }
 }
 
-/* Extremely Small Screens - Enable horizontal scroll only when absolutely necessary */
+/* Extremely Small Screens - Enable horizontal scroll for 5 columns */
 @media (max-width: 320px) {
   .visits-table-container {
     overflow-x: auto;
   }
 
   .visits-table {
-    min-width: 300px;
-    table-layout: auto;
+    min-width: 320px;
+    table-layout: fixed;
   }
 
-  .visits-table th,
+  .visits-table th {
+    padding: 10px 2px;
+    min-width: 64px;
+    min-height: 40px;
+  }
+
   .visits-table td {
-    padding: 8px 4px;
-    min-width: 60px;
+    padding: 12px 2px;
+    min-width: 64px;
+    min-height: 48px;
   }
 
-  .store-name-cell,
+  /* Equal width columns for extremely small screens */
+  .visits-table th:nth-child(1), .visits-table td:nth-child(1) { width: 20%; min-width: 64px; } /* Store Name */
+  .visits-table th:nth-child(2), .visits-table td:nth-child(2) { width: 20%; min-width: 64px; } /* Partner Brand */
+  .visits-table th:nth-child(3), .visits-table td:nth-child(3) { width: 20%; min-width: 64px; } /* Person Met */
+  .visits-table th:nth-child(4), .visits-table td:nth-child(4) { width: 20%; min-width: 64px; } /* Date */
+  .visits-table th:nth-child(5), .visits-table td:nth-child(5) { width: 20%; min-width: 64px; } /* Action */
+
+  .store-name-cell {
+    max-width: 60px;
+    word-wrap: break-word;
+    white-space: normal;
+    line-height: 1.2;
+    font-size: 8px;
+  }
+
+  .partner-brand-cell,
   .person-cell {
-    max-width: 80px;
+    max-width: 60px;
+    word-wrap: break-word;
+    white-space: normal;
+    line-height: 1.2;
   }
 
   .view-details-btn-table {
-    font-size: 9px;
-    padding: 2px 3px;
+    font-size: 7px;
+    padding: 3px 3px;
+    min-height: 26px;
+    line-height: 1.1;
+  }
+
+  .visit-status-badge {
+    font-size: 5px;
+    padding: 1px 2px;
+    border-radius: 4px;
   }
 }

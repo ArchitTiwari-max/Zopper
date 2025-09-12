@@ -117,7 +117,7 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
                 
                 return (
                   <tr key={task.id} className={expandedIssues.has(task.id) ? 'expanded-row' : ''}>
-                    <td className="store-name">{task.storeName}</td>
+                    <td className="stores-name">{task.storeName}</td>
                     <td className="issue">
                       <div className="issue-container">
                         <span 

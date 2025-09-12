@@ -113,17 +113,7 @@ const ExecutiveTodoList: React.FC = () => {
     fetchTasks();
   }, []);
 
-  const handleNavigateToDashboard = () => {
-    router.push('/executive');
-  };
-
-  const handleNavigateToVisitHistory = () => {
-    router.push('/executive/visit-history');
-  };
-
-  const handleNavigateToSettings = () => {
-    router.push('/executive/settings');
-  };
+  // Navigation handlers removed - handled by layout Footer component
 
   const handleSubmitTask = (taskId: string) => {
     setSelectedTaskId(taskId);
@@ -265,21 +255,7 @@ const ExecutiveTodoList: React.FC = () => {
         </div>
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="bottom-navigation">
-        <button className="nav-item" onClick={handleNavigateToDashboard}>
-          <span className="nav-icon">📊</span>
-          <span className="nav-label">Dashboard</span>
-        </button>
-        <button className="nav-item" onClick={handleNavigateToVisitHistory}>
-          <span className="nav-icon">📋</span>
-          <span className="nav-label">Visit History</span>
-        </button>
-        <button className="nav-item" onClick={handleNavigateToSettings}>
-          <span className="nav-icon">⚙️</span>
-          <span className="nav-label">Settings</span>
-        </button>
-      </nav>
+      {/* Bottom Navigation is handled by the layout Footer component */}
       
       {/* Submit Task Modal */}
       {isSubmitModalOpen && selectedTaskId && (

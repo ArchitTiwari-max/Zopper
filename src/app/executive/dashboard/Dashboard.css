@@ -107,6 +107,23 @@
   transform: translateY(-1px);
 }
 
+/* Clickable Cards */
+.clickable-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clickable-card:hover {
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  border-color: #3b82f6;
+}
+
+.clickable-card:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -217,6 +234,20 @@
 
 .brand-item:last-child {
   border-bottom: none;
+}
+
+/* Clickable Brand Items */
+.clickable-brand {
+  cursor: pointer;
+}
+
+.clickable-brand:hover {
+  background-color: #f8fafc !important;
+  transform: translateX(4px);
+}
+
+.clickable-brand:active {
+  transform: translateX(2px);
 }
 
 .brand-info {

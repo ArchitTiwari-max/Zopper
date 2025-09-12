@@ -46,25 +46,38 @@ const Store: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/executive/stores', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include'
-      });
+      // Fetch store data and filter options in parallel
+      const [storeResponse, filterResponse] = await Promise.all([
+        fetch('/api/executive/store/data', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include'
+        }),
+        fetch('/api/executive/store/filter', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include'
+        })
+      ]);
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch stores');
+      if (!storeResponse.ok || !filterResponse.ok) {
+        throw new Error('Failed to fetch store or filter data');
       }
 
-      const result = await response.json();
+      const [storeResult, filterResult] = await Promise.all([
+        storeResponse.json(),
+        filterResponse.json()
+      ]);
       
-      if (result.success) {
-        setStoreData(result.data.stores);
-        setFilterOptions(result.data.filterOptions);
+      if (storeResult.success && filterResult.success) {
+        setStoreData(storeResult.data.stores);
+        setFilterOptions(filterResult.data.filterOptions);
       } else {
-        throw new Error(result.error || 'Failed to fetch stores');
+        throw new Error(storeResult.error || filterResult.error || 'Failed to fetch data');
       }
     } catch (error) {
       console.error('Error fetching stores:', error);

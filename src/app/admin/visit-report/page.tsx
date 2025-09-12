@@ -292,6 +292,11 @@ const VisitReportPage: React.FC = () => {
 
   // Handle URL query parameters and update filter state
   useEffect(() => {
+    // Only process URL params after filter data is loaded
+    if (isLoadingFilters || filterData.stores.length === 0) {
+      return;
+    }
+
     const storeId = searchParams.get('storeId');
     const executiveId = searchParams.get('executiveId');
     const storeName = searchParams.get('storeName');
@@ -299,18 +304,23 @@ const VisitReportPage: React.FC = () => {
     const visitStatus = searchParams.get('visitStatus');
     const partnerBrand = searchParams.get('partnerBrand');
     
+    let hasUrlParams = false;
+    let newFilters = { ...filters };
+    
     // Update filter state based on URL params so dropdowns show correct values
     // Store IDs in filter state but display names in UI
     if (storeName && filters.storeName !== storeName) {
       // URL storeName is a name, need to find corresponding ID for filter state
       const store = filterData.stores.find(s => s.name === storeName);
       if (store && filters.storeName !== store.id) {
-        setFilters(prev => ({ ...prev, storeName: store.id }));
+        newFilters.storeName = store.id;
+        hasUrlParams = true;
       }
     } else if (storeId && filterData.stores.length > 0) {
       // URL has storeId, use that ID directly for filter state
       if (filters.storeName !== storeId) {
-        setFilters(prev => ({ ...prev, storeName: storeId }));
+        newFilters.storeName = storeId;
+        hasUrlParams = true;
       }
     }
     
@@ -318,39 +328,56 @@ const VisitReportPage: React.FC = () => {
       // URL executiveName is a name, need to find corresponding ID for filter state
       const executive = filterData.executives.find(e => e.name === executiveName);
       if (executive && filters.executiveName !== executive.id) {
-        setFilters(prev => ({ ...prev, executiveName: executive.id }));
+        newFilters.executiveName = executive.id;
+        hasUrlParams = true;
       }
     } else if (executiveId && filterData.executives.length > 0) {
       // URL has executiveId, use that ID directly for filter state
       if (filters.executiveName !== executiveId) {
-        setFilters(prev => ({ ...prev, executiveName: executiveId }));
+        newFilters.executiveName = executiveId;
+        hasUrlParams = true;
       }
     }
     
     // Handle visitStatus query parameter
     if (visitStatus && visitStatus !== filters.visitStatus) {
-      setFilters(prev => ({ ...prev, visitStatus: visitStatus }));
+      newFilters.visitStatus = visitStatus;
+      hasUrlParams = true;
     }
     
     // Handle partnerBrand query parameter
     if (partnerBrand && partnerBrand !== filters.partnerBrand) {
-      setFilters(prev => ({ ...prev, partnerBrand: partnerBrand }));
+      newFilters.partnerBrand = partnerBrand;
+      hasUrlParams = true;
     }
-  }, [searchParams, filterData]);
 
-  // OPTIMIZED LOADING: Load both table and filter data concurrently, but prioritize table UI
+    // Only update filters if there are actual URL params to process
+    if (hasUrlParams) {
+      setFilters(newFilters);
+    }
+  }, [searchParams, filterData, isLoadingFilters]);
+
+  // OPTIMIZED LOADING: Load filter data first, then table data
   useEffect(() => {
-    // Load table data first (higher priority for user experience)
-    fetchVisitReportData();
-    
-    // Load filter data concurrently (no delay needed since no loading state shown)
+    // Load filter data first so URL params can be processed correctly
     fetchFilterData();
   }, []);
-
-  // Refetch data when filters, date filter, or search params change
+  
+  // Load table data after filters are potentially updated from URL params
   useEffect(() => {
-    fetchVisitReportData(); // Always prioritize table data
-  }, [filters, selectedDateFilter, searchParams]);
+    // Only fetch data if filter data has been loaded (to avoid race conditions)
+    if (!isLoadingFilters) {
+      fetchVisitReportData();
+    }
+  }, [isLoadingFilters]);
+
+  // Refetch data when filters or date filter change (but not on searchParams to avoid double fetch)
+  useEffect(() => {
+    // Don't fetch immediately if we're still processing URL params
+    if (!isLoadingFilters) {
+      fetchVisitReportData();
+    }
+  }, [filters, selectedDateFilter]);
 
 
   const handleFilterChange = (filterType: keyof VisitReportFilters, value: string) => {
