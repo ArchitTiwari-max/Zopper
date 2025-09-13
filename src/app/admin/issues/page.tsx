@@ -200,7 +200,7 @@ const AdminIssuesPage: React.FC = () => {
   // Show critical errors immediately
   if (error) {
     return (
-      <div className="issues-overview">
+      <div className="admin-issues-overview">
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '400px', gap: '1rem' }}>
           <div style={{ fontSize: '1.2rem', color: '#ef4444' }}>Error loading issues</div>
           <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{error}</div>
@@ -218,63 +218,63 @@ const AdminIssuesPage: React.FC = () => {
   // OPTIMIZED: Show UI immediately, use separate loading states
 
   return (
-    <div className="issues-overview">
+    <div className="admin-issues-overview">
 
       {/* Summary Stats */}
-      <div className="issues-stats-grid">
+      <div className="admin-issues-stats-grid">
         <div 
-          className="stats-card clickable"
+          className="admin-issues-stats-card admin-issues-stats-card--clickable"
           onClick={() => handleStatusCardClick('Pending')}
           title="Click to filter by Pending issues (includes both Pending and Assigned)"
         >
-          <div className="stats-icon open">
+          <div className="admin-issues-stats-icon admin-issues-stats-icon--open">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
             </svg>
           </div>
-          <div className="stats-content">
+          <div className="admin-issues-stats-content">
             <h4>Open Issues</h4>
-            <div className="stats-value">{issuesData.filter(issue => issue.status === 'Pending' || issue.status === 'Assigned').length}</div>
+            <div className="admin-issues-stats-value">{issuesData.filter(issue => issue.status === 'Pending' || issue.status === 'Assigned').length}</div>
           </div>
         </div>
 
         <div 
-          className="stats-card clickable"
+          className="admin-issues-stats-card admin-issues-stats-card--clickable"
           onClick={() => handleStatusCardClick('Assigned')}
           title="Click to filter by Assigned issues only"
         >
-          <div className="stats-icon in-progress">
+          <div className="admin-issues-stats-icon admin-issues-stats-icon--in-progress">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6Z"/>
             </svg>
           </div>
-          <div className="stats-content">
+          <div className="admin-issues-stats-content">
             <h4>In Progress</h4>
-            <div className="stats-value">{issuesData.filter(issue => issue.status === 'Assigned').length}</div>
+            <div className="admin-issues-stats-value">{issuesData.filter(issue => issue.status === 'Assigned').length}</div>
           </div>
         </div>
 
         <div 
-          className="stats-card clickable"
+          className="admin-issues-stats-card admin-issues-stats-card--clickable"
           onClick={() => handleStatusCardClick('Resolved')}
           title="Click to filter by Resolved issues only"
         >
-          <div className="stats-icon resolved">
+          <div className="admin-issues-stats-icon admin-issues-stats-icon--resolved">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
               <path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
             </svg>
           </div>
-          <div className="stats-content">
+          <div className="admin-issues-stats-content">
             <h4>Resolved</h4>
-            <div className="stats-value">{issuesData.filter(issue => issue.status === 'Resolved').length}</div>
+            <div className="admin-issues-stats-value">{issuesData.filter(issue => issue.status === 'Resolved').length}</div>
           </div>
         </div>
 
       </div>
 
       {/* Filters Section */}
-      <div className="filters-section">
-        <div className="filters-header">
+      <div className="admin-issues-filters-section">
+        <div className="admin-issues-filters-header">
           <h3>Filters</h3>
         </div>
         {filterError ? (
@@ -288,13 +288,13 @@ const AdminIssuesPage: React.FC = () => {
             </button>
           </div>
         ) : (
-        <div className="filters-grid">
-          <div className="filter-group">
+        <div className="admin-issues-filters-grid">
+          <div className="admin-issues-filter-group">
             <label>Filter by Store</label>
             <select 
               value={filters.storeName}
               onChange={(e) => handleFilterChange('storeName', e.target.value)}
-              className="filter-select"
+              className="admin-issues-filter-select"
             >
               <option value="All Stores">All Stores</option>
               {filterData.stores.map(store => (
@@ -303,12 +303,12 @@ const AdminIssuesPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="filter-group">
+          <div className="admin-issues-filter-group">
             <label>Filter by Status</label>
             <select 
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="filter-select"
+              className="admin-issues-filter-select"
             >
               <option value="All Status">All Status</option>
               {filterData.statuses.map(status => (
@@ -323,20 +323,20 @@ const AdminIssuesPage: React.FC = () => {
       </div>
 
       {/* Issues Table */}
-      <div className="issues-table-section">
-        <div className="issues-table">
+      <div className="admin-issues-table-section">
+        <div className="admin-issues-table">
           {/* Always show table header for context */}
-          <div className="table-header">
-            <div className="header-cell">ISSUE ID</div>
-            <div className="header-cell">STORE</div>
-            <div className="header-cell">STATUS</div>
-            <div className="header-cell">REPORTED BY</div>
-            <div className="header-cell">DATE REPORTED</div>
-            <div className="header-cell">ACTIONS</div>
+          <div className="admin-issues-table-header">
+            <div className="admin-issues-header-cell">ISSUE ID</div>
+            <div className="admin-issues-header-cell">STORE</div>
+            <div className="admin-issues-header-cell">STATUS</div>
+            <div className="admin-issues-header-cell">REPORTED BY</div>
+            <div className="admin-issues-header-cell">DATE REPORTED</div>
+            <div className="admin-issues-header-cell">ACTIONS</div>
           </div>
           
           {/* Table body with loading state */}
-          <div className="table-body">
+          <div className="admin-issues-table-body">
             {isLoading ? (
               <div className="table-loading">
                 <div className="loading-spinner-large"></div>
@@ -344,40 +344,40 @@ const AdminIssuesPage: React.FC = () => {
               </div>
             ) : issuesData.length > 0 ? (
               issuesData.map(issue => (
-              <div key={issue.id} className="table-row">
-                <div className="cell">
-                  <Link href={`/admin/issues/${issue.id}`} className="issue-id-link">
+              <div key={issue.id} className="admin-issues-table-row">
+                <div className="admin-issues-cell">
+                  <Link href={`/admin/issues/${issue.id}`} className="admin-issues-issue-id-link">
                     {issue.issueId}
                   </Link>
                 </div>
-                <div className="cell">
-                  <div className="store-info">
-                    <Link href={`/admin/stores/${issue.storeId}`} className="store-name-link">
+                <div className="admin-issues-cell">
+                  <div className="admin-issues-store-info">
+                    <Link href={`/admin/stores/${issue.storeId}`} className="admin-issues-store-name-link">
                       <strong>{issue.storeName}</strong>
                     </Link>
-                    <div className="store-location">{issue.location}</div>
-                    <div className="brand-info">{issue.brandAssociated}</div>
+                    <div className="admin-issues-store-location">{issue.location}</div>
+                    <div className="admin-issues-brand-info">{issue.brandAssociated}</div>
                   </div>
                 </div>
-                <div className="cell">
+                <div className="admin-issues-cell">
                   <span 
-                    className="status-badge"
+                    className="admin-issues-status-badge"
                     style={{ backgroundColor: getStatusColor(issue.status) }}
                   >
                     {issue.status}
                   </span>
                 </div>
-                <div className="cell">
-                  <div className="reporter-info">
-                    <div className="reporter-name">{issue.reportedBy}</div>
-                    <div className="reporter-role">({issue.reportedByRole})</div>
+                <div className="admin-issues-cell">
+                  <div className="admin-issues-reporter-info">
+                    <div className="admin-issues-reporter-name">{issue.reportedBy}</div>
+                    <div className="admin-issues-reporter-role">({issue.reportedByRole})</div>
                   </div>
                 </div>
-                <div className="cell">
+                <div className="admin-issues-cell">
                   {new Date(issue.dateReported).toLocaleDateString()}
                 </div>
-                <div className="cell actions-cell">
-                  <Link href={`/admin/issues/${issue.id}`} className="view-details-btn">
+                <div className="admin-issues-cell admin-issues-actions-cell">
+                  <Link href={`/admin/issues/${issue.id}`} className="admin-issues-view-details-btn">
                     View Details
                   </Link>
                 </div>

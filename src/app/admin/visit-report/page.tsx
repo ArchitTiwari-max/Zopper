@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useDateFilter } from '../contexts/DateFilterContext';
+import VisitDetailsModal from '../components/VisitDetailsModal';
 import './page.css';
 
 // Types for visit report
@@ -165,6 +166,8 @@ const VisitReportPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [filterError, setFilterError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState<boolean>(true);
+  const [selectedVisit, setSelectedVisit] = useState<any>(null);
+  const [showModal, setShowModal] = useState<boolean>(false);
   
   // Filter data from API
   const [filterData, setFilterData] = useState<{
@@ -516,10 +519,21 @@ const VisitReportPage: React.FC = () => {
     return issueMapping[issueText] || null;
   };
 
+  // Modal handlers
+  const openVisitModal = (visit: VisitReportData) => {
+    setSelectedVisit(visit);
+    setShowModal(true);
+  };
+
+  const closeVisitModal = () => {
+    setSelectedVisit(null);
+    setShowModal(false);
+  };
+
   // Show critical errors immediately
   if (error) {
     return (
-      <div className="visit-report-overview">
+      <div className="admin-visit-report-overview">
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '400px', gap: '1rem' }}>
           <div style={{ fontSize: '1.2rem', color: '#ef4444' }}>Error loading visit reports</div>
           <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{error}</div>
@@ -537,10 +551,10 @@ const VisitReportPage: React.FC = () => {
   // OPTIMIZED: Show UI immediately, use separate loading states
 
   return (
-    <div className="visit-report-overview">
+    <div className="admin-visit-report-overview">
       {/* Filters Section */}
-      <div className="filters-section">
-        <div className="filters-header" onClick={() => setShowFilters(!showFilters)}>
+      <div className="admin-visit-report-filters-section">
+        <div className="admin-visit-report-filters-header" onClick={() => setShowFilters(!showFilters)}>
           <h3>Filters {showFilters ? '▼' : '▶'}</h3>
         </div>
         {showFilters && (
@@ -555,13 +569,13 @@ const VisitReportPage: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="filters-grid">
-              <div className="filter-group">
+            <div className="admin-visit-report-filters-grid">
+              <div className="admin-visit-report-filter-group">
                 <label>Filter by Partner Brand</label>
                 <select 
                   value={filters.partnerBrand}
                   onChange={(e) => handleFilterChange('partnerBrand', e.target.value)}
-                  className="filter-select"
+                  className="admin-visit-report-filter-select"
                   disabled={isLoadingFilters}
                 >
                   <option value="All Brands">{isLoadingFilters ? 'Loading brands...' : 'All Brands'}</option>
@@ -576,12 +590,12 @@ const VisitReportPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="filter-group">
+              <div className="admin-visit-report-filter-group">
                 <label>Filter by City</label>
                 <select 
                   value={filters.city}
                   onChange={(e) => handleFilterChange('city', e.target.value)}
-                  className="filter-select"
+                  className="admin-visit-report-filter-select"
                   disabled={isLoadingFilters}
                 >
                   <option value="All City">{isLoadingFilters ? 'Loading cities...' : 'All City'}</option>
@@ -596,12 +610,12 @@ const VisitReportPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="filter-group">
+              <div className="admin-visit-report-filter-group">
                 <label>Filter by Store Name</label>
                 <select 
                   value={filters.storeName}
                   onChange={(e) => handleFilterChange('storeName', e.target.value)}
-                  className="filter-select"
+                  className="admin-visit-report-filter-select"
                   disabled={isLoadingFilters}
                 >
                   <option value="All Store">{isLoadingFilters ? 'Loading stores...' : 'All Store'}</option>
@@ -616,12 +630,12 @@ const VisitReportPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="filter-group">
+              <div className="admin-visit-report-filter-group">
                 <label>Filter by Executive Name</label>
                 <select 
                   value={filters.executiveName}
                   onChange={(e) => handleFilterChange('executiveName', e.target.value)}
-                  className="filter-select"
+                  className="admin-visit-report-filter-select"
                   disabled={isLoadingFilters}
                 >
                   <option value="All Executive">{isLoadingFilters ? 'Loading executives...' : 'All Executive'}</option>
@@ -636,12 +650,12 @@ const VisitReportPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="filter-group">
+              <div className="admin-visit-report-filter-group">
                 <label>Filter by Review Status</label>
                 <select 
                   value={filters.visitStatus}
                   onChange={(e) => handleFilterChange('visitStatus', e.target.value)}
-                  className="filter-select"
+                  className="admin-visit-report-filter-select"
                 >
                   <option value="All Status">All Status</option>
                   {getAllVisitStatusOptions().map(option => (
@@ -650,12 +664,12 @@ const VisitReportPage: React.FC = () => {
                 </select>
               </div>
 
-              <div className="filter-group">
+              <div className="admin-visit-report-filter-group">
                 <label>Filter by Issue Status</label>
                 <select 
                   value={filters.issueStatus}
                   onChange={(e) => handleFilterChange('issueStatus', e.target.value)}
-                  className="filter-select"
+                  className="admin-visit-report-filter-select"
                 >
                   <option value="All Status">All Status</option>
                   {getAllIssueStatusOptions().map(option => (
@@ -669,21 +683,21 @@ const VisitReportPage: React.FC = () => {
       </div>
 
       {/* Visit Reports Table */}
-      <div className="visits-table-section">
-        <div className="visits-table">
+      <div className="admin-visit-report-table-section">
+        <div className="admin-visit-report-table">
           {/* Always show table header for context */}
-          <div className="table-header">
-            <div className="header-cell">Executive Name</div>
-            <div className="header-cell">Store Name</div>
-            <div className="header-cell">Partner Brand</div>
-            <div className="header-cell">Visit Date</div>
-            <div className="header-cell">Issues</div>
-            <div className="header-cell">Status</div>
-            <div className="header-cell">Actions</div>
+          <div className="admin-visit-report-table-header">
+            <div className="admin-visit-report-header-cell">Executive Name</div>
+            <div className="admin-visit-report-header-cell">Store Name</div>
+            <div className="admin-visit-report-header-cell">Partner Brand</div>
+            <div className="admin-visit-report-header-cell">Visit Date</div>
+            <div className="admin-visit-report-header-cell">Issues</div>
+            <div className="admin-visit-report-header-cell">Status</div>
+            <div className="admin-visit-report-header-cell">Actions</div>
           </div>
           
           {/* Table body with loading state */}
-          <div className="table-body">
+          <div className="admin-visit-report-table-body">
             {isLoading ? (
               <div className="table-loading">
                 <div className="loading-spinner-large"></div>
@@ -691,28 +705,28 @@ const VisitReportPage: React.FC = () => {
               </div>
             ) : filteredVisits.length > 0 ? (
               filteredVisits.map(visit => (
-              <div key={visit.id} className="table-row">
-                <div className="cell executive-cell">
+              <div key={visit.id} className="admin-visit-report-table-row">
+                <div className="admin-visit-report-cell admin-visit-report-executive-cell">
                   <div 
-                    className="executive-avatar"
+                    className="admin-visit-report-executive-avatar"
                     style={{ backgroundColor: visit.avatarColor }}
                   >
                     {visit.executiveInitials}
                   </div>
-                  <span className="executive-name">{visit.executiveName}</span>
+                  <span className="admin-visit-report-executive-name">{visit.executiveName}</span>
                 </div>
                 
-                <div className="cell store-name-cell">
-                  <Link href={`/admin/stores/${visit.id}`} className="store-name-link">
+                <div className="admin-visit-report-cell admin-visit-report-store-name-cell">
+                  <Link href={`/admin/stores/${visit.id}`} className="admin-visit-report-store-name-link">
                     {visit.storeName}
                   </Link>
                 </div>
                 
-                <div className="cell partner-brands-cell">
+                <div className="admin-visit-report-cell admin-visit-report-partner-brands-cell">
                   {visit.partnerBrand.map((brand, index) => (
                     <span 
                       key={index}
-                      className="brand-tag"
+                      className="admin-visit-report-brand-tag"
                       style={{ backgroundColor: getBrandColor(brand) }}
                     >
                       {brand}
@@ -720,59 +734,62 @@ const VisitReportPage: React.FC = () => {
                   ))}
                 </div>
                 
-                <div className="cell date-cell">
-                  <span className="visit-date">📅 {visit.visitDate}</span>
+                <div className="admin-visit-report-cell admin-visit-report-date-cell">
+                  <span className="admin-visit-report-visit-date">📅 {visit.visitDate}</span>
                 </div>
                 
-                <div className="cell issues-cell">
-                  <div className="issues-content">
+                <div className="admin-visit-report-cell admin-visit-report-issues-cell">
+                  <div className="admin-visit-report-issues-content">
                     {visit.issues === 'None' ? (
-                      <span className="no-issues">⚠️ {visit.issues}</span>
+                      <span className="admin-visit-report-no-issues">⚠️ {visit.issues}</span>
                     ) : (
-                      <div className="issue-link-container">
-                        <span className="issue-icon">⚠️</span>
+                      <div className="admin-visit-report-issue-link-container">
+                        <span className="admin-visit-report-issue-icon">⚠️</span>
                         {visit.issueId ? (
                           <Link 
                             href={`/admin/issues?issueId=${visit.issueId}`}
-                            className="issue-link"
+                            className="admin-visit-report-issue-link"
                             title={`View issue: ${visit.issues}`}
                           >
                             {visit.issues}
                           </Link>
                         ) : (
-                          <span className="has-issues">{visit.issues}</span>
+                          <span className="admin-visit-report-has-issues">{visit.issues}</span>
                         )}
                       </div>
                     )}
                   </div>
                 </div>
                 
-                <div className="cell status-cell">
-                  <div className="status-badges">
-                    <span className={`status-badge ${getVisitStatusBadgeClass(visit.visitStatus)}`}>
+                <div className="admin-visit-report-cell admin-visit-report-status-cell">
+                  <div className="admin-visit-report-status-badges">
+                    <span className={`admin-visit-report-status-badge ${getVisitStatusBadgeClass(visit.visitStatus)}`}>
                       {formatVisitStatus(visit.visitStatus)}
                     </span>
-                    <span className={`status-badge ${getIssueStatusBadgeClass(visit.issueStatus)}`}>
+                    <span className={`admin-visit-report-status-badge ${getIssueStatusBadgeClass(visit.issueStatus)}`}>
                       Issue {formatIssueStatus(visit.issueStatus)}
                     </span>
                   </div>
                 </div>
                 
-                <div className="cell actions-cell">
-                  <div className="action-buttons-group">
-                    <button className="view-details-btn">
+                <div className="admin-visit-report-cell admin-visit-report-actions-cell">
+                  <div className="admin-visit-report-action-buttons-group">
+                    <button 
+                      className="admin-visit-report-view-details-btn"
+                      onClick={() => openVisitModal(visit)}
+                    >
                       View Details
                     </button>
                     {visit.issues !== 'None' && visit.issueId && (
                       <Link 
                         href={`/admin/issues?issueId=${visit.issueId}`}
-                        className="view-issue-btn"
+                        className="admin-visit-report-view-issue-btn"
                       >
                         View Issue
                       </Link>
                     )}
                     {visit.visitStatus === 'PENDING_REVIEW' && (
-                      <button className="mark-reviewed-btn">
+                      <button className="admin-visit-report-mark-reviewed-btn">
                         Mark Reviewed
                       </button>
                     )}
@@ -794,6 +811,13 @@ const VisitReportPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Visit Details Modal */}
+      <VisitDetailsModal
+        isOpen={showModal}
+        onClose={closeVisitModal}
+        visit={selectedVisit}
+      />
     </div>
   );
 };

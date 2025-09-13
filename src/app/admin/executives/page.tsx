@@ -212,7 +212,7 @@ const AdminExecutivesPage: React.FC = () => {
   // Show critical errors immediately
   if (error) {
     return (
-      <div className="executives-overview">
+      <div className="admin-executives-overview">
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '400px', gap: '1rem' }}>
           <div style={{ fontSize: '1.2rem', color: '#ef4444' }}>Error loading executives</div>
           <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{error}</div>
@@ -245,17 +245,17 @@ const AdminExecutivesPage: React.FC = () => {
       : null;
 
   return (
-    <div className="executives-overview">
+    <div className="admin-executives-overview">
       {/* Store Filter Header */}
       {isFilteringByStore && currentStoreName && (
-        <div className="store-filter-header">
+        <div className="admin-executives-store-filter-header">
           <h2>Executives assigned to {currentStoreName}</h2>
         </div>
       )}
       
       {/* Filters Section */}
-      <div className="filters-section">
-        <div className="filters-header">
+      <div className="admin-executives-filters-section">
+        <div className="admin-executives-filters-header">
           <h3 
             onClick={() => setIsFiltersVisible(!isFiltersVisible)}
             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
@@ -281,13 +281,13 @@ const AdminExecutivesPage: React.FC = () => {
               </button>
             </div>
           ) : (
-        <div className="executives-filters-grid">
-          <div className="filter-group">
+        <div className="admin-executives-filters-grid">
+          <div className="admin-executives-filter-group">
             <label>Filter by Executive Name</label>
             <select 
               value={filters.executiveName}
               onChange={(e) => handleFilterChange('executiveName', e.target.value)}
-              className="filter-select"
+              className="admin-executives-filter-select"
             >
               <option value="All Executive">All Executive</option>
               {filterData.executives.map(executive => (
@@ -296,12 +296,12 @@ const AdminExecutivesPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="filter-group">
+          <div className="admin-executives-filter-group">
             <label>Filter by Store Assignment</label>
             <select
               value={filters.storeName}
               onChange={(e) => handleFilterChange('storeName', e.target.value)}
-              className="filter-select"
+              className="admin-executives-filter-select"
             >
               <option value="All Store">All Store</option>
               {filterData.stores.map(store => (
@@ -310,12 +310,12 @@ const AdminExecutivesPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="filter-group">
+          <div className="admin-executives-filter-group">
             <label>Filter by Brand</label>
             <select 
               value={filters.brand}
               onChange={(e) => handleFilterChange('brand', e.target.value)}
-              className="filter-select"
+              className="admin-executives-filter-select"
             >
               <option value="All Brands">All Brands</option>
               {filterData.brands.map(brand => (
@@ -330,20 +330,20 @@ const AdminExecutivesPage: React.FC = () => {
       </div>
 
       {/* Executives Table */}
-      <div className="executives-table-section">
-        <div className="executives-table">
+      <div className="admin-executives-table-section">
+        <div className="admin-executives-table">
           {/* Always show table header for context */}
-          <div className="table-header">
-            <div className="header-cell">Name</div>
-            <div className="header-cell">Region</div>
-            <div className="header-cell">Partner Brands</div>
-            <div className="header-cell">Total Visits</div>
-            <div className="header-cell">Last Visit</div>
-            <div className="header-cell">Assigned Stores</div>
+          <div className="admin-executives-table-header">
+            <div className="admin-executives-header-cell">Name</div>
+            <div className="admin-executives-header-cell">Region</div>
+            <div className="admin-executives-header-cell">Partner Brands</div>
+            <div className="admin-executives-header-cell">Total Visits</div>
+            <div className="admin-executives-header-cell">Last Visit</div>
+            <div className="admin-executives-header-cell">Assigned Stores</div>
           </div>
           
           {/* Table body with loading state */}
-          <div className="table-body">
+          <div className="admin-executives-table-body">
             {isLoading ? (
               <div className="table-loading">
                 <div className="loading-spinner-large"></div>
@@ -351,38 +351,38 @@ const AdminExecutivesPage: React.FC = () => {
               </div>
             ) : executivesData.length > 0 ? (
               executivesData.map(executive => (
-                <div key={executive.id} className="table-row">
-                  <div className="cell executive-name-cell">
-                    <div className="executive-avatar-container">
+                <div key={executive.id} className="admin-executives-table-row">
+                  <div className="admin-executives-cell admin-executives-name-cell">
+                    <div className="admin-executives-avatar-container">
                       <div 
-                        className="executive-avatar"
+                        className="admin-executives-avatar"
                         style={{ backgroundColor: executive.avatarColor }}
                       >
                         {executive.initials}
                       </div>
-                      <div className="executive-info">
-                        <Link href={`/admin/visit-report?executiveId=${executive.id}`} className="executive-name-link">
-                          <span className="executive-name">{executive.name}</span>
+                      <div className="admin-executives-info">
+                        <Link href={`/admin/visit-report?executiveId=${executive.id}`} className="admin-executives-name-link">
+                          <span className="admin-executives-name">{executive.name}</span>
                         </Link>
                       </div>
                     </div>
                   </div>
-                  <div className="cell">{executive.region}</div>
-                  <div className="cell partner-brands-cell">
+                  <div className="admin-executives-cell">{executive.region}</div>
+                  <div className="admin-executives-cell admin-executives-brands-cell">
                     {executive.partnerBrands.map((brand, index) => (
                       <span 
                         key={index}
-                        className="brand-tag"
+                        className="admin-executives-brand-tag"
                         style={{ backgroundColor: getBrandColor(brand) }}
                       >
                         {brand}
                       </span>
                     ))}
                   </div>
-                  <div className="cell">{executive.totalVisits}</div>
-                  <div className="cell">{executive.lastVisit}</div>
-                  <div className="cell">
-                    <Link href={`/admin/stores?executiveId=${executive.id}`} className="view-all-link">
+                  <div className="admin-executives-cell">{executive.totalVisits}</div>
+                  <div className="admin-executives-cell">{executive.lastVisit}</div>
+                  <div className="admin-executives-cell">
+                    <Link href={`/admin/stores?executiveId=${executive.id}`} className="admin-executives-view-all-link">
                       View All
                     </Link>
                   </div>

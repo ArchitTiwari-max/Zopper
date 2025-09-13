@@ -1,0 +1,260 @@
+/* Admin Visit Details Modal Styles */
+
+.admin-visit-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.admin-visit-modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-visit-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.admin-visit-modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.admin-visit-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+
+.admin-visit-modal-close:hover {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.admin-visit-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.admin-visit-detail-section {
+  margin-bottom: 2rem;
+}
+
+.admin-visit-detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.admin-visit-detail-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 1rem 0;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.admin-visit-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.admin-visit-detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 3px solid #3b82f6;
+}
+
+.admin-visit-detail-label {
+  font-weight: 600;
+  color: #374151;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.admin-visit-detail-value {
+  color: #1e293b;
+  flex: 1;
+}
+
+.admin-visit-executive-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-visit-executive-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-visit-executive-name {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.admin-visit-brands-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-visit-brand-tag {
+  display: inline-block;
+}
+
+.admin-visit-detail-text {
+  color: #374151;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 3px solid #10b981;
+}
+
+.admin-visit-issues-list {
+  background: #fef3c7;
+  border-radius: 8px;
+  border-left: 3px solid #f59e0b;
+  padding: 1rem;
+}
+
+.admin-visit-issue-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-visit-issue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.admin-visit-issue-details {
+  font-weight: 500;
+  color: #92400e;
+  flex: 1;
+}
+
+.admin-visit-issue-status-badge {
+  flex-shrink: 0;
+}
+
+.admin-visit-issue-id {
+  font-size: 0.875rem;
+  color: #92400e;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.admin-visit-no-issues {
+  color: #10b981;
+  font-weight: 500;
+  margin: 0;
+  padding: 0.75rem;
+  background: #f0fdf4;
+  border-radius: 8px;
+  border-left: 3px solid #10b981;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .admin-visit-modal-overlay {
+    padding: 0.5rem;
+  }
+
+  .admin-visit-modal-content {
+    max-height: 95vh;
+  }
+
+  .admin-visit-modal-header {
+    padding: 1rem;
+  }
+
+  .admin-visit-modal-body {
+    padding: 1rem;
+  }
+
+  .admin-visit-detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .admin-visit-detail-label {
+    min-width: auto;
+    font-size: 0.875rem;
+  }
+
+  .admin-visit-issue-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-visit-modal-overlay {
+    padding: 0.25rem;
+  }
+
+  .admin-visit-modal-title {
+    font-size: 1.125rem;
+  }
+
+  .admin-visit-detail-section-title {
+    font-size: 1rem;
+  }
+
+  .admin-visit-brands-list {
+    gap: 0.25rem;
+  }
+}

@@ -1,21 +1,21 @@
 /* Issue Detail Page Specific Styles */
 
 /* Issue Management Page Styles */
-.issue-management-overview {
+.admin-issue-detail-overview {
   padding: 2rem;
   background-color: #f8fafc;
   min-height: calc(100vh - 80px);
 }
 
-.issue-management-header {
+.admin-issue-detail-header {
   margin-bottom: 2rem;
 }
 
-.back-navigation {
+.admin-issue-detail-back-navigation {
   margin-bottom: 1rem;
 }
 
-.back-link {
+.admin-issue-detail-back-link {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -26,7 +26,7 @@
   transition: color 0.15s ease-in-out;
 }
 
-.back-link:hover {
+.admin-issue-detail-back-link:hover {
   color: #2563eb;
   text-decoration: none;
 }
@@ -45,7 +45,7 @@
 }
 
 /* Issue Content Grid */
-.issue-content-grid {
+.admin-issue-detail-content-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 2rem;
@@ -53,13 +53,13 @@
 }
 
 /* Issue Details Section */
-.issue-details-section {
+.admin-issue-detail-details-section {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-.issue-card {
+.admin-issue-detail-card {
   background: white;
   border-radius: 12px;
   padding: 2rem;
@@ -67,11 +67,11 @@
   border: 1px solid #e2e8f0;
 }
 
-.issue-header {
+.admin-issue-detail-header {
   margin-bottom: 1.5rem;
 }
 
-.issue-id-section {
+.admin-issue-detail-id-section {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -79,14 +79,14 @@
   gap: 1rem;
 }
 
-.issue-id-section h3 {
+.admin-issue-detail-id-section h3 {
   font-size: 1.5rem;
   font-weight: 600;
   color: #1e293b;
   margin: 0;
 }
 
-.issue-badges {
+.admin-issue-detail-badges {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -109,14 +109,14 @@
 }
 
 /* Issue Info Grid */
-.issue-info-grid {
+.admin-issue-detail-info-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
-.info-item {
+.admin-issue-detail-info-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -124,11 +124,11 @@
   border-bottom: 1px solid #f1f5f9;
 }
 
-.info-item:last-child {
+.admin-issue-detail-info-item:last-child {
   border-bottom: none;
 }
 
-.info-icon {
+.admin-issue-detail-info-icon {
   width: 32px;
   height: 32px;
   background: #f8fafc;
@@ -140,57 +140,57 @@
   flex-shrink: 0;
 }
 
-.info-content {
+.admin-issue-detail-info-content {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   flex: 1;
 }
 
-.info-label {
+.admin-issue-detail-info-label {
   font-size: 0.875rem;
   color: #6b7280;
   font-weight: 500;
 }
 
-.info-value {
+.admin-issue-detail-info-value {
   font-size: 0.875rem;
   color: #1e293b;
   font-weight: 500;
 }
 
-.info-link {
+.admin-issue-detail-info-link {
   color: #3b82f6;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
-.info-link:hover {
+.admin-issue-detail-info-link:hover {
   color: #2563eb;
   text-decoration: underline;
 }
 
 /* Issue Description */
-.issue-description {
+.admin-issue-detail-description {
   border-top: 1px solid #e2e8f0;
   padding-top: 1.5rem;
 }
 
-.issue-description h4 {
+.admin-issue-detail-description h4 {
   font-size: 1rem;
   font-weight: 600;
   color: #374151;
   margin: 0 0 0.75rem 0;
 }
 
-.issue-description p {
+.admin-issue-detail-description p {
   color: #6b7280;
   line-height: 1.6;
   margin: 0;
 }
 
 /* Assignment History Section */
-.assignment-history-section {
+.admin-issue-detail-assignment-history-section {
   background: white;
   border-radius: 12px;
   padding: 1.5rem;
@@ -198,14 +198,14 @@
   border: 1px solid #e2e8f0;
 }
 
-.assignment-history-section .section-header {
+.admin-issue-detail-assignment-history-section .admin-issue-detail-section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
 }
 
-.assignment-history-section h3 {
+.admin-issue-detail-assignment-history-section h3 {
   font-size: 1.125rem;
   font-weight: 600;
   color: #1e293b;
@@ -230,11 +230,11 @@
 }
 
 /* Assignment History Table */
-.assignment-history-table {
+.admin-issue-detail-assignment-history-table {
   margin-top: 1rem;
 }
 
-.assignment-history-table .table-header {
+.admin-issue-detail-assignment-history-table .admin-issue-detail-table-header {
   background: #f8fafc;
   display: grid;
   grid-template-columns: 1.5fr 1fr 2fr 1fr;
@@ -244,12 +244,12 @@
   margin-bottom: 0.5rem;
 }
 
-.assignment-history-table .table-body {
+.admin-issue-detail-assignment-history-table .admin-issue-detail-table-body {
   display: flex;
   flex-direction: column;
 }
 
-.assignment-history-table .table-row {
+.admin-issue-detail-assignment-history-table .admin-issue-detail-table-row {
   display: grid;
   grid-template-columns: 1.5fr 1fr 2fr 1fr;
   gap: 1rem;
@@ -258,11 +258,11 @@
   align-items: center;
 }
 
-.assignment-history-table .table-row:last-child {
+.admin-issue-detail-assignment-history-table .admin-issue-detail-table-row:last-child {
   border-bottom: none;
 }
 
-.executive-avatar-small {
+.admin-issue-detail-executive-avatar-small {
   width: 24px;
   height: 24px;
   background: #6b7280;
@@ -276,13 +276,13 @@
   margin-right: 0.5rem;
 }
 
-.admin-comment {
+.admin-issue-detail-admin-comment {
   font-size: 0.875rem;
   color: #6b7280;
   line-height: 1.4;
 }
 
-.assignment-status-badge {
+.admin-issue-detail-assignment-status-badge {
   font-size: 0.75rem;
   font-weight: 500;
   padding: 0.25rem 0.5rem;
@@ -291,7 +291,7 @@
   text-align: center;
 }
 
-.view-report-btn {
+.admin-issue-detail-view-report-btn {
   padding: 0.25rem 0.75rem;
   background: transparent;
   border: none;
@@ -303,17 +303,17 @@
   transition: color 0.15s ease-in-out;
 }
 
-.view-report-btn:hover {
+.admin-issue-detail-view-report-btn:hover {
   color: #059669;
 }
 
 /* Admin Action Area */
-.admin-action-area {
+.admin-issue-detail-action-area {
   display: flex;
   flex-direction: column;
 }
 
-.admin-action-card {
+.admin-issue-detail-action-card {
   background: white;
   border-radius: 12px;
   padding: 1.5rem;
@@ -323,18 +323,18 @@
   top: 2rem;
 }
 
-.admin-action-card h3 {
+.admin-issue-detail-action-card h3 {
   font-size: 1.125rem;
   font-weight: 600;
   color: #1e293b;
   margin: 0 0 1.5rem 0;
 }
 
-.action-section {
+.admin-issue-detail-action-section {
   margin-bottom: 1.5rem;
 }
 
-.action-section label {
+.admin-issue-detail-action-section label {
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
@@ -342,7 +342,7 @@
   margin-bottom: 0.5rem;
 }
 
-.comment-input {
+.admin-issue-detail-comment-input {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #d1d5db;
@@ -355,12 +355,12 @@
   transition: border-color 0.15s ease-in-out;
 }
 
-.comment-input:focus {
+.admin-issue-detail-comment-input:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.executive-select {
+.admin-issue-detail-executive-select {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #d1d5db;
@@ -372,21 +372,21 @@
   transition: border-color 0.15s ease-in-out;
 }
 
-.executive-select:focus {
+.admin-issue-detail-executive-select:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* Action Buttons */
-.action-buttons {
+.admin-issue-detail-action-buttons {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
 /* Loading button styles */
-.send-task-btn,
-.mark-solved-btn {
+.admin-issue-detail-send-task-btn,
+.admin-issue-detail-mark-solved-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -407,7 +407,7 @@
   animation: spin 1s linear infinite;
 }
 
-.send-task-btn {
+.admin-issue-detail-send-task-btn {
   padding: 0.75rem 1rem;
   background: #3b82f6;
   color: white;
@@ -419,16 +419,16 @@
   transition: background-color 0.15s ease-in-out;
 }
 
-.send-task-btn:hover:not(:disabled) {
+.admin-issue-detail-send-task-btn:hover:not(:disabled) {
   background: #2563eb;
 }
 
-.send-task-btn:disabled {
+.admin-issue-detail-send-task-btn:disabled {
   background: #9ca3af;
   cursor: not-allowed;
 }
 
-.mark-solved-btn {
+.admin-issue-detail-mark-solved-btn {
   padding: 0.75rem 1rem;
   background: #10b981;
   color: white;
@@ -440,11 +440,11 @@
   transition: background-color 0.15s ease-in-out;
 }
 
-.mark-solved-btn:hover:not(:disabled) {
+.admin-issue-detail-mark-solved-btn:hover:not(:disabled) {
   background: #059669;
 }
 
-.mark-solved-btn:disabled {
+.admin-issue-detail-mark-solved-btn:disabled {
   background: #9ca3af;
   cursor: not-allowed;
 }
@@ -517,7 +517,7 @@
 }
 
 /* Status Badge */
-.status-badge {
+.admin-issue-detail-status-badge {
   font-size: 0.75rem;
   font-weight: 500;
   padding: 0.25rem 0.5rem;
@@ -527,7 +527,7 @@
 }
 
 /* Store Name Section */
-.store-name-section {
+.admin-issue-detail-store-name-section {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -538,13 +538,13 @@
   border: 1px solid #e2e8f0;
 }
 
-.store-name-section span {
+.admin-issue-detail-store-name-section span {
   font-size: 1.125rem;
   font-weight: 600;
   color: #1e293b;
 }
 
-.view-details-btn {
+.admin-issue-detail-view-details-btn {
   background: #3b82f6;
   color: white;
   border: none;
@@ -555,8 +555,161 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.view-details-btn:hover {
+.admin-issue-detail-view-details-btn:hover {
   background: #2563eb;
+}
+
+.admin-issue-detail-store-details {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.admin-issue-detail-store-details div {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.admin-issue-detail-store-details div:last-child {
+  margin-bottom: 0;
+}
+
+.admin-issue-detail-store-details strong {
+  color: #1e293b;
+  margin-right: 0.5rem;
+}
+
+/* Visit Context Section */
+.admin-issue-detail-visit-context-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.admin-issue-detail-visit-context-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.admin-issue-detail-visit-context-header h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.admin-issue-detail-visit-context-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.admin-issue-detail-visit-context-details {
+  padding: 1rem;
+}
+
+.admin-issue-detail-visit-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-issue-detail-visit-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-issue-detail-detail-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  min-width: 100px;
+}
+
+.admin-issue-detail-detail-value {
+  font-size: 0.875rem;
+  color: #1e293b;
+}
+
+.admin-issue-detail-executive-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-issue-detail-executive-avatar-mini {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-issue-detail-visit-feedback {
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.admin-issue-detail-feedback-content {
+  font-style: italic;
+  color: #475569;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+  border-left: 3px solid #3b82f6;
+}
+
+/* Visit Context Toggle Buttons */
+.admin-issue-detail-show-visit-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 1rem 0;
+  display: block;
+}
+
+.admin-issue-detail-show-visit-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.admin-issue-detail-hide-visit-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-issue-detail-hide-visit-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
 }
 
 /* View Report Button */
@@ -789,19 +942,19 @@
 }
 
 /* Executive Cell */
-.executive-cell {
+.admin-issue-detail-executive-cell {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.executive-name {
+.admin-issue-detail-executive-name {
   font-weight: 500;
   color: #1e293b;
 }
 
 /* Header Cell */
-.header-cell {
+.admin-issue-detail-header-cell {
   font-size: 0.75rem;
   font-weight: 600;
   color: #6b7280;
@@ -810,7 +963,7 @@
 }
 
 /* Table Cell */
-.cell {
+.admin-issue-detail-cell {
   font-size: 0.875rem;
   color: #374151;
   display: flex;
@@ -818,7 +971,7 @@
 }
 
 /* Issue Resolution Report */
-.issue-resolution-report {
+.admin-issue-detail-resolution-report {
   background: white;
   border-radius: 12px;
   padding: 1.5rem;
@@ -826,27 +979,27 @@
   border: 1px solid #e2e8f0;
 }
 
-.report-header {
+.admin-issue-detail-report-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
 }
 
-.report-info h3 {
+.admin-issue-detail-report-info h3 {
   font-size: 1.125rem;
   font-weight: 600;
   color: #1e293b;
   margin: 0 0 0.25rem 0;
 }
 
-.report-info p {
+.admin-issue-detail-report-info p {
   color: #6b7280;
   font-size: 0.875rem;
   margin: 0;
 }
 
-.export-report-btn {
+.admin-issue-detail-export-report-btn {
   padding: 0.75rem 1.5rem;
   background: #10b981;
   color: white;
@@ -862,73 +1015,73 @@
   white-space: nowrap;
 }
 
-.export-report-btn:hover {
+.admin-issue-detail-export-report-btn:hover {
   background: #059669;
 }
 
 /* Responsive Design for Issue Management */
 @media (max-width: 1024px) {
-  .issue-content-grid {
+  .admin-issue-detail-content-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
   
-  .admin-action-card {
+  .admin-issue-detail-action-card {
     position: static;
   }
   
-  .assignment-history-table .table-header,
-  .assignment-history-table .table-row {
+  .admin-issue-detail-assignment-history-table .admin-issue-detail-table-header,
+  .admin-issue-detail-assignment-history-table .admin-issue-detail-table-row {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
   
-  .assignment-history-table .header-cell {
+  .admin-issue-detail-assignment-history-table .admin-issue-detail-header-cell {
     display: none;
   }
 }
 
 @media (max-width: 768px) {
-  .issue-management-overview {
+  .admin-issue-detail-overview {
     padding: 1rem;
   }
   
-  .issue-card,
-  .admin-action-card {
+  .admin-issue-detail-card,
+  .admin-issue-detail-action-card {
     padding: 1.5rem;
   }
   
-  .issue-id-section {
+  .admin-issue-detail-id-section {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
   }
   
-  .issue-badges {
+  .admin-issue-detail-badges {
     align-self: flex-end;
   }
   
-  .action-buttons {
+  .admin-issue-detail-action-buttons {
     gap: 0.5rem;
   }
   
-  .assignment-history-table .table-header,
-  .assignment-history-table .table-row {
+  .admin-issue-detail-assignment-history-table .admin-issue-detail-table-header,
+  .admin-issue-detail-assignment-history-table .admin-issue-detail-table-row {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
   
-  .assignment-history-table .header-cell {
+  .admin-issue-detail-assignment-history-table .admin-issue-detail-header-cell {
     display: none;
   }
 
-  .report-header {
+  .admin-issue-detail-report-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
 
-  .export-report-btn {
+  .admin-issue-detail-export-report-btn {
     width: 100%;
     justify-content: center;
   }

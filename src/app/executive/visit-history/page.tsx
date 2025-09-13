@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import VisitDetailsModal from '@/components/VisitDetailsModal';
+import VisitDetailsModal from '../components/VisitDetailsModal';
 import { useDateFilter } from '../contexts/DateFilterContext';
 import DateFilter from '@/components/DateFilter/DateFilter';
 import * as XLSX from 'xlsx';

@@ -26,6 +26,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Store ID is required' }, { status: 400 });
     }
 
+    // Get current executive info first
+    const currentExecutive = await prisma.executive.findUnique({
+      where: { userId: user.userId }
+    });
+
+    if (!currentExecutive) {
+      return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
+    }
+
     // Get last 5 visits for this store by ANY executive
     const visits = await prisma.visit.findMany({
       where: {
@@ -61,38 +70,83 @@ export async function GET(request: NextRequest) {
     // Transform visits data, handling null executives
     const transformedVisits = visits
       .filter(visit => visit.executive) // Only include visits with valid executives
-      .map(visit => ({
-        id: visit.id,
-        date: visit.createdAt.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        }),
-        status: visit.status, // PENDING or COMPLETED
-        representative: visit.executive?.name || 'Unknown Executive',
-        personMet: visit.personMet,
-        displayChecked: visit.displayChecked,
-        remarks: visit.remarks,
-        imageUrls: visit.imageUrls,
-        adminComment: visit.adminComment,
-        issues: visit.issues.map(issue => ({
-          id: issue.id,
-          details: issue.details,
-          status: issue.status,
-          createdAt: issue.createdAt,
-          assigned: issue.assigned
-            .filter(assignment => assignment.executive) // Filter out null executives
-            .map(assignment => ({
-              id: assignment.id,
-              adminComment: assignment.adminComment,
-              status: assignment.status,
-              createdAt: assignment.createdAt,
-              executiveName: assignment.executive?.name || 'Unknown Executive'
-            }))
-        })),
-        createdAt: visit.createdAt,
-        updatedAt: visit.updatedAt
-      }));
+      .map(visit => {
+        const isCurrentExecutive = visit.executiveId === currentExecutive.id;
+        
+        if (isCurrentExecutive) {
+          // Full data for current executive's visits
+          return {
+            id: visit.id,
+            date: visit.createdAt.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            }),
+            status: visit.status,
+            representative: visit.executive?.name || 'Unknown Executive',
+            canViewDetails: true,
+            personMet: visit.personMet,
+            displayChecked: visit.displayChecked,
+            remarks: visit.remarks,
+            imageUrls: visit.imageUrls,
+            adminComment: visit.adminComment,
+            storeName: visit.store?.storeName || 'Unknown Store',
+            issues: visit.issues
+              .filter(issue => 
+                issue.assigned.some(assignment => 
+                  assignment.executive && assignment.executive.id === currentExecutive.id
+                )
+              )
+              .map(issue => ({
+                id: issue.id,
+                details: issue.details,
+                status: issue.status,
+                createdAt: issue.createdAt,
+                assigned: issue.assigned
+                  .filter(assignment => 
+                    assignment.executive && assignment.executive.id === currentExecutive.id
+                  )
+                  .map(assignment => ({
+                    id: assignment.id,
+                    adminComment: assignment.adminComment,
+                    status: assignment.status,
+                    createdAt: assignment.createdAt,
+                    executiveName: assignment.executive?.name || 'Unknown Executive'
+                  }))
+              })),
+            createdAt: visit.createdAt,
+            updatedAt: visit.updatedAt
+          };
+        } else {
+          // Limited data for other executives' visits - but include contact person and issues for coordination
+          return {
+            id: visit.id,
+            date: visit.createdAt.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            }),
+            status: visit.status,
+            representative: visit.executive?.name || 'Unknown Executive',
+            canViewDetails: false,
+            personMet: visit.personMet, // Show contact person info for coordination
+            displayChecked: false, // No sensitive display info
+            remarks: null, // No private remarks
+            imageUrls: [], // No private images
+            adminComment: null, // No admin comments
+            storeName: visit.store?.storeName || 'Unknown Store',
+            issues: visit.issues.map(issue => ({
+              id: issue.id,
+              details: issue.details,
+              status: issue.status,
+              createdAt: issue.createdAt,
+              assigned: [] // Don't show assignments for other executives
+            })),
+            createdAt: visit.createdAt,
+            updatedAt: visit.updatedAt
+          };
+        }
+      });
 
     return NextResponse.json({
       success: true,

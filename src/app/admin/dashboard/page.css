@@ -1,11 +1,11 @@
-/* Dashboard Page Specific Styles */
+/* Admin Dashboard Page Specific Styles */
 
-/* Dashboard Overview */
-.dashboard-overview {
+/* Admin Dashboard Overview */
+.admin-dashboard-overview {
   padding: 2rem;
 }
 
-.overview-header {
+.admin-dashboard-overview-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -14,14 +14,14 @@
   gap: 1rem;
 }
 
-.overview-header h2 {
+.admin-dashboard-overview-header h2 {
   font-size: 1.5rem;
   font-weight: 600;
   color: #1e293b;
   margin-bottom: 0.25rem;
 }
 
-.overview-header p {
+.admin-dashboard-overview-header p {
   color: #64748b;
   font-size: 0.875rem;
 }
@@ -55,15 +55,15 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Metrics Grid */
-.metrics-grid {
+/* Admin Dashboard Metrics Grid */
+.admin-dashboard-metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
-.metric-card {
+.admin-dashboard-metric-card {
   background: white;
   border-radius: 12px;
   padding: 1.5rem;
@@ -73,36 +73,36 @@
   transition: all 0.2s ease;
 }
 
-.metric-card:hover {
+.admin-dashboard-metric-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
-.metric-card.clickable {
+.admin-dashboard-metric-card--clickable {
   cursor: pointer;
   text-decoration: none !important;
   color: inherit;
   display: flex;
 }
 
-.metric-card.clickable:hover {
+.admin-dashboard-metric-card--clickable:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
   text-decoration: none !important;
   color: inherit;
 }
 
-.metric-card.clickable:visited {
+.admin-dashboard-metric-card--clickable:visited {
   text-decoration: none !important;
   color: inherit;
 }
 
-.metric-card.clickable:focus {
+.admin-dashboard-metric-card--clickable:focus {
   text-decoration: none !important;
   outline: none;
 }
 
-.metric-icon {
+.admin-dashboard-metric-icon {
   width: 48px;
   height: 48px;
   border-radius: 10px;
@@ -112,79 +112,79 @@
   font-size: 1.25rem;
 }
 
-.metric-icon.visits {
+.admin-dashboard-metric-icon--visits {
   background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   color: white;
 }
 
-.metric-icon.reviews {
+.admin-dashboard-metric-icon--reviews {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: white;
 }
 
-.metric-icon.executives {
+.admin-dashboard-metric-icon--executives {
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
 }
 
-.metric-icon.issues {
+.admin-dashboard-metric-icon--issues {
   background: linear-gradient(135deg, #ef4444, #dc2626);
   color: white;
 }
 
-.metric-content {
+.admin-dashboard-metric-content {
   flex: 1;
 }
 
-.metric-content h3 {
+.admin-dashboard-metric-content h3 {
   font-size: 0.875rem;
   font-weight: 500;
   color: #64748b;
   margin-bottom: 0.5rem;
 }
 
-.metric-value {
+.admin-dashboard-metric-value {
   font-size: 1.875rem;
   font-weight: 700;
   color: #1e293b;
   margin-bottom: 0.25rem;
 }
 
-.metric-change {
+.admin-dashboard-metric-change {
   font-size: 0.75rem;
   font-weight: 500;
 }
 
-.metric-change.positive {
+.admin-dashboard-metric-change--positive {
   color: #10b981;
 }
 
-.metric-status {
+.admin-dashboard-metric-status {
   font-size: 0.75rem;
   font-weight: 500;
 }
 
-.metric-status.warning {
+.admin-dashboard-metric-status--warning {
   color: #f59e0b;
 }
 
-.metric-status.active {
+.admin-dashboard-metric-status--active {
   color: #10b981;
 }
 
-.metric-status.critical {
+.admin-dashboard-metric-status--critical {
   color: #ef4444;
 }
 
-/* Brand Visits Section */
-.brand-visits-section {
+/* Admin Dashboard Brand Visits Section */
+.admin-dashboard-brand-visits-section {
   background: white;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
   overflow: hidden;
 }
 
-.section-header {
+.admin-dashboard-section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -193,19 +193,25 @@
   background: #f8fafc;
 }
 
-.section-title {
+.admin-dashboard-section-title {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.section-title h3 {
+.admin-dashboard-section-title h3 {
   font-size: 1.125rem;
   font-weight: 600;
   color: #1e293b;
 }
 
-.brand-filter select {
+.admin-dashboard-brand-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-dashboard-brand-select {
   padding: 0.5rem 1rem;
   border: 1px solid #d1d5db;
   border-radius: 8px;
@@ -215,11 +221,11 @@
   cursor: pointer;
 }
 
-.brand-visits-table {
+.admin-dashboard-brand-visits-table {
   overflow-x: auto;
 }
 
-.table-header {
+.admin-dashboard-table-header {
   display: grid;
   grid-template-columns: 2fr 1.5fr 1fr;
   gap: 1rem;
@@ -228,7 +234,7 @@
   border-bottom: 1px solid #e2e8f0;
 }
 
-.header-cell {
+.admin-dashboard-header-cell {
   font-size: 0.75rem;
   font-weight: 600;
   color: #64748b;
@@ -236,12 +242,12 @@
   letter-spacing: 0.05em;
 }
 
-.table-body {
+.admin-dashboard-table-body {
   display: flex;
   flex-direction: column;
 }
 
-.table-row {
+.admin-dashboard-table-row {
   display: grid;
   grid-template-columns: 2fr 1.5fr 1fr;
   gap: 1rem;
@@ -250,23 +256,23 @@
   transition: all 0.2s ease;
 }
 
-.table-row:hover {
+.admin-dashboard-table-row:hover {
   background-color: #f8fafc;
 }
 
-.table-row:last-child {
+.admin-dashboard-table-row:last-child {
   border-bottom: none;
 }
 
-/* Clickable row styles */
-.table-row.clickable-row {
+/* Admin Dashboard Clickable row styles */
+.admin-dashboard-table-row--clickable {
   cursor: pointer;
   text-decoration: none;
   color: inherit;
   position: relative;
 }
 
-.table-row.clickable-row:hover {
+.admin-dashboard-table-row--clickable:hover {
   background-color: #f1f5f9;
   transform: translateX(2px);
   text-decoration: none;
@@ -275,7 +281,7 @@
 }
 
 /* Add a subtle arrow indicator on hover */
-.table-row.clickable-row:hover::after {
+.admin-dashboard-table-row--clickable:hover::after {
   content: '→';
   position: absolute;
   right: 1.5rem;
@@ -284,25 +290,25 @@
   transition: opacity 0.2s ease;
 }
 
-.table-row.clickable-row:visited {
+.admin-dashboard-table-row--clickable:visited {
   color: inherit;
   text-decoration: none;
 }
 
-.table-row.clickable-row:focus {
+.admin-dashboard-table-row--clickable:focus {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
   text-decoration: none;
 }
 
-.cell {
+.admin-dashboard-cell {
   display: flex;
   align-items: center;
   font-size: 0.875rem;
   color: #374151;
 }
 
-.store-name {
+.admin-dashboard-cell--store-name {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -310,29 +316,29 @@
   color: #1e293b;
 }
 
-.brand-name-link {
+.admin-dashboard-brand-name-link {
   color: #3b82f6;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
 }
 
-.brand-name-link:hover {
+.admin-dashboard-brand-name-link:hover {
   color: #2563eb;
   text-decoration: none;
 }
 
-.brand-name-link:visited {
+.admin-dashboard-brand-name-link:visited {
   color: #3b82f6;
 }
 
-.brand-name {
+.admin-dashboard-brand-name {
   color: #1e293b;
   font-weight: 500;
   font-size: 0.875rem;
 }
 
-.brand-logo {
+.admin-dashboard-brand-logo {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -344,7 +350,7 @@
   font-size: 0.875rem;
 }
 
-.visit-badge {
+.admin-dashboard-visit-badge {
   padding: 0.25rem 0.5rem;
   border-radius: 12px;
   color: white;
@@ -352,48 +358,48 @@
   font-weight: 500;
 }
 
-/* Responsive Design for Dashboard */
+/* Responsive Design for Admin Dashboard */
 @media (max-width: 1024px) {
-  .metrics-grid {
+  .admin-dashboard-metrics-grid {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
   
-  .overview-header {
+  .admin-dashboard-overview-header {
     flex-direction: column;
     align-items: flex-start;
   }
   
-  .table-header,
-  .table-row {
+  .admin-dashboard-table-header,
+  .admin-dashboard-table-row {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
   
-  .header-cell {
+  .admin-dashboard-header-cell {
     display: none;
   }
   
-  .cell {
+  .admin-dashboard-cell {
     padding: 0.5rem 0;
     border-bottom: 1px solid #f1f5f9;
   }
   
-  .cell:last-child {
+  .admin-dashboard-cell:last-child {
     border-bottom: none;
   }
 }
 
 @media (max-width: 768px) {
-  .dashboard-overview {
+  .admin-dashboard-overview {
     padding: 1rem;
   }
   
-  .metrics-grid {
+  .admin-dashboard-metrics-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
   
-  .section-header {
+  .admin-dashboard-section-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;

@@ -1,0 +1,471 @@
+/* Visit Details Modal Styles */
+.visit-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 20px;
+  animation: visitModalFadeIn 0.2s ease-out;
+  /* Ensure modal is always on top */
+  pointer-events: auto;
+  isolation: isolate;
+}
+
+@keyframes visitModalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.visit-modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: visitModalSlideIn 0.3s ease-out;
+}
+
+@keyframes visitModalSlideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.visit-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border-radius: 12px 12px 0 0;
+}
+
+.visit-modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #212529;
+  margin: 0;
+}
+
+.visit-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.visit-modal-close:hover {
+  background-color: #e5e7eb;
+  color: #374151;
+  transform: scale(1.1);
+}
+
+.visit-modal-body {
+  padding: 24px;
+}
+
+.visit-detail-section {
+  margin-bottom: 24px;
+}
+
+.visit-detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.visit-detail-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #212529;
+  margin: 0 0 12px 0;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 8px;
+  position: relative;
+}
+
+.visit-detail-section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background-color: #4f46e5;
+}
+
+.visit-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.visit-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.visit-detail-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.visit-detail-value {
+  font-size: 14px;
+  color: #212529;
+  font-weight: 500;
+}
+
+.visit-status-badge {
+  display: inline-block;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 12px !important;
+  border-radius: 12px !important;
+  white-space: nowrap;
+}
+
+.visit-detail-text {
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.5;
+  margin: 0;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #e9ecef;
+}
+
+.visit-detail-text.visit-admin-comment {
+  background-color: #f0f9ff;
+  border-left-color: #10b981;
+  color: #065f46;
+}
+
+.visit-people-met-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.visit-person-met-item {
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #374151;
+  transition: transform 0.2s;
+}
+
+.visit-person-met-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.visit-person-met-item .visit-person-name {
+  font-weight: 500;
+  margin-right: 4px;
+}
+
+.visit-person-met-item .visit-person-designation {
+  color: #6b7280;
+}
+
+.visit-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.visit-image-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.visit-image-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.visit-detail-image {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.visit-detail-image:hover {
+  transform: scale(1.05);
+}
+
+.visit-issues-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.visit-issue-detail-item {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  transition: box-shadow 0.2s;
+}
+
+.visit-issue-detail-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.visit-issue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.visit-issue-details {
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.visit-issue-status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background-color: #f3f4f6;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.visit-issue-date {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 12px;
+  font-style: italic;
+}
+
+.visit-issue-assignments {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 12px;
+}
+
+.visit-issue-assignments h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 8px 0;
+}
+
+.visit-assignment-item {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 8px;
+  transition: background-color 0.2s;
+}
+
+.visit-assignment-item:last-child {
+  margin-bottom: 0;
+}
+
+.visit-assignment-item:hover {
+  background-color: #fafafa;
+}
+
+.visit-assignment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.visit-assignment-executive {
+  font-size: 14px;
+  font-weight: 500;
+  color: #212529;
+}
+
+.visit-assignment-status {
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.visit-assignment-comment {
+  font-size: 13px;
+  color: #374151;
+  margin: 6px 0;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #4f46e5;
+}
+
+.visit-assignment-date {
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Mobile modal styles */
+@media (max-width: 768px) {
+  .visit-modal-overlay {
+    padding: 10px;
+  }
+  
+  .visit-modal-content {
+    max-height: 95vh;
+    border-radius: 8px;
+  }
+  
+  .visit-modal-header {
+    padding: 16px 20px;
+    border-radius: 8px 8px 0 0;
+  }
+  
+  .visit-modal-title {
+    font-size: 16px;
+  }
+  
+  .visit-modal-body {
+    padding: 20px;
+  }
+  
+  .visit-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .visit-detail-item {
+    padding: 10px;
+  }
+  
+  .visit-images-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+  }
+  
+  .visit-detail-image {
+    height: 100px;
+  }
+  
+  .visit-issue-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .visit-assignment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .visit-modal-overlay {
+    padding: 5px;
+  }
+  
+  .visit-modal-header {
+    padding: 12px 16px;
+  }
+  
+  .visit-modal-body {
+    padding: 16px;
+  }
+  
+  .visit-detail-section {
+    margin-bottom: 20px;
+  }
+  
+  .visit-detail-section-title {
+    font-size: 15px;
+  }
+  
+  .visit-detail-item {
+    padding: 8px;
+  }
+  
+  .visit-images-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+  
+  .visit-detail-image {
+    height: 80px;
+  }
+  
+  .visit-issue-detail-item {
+    padding: 12px;
+  }
+  
+  .visit-assignment-item {
+    padding: 10px;
+  }
+}
+
+/* Scrollbar styling for modal */
+.visit-modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.visit-modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.visit-modal-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.visit-modal-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

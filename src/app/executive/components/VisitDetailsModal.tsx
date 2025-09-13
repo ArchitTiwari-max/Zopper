@@ -8,6 +8,7 @@ interface PastVisit {
   date: string;
   status: 'PENDING_REVIEW' | 'REVIEWD';
   representative: string;
+  canViewDetails: boolean;
   personMet: PersonMet[];
   displayChecked: boolean;
   remarks?: string;
@@ -134,7 +135,7 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
             <div className="visit-detail-grid">
               <div className="visit-detail-item">
                 <span className="visit-detail-label">Store Name:</span>
-                <span className="visit-detail-value">{visit.storeName}</span>
+                <span className="visit-detail-value">{visit.storeName || 'Store information not available'}</span>
               </div>
               <div className="visit-detail-item">
                 <span className="visit-detail-label">Visit Date:</span>

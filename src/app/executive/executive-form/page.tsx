@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ImageUpload from '@/components/ImageUpload';
-import VisitDetailsModal from '@/components/VisitDetailsModal';
+import VisitDetailsModal from '../components/VisitDetailsModal';
 import './ExecutiveForm.css';
 
 interface PastVisit {
@@ -11,6 +11,7 @@ interface PastVisit {
   date: string;
   status: 'PENDING_REVIEW' | 'REVIEWD';
   representative: string;
+  canViewDetails: boolean;
   personMet: PersonMet[];
   displayChecked: boolean;
   remarks?: string;
@@ -19,6 +20,7 @@ interface PastVisit {
   issues: VisitIssue[];
   createdAt: string;
   updatedAt: string;
+  storeName: string;
 }
 
 interface VisitIssue {
@@ -687,12 +689,14 @@ const ExecutiveFormContent: React.FC = () => {
                         {visit.status}
                       </span>
                     </div>
-                    <button 
-                      className="view-details-btn"
-                      onClick={() => openVisitModal(visit)}
-                    >
-                      View Details
-                    </button>
+                    {visit.canViewDetails && (
+                      <button 
+                        className="view-details-btn"
+                        onClick={() => openVisitModal(visit)}
+                      >
+                        View Details
+                      </button>
+                    )}
                   </div>
                   <div className="visit-representative">
                     <span className="person-icon">👤</span>

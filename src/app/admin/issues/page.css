@@ -1,13 +1,13 @@
-/* Issues Page Specific Styles */
+/* Admin Issues Page Specific Styles */
 
-/* Issues Overview */
-.issues-overview {
+/* Admin Issues Overview */
+.admin-issues-overview {
   padding: 2rem;
   background-color: #f8fafc;
   min-height: calc(100vh - 80px);
 }
 
-.issues-header {
+.admin-issues-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -16,14 +16,14 @@
   gap: 1rem;
 }
 
-.issues-header-content h2 {
+.admin-issues-header-content h2 {
   font-size: 2rem;
   font-weight: 700;
   color: #1e293b;
   margin: 0 0 0.5rem 0;
 }
 
-.issues-header-content p {
+.admin-issues-header-content p {
   color: #64748b;
   font-size: 0.875rem;
   margin: 0;
@@ -74,15 +74,15 @@
   box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
 }
 
-/* Issues Stats Grid */
-.issues-stats-grid {
+/* Admin Issues Stats Grid */
+.admin-issues-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
-.stats-card {
+.admin-issues-stats-card {
   background: white;
   border-radius: 12px;
   padding: 1.5rem;
@@ -93,29 +93,29 @@
   transition: all 0.2s ease;
 }
 
-.stats-card:hover {
+.admin-issues-stats-card:hover {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
 
 /* Clickable stats cards */
-.stats-card.clickable {
+.admin-issues-stats-card--clickable {
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.stats-card.clickable:hover {
+.admin-issues-stats-card--clickable:hover {
   box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.15);
   transform: translateY(-3px);
   border-color: #3b82f6;
 }
 
-.stats-card.clickable:active {
+.admin-issues-stats-card--clickable:active {
   transform: translateY(-1px);
   box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.1);
 }
 
-.stats-icon {
+.admin-issues-stats-icon {
   width: 48px;
   height: 48px;
   border-radius: 10px;
@@ -126,37 +126,37 @@
   flex-shrink: 0;
 }
 
-.stats-icon.open {
+.admin-issues-stats-icon--open {
   background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
-.stats-icon.in-progress {
+.admin-issues-stats-icon--in-progress {
   background: linear-gradient(135deg, #3b82f6, #1d4ed8);
 }
 
-.stats-icon.resolved {
+.admin-issues-stats-icon--resolved {
   background: linear-gradient(135deg, #10b981, #059669);
 }
 
-.stats-icon.critical {
+.admin-issues-stats-icon--critical {
   background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 
-.stats-content h4 {
+.admin-issues-stats-content h4 {
   font-size: 0.875rem;
   font-weight: 500;
   color: #64748b;
   margin: 0 0 0.5rem 0;
 }
 
-.stats-value {
+.admin-issues-stats-value {
   font-size: 1.875rem;
   font-weight: 700;
   color: #1e293b;
 }
 
-/* Issues Table */
-.issues-table-section {
+/* Admin Issues Table */
+.admin-issues-table-section {
   background: white;
   border-radius: 12px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
@@ -164,11 +164,11 @@
   overflow: hidden;
 }
 
-.issues-table {
+.admin-issues-table {
   width: 100%;
 }
 
-.issues-table .table-header {
+.admin-issues-table .admin-issues-table-header {
   background: #6b7280;
   display: grid;
   grid-template-columns: 1.2fr 2fr 1fr 1.3fr 1.2fr 1.5fr;
@@ -176,7 +176,7 @@
   padding: 1rem;
 }
 
-.issues-table .header-cell {
+.admin-issues-table .admin-issues-header-cell {
   font-size: 0.75rem;
   font-weight: 600;
   color: white;
@@ -186,12 +186,12 @@
   align-items: center;
 }
 
-.issues-table .table-body {
+.admin-issues-table .admin-issues-table-body {
   display: flex;
   flex-direction: column;
 }
 
-.issues-table .table-row {
+.admin-issues-table .admin-issues-table-row {
   display: grid;
   grid-template-columns: 1.2fr 2fr 1fr 1.3fr 1.2fr 1.5fr;
   gap: 1rem;
@@ -201,47 +201,47 @@
   transition: background-color 0.15s ease-in-out;
 }
 
-.issues-table .table-row:hover {
+.admin-issues-table .admin-issues-table-row:hover {
   background-color: #f8fafc;
 }
 
-.issues-table .table-row:last-child {
+.admin-issues-table .admin-issues-table-row:last-child {
   border-bottom: none;
 }
 
-.issues-table .cell {
+.admin-issues-table .admin-issues-cell {
   font-size: 0.875rem;
   color: #374151;
   display: flex;
   align-items: center;
 }
 
-/* Issue ID Link */
-.issue-id-link {
+/* Admin Issues Issue ID Link */
+.admin-issues-issue-id-link {
   color: #3b82f6;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
 }
 
-.issue-id-link:hover {
+.admin-issues-issue-id-link:hover {
   color: #2563eb;
   text-decoration: underline;
 }
 
-/* Store Info in Issues Table */
-.store-info {
+/* Admin Issues Store Info */
+.admin-issues-store-info {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.store-location {
+.admin-issues-store-location {
   font-size: 0.75rem;
   color: #6b7280;
 }
 
-.brand-info {
+.admin-issues-brand-info {
   font-size: 0.75rem;
   color: #9ca3af;
 }
@@ -267,8 +267,8 @@
   text-align: center;
 }
 
-/* Status Badge */
-.status-badge {
+/* Admin Issues Status Badge */
+.admin-issues-status-badge {
   font-size: 0.75rem;
   font-weight: 500;
   padding: 0.25rem 0.5rem;
@@ -277,26 +277,26 @@
   text-align: center;
 }
 
-/* Reporter Info */
-.reporter-info {
+/* Admin Issues Reporter Info */
+.admin-issues-reporter-info {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.reporter-name {
+.admin-issues-reporter-name {
   font-weight: 500;
   color: #1e293b;
   font-size: 0.875rem;
 }
 
-.reporter-role {
+.admin-issues-reporter-role {
   font-size: 0.75rem;
   color: #6b7280;
 }
 
-/* Actions in Issues Table */
-.issues-table .actions-cell {
+/* Admin Issues Actions in Table */
+.admin-issues-table .admin-issues-actions-cell {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -304,7 +304,7 @@
   justify-self: start;
 }
 
-.quick-assign-btn {
+.admin-issues-quick-assign-btn {
   padding: 0.25rem 0.75rem;
   background: #f59e0b;
   color: white;
@@ -316,11 +316,11 @@
   transition: background-color 0.15s ease-in-out;
 }
 
-.quick-assign-btn:hover {
+.admin-issues-quick-assign-btn:hover {
   background: #d97706;
 }
 
-.view-details-btn {
+.admin-issues-view-details-btn {
   background: transparent;
   color: #3b82f6;
   text-decoration: underline;
@@ -332,7 +332,7 @@
   transition: color 0.15s ease-in-out;
 }
 
-.view-details-btn:hover {
+.admin-issues-view-details-btn:hover {
   color: #2563eb;
 }
 
@@ -388,20 +388,20 @@
   background-color: rgba(124, 45, 18, 0.05);
 }
 
-/* Store Name Link Style */
-.store-name-link {
+/* Admin Issues Store Name Link Style */
+.admin-issues-store-name-link {
   color: #3b82f6;
   text-decoration: none;
   transition: color 0.2s ease;
   cursor: pointer;
 }
 
-.store-name-link:hover {
+.admin-issues-store-name-link:hover {
   color: #2563eb;
   text-decoration: underline;
 }
 
-.store-name-link:visited {
+.admin-issues-store-name-link:visited {
   color: #3b82f6;
 }
 
@@ -435,8 +435,8 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Filters Section Styles */
-.filters-section {
+/* Admin Issues Filters Section Styles */
+.admin-issues-filters-section {
   background: white;
   border-radius: 12px;
   padding: 1.5rem;
@@ -445,32 +445,32 @@
   border: 1px solid #e2e8f0;
 }
 
-.filters-header h3 {
+.admin-issues-filters-header h3 {
   font-size: 1.125rem;
   font-weight: 600;
   color: #374151;
   margin: 0 0 1rem 0;
 }
 
-.filters-grid {
+.admin-issues-filters-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
 }
 
-.filter-group {
+.admin-issues-filter-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.filter-group label {
+.admin-issues-filter-group label {
   font-size: 0.875rem;
   font-weight: 500;
   color: #6b7280;
 }
 
-.filter-select {
+.admin-issues-filter-select {
   padding: 0.5rem 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -481,47 +481,47 @@
   transition: border-color 0.15s ease-in-out;
 }
 
-.filter-select:focus {
+.admin-issues-filter-select:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Responsive Design for Issues */
+/* Responsive Design for Admin Issues */
 @media (max-width: 1024px) {
-  .issues-stats-grid {
+  .admin-issues-stats-grid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
   
-  .issues-table .table-header,
-  .issues-table .table-row {
+  .admin-issues-table .admin-issues-table-header,
+  .admin-issues-table .admin-issues-table-row {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
   
-  .issues-table .header-cell {
+  .admin-issues-table .admin-issues-header-cell {
     display: none;
   }
   
-  .issues-table .cell {
+  .admin-issues-table .admin-issues-cell {
     padding: 0.5rem 0;
     border-bottom: 1px solid #f1f5f9;
   }
   
-  .issues-table .cell:last-child {
+  .admin-issues-table .admin-issues-cell:last-child {
     border-bottom: none;
   }
 }
 
 @media (max-width: 768px) {
-  .issues-overview {
+  .admin-issues-overview {
     padding: 1rem;
   }
   
-  .issues-stats-grid {
+  .admin-issues-stats-grid {
     grid-template-columns: 1fr;
   }
   
-  .issues-header {
+  .admin-issues-header {
     flex-direction: column;
     align-items: flex-start;
   }

@@ -313,7 +313,7 @@ const AdminStoresPage: React.FC = () => {
   // Show critical errors immediately
   if (error) {
     return (
-      <div className="stores-overview">
+      <div className="admin-stores-overview">
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '400px', gap: '1rem' }}>
           <div style={{ fontSize: '1.2rem', color: '#ef4444' }}>Error loading stores</div>
           <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{error}</div>
@@ -346,17 +346,17 @@ const AdminStoresPage: React.FC = () => {
       : null;
 
   return (
-    <div className="stores-overview">
+    <div className="admin-stores-overview">
       {/* Executive Filter Header */}
       {isFilteringByExecutive && currentExecutiveName && (
-        <div className="executive-filter-header">
+        <div className="admin-stores-executive-filter-header">
           <h2>Stores assigned to {currentExecutiveName}</h2>
         </div>
       )}
       
       {/* Filters Section */}
-      <div className="filters-section">
-        <div className="filters-header">
+      <div className="admin-stores-filters-section">
+        <div className="admin-stores-filters-header">
           <h3 
             onClick={() => setIsFiltersVisible(!isFiltersVisible)}
             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
@@ -382,13 +382,13 @@ const AdminStoresPage: React.FC = () => {
               </button>
             </div>
           ) : (
-        <div className="filters-grid">
-          <div className="filter-group">
+        <div className="admin-stores-filters-grid">
+          <div className="admin-stores-filter-group">
             <label>Filter by Partner Brand</label>
             <select 
               value={filters.partnerBrand}
               onChange={(e) => handleFilterChange('partnerBrand', e.target.value)}
-              className="filter-select"
+              className="admin-stores-filter-select"
             >
               <option value="All Brands">All Brands</option>
               {getFilterOptions('brands').map(brand => (
@@ -397,12 +397,12 @@ const AdminStoresPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="filter-group">
+          <div className="admin-stores-filter-group">
             <label>Filter by City</label>
             <select 
               value={filters.city}
               onChange={(e) => handleFilterChange('city', e.target.value)}
-              className="filter-select"
+              className="admin-stores-filter-select"
             >
               <option value="All City">All City</option>
               {getFilterOptions('cities').map(city => (
@@ -411,12 +411,12 @@ const AdminStoresPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="filter-group">
+          <div className="admin-stores-filter-group">
             <label>Filter by Store Name</label>
             <select 
               value={filters.storeName}
               onChange={(e) => handleFilterChange('storeName', e.target.value)}
-              className="filter-select"
+              className="admin-stores-filter-select"
             >
               <option value="All Store">All Store</option>
               {filterData.stores.map(store => (
@@ -425,12 +425,12 @@ const AdminStoresPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="filter-group">
+          <div className="admin-stores-filter-group">
             <label>Assigned Executive</label>
             <select 
               value={filters.executiveName}
               onChange={(e) => handleFilterChange('executiveName', e.target.value)}
-              className="filter-select"
+              className="admin-stores-filter-select"
             >
               <option value="All Executive">All Executive</option>
               {filterData.executives.map(executive => (
@@ -439,12 +439,12 @@ const AdminStoresPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="filter-group">
+          <div className="admin-stores-filter-group">
             <label>Filter by Visit Status</label>
             <select 
               value={filters.visitStatus}
               onChange={(e) => handleFilterChange('visitStatus', e.target.value)}
-              className="filter-select"
+              className="admin-stores-filter-select"
             >
               <option value="All Status">All Status</option>
               <option value="PENDING_REVIEW">Pending Review</option>
@@ -452,12 +452,12 @@ const AdminStoresPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="filter-group">
+          <div className="admin-stores-filter-group">
             <label>Filter by Issue Status</label>
             <select 
               value={filters.issueStatus}
               onChange={(e) => handleFilterChange('issueStatus', e.target.value)}
-              className="filter-select"
+              className="admin-stores-filter-select"
             >
               <option value="All Status">All Status</option>
               <option value="Pending">Pending</option>
@@ -550,20 +550,20 @@ const AdminStoresPage: React.FC = () => {
       </div>
 
       {/* Stores Table */}
-      <div className="stores-table-section">
-        <div className="stores-table">
+      <div className="admin-stores-table-section">
+        <div className="admin-stores-table">
           {/* Always show table header for context */}
-          <div className="table-header">
-            <div className="header-cell">STORE NAME</div>
-            <div className="header-cell">PARTNER BRANDS</div>
-            <div className="header-cell">ADDRESS</div>
-            <div className="header-cell">ASSIGNED TO</div>
-            <div className="header-cell">Pending Reviews</div>
-            <div className="header-cell">PENDING ISSUES</div>
+          <div className="admin-stores-table-header">
+            <div className="admin-stores-header-cell">STORE NAME</div>
+            <div className="admin-stores-header-cell">PARTNER BRANDS</div>
+            <div className="admin-stores-header-cell">ADDRESS</div>
+            <div className="admin-stores-header-cell">ASSIGNED TO</div>
+            <div className="admin-stores-header-cell">Pending Reviews</div>
+            <div className="admin-stores-header-cell">PENDING ISSUES</div>
           </div>
           
           {/* Table body with loading state */}
-          <div className="table-body">
+          <div className="admin-stores-table-body">
             {isLoading ? (
               <div className="table-loading">
                 <div className="loading-spinner-large"></div>
@@ -571,8 +571,8 @@ const AdminStoresPage: React.FC = () => {
               </div>
             ) : storeData.length > 0 ? (
               storeData.map(store => (
-                <div key={store.id} className="table-row">
-                  <div className="cell store-name-cell">
+                <div key={store.id} className="admin-stores-table-row">
+                  <div className="admin-stores-cell admin-stores-store-name-cell">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       {isCreatingVisitPlan && (
                         <input
@@ -589,49 +589,49 @@ const AdminStoresPage: React.FC = () => {
                         />
                       )}
                       {isCreatingVisitPlan ? (
-                        <span className="store-name-truncated" title={store.storeName}>
+                        <span className="admin-stores-store-name-truncated" title={store.storeName}>
                           {store.storeName}
                         </span>
                       ) : (
-                        <Link href={`/admin/visit-report?storeId=${store.id}`} className="store-name-link store-name-truncated" title={store.storeName}>
+                        <Link href={`/admin/visit-report?storeId=${store.id}`} className="admin-stores-store-name-link admin-stores-store-name-truncated" title={store.storeName}>
                           {store.storeName}
                         </Link>
                       )}
                     </div>
                   </div>
-                  <div className="cell partner-brands-cell">
+                  <div className="admin-stores-cell admin-stores-partner-brands-cell">
                     {store.partnerBrands.map((brand, index) => (
                       <span 
                         key={index}
-                        className="brand-tag"
+                        className="admin-stores-brand-tag"
                         style={{ backgroundColor: getBrandColor(brand) }}
                       >
                         {brand}
                       </span>
                     ))}
                   </div>
-                  <div className="cell">{store.address}</div>
-                  <div className="cell">
-                    <Link href={`/admin/executives?storeId=${store.id}`} className="view-all-link">
+                  <div className="admin-stores-cell">{store.address}</div>
+                  <div className="admin-stores-cell">
+                    <Link href={`/admin/executives?storeId=${store.id}`} className="admin-stores-view-all-link">
                       View All
                     </Link>
                   </div>
-                  <div className="cell">
+                  <div className="admin-stores-cell">
                     {store.pendingReviews > 0 ? (
-                      <span className="count-badge reviews-badge">
+                      <span className="admin-stores-count-badge admin-stores-reviews-badge">
                         {store.pendingReviews}
                       </span>
                     ) : (
-                      <span className="count-zero">{store.pendingReviews}</span>
+                      <span className="admin-stores-count-zero">{store.pendingReviews}</span>
                     )}
                   </div>
-                  <div className="cell">
+                  <div className="admin-stores-cell">
                     {store.pendingIssues > 0 ? (
-                      <span className="count-badge issues-badge">
+                      <span className="admin-stores-count-badge admin-stores-issues-badge">
                         {store.pendingIssues}
                       </span>
                     ) : (
-                      <span className="count-zero">{store.pendingIssues}</span>
+                      <span className="admin-stores-count-zero">{store.pendingIssues}</span>
                     )}
                   </div>
                 </div>

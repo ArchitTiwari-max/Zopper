@@ -1,14 +1,14 @@
 /* Executives Page Specific Styles */
 
 /* Executives Overview */
-.executives-overview {
+.admin-executives-overview {
   padding: 2rem;
   background-color: #f8fafc;
   min-height: calc(100vh - 80px);
 }
 
 /* Store Filter Header */
-.store-filter-header {
+.admin-executives-store-filter-header {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border-radius: 8px;
   padding: 0.75rem 1rem;
@@ -16,7 +16,7 @@
   box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
 }
 
-.store-filter-header h2 {
+.admin-executives-store-filter-header h2 {
   font-size: 1rem;
   font-weight: 600;
   color: white;
@@ -39,7 +39,7 @@
 }
 
 /* Executive Filters Grid */
-.executives-filters-grid {
+.admin-executives-filters-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
@@ -66,7 +66,7 @@
 }
 
 /* Executives Table */
-.executives-table-section {
+.admin-executives-table-section {
   background: white;
   border-radius: 12px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
@@ -74,11 +74,11 @@
   overflow: hidden;
 }
 
-.executives-table {
+.admin-executives-table {
   width: 100%;
 }
 
-.executives-table .table-header {
+.admin-executives-table-header {
   background: #6b7280;
   display: grid;
   grid-template-columns: 2fr 1fr 1.5fr 1fr 1fr 1fr;
@@ -86,7 +86,7 @@
   padding: 1rem;
 }
 
-.executives-table .header-cell {
+.admin-executives-header-cell {
   font-size: 0.75rem;
   font-weight: 600;
   color: white;
@@ -94,12 +94,12 @@
   letter-spacing: 0.05em;
 }
 
-.executives-table .table-body {
+.admin-executives-table-body {
   display: flex;
   flex-direction: column;
 }
 
-.executives-table .table-row {
+.admin-executives-table-row {
   display: grid;
   grid-template-columns: 2fr 1fr 1.5fr 1fr 1fr 1fr;
   gap: 1rem;
@@ -109,15 +109,15 @@
   transition: background-color 0.15s ease-in-out;
 }
 
-.executives-table .table-row:hover {
+.admin-executives-table-row:hover {
   background-color: #f8fafc;
 }
 
-.executives-table .table-row:last-child {
+.admin-executives-table-row:last-child {
   border-bottom: none;
 }
 
-.executives-table .cell {
+.admin-executives-cell {
   font-size: 0.875rem;
   color: #374151;
   display: flex;
@@ -125,18 +125,18 @@
 }
 
 /* Executive Name Cell */
-.executive-name-cell {
+.admin-executives-name-cell {
   display: flex;
   align-items: center;
 }
 
-.executive-avatar-container {
+.admin-executives-avatar-container {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.executive-avatar {
+.admin-executives-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -149,13 +149,13 @@
   flex-shrink: 0;
 }
 
-.executive-info {
+.admin-executives-info {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.executive-name {
+.admin-executives-name {
   font-weight: 500;
   color: #1e293b;
   font-size: 0.875rem;
@@ -163,55 +163,170 @@
 
 
 /* Executive Name Link Styles */
-.executive-name-link {
+.admin-executives-name-link {
   color: #3b82f6;
   text-decoration: none;
   transition: color 0.2s ease;
   cursor: pointer;
 }
 
-.executive-name-link:hover {
+.admin-executives-name-link:hover {
   color: #2563eb;
   text-decoration: underline;
 }
 
-.executive-name-link:visited {
+.admin-executives-name-link:visited {
   color: #3b82f6;
 }
 
-.executive-name-link .executive-name {
+.admin-executives-name-link .admin-executives-name {
   font-weight: 500;
   color: inherit;
 }
 
+/* Filters Section */
+.admin-executives-filters-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.admin-executives-filters-header {
+  margin-bottom: 1rem;
+}
+
+.admin-executives-filters-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-executives-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-executives-filter-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.admin-executives-filter-select {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.875rem;
+  color: #374151;
+  outline: none;
+  transition: border-color 0.15s ease-in-out;
+  cursor: pointer;
+}
+
+.admin-executives-filter-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Brand Tags */
+.admin-executives-brands-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-executives-brand-tag {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+/* View All Link */
+.admin-executives-view-all-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.admin-executives-view-all-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* Loading States */
+.table-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  gap: 1rem;
+}
+
+.loading-spinner-large {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Responsive Design for Executives */
 @media (max-width: 1024px) {
-  .executives-table .table-header,
-  .executives-table .table-row {
+  .admin-executives-table-header,
+  .admin-executives-table-row {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
   
-  .executives-table .header-cell {
+  .admin-executives-header-cell {
     display: none;
   }
   
-  .executives-table .cell {
+  .admin-executives-cell {
     padding: 0.5rem 0;
     border-bottom: 1px solid #f1f5f9;
   }
   
-  .executives-table .cell:last-child {
+  .admin-executives-cell:last-child {
     border-bottom: none;
   }
 }
 
 @media (max-width: 768px) {
-  .executives-overview {
+  .admin-executives-overview {
     padding: 1rem;
   }
   
-  .executives-filters-grid {
+  .admin-executives-filters-grid {
     grid-template-columns: 1fr;
   }
   

@@ -229,7 +229,7 @@ const IssueDetailPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="issue-management-overview">
+      <div className="admin-issue-detail-overview">
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
           <div style={{ fontSize: '1.2rem', color: '#64748b' }}>Loading issue details...</div>
         </div>
@@ -239,7 +239,7 @@ const IssueDetailPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="issue-management-overview">
+      <div className="admin-issue-detail-overview">
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
           <div style={{ fontSize: '1.2rem', color: '#ef4444' }}>Error: {error}</div>
         </div>
@@ -249,7 +249,7 @@ const IssueDetailPage: React.FC = () => {
 
   if (!issueData) {
     return (
-      <div className="issue-management-overview">
+      <div className="admin-issue-detail-overview">
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
           <div style={{ fontSize: '1.2rem', color: '#64748b' }}>Issue not found</div>
         </div>
@@ -258,11 +258,11 @@ const IssueDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="issue-management-overview">
+    <div className="admin-issue-detail-overview">
       {/* Header Section */}
-      <div className="issue-management-header">
-        <div className="back-navigation">
-          <Link href="/admin/issues" className="back-link">
+      <div className="admin-issue-detail-header">
+        <div className="admin-issue-detail-back-navigation">
+          <Link href="/admin/issues" className="admin-issue-detail-back-link">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
             </svg>
@@ -271,16 +271,16 @@ const IssueDetailPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="issue-content-grid">
+      <div className="admin-issue-detail-content-grid">
         {/* Left Side - Issue Details */}
-        <div className="issue-details-section">
-          <div className="issue-card">
-            <div className="issue-header">
-              <div className="issue-id-section">
+        <div className="admin-issue-detail-details-section">
+          <div className="admin-issue-detail-card">
+            <div className="admin-issue-detail-header">
+              <div className="admin-issue-detail-id-section">
                 <h3>{issueData.issueId}</h3>
-                <div className="issue-badges">
+                <div className="admin-issue-detail-badges">
                   <span 
-                    className="status-badge"
+                    className="admin-issue-detail-status-badge"
                     style={{ backgroundColor: getStatusColor(issueData.status) }}
                   >
                     {issueData.status}
@@ -288,119 +288,119 @@ const IssueDetailPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="store-name-section">
+              <div className="admin-issue-detail-store-name-section">
                 <span>{issueData.storeName}</span>
-                <button type="button" onClick={() => setShowStoreDetails(!showStoreDetails)} className="view-details-btn">
+                <button type="button" onClick={() => setShowStoreDetails(!showStoreDetails)} className="admin-issue-detail-view-details-btn">
                   {showStoreDetails ? 'Hide Details' : 'View Details'}
                 </button>
               </div>
 
               {showStoreDetails && (
-                <div className="store-details">
+                <div className="admin-issue-detail-store-details">
                   <div><strong>Brand Associated:</strong> {issueData.brandAssociated}</div>
                   <div><strong>City:</strong> {issueData.city}</div>
                 </div>
               )}
             </div>
 
-            <div className="issue-info-grid">
-              <div className="info-item">
-                <div className="info-icon">
+            <div className="admin-issue-detail-info-grid">
+              <div className="admin-issue-detail-info-item">
+                <div className="admin-issue-detail-info-icon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M9 11H7v6h2v-6zm4 0h-2v6h2v-6zm4 0h-2v6h2v-6zm2.5-9L12 0 2.5 2v2h19V2z"/>
                   </svg>
                 </div>
-                <div className="info-content">
-                  <span className="info-label">Date Reported:</span>
-                  <span className="info-value">{new Date(issueData.dateReported).toLocaleDateString()}</span>
+                <div className="admin-issue-detail-info-content">
+                  <span className="admin-issue-detail-info-label">Date Reported:</span>
+                  <span className="admin-issue-detail-info-value">{new Date(issueData.dateReported).toLocaleDateString()}</span>
                 </div>
               </div>
             </div>
 
-            <div className="issue-description">
+            <div className="admin-issue-detail-description">
               <h4>Issue Description:</h4>
               <p>{issueData.description}</p>
             </div>
             
             {/* Visit Context Section - Show if issue was created from a visit */}
             {showVisitContext && issueData.visitContext && (
-              <div className="visit-context-section">
-                <div className="visit-context-header">
+              <div className="admin-issue-detail-visit-context-section">
+                <div className="admin-issue-detail-visit-context-header">
                   <h4>Related Visit Information</h4>
-                  <button type="button" onClick={() => setShowVisitContext(false)} className="hide-visit-btn">Hide Visit Info</button>
+                  <button type="button" onClick={() => setShowVisitContext(false)} className="admin-issue-detail-hide-visit-btn">Hide Visit Info</button>
                 </div>
-                <div className="visit-context-card">
-                  <div className="visit-context-details">
-                    <div className="visit-detail-grid">
-                      <div className="visit-detail-item">
-                        <span className="detail-label">Executive:</span>
-                        <div className="executive-info">
-                          <div className="executive-avatar-mini">
+                <div className="admin-issue-detail-visit-context-card">
+                  <div className="admin-issue-detail-visit-context-details">
+                    <div className="admin-issue-detail-visit-detail-grid">
+                      <div className="admin-issue-detail-visit-detail-item">
+                        <span className="admin-issue-detail-detail-label">Executive:</span>
+                        <div className="admin-issue-detail-executive-info">
+                          <div className="admin-issue-detail-executive-avatar-mini">
                             {issueData.visitContext.executiveInitials}
                           </div>
                           <span>{issueData.visitContext.executiveName}</span>
                         </div>
                       </div>
-                      <div className="visit-detail-item">
-                        <span className="detail-label">Person Met:</span>
-                        <span className="detail-value">{issueData.visitContext.personMet} ({issueData.visitContext.personRole})</span>
+                      <div className="admin-issue-detail-visit-detail-item">
+                        <span className="admin-issue-detail-detail-label">Person Met:</span>
+                        <span className="admin-issue-detail-detail-value">{issueData.visitContext.personMet} ({issueData.visitContext.personRole})</span>
                       </div>
-                      <div className="visit-detail-item">
-                        <span className="detail-label">Display Checked:</span>
-                        <span className="detail-value">
+                      <div className="admin-issue-detail-visit-detail-item">
+                        <span className="admin-issue-detail-detail-label">Display Checked:</span>
+                        <span className="admin-issue-detail-detail-value">
                           {issueData.visitContext.displayChecked ? '✅ Yes' : '❌ No'}
                         </span>
                       </div>
-                      <div className="visit-detail-item">
-                        <span className="detail-label">Photos Taken:</span>
-                        <span className="detail-value">📸 {issueData.visitContext.photosCount}</span>
+                      <div className="admin-issue-detail-visit-detail-item">
+                        <span className="admin-issue-detail-detail-label">Photos Taken:</span>
+                        <span className="admin-issue-detail-detail-value">📸 {issueData.visitContext.photosCount}</span>
                       </div>
                     </div>
-                    <div className="visit-feedback">
-                      <span className="detail-label">Executive Feedback:</span>
-                      <div className="feedback-content">"{issueData.visitContext.feedback}"</div>
+                    <div className="admin-issue-detail-visit-feedback">
+                      <span className="admin-issue-detail-detail-label">Executive Feedback:</span>
+                      <div className="admin-issue-detail-feedback-content">"{issueData.visitContext.feedback}"</div>
                     </div>
                   </div>
                 </div>
               </div>
             )}
             {!showVisitContext && issueData.visitContext && (
-              <button type="button" onClick={() => setShowVisitContext(true)} className="show-visit-btn">Show Visit Info</button>
+              <button type="button" onClick={() => setShowVisitContext(true)} className="admin-issue-detail-show-visit-btn">Show Visit Info</button>
             )}
           </div>
 
           {/* Assignment History */}
-          <div className="assignment-history-section">
-            <div className="section-header">
+          <div className="admin-issue-detail-assignment-history-section">
+            <div className="admin-issue-detail-section-header">
               <h3>Assignment History</h3>
             </div>
 
-            <div className="assignment-history-table">
-              <div className="table-header">
-                <div className="header-cell">Executive</div>
-                <div className="header-cell">Date Assigned</div>
-                <div className="header-cell">Admin Comment</div>
-                <div className="header-cell">Status</div>
+            <div className="admin-issue-detail-assignment-history-table">
+              <div className="admin-issue-detail-table-header">
+                <div className="admin-issue-detail-header-cell">Executive</div>
+                <div className="admin-issue-detail-header-cell">Date Assigned</div>
+                <div className="admin-issue-detail-header-cell">Admin Comment</div>
+                <div className="admin-issue-detail-header-cell">Status</div>
               </div>
-              <div className="table-body">
+              <div className="admin-issue-detail-table-body">
                 {issueData.assignmentHistory.map(assignment => (
-                  <div key={assignment.id} className="table-row">
-                    <div className="cell executive-cell">
-                      <div className="executive-avatar-small">
+                  <div key={assignment.id} className="admin-issue-detail-table-row">
+                    <div className="admin-issue-detail-cell admin-issue-detail-executive-cell">
+                      <div className="admin-issue-detail-executive-avatar-small">
                         {assignment.executiveInitials}
                       </div>
-                      <span className="executive-name">{assignment.executiveName}</span>
+                      <span className="admin-issue-detail-executive-name">{assignment.executiveName}</span>
                     </div>
-                    <div className="cell">
+                    <div className="admin-issue-detail-cell">
                       {new Date(assignment.dateAssigned).toLocaleDateString()}
                     </div>
-                    <div className="cell admin-comment">
+                    <div className="admin-issue-detail-cell admin-issue-detail-admin-comment">
                       {assignment.adminComment}
                     </div>
-                    <div className="cell">
+                    <div className="admin-issue-detail-cell">
                       {assignment.status === 'Completed' ? (
                         <button 
-                          className="view-report-btn" 
+                          className="admin-issue-detail-view-report-btn" 
                           type="button"
                           onClick={() => handleViewReport(assignment.id, assignment.executiveName)}
                         >
@@ -408,7 +408,7 @@ const IssueDetailPage: React.FC = () => {
                         </button>
                       ) : (
                         <span 
-                          className="assignment-status-badge"
+                          className="admin-issue-detail-assignment-status-badge"
                           style={{ backgroundColor: getAssignmentStatusColor(assignment.status) }}
                         >
                           {assignment.status}
@@ -423,31 +423,31 @@ const IssueDetailPage: React.FC = () => {
         </div>
 
         {/* Right Side - Admin Action Area */}
-        <div className="admin-action-area">
-          <div className="admin-action-card">
+        <div className="admin-issue-detail-action-area">
+          <div className="admin-issue-detail-action-card">
             <h3>Admin Action Area</h3>
             
             {/* Add Comment Section */}
-            <div className="action-section">
+            <div className="admin-issue-detail-action-section">
               <label htmlFor="comment-input">Add Comment</label>
               <textarea
                 id="comment-input"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Enter your comment here..."
-                className="comment-input"
+                className="admin-issue-detail-comment-input"
                 rows={4}
               />
             </div>
 
             {/* Select Executive Section */}
-            <div className="action-section">
+            <div className="admin-issue-detail-action-section">
               <label htmlFor="executive-select">Select Executive</label>
               <select
                 id="executive-select"
                 value={selectedExecutive}
                 onChange={(e) => setSelectedExecutive(e.target.value)}
-                className="executive-select"
+                className="admin-issue-detail-executive-select"
               >
                 <option value="">Choose an executive...</option>
                 {executives.map(executive => (
@@ -459,9 +459,9 @@ const IssueDetailPage: React.FC = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="action-buttons">
+            <div className="admin-issue-detail-action-buttons">
               <button 
-                className="send-task-btn"
+                className="admin-issue-detail-send-task-btn"
                 onClick={handleSendTask}
                 disabled={!selectedExecutive || isAssigning || isMarkingSolved}
                 type="button"
@@ -476,7 +476,7 @@ const IssueDetailPage: React.FC = () => {
                 )}
               </button>
               <button 
-                className="mark-solved-btn"
+                className="admin-issue-detail-mark-solved-btn"
                 onClick={handleMarkSolved}
                 disabled={isAssigning || isMarkingSolved}
                 type="button"
@@ -497,14 +497,14 @@ const IssueDetailPage: React.FC = () => {
 
 
       {/* Issue Resolution Report */}
-      <div className="issue-resolution-report">
-        <div className="report-header">
-          <div className="report-info">
+      <div className="admin-issue-detail-resolution-report">
+        <div className="admin-issue-detail-report-header">
+          <div className="admin-issue-detail-report-info">
             <h3>Issue Resolution Report</h3>
             <p>Generate comprehensive report for this issue</p>
           </div>
           <button 
-            className="export-report-btn"
+            className="admin-issue-detail-export-report-btn"
             onClick={handleExportReport}
             type="button"
           >
