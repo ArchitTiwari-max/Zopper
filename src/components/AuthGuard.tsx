@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { getUserFromCookie, isAuthenticated, isAuthorizedForPath } from '../lib/cookieUtils';
 import '../lib/authInterceptor'; // Set up global auth interceptor
 
 interface AuthGuardProps {
@@ -9,76 +10,64 @@ interface AuthGuardProps {
   allowedRoles?: string[]; // Optional role-based access control
 }
 
-interface User {
-  id: string;
-  email: string;
-  username: string;
-  role: string;
-}
-
 export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [authState, setAuthState] = useState<{
+    isAuthenticated: boolean;
+    isAuthorized: boolean;
+    isLoading: boolean;
+  }>({ isAuthenticated: false, isAuthorized: false, isLoading: true });
 
+  // Check authentication on mount and pathname changes
   useEffect(() => {
-    // Since we use HTTP-only cookies, we can't check them client-side
-    // Just proceed with server-side authentication check
-    checkAuthentication();
-  }, []);
-  
-  // Re-check authentication when pathname changes (navigation)
-  useEffect(() => {
-    if (isAuthenticated !== null) {
-      checkAuthentication();
-    }
+    checkCookieAuth();
   }, [pathname]);
   
-  // Periodic authentication check every 10 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (isAuthenticated === true) {
-        checkAuthentication();
-      }
-    }, 10000); // Check every 10 seconds
-    
-    return () => clearInterval(interval);
-  }, [isAuthenticated]);
 
-  const checkAuthentication = async () => {
+  const checkCookieAuth = () => {
     try {
-      const response = await fetch('/api/auth/verify-session', {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const userData = data.user;
-        
-        setIsAuthenticated(true);
-        setUser(userData);
-        
-        // Check role-based authorization
-        const authorized = checkRoleAuthorization(userData.role, pathname);
-        setIsAuthorized(authorized);
-        
-        if (!authorized) {
-          // If user is trying to access a role they don't have, log them out
-          await logoutUser();
-        }
-      } else {
-        setIsAuthenticated(false);
+      const authenticated = isAuthenticated();
+      
+      if (!authenticated) {
+        setAuthState({
+          isAuthenticated: false,
+          isAuthorized: false,
+          isLoading: false
+        });
         router.replace('/');
+        return;
       }
+
+      const authorized = isAuthorizedForPath(pathname, allowedRoles);
+      
+      if (!authorized) {
+        setAuthState({
+          isAuthenticated: true,
+          isAuthorized: false,
+          isLoading: false
+        });
+        // Redirect unauthorized users
+        logoutUser();
+        return;
+      }
+
+      setAuthState({
+        isAuthenticated: true,
+        isAuthorized: true,
+        isLoading: false
+      });
     } catch (error) {
-      console.error('Auth check failed:', error);
-      setIsAuthenticated(false);
+      console.error('Cookie auth check failed:', error);
+      setAuthState({
+        isAuthenticated: false,
+        isAuthorized: false,
+        isLoading: false
+      });
       router.replace('/');
     }
   };
+
   
   const logoutUser = async () => {
     try {
@@ -89,38 +78,22 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {
-      setIsAuthenticated(false);
-      setIsAuthorized(false);
+      setAuthState({
+        isAuthenticated: false,
+        isAuthorized: false,
+        isLoading: false
+      });
       router.replace('/');
     }
   };
-  
-  const checkRoleAuthorization = (userRole: string, currentPath: string): boolean => {
-    // If specific roles are defined for this guard, check against them
-    if (allowedRoles && allowedRoles.length > 0) {
-      return allowedRoles.includes(userRole);
-    }
-    
-    // Default path-based role checking
-    if (currentPath.startsWith('/admin')) {
-      return userRole === 'ADMIN';
-    }
-    
-    if (currentPath.startsWith('/executive')) {
-      return userRole === 'EXECUTIVE';
-    }
-    
-    // Default to true for other paths
-    return true;
-  };
 
   // Don't show loading if we're redirecting
-  if (isAuthenticated === false || isAuthorized === false) {
+  if (!authState.isAuthenticated || !authState.isAuthorized) {
     return null;
   }
 
-  // Show minimal loading state
-  if (isAuthenticated === null || isAuthorized === null) {
+  // Show minimal loading state (should be very brief with cookie auth)
+  if (authState.isLoading) {
     return (
       <div style={{ 
         display: 'flex', 
@@ -130,7 +103,7 @@ export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
         fontSize: '16px',
         color: '#64748b'
       }}>
-        Verifying access...
+        Loading...
       </div>
     );
   }

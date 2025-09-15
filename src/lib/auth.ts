@@ -105,9 +105,36 @@ export function clearAuthCookies(response: NextResponse): NextResponse {
 
 /**
  * Gets authenticated user from request cookies
+ * Automatically sets refreshed tokens in response cookies
  */
 export async function getAuthenticatedUser(request: NextRequest): Promise<TokenPayload | null> {
   const authResult = await validateAndRefreshToken(request);
+  
+  // If tokens were refreshed, set them directly in the response using Next.js cookies
+  if (authResult.response && authResult.isAuthenticated) {
+    try {
+      const { cookies } = await import('next/headers');
+      const cookieStore = await cookies();
+      
+      const refreshedCookies = authResult.response.cookies.getAll();
+      
+      // Set refreshed cookies directly in the current API response
+      refreshedCookies.forEach(cookie => {
+        cookieStore.set(cookie.name, cookie.value, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          expires: cookie.expires ? new Date(cookie.expires) : undefined,
+          path: '/'
+        });
+      });
+      
+      console.log('🔄 Access token refreshed and set in response cookies');
+    } catch (error) {
+      console.error('Failed to set refreshed cookies:', error);
+    }
+  }
+  
   return authResult.isAuthenticated ? authResult.user || null : null;
 }
 
