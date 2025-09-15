@@ -189,51 +189,51 @@ const ExecutiveTodoList: React.FC = () => {
   };
 
   return (
-    <div className="executive-todo-container">
+    <div className="exec-tasks-container">
       {/* Header */}
 
       {/* Main Content */}
       <main>
-        <div className="pending-tasks-section">
-          <div className="task-header">
-            <div className="task-title-section">
-              <h1 className="task-title">Assigned Tasks</h1>
-              <p className="task-subtitle">Complete your assigned tasks across different categories</p>
+        <div className="exec-tasks-section">
+          <div className="exec-tasks-header">
+            <div className="exec-tasks-title-section">
+              <h1 className="exec-tasks-title">Assigned Tasks</h1>
+              <p className="exec-tasks-subtitle">Complete your assigned tasks across different categories</p>
             </div>
           </div>
 
           {/* Task Tabs */}
-          <div className="task-tabs">
+          <div className="exec-tasks-tabs">
             <button 
-              className={`tab-btn ${activeTab === 'visit' ? 'active' : ''}`}
+              className={`exec-tasks-tab-btn ${activeTab === 'visit' ? 'active' : ''}`}
               onClick={() => setActiveTab('visit')}
             >
-              <span className="tab-icon">🏪</span>
-              <span className="tab-label">Pending Visits</span>
+              <span className="exec-tasks-tab-icon">🏪</span>
+              <span className="exec-tasks-tab-label">Pending Visits</span>
             </button>
             <button 
-              className={`tab-btn ${activeTab === 'issues' ? 'active' : ''}`}
+              className={`exec-tasks-tab-btn ${activeTab === 'issues' ? 'active' : ''}`}
               onClick={() => setActiveTab('issues')}
             >
-              <span className="tab-icon">⚠️</span>
-              <span className="tab-label">
+              <span className="exec-tasks-tab-icon">⚠️</span>
+              <span className="exec-tasks-tab-label">
                 Pending Issues
                 {pendingTasksCount > 0 && (
-                  <span className="tab-count">({pendingTasksCount})</span>
+                  <span className="exec-tasks-tab-count">({pendingTasksCount})</span>
                 )}
               </span>
             </button>
             <button 
-              className={`tab-btn ${activeTab === 'training' ? 'active' : ''}`}
+              className={`exec-tasks-tab-btn ${activeTab === 'training' ? 'active' : ''}`}
               onClick={() => setActiveTab('training')}
             >
-              <span className="tab-icon">📚</span>
-              <span className="tab-label">Training Tasks</span>
+              <span className="exec-tasks-tab-icon">📚</span>
+              <span className="exec-tasks-tab-label">Training Tasks</span>
             </button>
           </div>
 
           {/* Tab Content */}
-          <div className="tab-content">
+          <div className="exec-tasks-tab-content">
             {activeTab === 'visit' && (
               <VisitsTab />
             )}

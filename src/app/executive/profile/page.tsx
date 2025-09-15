@@ -122,21 +122,21 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div className="settings-container">
-      <div className="settings-content">
+    <div className="exec-prof-settings-container">
+      <div className="exec-prof-settings-content">
         {/* Title Section */}
-        <div className="settings-title-section">
-          <h1 className="settings-title">Profile</h1>
-          <p className="settings-subtitle">Manage your profile and notification preferences</p>
+        <div className="exec-prof-settings-title-section">
+          <h1 className="exec-prof-settings-title">Profile</h1>
+          <p className="exec-prof-settings-subtitle">Manage your profile and notification preferences</p>
         </div>
 
         {/* Profile Information Card */}
-        <div className="profile-card">
-          <div className="profile-card-header">
-            <div className="profile-icon">
+        <div className="exec-prof-profile-card">
+          <div className="exec-prof-profile-card-header">
+            <div className="exec-prof-profile-icon">
               <span className="profile-icon-text">👤</span>
             </div>
-            <h2 className="profile-card-title">Profile Information</h2>
+            <h2 className="exec-prof-profile-card-title">Profile Information</h2>
           </div>
 
           {isLoadingProfile ? (
@@ -146,111 +146,111 @@ const Settings: React.FC = () => {
             </div>
           ) : profileError ? (
             <div className="error-state">
-              <span className="error-message">{profileError}</span>
+              <span className="exec-prof-error-message">{profileError}</span>
             </div>
           ) : profile ? (
-            <div className="profile-form">
-              <div className="form-group">
-                <label className="form-label">Name</label>
+            <div className="exec-prof-profile-form">
+              <div className="exec-prof-form-group">
+                <label className="exec-prof-form-label">Name</label>
                 <input
                   type="text"
-                  className="form-input disabled"
+                  className="exec-prof-form-input disabled"
                   value={profile.name}
                   disabled
                   readOnly
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Email</label>
+              <div className="exec-prof-form-group">
+                <label className="exec-prof-form-label">Email</label>
                 <input
                   type="email"
-                  className="form-input disabled"
+                  className="exec-prof-form-input disabled"
                   value={profile.email}
                   disabled
                   readOnly
                 />
-                <span className="form-helper">Contact admin to update email address</span>
+                <span className="exec-prof-form-helper">Contact admin to update email address</span>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Username</label>
+              <div className="exec-prof-form-group">
+                <label className="exec-prof-form-label">Username</label>
                 <input
                   type="text"
-                  className="form-input disabled"
+                  className="exec-prof-form-input disabled"
                   value={profile.username || 'Not available'}
                   disabled
                   readOnly
                 />
-                <span className="form-helper">Username cannot be changed</span>
+                <span className="exec-prof-form-helper">Username cannot be changed</span>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Contact Number</label>
+              <div className="exec-prof-form-group">
+                <label className="exec-prof-form-label">Contact Number</label>
                 <input
                   type="tel"
-                  className="form-input disabled"
+                  className="exec-prof-form-input disabled"
                   value={profile.contact_number || 'Not provided'}
                   disabled
                   readOnly
                 />
-                <span className="form-helper">Contact admin to update contact number</span>
+                <span className="exec-prof-form-helper">Contact admin to update contact number</span>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Region</label>
+              <div className="exec-prof-form-group">
+                <label className="exec-prof-form-label">Region</label>
                 <input
                   type="text"
-                  className="form-input disabled"
+                  className="exec-prof-form-input disabled"
                   value={profile.region || 'Not specified'}
                   disabled
                   readOnly
                 />
-                <span className="form-helper">Contact admin to update region</span>
+                <span className="exec-prof-form-helper">Contact admin to update region</span>
               </div>
             </div>
           ) : null}
         </div>
 
         {/* Notifications Card */}
-        <div className="notifications-card">
-          <h2 className="notifications-card-title">Notifications</h2>
+        <div className="exec-prof-notifications-card">
+          <h2 className="exec-prof-notifications-card-title">Notifications</h2>
           
-          <div className="notification-settings">
-            <div className="notification-item">
-              <div className="notification-info">
-                <span className="notification-label">Email Notifications</span>
-                <span className="notification-description">
+          <div className="exec-prof-notification-settings">
+            <div className="exec-prof-notification-item">
+              <div className="exec-prof-notification-info">
+                <span className="exec-prof-notification-label">Email Notifications</span>
+                <span className="exec-prof-notification-description">
                   Receive task updates and announcements via email
                 </span>
               </div>
-              <div className="toggle-container">
-                <label className="toggle-switch">
+              <div className="exec-prof-toggle-container">
+                <label className="exec-prof-toggle-switch">
                   <input
                     type="checkbox"
                     checked={notifications.emailNotifications}
                     onChange={() => handleNotificationToggle('emailNotifications')}
                   />
-                  <span className="toggle-slider"></span>
+                  <span className="exec-prof-toggle-slider"></span>
                 </label>
               </div>
             </div>
 
-            <div className="notification-item">
-              <div className="notification-info">
-                <span className="notification-label">Push Notifications</span>
-                <span className="notification-description">
+            <div className="exec-prof-notification-item">
+              <div className="exec-prof-notification-info">
+                <span className="exec-prof-notification-label">Push Notifications</span>
+                <span className="exec-prof-notification-description">
                   Get instant alerts for urgent tasks and updates
                 </span>
               </div>
-              <div className="toggle-container">
-                <label className="toggle-switch">
+              <div className="exec-prof-toggle-container">
+                <label className="exec-prof-toggle-switch">
                   <input
                     type="checkbox"
                     checked={notifications.pushNotifications}
                     onChange={() => handleNotificationToggle('pushNotifications')}
                   />
-                  <span className="toggle-slider"></span>
+                  <span className="exec-prof-toggle-slider"></span>
                 </label>
               </div>
             </div>
@@ -258,22 +258,22 @@ const Settings: React.FC = () => {
         </div>
 
         {/* Account Management Card */}
-        <div className="account-card">
-          <h2 className="account-card-title">Account Management</h2>
+        <div className="exec-prof-account-card">
+          <h2 className="exec-prof-account-card-title">Account Management</h2>
           
-          <div className="account-settings">
-            <div className="account-item">
-              <div className="account-info">
-                <span className="account-label">Sign Out</span>
-                <span className="account-description">
+          <div className="exec-prof-account-settings">
+            <div className="exec-prof-account-item">
+              <div className="exec-prof-account-info">
+                <span className="exec-prof-account-label">Sign Out</span>
+                <span className="exec-prof-account-description">
                   Sign out from your executive account and return to the login page
                 </span>
               </div>
-              <div className="logout-container">
+              <div className="exec-prof-logout-container">
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="logout-btn"
+                  className="exec-prof-logout-btn"
                   disabled={isLoggingOut}
                 >
                   {isLoggingOut ? (

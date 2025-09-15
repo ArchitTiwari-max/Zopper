@@ -9,18 +9,19 @@ import './page.css';
 
 // Types for visit report
 interface VisitReportData {
-  id: number;
+  id: string; // ObjectId
   executiveName: string;
   executiveInitials: string;
   avatarColor: string;
   storeName: string;
+  storeId: string;
   partnerBrand: string[];
   visitDate: string;
   visitStatus: 'PENDING_REVIEW' | 'REVIEWD';
-  issueStatus: 'Pending' | 'Assigned' | 'Resolved';
+  issueStatus: 'Pending' | 'Assigned' | 'Resolved' | null;
   city: string;
   issues: string;
-  issueId?: number;
+  issueId?: string;
   feedback: string;
 }
 
@@ -33,128 +34,6 @@ interface VisitReportFilters {
   issueStatus: string;
 }
 
-// Mock data for unified visit reports
-const mockVisitData: VisitReportData[] = [
-  {
-    id: 1,
-    executiveName: 'Ramesh Kumar',
-    executiveInitials: 'RK',
-    avatarColor: '#3B82F6',
-    storeName: 'Lucky Electronics',
-    partnerBrand: ['Godrej', 'Havells'],
-    visitDate: '2025-08-01',
-    visitStatus: 'PENDING_REVIEW',
-    issueStatus: 'Pending',
-    city: 'Ghaziabad',
-    issues: 'No flyer stock',
-    issueId: 1323,
-    feedback: 'Asked for new standee'
-  },
-  {
-    id: 2,
-    executiveName: 'Neha Sharma',
-    executiveInitials: 'NS',
-    avatarColor: '#EC4899',
-    storeName: 'Techno Hub',
-    partnerBrand: ['Oppo'],
-    visitDate: '2025-08-15',
-    visitStatus: 'REVIEWD',
-    issueStatus: 'Resolved',
-    city: 'Noida',
-    issues: 'None',
-    feedback: 'Happy with current setup'
-  },
-  {
-    id: 3,
-    executiveName: 'Sunita Yadav',
-    executiveInitials: 'SY',
-    avatarColor: '#8B5CF6',
-    storeName: 'Digital Express',
-    partnerBrand: ['Vivo', 'Oppo'],
-    visitDate: '2025-08-08',
-    visitStatus: 'REVIEWD',
-    issueStatus: 'Assigned',
-    city: 'Delhi',
-    issues: 'Display demo req',
-    issueId: 1324,
-    feedback: 'Need better product visibility'
-  },
-  {
-    id: 4,
-    executiveName: 'Rajesh Singh',
-    executiveInitials: 'RS',
-    avatarColor: '#F59E0B',
-    storeName: 'Alpha Mobiles',
-    partnerBrand: ['Vivo'],
-    visitDate: '2025-08-12',
-    visitStatus: 'PENDING_REVIEW',
-    issueStatus: 'Pending',
-    city: 'Noida',
-    issues: 'Low stock shelf',
-    issueId: 1325,
-    feedback: 'Satisfied with service'
-  },
-  {
-    id: 5,
-    executiveName: 'Priya Gupta',
-    executiveInitials: 'PG',
-    avatarColor: '#10B981',
-    storeName: 'Mobile World',
-    partnerBrand: ['Samsung', 'Vivo', 'Oppo'],
-    visitDate: '2025-08-20',
-    visitStatus: 'REVIEWD',
-    issueStatus: 'Resolved',
-    city: 'Delhi',
-    issues: 'WiFi connectivity issues',
-    issueId: 1322,
-    feedback: 'Excellent product placement'
-  },
-  {
-    id: 6,
-    executiveName: 'Amit Verma',
-    executiveInitials: 'AV',
-    avatarColor: '#EF4444',
-    storeName: 'Smart Zone',
-    partnerBrand: ['Samsung'],
-    visitDate: '2025-08-08',
-    visitStatus: 'REVIEWD',
-    issueStatus: 'Assigned',
-    city: 'Delhi',
-    issues: 'Missing price tags',
-    issueId: 1326,
-    feedback: 'Needs promotional materials'
-  },
-  {
-    id: 7,
-    executiveName: 'Kavita Sharma',
-    executiveInitials: 'KS',
-    avatarColor: '#8B5CF6',
-    storeName: 'Galaxy Store',
-    partnerBrand: ['Samsung', 'Oppo'],
-    visitDate: '2025-08-18',
-    visitStatus: 'REVIEWD',
-    issueStatus: 'Resolved',
-    city: 'Gurgaon',
-    issues: 'WiFi connectivity issues',
-    issueId: 1322,
-    feedback: 'Good customer response'
-  },
-  {
-    id: 8,
-    executiveName: 'Deepak Mishra',
-    executiveInitials: 'DM',
-    avatarColor: '#F97316',
-    storeName: 'Tech Paradise',
-    partnerBrand: ['Vivo'],
-    visitDate: '2025-08-25',
-    visitStatus: 'PENDING_REVIEW',
-    issueStatus: 'Pending',
-    city: 'Faridabad',
-    issues: 'Inventory management',
-    issueId: 1327,
-    feedback: 'Store layout needs improvement'
-  }
-];
 
 const VisitReportPage: React.FC = () => {
   const searchParams = useSearchParams();
@@ -168,6 +47,7 @@ const VisitReportPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState<boolean>(true);
   const [selectedVisit, setSelectedVisit] = useState<any>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [markingReviewedId, setMarkingReviewedId] = useState<string | null>(null);
   
   // Filter data from API
   const [filterData, setFilterData] = useState<{
@@ -214,58 +94,14 @@ const VisitReportPage: React.FC = () => {
     }
   };
 
-  // Fetch visit report data from API
+  // Fetch ALL visit report data from API (no server-side filtering)
   const fetchVisitReportData = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Build query parameters
+      // Only pass dateFilter to get all data for client-side filtering
       const params = new URLSearchParams();
       params.append('dateFilter', selectedDateFilter);
-      
-      // Send all current filter values as query parameters
-      // Use IDs for backend queries for better performance
-      
-      // URL parameters (from store/executive page navigation) take precedence
-      const urlStoreId = searchParams.get('storeId');
-      const urlExecutiveId = searchParams.get('executiveId');
-      const urlStoreName = searchParams.get('storeName');
-      const urlExecutiveName = searchParams.get('executiveName');
-      
-      // Use URL params if available, otherwise use filter state (which contains IDs)
-      if (urlStoreId) {
-        params.append('storeId', urlStoreId);
-      } else if (filters.storeName !== 'All Store') {
-        params.append('storeId', filters.storeName); // filters.storeName contains store ID
-      }
-      
-      if (urlExecutiveId) {
-        params.append('executiveId', urlExecutiveId);
-      } else if (filters.executiveName !== 'All Executive') {
-        params.append('executiveId', filters.executiveName); // filters.executiveName contains executive ID
-      }
-      
-      // Add URL name params if available (for backward compatibility)
-      if (urlStoreName && !urlStoreId) {
-        params.append('storeName', urlStoreName);
-      }
-      if (urlExecutiveName && !urlExecutiveId) {
-        params.append('executiveName', urlExecutiveName);
-      }
-      
-      // Other filters always come from filter state
-      if (filters.partnerBrand !== 'All Brands') {
-        params.append('partnerBrand', filters.partnerBrand);
-      }
-      if (filters.city !== 'All City') {
-        params.append('city', filters.city);
-      }
-      if (filters.visitStatus !== 'All Status') {
-        params.append('visitStatus', filters.visitStatus);
-      }
-      if (filters.issueStatus !== 'All Status') {
-        params.append('issueStatus', filters.issueStatus);
-      }
 
       const response = await fetch(`/api/admin/visit-report/data?${params.toString()}`, {
         method: 'GET',
@@ -282,7 +118,7 @@ const VisitReportPage: React.FC = () => {
 
       const data = await response.json();
       setVisitData(data.visits || []);
-      setFilteredVisits(data.visits || []);
+      // applyFilters will be triggered by visitData change and handle filteredVisits
     } catch (error) {
       console.error('Failed to fetch visit report data:', error);
       setError(error instanceof Error ? error.message : 'Failed to load visit report data');
@@ -293,114 +129,191 @@ const VisitReportPage: React.FC = () => {
     }
   };
 
-  // Handle URL query parameters and update filter state
-  useEffect(() => {
-    // Only process URL params after filter data is loaded
-    if (isLoadingFilters || filterData.stores.length === 0) {
+  // Apply filters to existing data (client-side filtering)
+  const applyFilters = () => {
+    if (!visitData.length) {
+      setFilteredVisits([]);
       return;
     }
 
-    const storeId = searchParams.get('storeId');
-    const executiveId = searchParams.get('executiveId');
-    const storeName = searchParams.get('storeName');
-    const executiveName = searchParams.get('executiveName');
-    const visitStatus = searchParams.get('visitStatus');
-    const partnerBrand = searchParams.get('partnerBrand');
-    
-    let hasUrlParams = false;
-    let newFilters = { ...filters };
-    
-    // Update filter state based on URL params so dropdowns show correct values
-    // Store IDs in filter state but display names in UI
-    if (storeName && filters.storeName !== storeName) {
-      // URL storeName is a name, need to find corresponding ID for filter state
-      const store = filterData.stores.find(s => s.name === storeName);
-      if (store && filters.storeName !== store.id) {
-        newFilters.storeName = store.id;
-        hasUrlParams = true;
+    let filtered = visitData.filter(visit => {
+      // Filter by partner brand
+      if (filters.partnerBrand !== 'All Brands') {
+        if (!visit.partnerBrand.includes(filters.partnerBrand)) {
+          return false;
+        }
       }
-    } else if (storeId && filterData.stores.length > 0) {
-      // URL has storeId, use that ID directly for filter state
-      if (filters.storeName !== storeId) {
-        newFilters.storeName = storeId;
-        hasUrlParams = true;
-      }
-    }
-    
-    if (executiveName && filters.executiveName !== executiveName) {
-      // URL executiveName is a name, need to find corresponding ID for filter state
-      const executive = filterData.executives.find(e => e.name === executiveName);
-      if (executive && filters.executiveName !== executive.id) {
-        newFilters.executiveName = executive.id;
-        hasUrlParams = true;
-      }
-    } else if (executiveId && filterData.executives.length > 0) {
-      // URL has executiveId, use that ID directly for filter state
-      if (filters.executiveName !== executiveId) {
-        newFilters.executiveName = executiveId;
-        hasUrlParams = true;
-      }
-    }
-    
-    // Handle visitStatus query parameter
-    if (visitStatus && visitStatus !== filters.visitStatus) {
-      newFilters.visitStatus = visitStatus;
-      hasUrlParams = true;
-    }
-    
-    // Handle partnerBrand query parameter
-    if (partnerBrand && partnerBrand !== filters.partnerBrand) {
-      newFilters.partnerBrand = partnerBrand;
-      hasUrlParams = true;
-    }
 
-    // Only update filters if there are actual URL params to process
-    if (hasUrlParams) {
-      setFilters(newFilters);
-    }
-  }, [searchParams, filterData, isLoadingFilters]);
+      // Filter by city
+      if (filters.city !== 'All City') {
+        if (visit.city !== filters.city) {
+          return false;
+        }
+      }
 
-  // OPTIMIZED LOADING: Load filter data first, then table data
+      // Filter by store name
+      if (filters.storeName !== 'All Store') {
+        // If filters.storeName contains an ID, find the store name
+        const store = filterData.stores.find(s => s.id === filters.storeName);
+        const storeNameToMatch = store ? store.name : filters.storeName;
+        if (visit.storeName !== storeNameToMatch) {
+          return false;
+        }
+      }
+
+      // Filter by executive name
+      if (filters.executiveName !== 'All Executive') {
+        // If filters.executiveName contains an ID, find the executive name
+        const executive = filterData.executives.find(e => e.id === filters.executiveName);
+        const executiveNameToMatch = executive ? executive.name : filters.executiveName;
+        if (visit.executiveName !== executiveNameToMatch) {
+          return false;
+        }
+      }
+
+      // Filter by visit status
+      if (filters.visitStatus !== 'All Status') {
+        if (visit.visitStatus !== filters.visitStatus) {
+          return false;
+        }
+      }
+
+      // Filter by issue status
+      if (filters.issueStatus !== 'All Status') {
+        // Handle the case where visit has no issue status (null)
+        if (!visit.issueStatus && filters.issueStatus !== 'None') {
+          return false;
+        }
+        // Handle normal case where issue status matches
+        if (visit.issueStatus !== filters.issueStatus) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    setFilteredVisits(filtered);
+  };
+
+  // Initial data fetch on mount
   useEffect(() => {
-    // Load filter data first so URL params can be processed correctly
     fetchFilterData();
+    fetchVisitReportData();
   }, []);
-  
-  // Load table data after filters are potentially updated from URL params
-  useEffect(() => {
-    // Only fetch data if filter data has been loaded (to avoid race conditions)
-    if (!isLoadingFilters) {
-      fetchVisitReportData();
-    }
-  }, [isLoadingFilters]);
 
-  // Refetch data when filters or date filter change (but not on searchParams to avoid double fetch)
+  // Set initial filters from URL parameters (separate effect to avoid conflicts)
   useEffect(() => {
-    // Don't fetch immediately if we're still processing URL params
-    if (!isLoadingFilters) {
+    // Only process URL params after filter data is loaded
+    if (filterData.stores.length === 0) return;
+    
+    const urlStoreId = searchParams.get('storeId');
+    const urlExecutiveId = searchParams.get('executiveId');
+    const urlPartnerBrand = searchParams.get('partnerBrand');
+    const urlCity = searchParams.get('city');
+    const urlVisitStatus = searchParams.get('visitStatus');
+    const urlIssueStatus = searchParams.get('issueStatus');
+    
+    if (urlStoreId || urlExecutiveId || urlPartnerBrand || urlCity || urlVisitStatus || urlIssueStatus) {
+      // Use store ID directly
+      let storeFilter = 'All Store';
+      if (urlStoreId && urlStoreId !== 'All Store') {
+        // Validate that the store ID exists in filter data
+        const matchingStore = filterData.stores.find(store => store.id === urlStoreId);
+        storeFilter = matchingStore ? urlStoreId : 'All Store';
+        console.log('[URL DEBUG] Store ID from URL:', urlStoreId, '→ Valid:', !!matchingStore);
+      }
+      
+      // Use executive ID directly
+      let executiveFilter = 'All Executive';
+      if (urlExecutiveId && urlExecutiveId !== 'All Executive') {
+        // Validate that the executive ID exists in filter data
+        const matchingExecutive = filterData.executives.find(exec => exec.id === urlExecutiveId);
+        executiveFilter = matchingExecutive ? urlExecutiveId : 'All Executive';
+        console.log('[URL DEBUG] Executive ID from URL:', urlExecutiveId, '→ Valid:', !!matchingExecutive);
+      }
+      
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        partnerBrand: urlPartnerBrand || prevFilters.partnerBrand,
+        city: urlCity || prevFilters.city,
+        storeName: storeFilter,
+        executiveName: executiveFilter,
+        visitStatus: urlVisitStatus || prevFilters.visitStatus,
+        issueStatus: urlIssueStatus || prevFilters.issueStatus
+      }));
+    }
+  }, [filterData.stores, filterData.executives]); // Wait for filter data to be loaded
+
+  // Apply filters to existing data when filters change (but not on initial load)
+  useEffect(() => {
+    if (visitData.length > 0) { // Only apply filters if we have data
+      applyFilters();
+    }
+  }, [filters, visitData]);
+
+  // Refetch data when date filter changes (requires server-side fetch)
+  useEffect(() => {
+    if (visitData.length > 0) { // Only refetch if we already have data (not on initial load)
       fetchVisitReportData();
     }
-  }, [filters, selectedDateFilter]);
+  }, [selectedDateFilter]);
 
 
   const handleFilterChange = (filterType: keyof VisitReportFilters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
+    const newFilters = {
+      ...filters,
       [filterType]: value
-    }));
+    };
     
-    // When user manually changes filters, we want to clear URL params
-    // so their selections take precedence over URL navigation
-    // We can do this by updating the URL without the storeId/executiveId params
-    if ((filterType === 'storeName' || filterType === 'executiveName') && 
-        (searchParams.get('storeId') || searchParams.get('executiveId'))) {
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('storeId');
-      newUrl.searchParams.delete('executiveId');
-      newUrl.searchParams.delete('storeName');
-      newUrl.searchParams.delete('executiveName');
-      window.history.replaceState({}, '', newUrl.toString());
+    setFilters(newFilters);
+    
+    // Update URL with current filter state
+    updateUrlWithFilters(newFilters);
+  };
+
+  // Function to update URL based on current filter state
+  const updateUrlWithFilters = (currentFilters: VisitReportFilters) => {
+    const newUrl = new URL(window.location.href);
+    
+    // Clear all existing filter params
+    newUrl.searchParams.delete('partnerBrand');
+    newUrl.searchParams.delete('city');
+    newUrl.searchParams.delete('storeName');
+    newUrl.searchParams.delete('executiveName');
+    newUrl.searchParams.delete('visitStatus');
+    newUrl.searchParams.delete('issueStatus');
+    newUrl.searchParams.delete('storeId');
+    newUrl.searchParams.delete('executiveId');
+    
+    // Add current filter values to URL (only if not default)
+    if (currentFilters.partnerBrand !== 'All Brands') {
+      newUrl.searchParams.set('partnerBrand', currentFilters.partnerBrand);
     }
+    
+    if (currentFilters.city !== 'All City') {
+      newUrl.searchParams.set('city', currentFilters.city);
+    }
+    
+    if (currentFilters.visitStatus !== 'All Status') {
+      newUrl.searchParams.set('visitStatus', currentFilters.visitStatus);
+    }
+    
+    if (currentFilters.issueStatus !== 'All Status') {
+      newUrl.searchParams.set('issueStatus', currentFilters.issueStatus);
+    }
+    
+    // Use IDs directly in URL for store and executive
+    if (currentFilters.storeName !== 'All Store') {
+      newUrl.searchParams.set('storeId', currentFilters.storeName);
+    }
+    
+    if (currentFilters.executiveName !== 'All Executive') {
+      newUrl.searchParams.set('executiveId', currentFilters.executiveName);
+    }
+    
+    // Update URL without reloading page
+    window.history.pushState({}, '', newUrl.toString());
   };
 
   const getBrandColor = (brand: string): string => {
@@ -457,11 +370,13 @@ const VisitReportPage: React.FC = () => {
   };
 
   // Format issue status for display (already properly formatted)
-  const formatIssueStatus = (status: 'Pending' | 'Assigned' | 'Resolved'): string => {
-    return status;
+  const formatIssueStatus = (status: 'Pending' | 'Assigned' | 'Resolved' | null): string => {
+    return status || 'None';
   };
 
-  const getIssueStatusBadgeClass = (status: 'Pending' | 'Assigned' | 'Resolved'): string => {
+  const getIssueStatusBadgeClass = (status: 'Pending' | 'Assigned' | 'Resolved' | null): string => {
+    if (!status) return 'issue-status-default';
+    
     switch (status) {
       case 'Pending':
         return 'issue-status-pending';
@@ -528,6 +443,56 @@ const VisitReportPage: React.FC = () => {
   const closeVisitModal = () => {
     setSelectedVisit(null);
     setShowModal(false);
+  };
+
+  // Mark visit as reviewed
+  const markAsReviewed = async (visitId: string, adminComment?: string) => {
+    setMarkingReviewedId(visitId);
+    try {
+      const response = await fetch(`/api/admin/visit-report/${visitId}/mark-reviewed`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ adminComment })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Update the local state to reflect the change
+        setVisitData(prevVisits => 
+          prevVisits.map(visit => 
+            visit.id === visitId 
+              ? { ...visit, visitStatus: 'REVIEWD' as const }
+              : visit
+          )
+        );
+        
+        // Also update filtered visits if they exist
+        setFilteredVisits(prevVisits => 
+          prevVisits.map(visit => 
+            visit.id === visitId 
+              ? { ...visit, visitStatus: 'REVIEWD' as const }
+              : visit
+          )
+        );
+        
+        // Show success message
+        alert(result.message || 'Visit marked as reviewed successfully!');
+      }
+    } catch (error) {
+      console.error('Error marking visit as reviewed:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to mark visit as reviewed'}`);
+    } finally {
+      setMarkingReviewedId(null);
+    }
   };
 
   // Show critical errors immediately
@@ -717,7 +682,7 @@ const VisitReportPage: React.FC = () => {
                 </div>
                 
                 <div className="admin-visit-report-cell admin-visit-report-store-name-cell">
-                  <Link href={`/admin/stores/${visit.id}`} className="admin-visit-report-store-name-link">
+                  <Link href={`/admin/stores?storeId=${visit.storeId}`} className="admin-visit-report-store-name-link">
                     {visit.storeName}
                   </Link>
                 </div>
@@ -747,7 +712,7 @@ const VisitReportPage: React.FC = () => {
                         <span className="admin-visit-report-issue-icon">⚠️</span>
                         {visit.issueId ? (
                           <Link 
-                            href={`/admin/issues?issueId=${visit.issueId}`}
+                            href={`/admin/issues/${visit.issueId}`}
                             className="admin-visit-report-issue-link"
                             title={`View issue: ${visit.issues}`}
                           >
@@ -766,9 +731,11 @@ const VisitReportPage: React.FC = () => {
                     <span className={`admin-visit-report-status-badge ${getVisitStatusBadgeClass(visit.visitStatus)}`}>
                       {formatVisitStatus(visit.visitStatus)}
                     </span>
-                    <span className={`admin-visit-report-status-badge ${getIssueStatusBadgeClass(visit.issueStatus)}`}>
-                      Issue {formatIssueStatus(visit.issueStatus)}
-                    </span>
+                    {visit.issueStatus && visit.issues !== 'None' && (
+                      <span className={`admin-visit-report-status-badge ${getIssueStatusBadgeClass(visit.issueStatus)}`}>
+                        Issue {formatIssueStatus(visit.issueStatus)}
+                      </span>
+                    )}
                   </div>
                 </div>
                 
@@ -780,17 +747,17 @@ const VisitReportPage: React.FC = () => {
                     >
                       View Details
                     </button>
-                    {visit.issues !== 'None' && visit.issueId && (
-                      <Link 
-                        href={`/admin/issues?issueId=${visit.issueId}`}
-                        className="admin-visit-report-view-issue-btn"
-                      >
-                        View Issue
-                      </Link>
-                    )}
                     {visit.visitStatus === 'PENDING_REVIEW' && (
-                      <button className="admin-visit-report-mark-reviewed-btn">
-                        Mark Reviewed
+                      <button 
+                        className="admin-visit-report-mark-reviewed-btn"
+                        onClick={() => markAsReviewed(visit.id)}
+                        disabled={markingReviewedId === visit.id}
+                        style={{
+                          opacity: markingReviewedId === visit.id ? 0.6 : 1,
+                          cursor: markingReviewedId === visit.id ? 'not-allowed' : 'pointer'
+                        }}
+                      >
+                        {markingReviewedId === visit.id ? 'Marking...' : 'Mark Reviewed'}
                       </button>
                     )}
                   </div>

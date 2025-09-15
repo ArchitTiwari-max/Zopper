@@ -391,12 +391,12 @@ const ExecutiveFormContent: React.FC = () => {
   // Show error state only if store loading failed and we have an error
   if (error && !storeLoading && !storeData) {
     return (
-      <div className="executive-form-container">
-        <div className="executive-form-content">
-          <div className="error-state">
+      <div className="exec-f-sub-container">
+        <div className="exec-f-sub-content">
+          <div className="exec-f-sub-error-state">
             <h2>Error Loading Store</h2>
             <p>{error}</p>
-            <button onClick={() => router.push('/executive/store')} className="back-btn">
+            <button onClick={() => router.push('/executive/store')} className="exec-f-sub-back-btn">
               Back to Stores
             </button>
           </div>
@@ -406,89 +406,89 @@ const ExecutiveFormContent: React.FC = () => {
   }
 
   return (
-    <div className="executive-form-container">
-      <div className="executive-form-content">
+    <div className="exec-f-sub-container">
+      <div className="exec-f-sub-content">
         {/* Header */}
-        <div className="form-header">
-          <button className="back-btn" onClick={() => router.push('/executive/store')}>
-            <span className="back-arrow">←</span>
+        <div className="exec-f-sub-header">
+          <button className="exec-f-sub-back-btn" onClick={() => router.push('/executive/store')}>
+            <span className="exec-f-sub-back-arrow">←</span>
             Back to Stores
           </button>
         </div>
 
         {/* Title */}
-        <div className="form-title-section">
-          <h1 className="form-title">Visit Form</h1>
-          <p className="form-subtitle">Submit your Visit Report</p>
+        <div className="exec-f-sub-title-section">
+          <h1 className="exec-f-sub-title">Visit Form</h1>
+          <p className="exec-f-sub-subtitle">Submit your Visit Report</p>
         </div>
 
         {/* Store Info Card */}
-        <div className="store-info-card">
+        <div className="exec-f-sub-store-info-card">
           {storeLoading ? (
             <div className="loading-text">
               Loading store information...
             </div>
           ) : storeData ? (
             <>
-              <h2 className="store-name">{storeData.storeName}</h2>
-              <div className="partner-brands">
+              <h2 className="exec-f-sub-store-name">{storeData.storeName}</h2>
+              <div className="exec-f-sub-partner-brands">
                 {storeData.partnerBrands.map((brand, index) => (
-                  <span key={index} className="brand-tag">{brand}</span>
+                  <span key={index} className="exec-f-sub-brand-tag">{brand}</span>
                 ))}
               </div>
-              <div className="store-details">
-                <div className="detail-item">
-                  <span className="location-icon">📍</span>
-                  <div className="address-info">
-                    <div className="city">{storeData.city}</div>
+              <div className="exec-f-sub-store-details">
+                <div className="exec-f-sub-detail-item">
+                  <span className="exec-f-sub-location-icon">📍</span>
+                  <div className="exec-f-sub-address-info">
+                    <div className="exec-f-sub-city">{storeData.city}</div>
                     {storeData.fullAddress && (
-                      <div className="full-address">{storeData.fullAddress}</div>
+                      <div className="exec-f-sub-full-address">{storeData.fullAddress}</div>
                     )}
                   </div>
                 </div>
               </div>
             </>
           ) : (
-            <div className="error-message">
+            <div className="exec-f-sub-error-message">
               Failed to load store information
             </div>
           )}
         </div>
 
         {/* Visit Form */}
-        <div className="visit-form-card">
-          <h3 className="section-title">Log Visit Details</h3>
+        <div className="exec-f-sub-visit-form-card">
+          <h3 className="exec-f-sub-section-title">Log Visit Details</h3>
           
-          <div className="form-group">
-            <label className="form-label">
-              Contact Person <span className="required">*</span>
+          <div className="exec-f-sub-form-group">
+            <label className="exec-f-sub-form-label">
+              Contact Person <span className="exec-f-sub-required">*</span>
             </label>
-            <div className="people-input-container">
-              <div className="person-input-wrapper">
+            <div className="exec-f-sub-people-input-container">
+              <div className="exec-f-sub-person-input-wrapper">
                 <input
                   type="text"
-                  className="form-input person-name-input"
+                  className="exec-f-sub-form-input exec-f-sub-person-name-input"
                   placeholder="Enter person's name"
                   value={currentPerson.name}
                   onChange={(e) => handlePersonInputChange('name', e.target.value)}
                 />
                 <input
                   type="text"
-                  className="form-input person-designation-input"
+                  className="exec-f-sub-form-input exec-f-sub-person-designation-input"
                   placeholder="Enter designation"
                   value={currentPerson.designation}
                   onChange={(e) => handlePersonInputChange('designation', e.target.value)}
                 />
                 <input
                   type="tel"
-                  className="form-input person-phone-input"
+                  className="exec-f-sub-form-input exec-f-sub-person-phone-input"
                   placeholder="Enter phone number (optional)"
                   value={currentPerson.phoneNumber}
                   onChange={(e) => handlePersonInputChange('phoneNumber', e.target.value)}
                 />
                 <button
                   type="button"
-                  className="add-person-btn"
+                  className="exec-f-sub-add-person-btn"
                   onClick={addPerson}
                   disabled={!currentPerson.name.trim() || !currentPerson.designation.trim()}
                 >
@@ -496,19 +496,19 @@ const ExecutiveFormContent: React.FC = () => {
                 </button>
               </div>
               {formData.peopleMet.length > 0 && (
-                <div className="people-list">
+                <div className="exec-f-sub-people-list">
                   {formData.peopleMet.map((person, index) => (
-                    <div key={index} className="person-item">
-                      <div className="person-details">
-                        <span className="person-name">{person.name}</span>
-                        <span className="person-designation">({person.designation})</span>
+                    <div key={index} className="exec-f-sub-person-item">
+                      <div className="exec-f-sub-person-details">
+                        <span className="exec-f-sub-person-name">{person.name}</span>
+                        <span className="exec-f-sub-person-designation">({person.designation})</span>
                         {person.phoneNumber && (
-                          <span className="person-phone"> - {person.phoneNumber}</span>
+                          <span className="exec-f-sub-person-phone"> - {person.phoneNumber}</span>
                         )}
                       </div>
                       <button
                         type="button"
-                        className="remove-person-btn"
+                        className="exec-f-sub-remove-person-btn"
                         onClick={() => removePerson(index)}
                         title="Remove person"
                       >
@@ -533,13 +533,13 @@ const ExecutiveFormContent: React.FC = () => {
             </label>
           </div> */}
 
-          <div className="form-group">
-            <label className="form-label">Raise Issues if</label>
-            <div className="issues-input-container">
-              <div className="issue-input-wrapper">
+          <div className="exec-f-sub-form-group">
+            <label className="exec-f-sub-form-label">Raise Issues if</label>
+            <div className="exec-f-sub-issues-input-container">
+              <div className="exec-f-sub-issue-input-wrapper">
                 <input
                   type="text"
-                  className="form-input issue-input"
+                  className="exec-f-sub-form-input exec-f-sub-issue-input"
                   placeholder="Describe an issue encountered"
                   value={currentIssue}
                   onChange={(e) => setCurrentIssue(e.target.value)}
@@ -547,7 +547,7 @@ const ExecutiveFormContent: React.FC = () => {
                 />
                 <button
                   type="button"
-                  className="add-issue-btn"
+                  className="exec-f-sub-add-issue-btn"
                   onClick={addIssue}
                   disabled={!currentIssue.trim()}
                 >
@@ -555,13 +555,13 @@ const ExecutiveFormContent: React.FC = () => {
                 </button>
               </div>
               {formData.issuesRaised.length > 0 && (
-                <div className="issues-list">
+                <div className="exec-f-sub-issues-list">
                   {formData.issuesRaised.map((issue, index) => (
-                    <div key={index} className="issue-item">
-                      <span className="issue-text">{issue}</span>
+                    <div key={index} className="exec-f-sub-issue-item">
+                      <span className="exec-f-sub-issue-text">{issue}</span>
                       <button
                         type="button"
-                        className="remove-issue-btn"
+                        className="exec-f-sub-remove-issue-btn"
                         onClick={() => removeIssue(index)}
                         title="Remove issue"
                       >
@@ -574,8 +574,8 @@ const ExecutiveFormContent: React.FC = () => {
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Photos Taken</label>
+          <div className="exec-f-sub-form-group">
+            <label className="exec-f-sub-form-label">Photos Taken</label>
             <ImageUpload 
               onUpload={handleImageUpload}
               multiple={true}
@@ -584,14 +584,14 @@ const ExecutiveFormContent: React.FC = () => {
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">
-              Brands Visited <span className="required">*</span>
+          <div className="exec-f-sub-form-group">
+            <label className="exec-f-sub-form-label">
+              Brands Visited <span className="exec-f-sub-required">*</span>
             </label>
-            <div className="brands-input-container">
-              <div className="brand-input-wrapper">
+            <div className="exec-f-sub-brands-input-container">
+              <div className="exec-f-sub-brand-input-wrapper">
                 <select
-                  className="form-select brand-select"
+                  className="exec-f-sub-form-select exec-f-sub-brand-select"
                   value={currentBrand}
                   onChange={(e) => setCurrentBrand(e.target.value)}
                   disabled={storeLoading || !storeData}
@@ -612,7 +612,7 @@ const ExecutiveFormContent: React.FC = () => {
                 </select>
                 <button
                   type="button"
-                  className="add-brand-btn"
+                  className="exec-f-sub-add-brand-btn"
                   onClick={addBrand}
                   disabled={!currentBrand.trim() || storeLoading || !storeData}
                 >
@@ -620,13 +620,13 @@ const ExecutiveFormContent: React.FC = () => {
                 </button>
               </div>
               {formData.brandsVisited.length > 0 && (
-                <div className="brands-list">
+                <div className="exec-f-sub-brands-list">
                   {formData.brandsVisited.map((brand, index) => (
-                    <div key={index} className="brand-item">
-                      <span className="brand-name">{brand}</span>
+                    <div key={index} className="exec-f-sub-brand-item">
+                      <span className="exec-f-sub-brand-name">{brand}</span>
                       <button
                         type="button"
-                        className="remove-brand-btn"
+                        className="exec-f-sub-remove-brand-btn"
                         onClick={() => removeBrand(brand)}
                         title="Remove brand"
                       >
@@ -639,10 +639,10 @@ const ExecutiveFormContent: React.FC = () => {
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Remarks</label>
+          <div className="exec-f-sub-form-group">
+            <label className="exec-f-sub-form-label">Remarks</label>
             <textarea
-              className="form-textarea"
+              className="exec-f-sub-form-textarea"
               placeholder="Additional comments or observations..."
               value={formData.remarks}
               onChange={(e) => handleInputChange('remarks', e.target.value)}
@@ -650,12 +650,12 @@ const ExecutiveFormContent: React.FC = () => {
             />
           </div>
 
-          <div className="form-actions">
-            <button className="save-draft-btn" onClick={handleSaveDraft} disabled={submitting}>
+          <div className="exec-f-sub-form-actions">
+            <button className="exec-f-sub-save-draft-btn" onClick={handleSaveDraft} disabled={submitting}>
               Save Draft
             </button>
             <button 
-              className="submit-visit-btn" 
+              className="exec-f-sub-submit-visit-btn" 
               onClick={handleSubmitVisit}
               disabled={submitting || formData.peopleMet.length === 0 || formData.brandsVisited.length === 0}
             >
@@ -665,25 +665,25 @@ const ExecutiveFormContent: React.FC = () => {
         </div>
 
         {/* Past Visits */}
-        <div className="past-visits-card">
-          <h3 className="section-title">Past Visits</h3>
-          <div className="visits-list">
+        <div className="exec-f-sub-past-visits-card">
+          <h3 className="exec-f-sub-section-title">Past Visits</h3>
+          <div className="exec-f-sub-visits-list">
             {visitsLoading ? (
               <div className="loading-text">
                 Loading past visits...
               </div>
             ) : pastVisits.length === 0 ? (
-              <div className="no-visits">
+              <div className="exec-f-sub-no-visits">
                 <p>No previous visits found for this store.</p>
               </div>
             ) : (
               pastVisits.map((visit) => (
-                <div key={visit.id} className="visit-item">
-                  <div className="visit-header">
-                    <div className="visit-date-status">
-                      <span className="visit-date">{formatDate(visit.createdAt)}</span>
+                <div key={visit.id} className="exec-f-sub-visit-item">
+                  <div className="exec-f-sub-visit-header">
+                    <div className="exec-f-sub-visit-date-status">
+                      <span className="exec-f-sub-visit-date">{formatDate(visit.createdAt)}</span>
                       <span 
-                        className="visit-status"
+                        className="exec-f-sub-visit-status"
                         style={{ backgroundColor: getStatusColor(visit.status) }}
                       >
                         {visit.status}
@@ -691,34 +691,34 @@ const ExecutiveFormContent: React.FC = () => {
                     </div>
                     {visit.canViewDetails && (
                       <button 
-                        className="view-details-btn"
+                        className="exec-f-sub-view-details-btn"
                         onClick={() => openVisitModal(visit)}
                       >
                         View Details
                       </button>
                     )}
                   </div>
-                  <div className="visit-representative">
-                    <span className="person-icon">👤</span>
+                  <div className="exec-f-sub-visit-representative">
+                    <span className="exec-f-sub-person-icon">👤</span>
                     <span>{visit.representative}</span>
                   </div>
                   {visit.remarks && (
-                    <div className="visit-description">
+                    <div className="exec-f-sub-visit-description">
                       {visit.remarks}
                     </div>
                   )}
                   {visit.adminComment && (
-                    <div className="admin-note">
+                    <div className="exec-f-sub-admin-note">
                       <strong>Admin:</strong> {visit.adminComment}
                     </div>
                   )}
                   {visit.issues && visit.issues.length > 0 && (
-                    <div className="visit-issues">
+                    <div className="exec-f-sub-visit-issues">
                       <strong>Issues Reported:</strong>
                       {visit.issues.map((issue) => (
-                        <div key={issue.id} className="issue-item">
-                          <span className="issue-details">{issue.details}</span>
-                          <span className="issue-status" style={{ color: getStatusColor(issue.status) }}>
+                        <div key={issue.id} className="exec-f-sub-issue-item">
+                          <span className="exec-f-sub-issue-details">{issue.details}</span>
+                          <span className="exec-f-sub-issue-status" style={{ color: getStatusColor(issue.status) }}>
                             ({issue.status})
                           </span>
                         </div>
@@ -726,10 +726,10 @@ const ExecutiveFormContent: React.FC = () => {
                     </div>
                   )}
                   {visit.personMet && visit.personMet.length > 0 && (
-                    <div className="visit-people">
+                    <div className="exec-f-sub-visit-people">
                       <strong>Contact Person:</strong>
                       {visit.personMet.map((person, index) => (
-                        <span key={index} className="person-met">
+                        <span key={index} className="exec-f-sub-person-met">
                           {person.name} ({person.designation})
                           {person.phoneNumber && ` - ${person.phoneNumber}`}
                           {index < visit.personMet.length - 1 && ', '}
@@ -757,8 +757,8 @@ const ExecutiveFormContent: React.FC = () => {
 const ExecutiveForm: React.FC = () => {
   return (
     <Suspense fallback={
-      <div className="executive-form-container">
-        <div className="executive-form-content">
+      <div className="exec-f-sub-container">
+        <div className="exec-f-sub-content">
           <div className="loading-text">
             Loading form...
           </div>

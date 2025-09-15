@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     const [
       totalVisitsData,
       pendingReviewsData, 
-      issuesReportedData,
+      pendingIssuesData,
       previousVisitsData,
       brandVisitsData
     ] = await Promise.all([
@@ -74,10 +74,13 @@ export async function GET(request: NextRequest) {
         }
       }),
 
-      // Issues reported in date range  
+      // Pending issues (Pending + Assigned status) in date range  
       prisma.issue.aggregate({
         _count: true,
         where: {
+          status: {
+            in: ['Pending', 'Assigned']
+          },
           createdAt: {
             gte: startDate,
             lte: now
@@ -122,9 +125,9 @@ export async function GET(request: NextRequest) {
         trend: pendingReviewsData._count > 20 ? 'warning' : 'active'
       },
       issuesReported: {
-        count: issuesReportedData._count,
-        status: issuesReportedData._count > 10 ? 'Requires resolution' : 'Manageable',
-        trend: issuesReportedData._count > 10 ? 'critical' : 'warning'
+        count: pendingIssuesData._count,
+        status: pendingIssuesData._count > 10 ? 'Requires resolution' : 'Manageable',
+        trend: pendingIssuesData._count > 10 ? 'critical' : 'warning'
       },
       brandData: brandVisitsData
     };

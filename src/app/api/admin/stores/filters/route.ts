@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           name: true,
-          region: true
+          region: true,
+          assignedStoreIds: true
         },
         orderBy: {
           name: 'asc'
@@ -71,7 +72,8 @@ export async function GET(request: NextRequest) {
       executives: executives.map(executive => ({
         id: executive.id,
         name: executive.name,
-        region: executive.region
+        region: executive.region,
+        assignedStoreIds: executive.assignedStoreIds
       })),
       brands: brands.map(brand => ({
         id: brand.id,

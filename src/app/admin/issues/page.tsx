@@ -12,8 +12,10 @@ const AdminIssuesPage: React.FC = () => {
   const searchParams = useSearchParams();
   const { selectedDateFilter } = useDateFilter();
   const [issuesData, setIssuesData] = useState<IssueData[]>([]);
+  const [filteredIssues, setFilteredIssues] = useState<IssueData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isLoadingFilters, setIsLoadingFilters] = useState<boolean>(true);
+  const [isFilterChanging, setIsFilterChanging] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [filterError, setFilterError] = useState<string | null>(null);
   
@@ -61,38 +63,14 @@ const AdminIssuesPage: React.FC = () => {
     }
   };
 
-  // Fetch issues data from API
+  // Fetch ALL issues data from API (no server-side filtering)
   const fetchIssuesData = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Build query parameters
+      // Only pass dateFilter to get all data for client-side filtering
       const params = new URLSearchParams();
       params.append('dateFilter', selectedDateFilter);
-      
-      // Use IDs for backend queries for better performance
-      // URL parameters (from other pages) take precedence
-      const urlStoreId = searchParams.get('storeId');
-      const urlExecutiveId = searchParams.get('executiveId');
-      const urlIssueId = searchParams.get('issueId');
-      
-      if (urlStoreId) {
-        params.append('storeId', urlStoreId);
-      } else if (filters.storeName !== 'All Stores') {
-        params.append('storeId', filters.storeName); // filters.storeName contains store ID
-      }
-      
-      if (urlExecutiveId) {
-        params.append('executiveId', urlExecutiveId);
-      }
-      
-      if (urlIssueId) {
-        params.append('issueId', urlIssueId);
-      }
-      
-      if (filters.status !== 'All Status') {
-        params.append('status', filters.status);
-      }
 
       const response = await fetch(`/api/admin/issues/data?${params.toString()}`, {
         method: 'GET',
@@ -109,65 +87,146 @@ const AdminIssuesPage: React.FC = () => {
 
       const data = await response.json();
       setIssuesData(data.issues || []);
+      // applyFilters will be triggered by issuesData change and handle filtering
     } catch (error) {
       console.error('Failed to fetch issues data:', error);
       setError(error instanceof Error ? error.message : 'Failed to load issues data');
       setIssuesData([]);
     } finally {
       setIsLoading(false);
+      setIsFilterChanging(false);
     }
   };
 
-  // Handle URL query parameters and update filter state
+  // Apply filters to existing data (client-side filtering)
+  const applyFilters = () => {
+    if (!issuesData.length) {
+      setFilteredIssues([]);
+      setIsFilterChanging(false); // Reset loading state
+      return;
+    }
+
+    let filtered = issuesData.filter(issue => {
+      // Filter by store name
+      if (filters.storeName !== 'All Stores') {
+        // If filters.storeName contains an ID, find the store name
+        const store = filterData.stores.find(s => s.id === filters.storeName);
+        const storeNameToMatch = store ? store.name : filters.storeName;
+        if (issue.storeName !== storeNameToMatch) {
+          return false;
+        }
+      }
+
+      // Filter by status
+      if (filters.status !== 'All Status') {
+        if (filters.status === 'Pending') {
+          // When "Pending" is selected, show both Pending and Assigned issues
+          if (issue.status !== 'Pending' && issue.status !== 'Assigned') {
+            return false;
+          }
+        } else {
+          // For other statuses, exact match
+          if (issue.status !== filters.status) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    });
+
+    setFilteredIssues(filtered);
+    setIsFilterChanging(false); // Reset loading state after filtering
+  };
+
+  // Initial data fetch on mount
   useEffect(() => {
-    const storeId = searchParams.get('storeId');
-    const executiveId = searchParams.get('executiveId');
-    const status = searchParams.get('status');
+    fetchFilterData();
+    fetchIssuesData();
+  }, []);
+
+  // Set initial filters from URL parameters (separate effect to avoid conflicts)
+  useEffect(() => {
+    // Only process URL params after filter data is loaded
+    if (filterData.stores.length === 0) return;
     
-    // Update filter state based on URL params so dropdowns show correct values
-    // Store IDs in filter state but display names in UI
-    if (storeId && filterData.stores.length > 0) {
-      // URL has storeId, use that ID directly for filter state
-      if (filters.storeName !== storeId) {
-        setFilters(prev => ({ ...prev, storeName: storeId }));
+    const urlStoreName = searchParams.get('storeName');
+    const urlStatus = searchParams.get('status');
+    const urlStoreId = searchParams.get('storeId');
+    
+    if (urlStoreName || urlStatus || urlStoreId) {
+      // Convert store name to store ID
+      let storeFilter = 'All Stores';
+      if (urlStoreName) {
+        const matchingStore = filterData.stores.find(store => store.name === urlStoreName);
+        storeFilter = matchingStore ? matchingStore.id : 'All Stores';
+        console.log('[URL DEBUG] Store name from URL:', urlStoreName, '→ Store ID:', storeFilter);
+      } else if (urlStoreId) {
+        storeFilter = urlStoreId;
+        console.log('[URL DEBUG] Store ID from URL:', urlStoreId);
+      }
+      
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        storeName: storeFilter,
+        status: urlStatus || prevFilters.status
+      }));
+    }
+  }, [filterData.stores]); // Wait for filter data to be loaded
+
+  // Apply filters to existing data when filters change
+  useEffect(() => {
+    if (issuesData.length > 0) { // Only apply filters if we have data
+      applyFilters();
+    }
+  }, [filters, issuesData]);
+
+  // Refetch data when date filter changes (requires server-side fetch)
+  useEffect(() => {
+    if (issuesData.length > 0) { // Only refetch if we already have data (not on initial load)
+      fetchIssuesData();
+    }
+  }, [selectedDateFilter]);
+
+  const handleFilterChange = (filterType: keyof IssueFilters, value: string) => {
+    setIsFilterChanging(true);
+    const newFilters = {
+      ...filters,
+      [filterType]: value
+    };
+    
+    setFilters(newFilters);
+    
+    // Update URL with current filter state
+    updateUrlWithFilters(newFilters);
+  };
+
+  // Function to update URL based on current filter state
+  const updateUrlWithFilters = (currentFilters: IssueFilters) => {
+    const newUrl = new URL(window.location.href);
+    
+    // Clear all existing filter params
+    newUrl.searchParams.delete('storeName');
+    newUrl.searchParams.delete('status');
+    newUrl.searchParams.delete('storeId');
+    newUrl.searchParams.delete('executiveId');
+    newUrl.searchParams.delete('issueId');
+    
+    // Add current filter values to URL (only if not default)
+    if (currentFilters.status !== 'All Status') {
+      newUrl.searchParams.set('status', currentFilters.status);
+    }
+    
+    // For store, convert ID back to name for readable URLs
+    if (currentFilters.storeName !== 'All Stores') {
+      const store = filterData.stores.find(s => s.id === currentFilters.storeName);
+      if (store) {
+        newUrl.searchParams.set('storeName', store.name);
       }
     }
     
-    // Handle status query parameter
-    if (status && status !== filters.status) {
-      setFilters(prev => ({ ...prev, status: status }));
-    }
-  }, [searchParams, filterData]);
-
-  // OPTIMIZED LOADING: Load both table and filter data concurrently, but prioritize table UI
-  useEffect(() => {
-    // Load table data first (higher priority for user experience)
-    fetchIssuesData();
-    
-    // Load filter data concurrently (no delay needed since no loading state shown)
-    fetchFilterData();
-  }, []);
-
-  // Refetch data when filters, date filter, or search params change
-  useEffect(() => {
-    fetchIssuesData(); // Always prioritize table data
-  }, [filters, selectedDateFilter, searchParams]);
-
-  const handleFilterChange = (filterType: keyof IssueFilters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [filterType]: value
-    }));
-    
-    // When user manually changes filters, clear URL params so their selections take precedence
-    if ((filterType === 'storeName') && 
-        (searchParams.get('storeId') || searchParams.get('executiveId'))) {
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('storeId');
-      newUrl.searchParams.delete('executiveId');
-      newUrl.searchParams.delete('issueId');
-      window.history.replaceState({}, '', newUrl.toString());
-    }
+    // Update URL without reloading page
+    window.history.pushState({}, '', newUrl.toString());
   };
 
   // Handle status card clicks to apply filters
@@ -238,21 +297,6 @@ const AdminIssuesPage: React.FC = () => {
           </div>
         </div>
 
-        <div 
-          className="admin-issues-stats-card admin-issues-stats-card--clickable"
-          onClick={() => handleStatusCardClick('Assigned')}
-          title="Click to filter by Assigned issues only"
-        >
-          <div className="admin-issues-stats-icon admin-issues-stats-icon--in-progress">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6Z"/>
-            </svg>
-          </div>
-          <div className="admin-issues-stats-content">
-            <h4>In Progress</h4>
-            <div className="admin-issues-stats-value">{issuesData.filter(issue => issue.status === 'Assigned').length}</div>
-          </div>
-        </div>
 
         <div 
           className="admin-issues-stats-card admin-issues-stats-card--clickable"
@@ -311,8 +355,8 @@ const AdminIssuesPage: React.FC = () => {
               className="admin-issues-filter-select"
             >
               <option value="All Status">All Status</option>
-              {filterData.statuses.map(status => (
-                <option key={status} value={status}>{status}</option>
+              {filterData.statuses.filter(status => status !== 'Assigned').map(status => (
+                <option key={status} value={status}>{status === 'Pending' ? 'Open' : status}</option>
               ))}
             </select>
           </div>
@@ -337,13 +381,13 @@ const AdminIssuesPage: React.FC = () => {
           
           {/* Table body with loading state */}
           <div className="admin-issues-table-body">
-            {isLoading ? (
+            {(isLoading || isFilterChanging) ? (
               <div className="table-loading">
                 <div className="loading-spinner-large"></div>
                 <span className="loading-text">Loading issues data...</span>
               </div>
-            ) : issuesData.length > 0 ? (
-              issuesData.map(issue => (
+            ) : filteredIssues.length > 0 ? (
+              filteredIssues.map(issue => (
               <div key={issue.id} className="admin-issues-table-row">
                 <div className="admin-issues-cell">
                   <Link href={`/admin/issues/${issue.id}`} className="admin-issues-issue-id-link">
@@ -352,7 +396,7 @@ const AdminIssuesPage: React.FC = () => {
                 </div>
                 <div className="admin-issues-cell">
                   <div className="admin-issues-store-info">
-                    <Link href={`/admin/stores/${issue.storeId}`} className="admin-issues-store-name-link">
+                    <Link href={`/admin/stores?storeId=${issue.storeId}`} className="admin-issues-store-name-link">
                       <strong>{issue.storeName}</strong>
                     </Link>
                     <div className="admin-issues-store-location">{issue.location}</div>

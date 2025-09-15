@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     // OPTIMIZED: Get all filter data concurrently with Promise.all - no limits, fetch all data
-    const [executives, stores, brands] = await Promise.all([
+    const [executives, stores] = await Promise.all([
       // Get ALL executives for executive names - no limits
       prisma.executive.findMany({
         select: {
@@ -44,17 +44,6 @@ export async function GET(request: NextRequest) {
         orderBy: {
           storeName: 'asc'
         }
-      }),
-
-      // Get ALL brands - no limits
-      prisma.brand.findMany({
-        select: {
-          id: true,
-          brandName: true
-        },
-        orderBy: {
-          brandName: 'asc'
-        }
       })
     ]);
 
@@ -64,7 +53,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       executives: executives.map(exec => ({ id: exec.id, name: exec.name, region: exec.region })),
       stores: stores.map(store => ({ id: store.id, name: store.storeName, city: store.city })),
-      brands: brands.map(brand => ({ id: brand.id, name: brand.brandName })),
       cities: cities
     });
 

@@ -1,5 +1,5 @@
-/* Executive To-Do List Styles */
-.executive-todo-container {
+/* Executive Tasks Styles */
+.exec-tasks-container {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -15,37 +15,37 @@ main {
   padding-bottom: 80px; /* Space for bottom navigation */
 }
 
-/* Pending Tasks Section */
-.pending-tasks-section {
+/* Executive Tasks Section */
+.exec-tasks-section {
   padding: 24px 20px;
 }
 
-/* Task Header */
-.task-header {
+/* Executive Tasks Header */
+.exec-tasks-header {
   margin-bottom: 24px;
 }
 
-.task-title-section {
+.exec-tasks-title-section {
   display: flex;
   flex-direction: column;
 }
 
-.task-title {
+.exec-tasks-title {
   font-size: 24px;
   font-weight: 600;
   color: #212529;
   margin: 0 0 8px 0;
 }
 
-.task-subtitle {
+.exec-tasks-subtitle {
   color: #6c757d;
   font-size: 14px;
   margin: 0;
   line-height: 1.4;
 }
 
-/* Task Tabs */
-.task-tabs {
+/* Executive Tasks Tabs */
+.exec-tasks-tabs {
   display: flex;
   gap: 4px;
   margin-bottom: 24px;
@@ -55,7 +55,7 @@ main {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.tab-btn {
+.exec-tasks-tab-btn {
   flex: 1;
   display: flex;
   align-items: center;
@@ -73,23 +73,23 @@ main {
   position: relative;
 }
 
-.tab-btn:hover {
+.exec-tasks-tab-btn:hover {
   color: #495057;
   background-color: rgba(255, 255, 255, 0.5);
 }
 
-.tab-btn.active {
+.exec-tasks-tab-btn.active {
   background-color: white;
   color: #4f46e5;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.tab-icon {
+.exec-tasks-tab-icon {
   font-size: 16px;
   line-height: 1;
 }
 
-.tab-label {
+.exec-tasks-tab-label {
   font-weight: 500;
   white-space: nowrap;
   display: flex;
@@ -97,7 +97,7 @@ main {
   gap: 0.5rem;
 }
 
-.tab-count {
+.exec-tasks-tab-count {
   font-size: 0.75rem;
   font-weight: 600;
   color: #ef4444;
@@ -108,13 +108,66 @@ main {
   text-align: center;
 }
 
-/* Tab Content */
-.tab-content {
+/* Executive Tasks Tab Content */
+.exec-tasks-tab-content {
   margin-top: 24px;
 }
 
-.tab-panel {
+.exec-tasks-tab-panel {
   min-height: 400px;
+}
+
+/* Issues Tab Specific Styles */
+.exec-tasks-issues-panel {
+  min-height: 400px;
+}
+
+.exec-tasks-issues-table-container {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.exec-tasks-issues-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.exec-tasks-issues-table thead {
+  background-color: #f8f9fa;
+  position: relative;
+  z-index: 1;
+}
+
+.exec-tasks-issues-table th {
+  padding: 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e9ecef;
+  background-color: #f8f9fa;
+}
+
+.exec-tasks-issues-table tbody tr {
+  border-bottom: 1px solid #e9ecef;
+  transition: background-color 0.2s;
+}
+
+.exec-tasks-issues-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.exec-tasks-issues-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.exec-tasks-issues-table td {
+  padding: 16px;
+  vertical-align: middle;
 }
 
 /* Placeholder Content */
@@ -214,7 +267,7 @@ main {
 }
 
 /* Table Cell Styles */
-.stores-name {
+.exec-tasks-issues-stores-name {
   font-weight: 600;
   color: #212529;
   font-size: 14px;
@@ -224,7 +277,7 @@ main {
   max-width: 200px;
 }
 
-.issue {
+.exec-tasks-issues-issue {
   color: #6c757d;
   font-size: 14px;
   overflow: hidden;
@@ -233,21 +286,21 @@ main {
   max-width: 250px;
 }
 
-.admin-comment {
+.exec-tasks-issues-admin-comment {
   max-width: 150px;
 }
 
-.admin-comment-text {
+.exec-tasks-issues-admin-comment-text {
   color: #64748b;
   font-size: 0.875rem;
   line-height: 1.4;
 }
 
-.admin-comment-text.truncated {
+.exec-tasks-issues-admin-comment-text.truncated {
   cursor: help;
 }
 
-.city {
+.exec-tasks-issues-city {
   color: #495057;
   font-size: 14px;
   overflow: hidden;
@@ -293,7 +346,7 @@ main {
 }
 
 /* Status Badge Styles */
-.status-badge {
+.exec-tasks-issues-status-badge {
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 12px;
@@ -302,34 +355,34 @@ main {
   display: inline-block;
 }
 
-.status-badge.pending {
+.exec-tasks-issues-status-badge.pending {
   background-color: #fff3cd;
   color: #856404;
 }
 
-.status-badge.submitted {
+.exec-tasks-issues-status-badge.submitted {
   background-color: #d1ecf1;
   color: #0c5460;
 }
 
 /* Action Column Styles */
-.action-column {
+.exec-tasks-issues-action-column {
   text-align: center;
 }
 
-.action-content {
+.exec-tasks-issues-action-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
 }
 
-.action-header {
+.exec-tasks-issues-action-header {
   text-align: center;
 }
 
 /* View Details Button */
-.view-details-btn {
+.exec-tasks-issues-view-details-btn {
   background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: white;
   border: none;
@@ -343,13 +396,13 @@ main {
   min-width: 100px;
 }
 
-.view-details-btn:hover {
+.exec-tasks-issues-view-details-btn:hover {
   background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
 }
 
-.view-details-btn:active {
+.exec-tasks-issues-view-details-btn:active {
   transform: translateY(0);
   box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
 }
@@ -360,87 +413,87 @@ main {
 
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
-  .pending-tasks-section {
+  .exec-tasks-section {
     padding: 16px;
   }
   
   /* Make table fully responsive - fit to screen width */
-  .table-container {
+  .exec-tasks-issues-table-container {
     overflow: visible;
   }
   
-  .tasks-table {
+  .exec-tasks-issues-table {
     width: 100%;
     table-layout: fixed; /* Fixed table layout for equal column distribution */
   }
   
-  .tasks-table th,
-  .tasks-table td {
+  .exec-tasks-issues-table th,
+  .exec-tasks-issues-table td {
     padding: 8px 4px;
     word-wrap: break-word;
     overflow-wrap: break-word;
     white-space: normal;
   }
   
-  .tasks-table th {
+  .exec-tasks-issues-table th {
     font-size: 9px;
     line-height: 1.2;
   }
   
   /* Column width percentages to fit screen - More balanced distribution */
-  .tasks-table th:nth-child(1), /* Store Name */
-  .tasks-table td:nth-child(1) {
+  .exec-tasks-issues-table th:nth-child(1), /* Store Name */
+  .exec-tasks-issues-table td:nth-child(1) {
     width: 20%;
   }
   
-  .tasks-table th:nth-child(2), /* Issue */
-  .tasks-table td:nth-child(2) {
+  .exec-tasks-issues-table th:nth-child(2), /* Issue */
+  .exec-tasks-issues-table td:nth-child(2) {
     width: 20%;
   }
   
-  .tasks-table th:nth-child(3), /* Admin Comment */
-  .tasks-table td:nth-child(3) {
+  .exec-tasks-issues-table th:nth-child(3), /* Admin Comment */
+  .exec-tasks-issues-table td:nth-child(3) {
     width: 20%;
   }
   
-  .tasks-table th:nth-child(4), /* City */
-  .tasks-table td:nth-child(4) {
+  .exec-tasks-issues-table th:nth-child(4), /* City */
+  .exec-tasks-issues-table td:nth-child(4) {
     width: 15%;
   }
   
-  .tasks-table th:nth-child(5), /* Action */
-  .tasks-table td:nth-child(5) {
+  .exec-tasks-issues-table th:nth-child(5), /* Action */
+  .exec-tasks-issues-table td:nth-child(5) {
     width: 25%;
   }
   
-  .stores-name {
+  .exec-tasks-issues-stores-name {
     font-size: 11px;
     font-weight: 600;
     line-height: 1.3;
   }
   
-  .issue {
+  .exec-tasks-issues-issue {
     font-size: 10px;
     line-height: 1.3;
   }
   
-  .admin-comment-text {
+  .exec-tasks-issues-admin-comment-text {
     font-size: 9px;
     line-height: 1.2;
   }
   
-  .city {
+  .exec-tasks-issues-city {
     font-size: 10px;
     line-height: 1.2;
   }
   
-  .action-content {
+  .exec-tasks-issues-action-content {
     gap: 3px;
     align-items: center;
     justify-content: center;
   }
   
-  .status-badge {
+  .exec-tasks-issues-status-badge {
     padding: 2px 4px;
     font-size: 8px;
     margin-bottom: 2px;
@@ -448,7 +501,7 @@ main {
     white-space: nowrap;
   }
   
-  .view-details-btn {
+  .exec-tasks-issues-view-details-btn {
     padding: 3px 6px;
     font-size: 8px;
     line-height: 1.2;
@@ -458,25 +511,25 @@ main {
     max-width: 80px;
   }
 
-  .task-tabs {
+  .exec-tasks-tabs {
     margin-bottom: 20px;
     padding: 3px;
   }
 
-  .tab-btn {
+  .exec-tasks-tab-btn {
     padding: 10px 8px;
     font-size: 12px;
   }
 
-  .tab-icon {
+  .exec-tasks-tab-icon {
     font-size: 14px;
   }
 
-  .tab-label {
+  .exec-tasks-tab-label {
     font-size: 11px;
   }
 
-  .tab-count {
+  .exec-tasks-tab-count {
     font-size: 0.7rem;
     padding: 0.1rem 0.3rem;
   }
@@ -501,89 +554,89 @@ main {
 }
 
 @media (max-width: 480px) {
-  .pending-tasks-section {
+  .exec-tasks-section {
     padding: 8px;
   }
   
-  .table-container {
+  .exec-tasks-issues-table-container {
     margin: 0 -8px;
     border-radius: 0;
     overflow: visible;
   }
   
-  .tasks-table {
+  .exec-tasks-issues-table {
     width: 100%;
     table-layout: fixed;
   }
   
-  .tasks-table th,
-  .tasks-table td {
+  .exec-tasks-issues-table th,
+  .exec-tasks-issues-table td {
     padding: 3px 2px;
     word-wrap: break-word;
     overflow-wrap: break-word;
     white-space: normal;
   }
   
-  .tasks-table th {
+  .exec-tasks-issues-table th {
     font-size: 7px;
     line-height: 1.1;
     text-transform: uppercase;
   }
   
   /* Equal column widths for very small screens */
-  .tasks-table th:nth-child(1), /* Store Name */
-  .tasks-table td:nth-child(1) {
+  .exec-tasks-issues-table th:nth-child(1), /* Store Name */
+  .exec-tasks-issues-table td:nth-child(1) {
     width: 20%;
   }
   
-  .tasks-table th:nth-child(2), /* Issue */
-  .tasks-table td:nth-child(2) {
+  .exec-tasks-issues-table th:nth-child(2), /* Issue */
+  .exec-tasks-issues-table td:nth-child(2) {
     width: 20%;
   }
   
-  .tasks-table th:nth-child(3), /* Admin Comment */
-  .tasks-table td:nth-child(3) {
+  .exec-tasks-issues-table th:nth-child(3), /* Admin Comment */
+  .exec-tasks-issues-table td:nth-child(3) {
     width: 20%;
   }
   
-  .tasks-table th:nth-child(4), /* City */
-  .tasks-table td:nth-child(4) {
+  .exec-tasks-issues-table th:nth-child(4), /* City */
+  .exec-tasks-issues-table td:nth-child(4) {
     width: 15%;
   }
   
-  .tasks-table th:nth-child(5), /* Action */
-  .tasks-table td:nth-child(5) {
+  .exec-tasks-issues-table th:nth-child(5), /* Action */
+  .exec-tasks-issues-table td:nth-child(5) {
     width: 25%;
   }
   
-  .stores-name {
+  .exec-tasks-issues-stores-name {
     font-size: 8px;
     font-weight: 600;
     line-height: 1.1;
   }
   
-  .issue {
+  .exec-tasks-issues-issue {
     font-size: 7px;
     line-height: 1.1;
   }
   
-  .admin-comment-text {
+  .exec-tasks-issues-admin-comment-text {
     font-size: 7px;
     line-height: 1.1;
   }
   
-  .city {
+  .exec-tasks-issues-city {
     font-size: 7px;
     line-height: 1.1;
   }
   
-  .action-content {
+  .exec-tasks-issues-action-content {
     gap: 2px;
     align-items: center;
     justify-content: center;
   }
   
-  .status-badge {
+  .exec-tasks-issues-status-badge {
     padding: 1px 3px;
     font-size: 6px;
     margin-bottom: 1px;
@@ -591,7 +644,7 @@ main {
     white-space: nowrap;
   }
   
-  .view-details-btn {
+  .exec-tasks-issues-view-details-btn {
     padding: 2px 4px;
     font-size: 7px;
     line-height: 1.1;
@@ -600,25 +653,25 @@ main {
     min-width: auto;
   }
   
-  .task-tabs {
+  .exec-tasks-tabs {
     margin-bottom: 16px;
     padding: 2px;
   }
   
-  .tab-btn {
+  .exec-tasks-tab-btn {
     padding: 8px 6px;
     font-size: 11px;
   }
   
-  .tab-icon {
+  .exec-tasks-tab-icon {
     font-size: 12px;
   }
   
-  .tab-label {
+  .exec-tasks-tab-label {
     font-size: 10px;
   }
   
-  .tab-count {
+  .exec-tasks-tab-count {
     font-size: 0.65rem;
     padding: 0.05rem 0.25rem;
   }

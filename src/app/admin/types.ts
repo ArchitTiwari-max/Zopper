@@ -56,8 +56,8 @@ export interface StoreFilters {
   city: string;
   storeName: string;
   executiveName: string;
-  visitStatus: string;
-  issueStatus: string;
+  showOnlyUnresolvedIssues: boolean;
+  showOnlyUnreviewedVisits: boolean;
 }
 
 export type PartnerBrandOption = 'All Brands' | 'Samsung' | 'Vivo' | 'Oppo' | 'OnePlus' | 'Realme' | 'Xiaomi';
@@ -72,17 +72,15 @@ export interface ExecutiveData {
   name: string;
   initials: string;
   region: string;
-  partnerBrands: string[];
   totalVisits: number;
   lastVisit: string;
-  assignedStores: string;
+  assignedStoreIds: string[];
   avatarColor: string;
 }
 
 export interface ExecutiveFilters {
   executiveName: string;
   storeName: string;
-  brand: string;
 }
 
 export type RegionFilterOption = 'All Regions' | 'East Delhi' | 'West Delhi' | 'South Delhi' | 'North Delhi' | 'Central Delhi';

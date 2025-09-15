@@ -11,8 +11,10 @@ import './page.css';
 const AdminStoresPage: React.FC = () => {
   const searchParams = useSearchParams();
   const [storeData, setStoreData] = useState<StoreData[]>([]);
+  const [filteredStores, setFilteredStores] = useState<StoreData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isLoadingFilters, setIsLoadingFilters] = useState<boolean>(true);
+  const [isFilterChanging, setIsFilterChanging] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [filterError, setFilterError] = useState<string | null>(null);
   const [isFiltersVisible, setIsFiltersVisible] = useState<boolean>(true);
@@ -20,7 +22,7 @@ const AdminStoresPage: React.FC = () => {
   // Filter data from API
   const [filterData, setFilterData] = useState<{
     stores: Array<{id: string, name: string, city: string}>;
-    executives: Array<{id: string, name: string, region: string}>;
+    executives: Array<{id: string, name: string, region: string, assignedStoreIds: string[]}>;
     brands: Array<{id: string, name: string}>;
     cities: string[];
     statuses: string[];
@@ -31,8 +33,8 @@ const AdminStoresPage: React.FC = () => {
     city: 'All City',
     storeName: 'All Store',
     executiveName: 'All Executive',
-    visitStatus: 'All Status',
-    issueStatus: 'All Status'
+    showOnlyUnresolvedIssues: false,
+    showOnlyUnreviewedVisits: false
   });
 
   // Visit plan creation state
@@ -69,57 +71,12 @@ const AdminStoresPage: React.FC = () => {
     }
   };
 
-  // Fetch store data from API
+  // Fetch ALL stores data from API (no server-side filtering)
   const fetchStoreData = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Build query parameters
-      const params = new URLSearchParams();
-      
-      // Send all current filter values as query parameters
-      // URL parameters (from navigation) take precedence
-      const urlStoreId = searchParams.get('storeId');
-      const urlExecutiveId = searchParams.get('executiveId');
-      const urlStoreName = searchParams.get('storeName');
-      const urlExecutiveName = searchParams.get('executiveName');
-      
-      // Use URL params if available, otherwise use filter state
-      if (urlStoreId) {
-        params.append('urlStoreId', urlStoreId);
-      } else if (filters.storeName !== 'All Store') {
-        params.append('storeId', filters.storeName); // filters.storeName contains store ID
-      }
-      
-      if (urlExecutiveId) {
-        params.append('urlExecutiveId', urlExecutiveId);
-      } else if (filters.executiveName !== 'All Executive') {
-        params.append('executiveId', filters.executiveName); // filters.executiveName contains executive ID
-      }
-      
-      // Add URL name params if available
-      if (urlStoreName && !urlStoreId) {
-        params.append('storeName', urlStoreName);
-      }
-      if (urlExecutiveName && !urlExecutiveId) {
-        params.append('executiveName', urlExecutiveName);
-      }
-      
-      // Other filters always come from filter state
-      if (filters.partnerBrand !== 'All Brands') {
-        params.append('partnerBrand', filters.partnerBrand);
-      }
-      if (filters.city !== 'All City') {
-        params.append('city', filters.city);
-      }
-      if (filters.visitStatus !== 'All Status') {
-        params.append('visitStatus', filters.visitStatus);
-      }
-      if (filters.issueStatus !== 'All Status') {
-        params.append('issueStatus', filters.issueStatus);
-      }
-
-      const response = await fetch(`/api/admin/stores/data?${params.toString()}`, {
+      const response = await fetch('/api/admin/stores/data', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -140,42 +97,160 @@ const AdminStoresPage: React.FC = () => {
       setStoreData([]);
     } finally {
       setIsLoading(false);
+      setIsFilterChanging(false);
     }
   };
 
-  // Handle URL query parameters and update filter state
-  useEffect(() => {
-    const storeId = searchParams.get('storeId');
-    const executiveId = searchParams.get('executiveId');
-    const storeName = searchParams.get('storeName');
-    const executiveName = searchParams.get('executiveName');
-    
-    // Update filter state based on URL params so dropdowns show correct values
-    // Only update if the values are different to avoid infinite loops
-    if (storeName && filters.storeName !== storeName) {
-      // URL storeName is a name, need to find corresponding ID for filter state
-      const store = filterData.stores.find(s => s.name === storeName);
-      if (store && filters.storeName !== store.id) {
-        setFilters(prev => ({ ...prev, storeName: store.id }));
+  // Apply filters to existing data (client-side filtering)
+  const applyFilters = () => {
+    if (!storeData.length) {
+      setFilteredStores([]);
+      setIsFilterChanging(false);
+      return;
+    }
+
+    let filtered = storeData.filter(store => {
+      // Filter by store name
+      if (filters.storeName !== 'All Store') {
+        // filters.storeName contains store ID
+        if (store.id !== filters.storeName) {
+          return false;
+        }
       }
-    } else if (storeId && filterData.stores.length > 0) {
-      // URL has storeId, use that ID directly for filter state
-      if (filters.storeName !== storeId) {
-        setFilters(prev => ({ ...prev, storeName: storeId }));
+
+      // Filter by partner brand
+      if (filters.partnerBrand !== 'All Brands') {
+        if (!store.partnerBrands.includes(filters.partnerBrand)) {
+          return false;
+        }
+      }
+
+      // Filter by city
+      if (filters.city !== 'All City') {
+        if (store.city !== filters.city) {
+          return false;
+        }
+      }
+
+      // Filter by assigned executive
+      if (filters.executiveName !== 'All Executive') {
+        // filters.executiveName contains executive ID
+        // Need to check if this store is assigned to this executive
+        const executive = filterData.executives.find(e => e.id === filters.executiveName);
+        if (!executive) return false;
+        
+        // Check if this store's ID is in the executive's assignedStoreIds array
+        if (!executive.assignedStoreIds || !executive.assignedStoreIds.includes(store.id)) {
+          return false;
+        }
+      }
+
+      // Filter: Show only stores with unresolved issues
+      if (filters.showOnlyUnresolvedIssues && store.pendingIssues === 0) {
+        return false;
+      }
+
+      // Filter: Show only stores with unreviewed visits
+      if (filters.showOnlyUnreviewedVisits && store.pendingReviews === 0) {
+        return false;
+      }
+
+      return true;
+    });
+
+    setFilteredStores(filtered);
+    setIsFilterChanging(false);
+  };
+
+  // Function to update URL based on current filter state
+  const updateUrlWithFilters = (currentFilters: StoreFilters) => {
+    const newUrl = new URL(window.location.href);
+    
+    // Clear all existing filter params
+    newUrl.searchParams.delete('storeId');
+    newUrl.searchParams.delete('executiveId');
+    newUrl.searchParams.delete('brandId');
+    newUrl.searchParams.delete('city');
+    newUrl.searchParams.delete('storeName');
+    newUrl.searchParams.delete('executiveName');
+    newUrl.searchParams.delete('showUnresolvedIssues');
+    newUrl.searchParams.delete('showUnreviewedVisits');
+    
+    // Add current filter values to URL using IDs (only if not default)
+    
+    // Use store ID in URL
+    if (currentFilters.storeName !== 'All Store') {
+      newUrl.searchParams.set('storeId', currentFilters.storeName);
+    }
+    
+    // Use executive ID in URL
+    if (currentFilters.executiveName !== 'All Executive') {
+      newUrl.searchParams.set('executiveId', currentFilters.executiveName);
+    }
+    
+    // Use brand ID in URL (convert brand name to ID)
+    if (currentFilters.partnerBrand !== 'All Brands') {
+      const brand = filterData.brands.find(b => b.name === currentFilters.partnerBrand);
+      if (brand) {
+        newUrl.searchParams.set('brandId', brand.id);
       }
     }
     
-    if (executiveName && filters.executiveName !== executiveName) {
-      // URL executiveName is a name, need to find corresponding ID for filter state
-      const executive = filterData.executives.find(e => e.name === executiveName);
-      if (executive && filters.executiveName !== executive.id) {
-        setFilters(prev => ({ ...prev, executiveName: executive.id }));
+    // Use city name in URL
+    if (currentFilters.city !== 'All City') {
+      newUrl.searchParams.set('city', currentFilters.city);
+    }
+    
+    // Add checkbox filter states to URL
+    if (currentFilters.showOnlyUnresolvedIssues) {
+      newUrl.searchParams.set('showUnresolvedIssues', 'true');
+    }
+    
+    if (currentFilters.showOnlyUnreviewedVisits) {
+      newUrl.searchParams.set('showUnreviewedVisits', 'true');
+    }
+    
+    // Update URL without reloading page
+    window.history.pushState({}, '', newUrl.toString());
+  };
+
+  // Handle URL query parameters (use IDs) and update filter state
+  useEffect(() => {
+    const storeId = searchParams.get('storeId');
+    const executiveId = searchParams.get('executiveId');
+    const brandId = searchParams.get('brandId');
+    const city = searchParams.get('city');
+    const showUnresolvedIssues = searchParams.get('showUnresolvedIssues') === 'true';
+    const showUnreviewedVisits = searchParams.get('showUnreviewedVisits') === 'true';
+
+    // Update filter state based on URL params using IDs
+    if (storeId && filterData.stores.length > 0 && filters.storeName !== storeId) {
+      setFilters(prev => ({ ...prev, storeName: storeId }));
+    }
+
+    if (executiveId && filterData.executives.length > 0 && filters.executiveName !== executiveId) {
+      setFilters(prev => ({ ...prev, executiveName: executiveId }));
+    }
+
+    if (brandId && filterData.brands.length > 0 && filters.partnerBrand !== brandId) {
+      // Convert brandId to brand name to match filter type
+      const brand = filterData.brands.find(b => b.id === brandId);
+      if (brand) {
+        setFilters(prev => ({ ...prev, partnerBrand: brand.name }));
       }
-    } else if (executiveId && filterData.executives.length > 0) {
-      // URL has executiveId, use that ID directly for filter state
-      if (filters.executiveName !== executiveId) {
-        setFilters(prev => ({ ...prev, executiveName: executiveId }));
-      }
+    }
+
+    if (city && filters.city !== city) {
+      setFilters(prev => ({ ...prev, city: city }));
+    }
+
+    // Update checkbox filter states from URL
+    if (filters.showOnlyUnresolvedIssues !== showUnresolvedIssues) {
+      setFilters(prev => ({ ...prev, showOnlyUnresolvedIssues: showUnresolvedIssues }));
+    }
+
+    if (filters.showOnlyUnreviewedVisits !== showUnreviewedVisits) {
+      setFilters(prev => ({ ...prev, showOnlyUnreviewedVisits: showUnreviewedVisits }));
     }
   }, [searchParams, filterData]);
 
@@ -188,27 +263,28 @@ const AdminStoresPage: React.FC = () => {
     fetchFilterData();
   }, []);
 
-  // Refetch data when filters or search params change
+  // Apply client-side filters when filters or data change
   useEffect(() => {
-    fetchStoreData(); // Always prioritize table data
-  }, [filters, searchParams]);
+    if (storeData.length > 0) {
+      applyFilters();
+    }
+  }, [filters, storeData]);
 
-  const handleFilterChange = (filterType: keyof StoreFilters, value: string) => {
+  // Optionally refetch when search params change if needed (e.g., deep link)
+  useEffect(() => {
+    // No refetch needed since we always fetch all data; just sync filter state from URL
+  }, [searchParams]);
+
+  const handleFilterChange = (filterType: keyof StoreFilters, value: string | boolean) => {
+    setIsFilterChanging(true);
     setFilters(prev => ({
       ...prev,
       [filterType]: value
     }));
-    
-    // When user manually changes filters, clear URL params so their selections take precedence
-    if ((filterType === 'storeName' || filterType === 'executiveName') && 
-        (searchParams.get('storeId') || searchParams.get('executiveId'))) {
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('storeId');
-      newUrl.searchParams.delete('executiveId');
-      newUrl.searchParams.delete('storeName');
-      newUrl.searchParams.delete('executiveName');
-      window.history.replaceState({}, '', newUrl.toString());
-    }
+
+    // Update URL with current filter state using IDs
+    const newFilters = { ...filters, [filterType]: value } as StoreFilters;
+    updateUrlWithFilters(newFilters);
   };
 
   // Visit plan creation handlers
@@ -338,12 +414,13 @@ const AdminStoresPage: React.FC = () => {
 
   // Check if we're filtering by a specific executive from URL
   const urlExecutiveId = searchParams.get('executiveId');
-  const isFilteringByExecutive = urlExecutiveId || (filters.executiveName !== 'All Executive' && filters.executiveName !== 'All Executive');
-  const currentExecutiveName = urlExecutiveId 
-    ? getExecutiveNameFromId(urlExecutiveId)
-    : filters.executiveName !== 'All Executive' 
-      ? getExecutiveNameFromId(filters.executiveName)
-      : null;
+  const isFilteringByExecutive = urlExecutiveId || (filters.executiveName !== 'All Executive');
+  const currentExecutiveName = (() => {
+    const id = urlExecutiveId || (filters.executiveName !== 'All Executive' ? filters.executiveName : null);
+    if (!id) return null;
+    const exec = filterData.executives.find(e => e.id === id);
+    return exec ? exec.name : null;
+  })();
 
   return (
     <div className="admin-stores-overview">
@@ -382,6 +459,7 @@ const AdminStoresPage: React.FC = () => {
               </button>
             </div>
           ) : (
+        <>
         <div className="admin-stores-filters-grid">
           <div className="admin-stores-filter-group">
             <label>Filter by Partner Brand</label>
@@ -439,32 +517,70 @@ const AdminStoresPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="admin-stores-filter-group">
-            <label>Filter by Visit Status</label>
-            <select 
-              value={filters.visitStatus}
-              onChange={(e) => handleFilterChange('visitStatus', e.target.value)}
-              className="admin-stores-filter-select"
-            >
-              <option value="All Status">All Status</option>
-              <option value="PENDING_REVIEW">Pending Review</option>
-              <option value="REVIEWD">Reviewed</option>
-            </select>
-          </div>
-
-          <div className="admin-stores-filter-group">
-            <label>Filter by Issue Status</label>
-            <select 
-              value={filters.issueStatus}
-              onChange={(e) => handleFilterChange('issueStatus', e.target.value)}
-              className="admin-stores-filter-select"
-            >
-              <option value="All Status">All Status</option>
-              <option value="Pending">Pending</option>
-              <option value="Resolved">Resolved</option>
-            </select>
-          </div>
         </div>
+        
+        {/* Quick Filters - Horizontal Layout */}
+        <div className="admin-stores-checkbox-filters" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '24px',
+          marginTop: '12px',
+          padding: '12px 16px',
+          backgroundColor: '#f8fafc',
+          borderRadius: '6px',
+          border: '1px solid #e2e8f0'
+        }}>
+          <div style={{ fontWeight: '600', fontSize: '13px', color: '#374151', minWidth: 'fit-content' }}>
+            Quick Filters:
+          </div>
+          
+          <label className="admin-stores-checkbox-filter" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '13px',
+            cursor: 'pointer',
+            color: '#374151',
+            whiteSpace: 'nowrap'
+          }}>
+            <input 
+              type="checkbox" 
+              checked={filters.showOnlyUnresolvedIssues}
+              onChange={(e) => handleFilterChange('showOnlyUnresolvedIssues', e.target.checked)}
+              style={{
+                width: '14px',
+                height: '14px',
+                cursor: 'pointer',
+                accentColor: '#3b82f6'
+              }}
+            />
+            Stores with Unresolved issues
+          </label>
+          
+          <label className="admin-stores-checkbox-filter" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '13px',
+            cursor: 'pointer',
+            color: '#374151',
+            whiteSpace: 'nowrap'
+          }}>
+            <input 
+              type="checkbox" 
+              checked={filters.showOnlyUnreviewedVisits}
+              onChange={(e) => handleFilterChange('showOnlyUnreviewedVisits', e.target.checked)}
+              style={{
+                width: '14px',
+                height: '14px',
+                cursor: 'pointer',
+                accentColor: '#3b82f6'
+              }}
+            />
+            Stores with Unreviewed visits
+          </label>
+        </div>
+        </>
           )
         )}
         {isCreatingVisitPlan && (
@@ -564,13 +680,13 @@ const AdminStoresPage: React.FC = () => {
           
           {/* Table body with loading state */}
           <div className="admin-stores-table-body">
-            {isLoading ? (
+            {(isLoading || isFilterChanging) ? (
               <div className="table-loading">
                 <div className="loading-spinner-large"></div>
                 <span className="loading-text">Loading stores data...</span>
               </div>
-            ) : storeData.length > 0 ? (
-              storeData.map(store => (
+            ) : filteredStores.length > 0 ? (
+              filteredStores.map(store => (
                 <div key={store.id} className="admin-stores-table-row">
                   <div className="admin-stores-cell admin-stores-store-name-cell">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

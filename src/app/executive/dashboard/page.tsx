@@ -126,29 +126,29 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-content">
+    <div className="exec-dash-container">
+      <div className="exec-dash-content">
         {/* Header Section */}
-        <div className="dashboard-header">
-          <div className="dashboard-title-section">
-            <h1 className="dashboard-title">Dashboard</h1>
-            <p className="dashboard-subtitle">Track visits, tasks, and overall progress at a glance</p>
+        <div className="exec-dash-header">
+          <div className="exec-dash-title-section">
+            <h1 className="exec-dash-title">Dashboard</h1>
+            <p className="exec-dash-subtitle">Track visits, tasks, and overall progress at a glance</p>
           </div>
-          <div className="dashboard-date-filter">
+          <div className="exec-dash-date-filter">
             <DateFilter />
           </div>
         </div>
 
         {/* Brand-wise Visits Section */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <div className="card-title-section">
-              <div className="chart-icon">📊</div>
-              <h2 className="card-title">Brand-wise Visits</h2>
+        <div className="exec-dash-dashboard-card">
+          <div className="exec-dash-card-header">
+            <div className="exec-dash-card-title-section">
+              <div className="exec-dash-chart-icon">📊</div>
+              <h2 className="exec-dash-card-title">Brand-wise Visits</h2>
             </div>
-            <div className="filters">
+            <div className="exec-dash-filters">
               <select 
-                className="filter-select"
+                className="exec-dash-filter-select"
                 value={brandFilter}
                 onChange={(e) => setBrandFilter(e.target.value)}
                 disabled={loading}
@@ -161,41 +161,41 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="brands-list">
+          <div className="exec-dash-brands-list">
             {loading ? (
-              <div className="loading-state">
+              <div className="exec-dash-loading-state">
                 <div className="loading-spinner-large"></div>
                 <span className="loading-text">Loading brand visits...</span>
               </div>
             ) : error ? (
-              <div className="error-state">
+              <div className="exec-dash-error-state">
                 <span>Error: {error}</span>
-                <button onClick={() => fetchDashboardStats(selectedPeriod)} className="retry-btn">
+                <button onClick={() => fetchDashboardStats(selectedPeriod)} className="exec-dash-retry-btn">
                   Retry
                 </button>
               </div>
             ) : filteredBrandVisits.length === 0 ? (
-              <div className="no-data-state">
+              <div className="exec-dash-no-data-state">
                 <span>No brand visits found for {selectedPeriod}</span>
               </div>
             ) : (
               filteredBrandVisits.map((brand, index) => {
                 const brandStyle = getBrandStyle(index);
                 return (
-                  <div key={brand.id} className="brand-item clickable-brand" onClick={() => handleBrandClick(brand.name)}>
-                    <div className="brand-info">
+                  <div key={brand.id} className="exec-dash-brand-item exec-dash-clickable-brand" onClick={() => handleBrandClick(brand.name)}>
+                    <div className="exec-dash-brand-info">
                       <div 
-                        className="brand-icon"
+                        className="exec-dash-brand-icon"
                         style={{ backgroundColor: brandStyle.bgColor, color: brandStyle.color }}
                       >
                         {getBrandIcon(brand.name)}
                       </div>
-                      <div className="brand-details">
-                        <span className="brand-name">{brand.name}</span>
-                        {brand.category && <span className="brand-category">{brand.category}</span>}
+                      <div className="exec-dash-brand-details">
+                        <span className="exec-dash-brand-name">{brand.name}</span>
+                        {brand.category && <span className="exec-dash-brand-category">{brand.category}</span>}
                       </div>
                     </div>
-                    <div className="visit-badge">
+                    <div className="exec-dash-visit-badge">
                       {brand.visits} visits
                     </div>
                   </div>
@@ -206,46 +206,46 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Total Visits Section */}
-        <div className="dashboard-card clickable-card" onClick={handleViewAllVisits}>
-          <div className="card-header">
-            <div className="card-title-section">
-              <div className="location-icon">📍</div>
-              <h2 className="card-title">Total Visits</h2>
+        <div className="exec-dash-dashboard-card exec-dash-clickable-card" onClick={handleViewAllVisits}>
+          <div className="exec-dash-card-header">
+            <div className="exec-dash-card-title-section">
+              <div className="exec-dash-location-icon">📍</div>
+              <h2 className="exec-dash-card-title">Total Visits</h2>
             </div>
           </div>
           
-          <div className="total-visits-content">
+          <div className="exec-dash-total-visits-content">
             {loading ? (
-              <div className="loading-inline">
+              <div className="exec-dash-loading-inline">
                 <div className="loading-spinner-large"></div>
               </div>
             ) : (
-              <div className="total-number">{stats?.totalVisits || 0}</div>
+              <div className="exec-dash-total-number">{stats?.totalVisits || 0}</div>
             )}
-            <div className="total-description">Total store visits completed</div>
-            <button className="view-all-btn desktop-only" onClick={(e) => {e.stopPropagation(); handleViewAllStores();}}>View All Stores</button>
+            <div className="exec-dash-total-description">Total store visits completed</div>
+            <button className="exec-dash-view-all-btn exec-dash-desktop-only" onClick={(e) => {e.stopPropagation(); handleViewAllStores();}}>View All Stores</button>
           </div>
         </div>
 
         {/* Assigned Tasks Section */}
-        <div className="dashboard-card clickable-card" onClick={handleViewAllTasks}>
-          <div className="card-header">
-            <div className="card-title-section">
-              <div className="tasks-icon">📋</div>
-              <h2 className="card-title">Assigned Tasks</h2>
+        <div className="exec-dash-dashboard-card exec-dash-clickable-card" onClick={handleViewAllTasks}>
+          <div className="exec-dash-card-header">
+            <div className="exec-dash-card-title-section">
+              <div className="exec-dash-tasks-icon">📋</div>
+              <h2 className="exec-dash-card-title">Assigned Tasks</h2>
             </div>
           </div>
           
-          <div className="tasks-content">
+          <div className="exec-dash-tasks-content">
             {loading ? (
-              <div className="loading-inline">
+              <div className="exec-dash-loading-inline">
                 <div className="loading-spinner-large"></div>
               </div>
             ) : (
-              <div className="pending-number">{stats?.tasks.pending || 0}</div>
+              <div className="exec-dash-pending-number">{stats?.tasks.pending || 0}</div>
             )}
-            <div className="pending-description">Pending tasks to complete</div>
-            <button className="view-all-btn desktop-only" onClick={(e) => {e.stopPropagation(); handleViewAllTasks();}}>View All Tasks</button>
+            <div className="exec-dash-pending-description">Pending tasks to complete</div>
+            <button className="exec-dash-view-all-btn exec-dash-desktop-only" onClick={(e) => {e.stopPropagation(); handleViewAllTasks();}}>View All Tasks</button>
           </div>
         </div>
       </div>

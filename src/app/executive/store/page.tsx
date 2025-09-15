@@ -220,25 +220,25 @@ const Store: React.FC = () => {
   });
 
   return (
-    <div className="store-container">
-      <div className="store-content">
+    <div className="exec-v-form-container">
+      <div className="exec-v-form-content">
         {/* Header Section */}
-        <div className="store-header">
-          <div className="store-title-section">
-            <h1 className="store-title">Assigned Stores</h1>
-            <p className="store-subtitle">Manage your visits and track progress</p>
+        <div className="exec-v-form-header">
+          <div className="exec-v-form-title-section">
+            <h1 className="exec-v-form-title">Assigned Stores</h1>
+            <p className="exec-v-form-subtitle">Manage your visits and track progress</p>
           </div>
           {!isCreateMode ? (
-            <button className="create-visit-btn" onClick={handleCreateVisit} disabled={loading}>
-              <span className="plus-icon">+</span>
+            <button className="exec-v-form-create-visit-btn" onClick={handleCreateVisit} disabled={loading}>
+              <span className="exec-v-form-plus-icon">+</span>
               Create PJP
             </button>
           ) : (
-            <div className="action-buttons">
-              <button className="preview-send-btn" onClick={handlePreviewAndSend} disabled={loading}>
+            <div className="exec-v-form-action-buttons">
+              <button className="exec-v-form-preview-send-btn" onClick={handlePreviewAndSend} disabled={loading}>
                 Preview And Send
               </button>
-              <button className="cancel-btn" onClick={handleCancel}>
+              <button className="exec-v-form-cancel-btn" onClick={handleCancel}>
                 Cancel
               </button>
             </div>
@@ -246,23 +246,23 @@ const Store: React.FC = () => {
         </div>
 
         {/* Filters Section */}
-        <div className="filters-section">
+        <div className="exec-v-form-filters-section">
           <button 
-            className={`filters-toggle ${filtersOpen ? 'active' : ''}`}
+            className={`exec-v-form-filters-toggle ${filtersOpen ? 'active' : ''}`}
             onClick={() => setFiltersOpen(!filtersOpen)}
             disabled={loading}
           >
             <span>Filters</span>
-            <span className="filter-arrow">▼</span>
+            <span className="exec-v-form-filter-arrow">▼</span>
           </button>
           
           {filtersOpen && (
-            <div className="filters-panel">
-              <div className="filter-group">
-                <label className="filter-label">Store Name</label>
+            <div className="exec-v-form-filters-panel">
+              <div className="exec-v-form-filter-group">
+                <label className="exec-v-form-filter-label">Store Name</label>
                 <input
                   type="text"
-                  className="filter-input"
+                  className="exec-v-form-filter-input"
                   placeholder="Enter store name..."
                   value={filters.storeName}
                   onChange={(e) => handleFilterChange('storeName', e.target.value)}
@@ -270,10 +270,10 @@ const Store: React.FC = () => {
                 />
               </div>
               
-              <div className="filter-group">
-                <label className="filter-label">Filter by City</label>
+              <div className="exec-v-form-filter-group">
+                <label className="exec-v-form-filter-label">Filter by City</label>
                 <select
-                  className="filter-select"
+                  className="exec-v-form-filter-select"
                   value={filters.city}
                   onChange={(e) => handleFilterChange('city', e.target.value)}
                   disabled={loading}
@@ -284,10 +284,10 @@ const Store: React.FC = () => {
                 </select>
               </div>
               
-              <div className="filter-group">
-                <label className="filter-label">Filter by Partner Brand</label>
+              <div className="exec-v-form-filter-group">
+                <label className="exec-v-form-filter-label">Filter by Partner Brand</label>
                 <select
-                  className="filter-select"
+                  className="exec-v-form-filter-select"
                   value={filters.partnerBrand}
                   onChange={(e) => handleFilterChange('partnerBrand', e.target.value)}
                   disabled={loading}
@@ -298,10 +298,10 @@ const Store: React.FC = () => {
                 </select>
               </div>
               
-              <div className="filter-group">
-                <label className="filter-label">Sort By</label>
+              <div className="exec-v-form-filter-group">
+                <label className="exec-v-form-filter-label">Sort By</label>
                 <select
-                  className="filter-select"
+                  className="exec-v-form-filter-select"
                   value={filters.sortBy}
                   onChange={(e) => handleFilterChange('sortBy', e.target.value)}
                   disabled={loading}
@@ -317,66 +317,66 @@ const Store: React.FC = () => {
         </div>
 
         {/* Table Container */}
-        <div className="store-table-container">
+        <div className="exec-v-form-table-container">
           {/* Table Header */}
-          <div className={`table-header ${isCreateMode ? 'create-mode' : ''}`}>
+          <div className={`exec-v-form-table-header ${isCreateMode ? 'create-mode' : ''}`}>
             {isCreateMode && (
-              <div className="header-cell checkbox-header"></div>
+              <div className="exec-v-form-header-cell exec-v-form-checkbox-header"></div>
             )}
-            <div className="header-cell store-name-header">STORE NAME</div>
-            <div className="header-cell partner-header">PARTNER BRANDS</div>
-            <div className="header-cell city-header">CITY</div>
-            <div className="header-cell visited-header">VISITED</div>
+            <div className="exec-v-form-header-cell exec-v-form-store-name-header">STORE NAME</div>
+            <div className="exec-v-form-header-cell exec-v-form-partner-header">PARTNER BRANDS</div>
+            <div className="exec-v-form-header-cell exec-v-form-city-header">CITY</div>
+            <div className="exec-v-form-header-cell exec-v-form-visited-header">VISITED</div>
           </div>
 
           {/* Table Body */}
-          <div className="table-body">
+          <div className="exec-v-form-table-body">
             {loading ? (
               <div className="loading-state">
                 <div className="loading-spinner-large"></div>
                 <span className="loading-text">Loading store data...</span>
               </div>
             ) : error ? (
-              <div className="error-state">
-                <div className="error-icon">⚠️</div>
-                <p className="error-text">Error: {error}</p>
-                <button className="retry-btn" onClick={fetchStores}>Retry</button>
+              <div className="exec-v-form-error-state">
+                <div className="exec-v-form-error-icon">⚠️</div>
+                <p className="exec-v-form-error-text">Error: {error}</p>
+                <button className="exec-v-form-retry-btn" onClick={fetchStores}>Retry</button>
               </div>
             ) : filteredStores.length === 0 ? (
-              <div className="no-stores-state">
-                <div className="no-stores-icon">🏪</div>
-                <p className="no-stores-text">No stores found matching your criteria</p>
+              <div className="exec-v-form-no-stores-state">
+                <div className="exec-v-form-no-stores-icon">🏪</div>
+                <p className="exec-v-form-no-stores-text">No stores found matching your criteria</p>
               </div>
             ) : (
               filteredStores.map((store) => (
                 <div 
                   key={store.id} 
-                  className={`table-row ${isCreateMode ? 'create-mode' : ''} ${selectedStores.includes(store.id) ? 'selected' : ''} ${!isCreateMode ? 'clickable' : ''}`}
+                  className={`exec-v-form-table-row ${isCreateMode ? 'create-mode' : ''} ${selectedStores.includes(store.id) ? 'selected' : ''} ${!isCreateMode ? 'clickable' : ''}`}
                   onClick={(e) => handleStoreRowClick(store.id, e)}
                 >
                   {isCreateMode && (
-                    <div className="table-cell checkbox-cell">
+                    <div className="exec-v-form-table-cell exec-v-form-checkbox-cell">
                       <input
                         type="checkbox"
-                        className="store-checkbox"
+                        className="exec-v-form-store-checkbox"
                         checked={selectedStores.includes(store.id)}
                         onChange={() => handleStoreSelection(store.id)}
                       />
                     </div>
                   )}
-                  <div className="table-cell store-name-cell">
-                    <span className="store-name-text">{store.storeName}</span>
+                  <div className="exec-v-form-table-cell exec-v-form-store-name-cell">
+                    <span className="exec-v-form-store-name-text">{store.storeName}</span>
                   </div>
-                  <div className="table-cell partner-cell">
-                    <span className="brand-text">
+                  <div className="exec-v-form-table-cell exec-v-form-partner-cell">
+                    <span className="exec-v-form-brand-text">
                       {store.partnerBrands.length > 0 ? store.partnerBrands.join(', ') : 'No brands'}
                     </span>
                   </div>
-                  <div className="table-cell city-cell">
-                    <span className="city-text">{store.city}</span>
+                  <div className="exec-v-form-table-cell exec-v-form-city-cell">
+                    <span className="exec-v-form-city-text">{store.city}</span>
                   </div>
-                  <div className="table-cell visited-cell">
-                    <span className="visited-text">{store.visited}</span>
+                  <div className="exec-v-form-table-cell exec-v-form-visited-cell">
+                    <span className="exec-v-form-visited-text">{store.visited}</span>
                   </div>
                 </div>
               ))
@@ -387,12 +387,12 @@ const Store: React.FC = () => {
 
       {/* Preview Modal */}
       {showPreview && (
-        <div className="modal-overlay">
-          <div className="preview-modal">
-            <div className="modal-header">
-              <h2 className="modal-title">📋 Visit Plan Preview</h2>
+        <div className="exec-v-form-modal-overlay">
+          <div className="exec-v-form-preview-modal">
+            <div className="exec-v-form-modal-header">
+              <h2 className="exec-v-form-modal-title">📋 Visit Plan Preview</h2>
               <button 
-                className="modal-close-btn"
+                className="exec-v-form-modal-close-btn"
                 onClick={() => setShowPreview(false)}
                 disabled={submitting}
               >
@@ -400,27 +400,27 @@ const Store: React.FC = () => {
               </button>
             </div>
             
-            <div className="modal-body">
-              <div className="preview-summary">
-                <p className="summary-text">
+            <div className="exec-v-form-modal-body">
+              <div className="exec-v-form-preview-summary">
+                <p className="exec-v-form-summary-text">
                   You have selected <strong>{selectedStores.length}</strong> {selectedStores.length === 1 ? 'store' : 'stores'} for visits:
                 </p>
               </div>
               
-              <div className="preview-stores-list">
+              <div className="exec-v-form-preview-stores-list">
                 {getSelectedStoreDetails().map((store, index) => (
-                  <div key={store.id} className="preview-store-item">
-                    <div className="store-number">{index + 1}</div>
-                    <div className="store-info">
-                      <h4 className="store-name">{store.storeName}</h4>
-                      <p className="store-details">
+                  <div key={store.id} className="exec-v-form-preview-store-item">
+                    <div className="exec-v-form-store-number">{index + 1}</div>
+                    <div className="exec-v-form-store-info">
+                      <h4 className="exec-v-form-store-name">{store.storeName}</h4>
+                      <p className="exec-v-form-store-details">
                         📍 {store.city}
                         {store.fullAddress && ` • ${store.fullAddress}`}
                       </p>
-                      <p className="store-brands">
+                      <p className="exec-v-form-store-brands">
                         🏢 {store.partnerBrands.length > 0 ? store.partnerBrands.join(', ') : 'No brands'}
                       </p>
-                      <p className="store-status">
+                      <p className="exec-v-form-store-status">
                         📅 Last Visit: {store.visited}
                       </p>
                     </div>
@@ -428,24 +428,24 @@ const Store: React.FC = () => {
                 ))}
               </div>
               
-              <div className="preview-note">
-                <p className="note-text">
+              <div className="exec-v-form-preview-note">
+                <p className="exec-v-form-note-text">
                   💡 <strong>Note:</strong> Submitting this visit plan will notify all admins about your intended store visits. 
                   They will receive a notification with the list of selected stores.
                 </p>
               </div>
             </div>
             
-            <div className="modal-footer">
+            <div className="exec-v-form-modal-footer">
               <button 
-                className="cancel-modal-btn"
+                className="exec-v-form-cancel-modal-btn"
                 onClick={() => setShowPreview(false)}
                 disabled={submitting}
               >
                 Cancel
               </button>
               <button 
-                className="send-plan-btn"
+                className="exec-v-form-send-plan-btn"
                 onClick={handleSubmitVisitPlan}
                 disabled={submitting}
               >

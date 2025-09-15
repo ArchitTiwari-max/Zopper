@@ -1,11 +1,11 @@
 /* Executive Form Styles */
-.executive-form-container {
+.exec-f-sub-container {
   min-height: 100vh;
   background-color: #f8f9fa;
   padding: 0;
 }
 
-.executive-form-content {
+.exec-f-sub-content {
   max-width: 500px;
   margin: 0 auto;
   padding: 20px 20px 100px 20px; /* Added 100px bottom padding for navigation */
@@ -14,21 +14,16 @@
 
 /* Desktop-specific styles */
 @media (min-width: 1200px) {
-  .executive-form-content {
+  .exec-f-sub-content {
     max-width: 700px;
     padding: 32px 32px 120px 32px; /* Added bottom padding for navigation */
   }
 }
 
-@media (min-width: 992px) and (max-width: 1199px) {
-  .executive-form-content {
-    max-width: 600px;
-    padding: 28px 28px 120px 28px; /* Added bottom padding for navigation */
-  }
-}
+
 
 /* Header */
-.form-header {
+.exec-f-sub-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -36,7 +31,7 @@
   padding: 10px 0;
 }
 
-.back-btn {
+.exec-f-sub-back-btn {
   background: none;
   border: none;
   color: #6c757d;
@@ -49,16 +44,16 @@
   transition: color 0.2s;
 }
 
-.back-btn:hover {
+.exec-f-sub-back-btn:hover {
   color: #495057;
 }
 
-.back-arrow {
+.exec-f-sub-back-arrow {
   font-size: 18px;
   font-weight: bold;
 }
 
-.user-icon {
+.exec-f-sub-user-icon {
   width: 36px;
   height: 36px;
   background-color: #4f46e5;
@@ -72,7 +67,7 @@
   position: relative;
 }
 
-.user-icon::before {
+.exec-f-sub-user-icon::before {
   content: '';
   position: absolute;
   top: -2px;
@@ -85,25 +80,25 @@
 }
 
 /* Title Section */
-.form-title-section {
+.exec-f-sub-title-section {
   margin-bottom: 24px;
 }
 
-.form-title {
+.exec-f-sub-title {
   font-size: 24px;
   font-weight: 600;
   color: #212529;
   margin: 0 0 4px 0;
 }
 
-.form-subtitle {
+.exec-f-sub-subtitle {
   color: #6c757d;
   font-size: 14px;
   margin: 0;
 }
 
 /* Store Info Card */
-.store-info-card {
+.exec-f-sub-store-info-card {
   background: white;
   border-radius: 12px;
   padding: 20px;
@@ -111,21 +106,21 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.store-name {
+.exec-f-sub-store-name {
   font-size: 18px;
   font-weight: 600;
   color: #212529;
   margin: 0 0 12px 0;
 }
 
-.partner-brands {
+.exec-f-sub-partner-brands {
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
-.brand-tag {
+.exec-f-sub-brand-tag {
   background-color: #e3f2fd;
   color: #1976d2;
   padding: 4px 12px;
@@ -134,13 +129,13 @@
   font-weight: 500;
 }
 
-.store-details {
+.exec-f-sub-store-details {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.detail-item {
+.exec-f-sub-detail-item {
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -148,38 +143,45 @@
   color: #495057;
 }
 
-.address-info {
+.exec-f-sub-address-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.city {
+.exec-f-sub-city {
   font-weight: 600;
   color: #212529;
   font-size: 14px;
 }
 
-.full-address {
+.exec-f-sub-full-address {
   font-size: 13px;
   color: #6c757d;
   line-height: 1.3;
 }
 
-.location-icon,
-.person-icon {
+.exec-f-sub-location-icon,
+.exec-f-sub-person-icon {
   font-size: 16px;
   margin-top: 1px;
 }
 
-.contact-number {
+.exec-f-sub-contact-number {
   font-size: 13px;
   color: #6c757d;
   margin-top: 2px;
 }
 
+.exec-f-sub-error-message {
+  font-size: 14px;
+  color: #dc3545;
+  text-align: center;
+  padding: 12px;
+}
+
 /* Visit Form Card */
-.visit-form-card {
+.exec-f-sub-visit-form-card {
   background: white;
   border-radius: 12px;
   padding: 20px;
@@ -187,7 +189,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.section-title {
+.exec-f-sub-section-title {
   font-size: 16px;
   font-weight: 600;
   color: #212529;
@@ -195,11 +197,11 @@
 }
 
 /* Form Groups */
-.form-group {
+.exec-f-sub-form-group {
   margin-bottom: 20px;
 }
 
-.form-label {
+.exec-f-sub-form-label {
   display: block;
   font-size: 14px;
   font-weight: 500;
@@ -207,12 +209,12 @@
   margin-bottom: 8px;
 }
 
-.required {
+.exec-f-sub-required {
   color: #dc3545;
 }
 
 /* Form Inputs */
-.form-select {
+.exec-f-sub-form-select {
   width: 100%;
   padding: 12px 16px;
   border: 1px solid #dee2e6;
@@ -228,13 +230,13 @@
   transition: border-color 0.2s;
 }
 
-.form-select:focus {
+.exec-f-sub-form-select:focus {
   outline: none;
   border-color: #4f46e5;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-.form-textarea {
+.exec-f-sub-form-textarea {
   width: 100%;
   padding: 12px 16px;
   border: 1px solid #dee2e6;
@@ -246,18 +248,18 @@
   transition: border-color 0.2s;
 }
 
-.form-textarea:focus {
+.exec-f-sub-form-textarea:focus {
   outline: none;
   border-color: #4f46e5;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-.form-textarea::placeholder {
+.exec-f-sub-form-textarea::placeholder {
   color: #9ca3af;
 }
 
 /* Checkbox */
-.checkbox-container {
+.exec-f-sub-checkbox-container {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -266,7 +268,7 @@
   color: #495057;
 }
 
-.checkbox-container input[type="checkbox"] {
+.exec-f-sub-checkbox-container input[type="checkbox"] {
   width: 18px;
   height: 18px;
   cursor: pointer;
@@ -274,7 +276,7 @@
 }
 
 /* Photo Upload */
-.photo-upload-area {
+.exec-f-sub-photo-upload-area {
   border: 2px dashed #dee2e6;
   border-radius: 8px;
   padding: 30px 20px;
@@ -290,50 +292,50 @@
   justify-content: center;
 }
 
-.photo-upload-area:hover {
+.exec-f-sub-photo-upload-area:hover {
   border-color: #4f46e5;
   background-color: #f0f0ff;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
 }
 
-.photo-upload-area:active {
+.exec-f-sub-photo-upload-area:active {
   transform: translateY(0);
 }
 
-.upload-icon {
+.exec-f-sub-upload-icon {
   font-size: 32px;
   margin-bottom: 8px;
   opacity: 0.7;
   transition: opacity 0.2s;
 }
 
-.photo-upload-area:hover .upload-icon {
+.exec-f-sub-photo-upload-area:hover .exec-f-sub-upload-icon {
   opacity: 1;
 }
 
-.upload-text {
+.exec-f-sub-upload-text {
   color: #495057;
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 4px;
 }
 
-.upload-formats {
+.exec-f-sub-upload-formats {
   color: #6c757d;
   font-size: 12px;
   margin-top: 4px;
 }
 
 /* Photo Preview Section */
-.uploaded-photos {
+.exec-f-sub-uploaded-photos {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: 8px;
   margin-top: 12px;
 }
 
-.photo-preview {
+.exec-f-sub-photo-preview {
   position: relative;
   width: 80px;
   height: 80px;
@@ -343,13 +345,13 @@
   background-color: #f8f9fa;
 }
 
-.photo-preview img {
+.exec-f-sub-photo-preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.remove-photo {
+.exec-f-sub-remove-photo {
   position: absolute;
   top: -4px;
   right: -4px;
@@ -367,23 +369,23 @@
   transition: background-color 0.2s;
 }
 
-.remove-photo:hover {
+.exec-f-sub-remove-photo:hover {
   background-color: #c82333;
 }
 
 /* People Input - scoped to visit form */
-.visit-form-card .people-input-container {
+.exec-f-sub-visit-form-card .exec-f-sub-people-input-container {
   width: 100%;
 }
 
-.visit-form-card .person-input-wrapper {
+.exec-f-sub-visit-form-card .exec-f-sub-person-input-wrapper {
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
   flex-wrap: wrap;
 }
 
-.visit-form-card .form-input {
+.exec-f-sub-visit-form-card .exec-f-sub-form-input {
   padding: 12px 16px;
   border: 1px solid #dee2e6;
   border-radius: 8px;
@@ -392,23 +394,23 @@
   background-color: white;
 }
 
-.visit-form-card .form-input:focus {
+.exec-f-sub-visit-form-card .exec-f-sub-form-input:focus {
   outline: none;
   border-color: #4f46e5;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-.visit-form-card .person-name-input {
+.exec-f-sub-visit-form-card .exec-f-sub-person-name-input {
   flex: 2;
   min-width: 200px;
 }
 
-.visit-form-card .person-designation-input {
+.exec-f-sub-visit-form-card .exec-f-sub-person-designation-input {
   flex: 1;
   min-width: 150px;
 }
 
-.visit-form-card .add-person-btn {
+.exec-f-sub-visit-form-card .exec-f-sub-add-person-btn {
   padding: 12px 20px;
   background-color: #4f46e5;
   color: white;
@@ -421,20 +423,20 @@
   white-space: nowrap;
 }
 
-.visit-form-card .add-person-btn:hover:not(:disabled) {
+.exec-f-sub-visit-form-card .exec-f-sub-add-person-btn:hover:not(:disabled) {
   background-color: #4338ca;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
-.visit-form-card .add-person-btn:disabled {
+.exec-f-sub-visit-form-card .exec-f-sub-add-person-btn:disabled {
   background-color: #d1d5db;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-.visit-form-card .people-list {
+.exec-f-sub-visit-form-card .exec-f-sub-people-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -444,7 +446,7 @@
   border: 1px solid #e9ecef;
 }
 
-.visit-form-card .person-item {
+.exec-f-sub-visit-form-card .exec-f-sub-person-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -455,23 +457,23 @@
   animation: personFadeIn 0.2s ease-out;
 }
 
-.visit-form-card .person-details {
+.exec-f-sub-visit-form-card .exec-f-sub-person-details {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.visit-form-card .person-name {
+.exec-f-sub-visit-form-card .exec-f-sub-person-name {
   font-weight: 500;
   color: #212529;
 }
 
-.visit-form-card .person-designation {
+.exec-f-sub-visit-form-card .exec-f-sub-person-designation {
   color: #6c757d;
   font-size: 13px;
 }
 
-.visit-form-card .remove-person-btn {
+.exec-f-sub-visit-form-card .exec-f-sub-remove-person-btn {
   background: none;
   border: none;
   color: #dc3545;
@@ -488,7 +490,7 @@
   line-height: 1;
 }
 
-.visit-form-card .remove-person-btn:hover {
+.exec-f-sub-visit-form-card .exec-f-sub-remove-person-btn:hover {
   background-color: #dc3545;
   color: white;
   transform: scale(1.1);
@@ -506,17 +508,17 @@
 }
 
 /* Brands Input - scoped to visit form to avoid dashboard conflicts */
-.visit-form-card .brands-input-container {
+.exec-f-sub-visit-form-card .exec-f-sub-brands-input-container {
   width: 100%;
 }
 
-.visit-form-card .brand-input-wrapper {
+.exec-f-sub-visit-form-card .exec-f-sub-brand-input-wrapper {
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
 }
 
-.visit-form-card .brand-input-wrapper .form-select.brand-select {
+.exec-f-sub-visit-form-card .exec-f-sub-brand-input-wrapper .exec-f-sub-form-select.exec-f-sub-brand-select {
   flex: 1;
   padding: 12px 16px;
   border: 1px solid #dee2e6;
@@ -527,13 +529,13 @@
   margin-right: 0;
 }
 
-.visit-form-card .brand-input-wrapper .form-select.brand-select:focus {
+.exec-f-sub-visit-form-card .exec-f-sub-brand-input-wrapper .exec-f-sub-form-select.exec-f-sub-brand-select:focus {
   outline: none;
   border-color: #4f46e5;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-.visit-form-card .add-brand-btn {
+.exec-f-sub-visit-form-card .exec-f-sub-add-brand-btn {
   padding: 12px 20px;
   background-color: #4f46e5;
   color: white;
@@ -546,13 +548,13 @@
   white-space: nowrap;
 }
 
-.visit-form-card .add-brand-btn:hover:not(:disabled) {
+.exec-f-sub-visit-form-card .exec-f-sub-add-brand-btn:hover:not(:disabled) {
   background-color: #4338ca;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
-.visit-form-card .add-brand-btn:disabled {
+.exec-f-sub-visit-form-card .exec-f-sub-add-brand-btn:disabled {
   background-color: #d1d5db;
   cursor: not-allowed;
   transform: none;
@@ -560,7 +562,7 @@
 }
 
 /* Form-specific brands list to avoid conflicts with dashboard */
-.visit-form-card .brands-list {
+.exec-f-sub-visit-form-card .exec-f-sub-brands-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -571,7 +573,7 @@
   min-height: 50px;
 }
 
-.visit-form-card .brand-item {
+.exec-f-sub-visit-form-card .exec-f-sub-brand-item {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -586,11 +588,11 @@
   transition: all 0.2s ease;
 }
 
-.visit-form-card .brand-name {
+.exec-f-sub-visit-form-card .exec-f-sub-brand-name {
   margin-right: 2px;
 }
 
-.visit-form-card .remove-brand-btn {
+.exec-f-sub-visit-form-card .exec-f-sub-remove-brand-btn {
   background: none;
   border: none;
   color: #dc3545;
@@ -607,7 +609,7 @@
   line-height: 1;
 }
 
-.visit-form-card .remove-brand-btn:hover {
+.exec-f-sub-visit-form-card .exec-f-sub-remove-brand-btn:hover {
   background-color: #dc3545;
   color: white;
   transform: scale(1.1);
@@ -625,18 +627,18 @@
 }
 
 /* Issues Input - scoped to visit form */
-.visit-form-card .issues-input-container {
+.exec-f-sub-visit-form-card .exec-f-sub-issues-input-container {
   width: 100%;
 }
 
-.visit-form-card .issue-input-wrapper {
+.exec-f-sub-visit-form-card .exec-f-sub-issue-input-wrapper {
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
   flex-wrap: wrap;
 }
 
-.visit-form-card .issue-input-wrapper .form-input.issue-input {
+.exec-f-sub-visit-form-card .exec-f-sub-issue-input-wrapper .exec-f-sub-form-input.exec-f-sub-issue-input {
   flex: 1;
   padding: 12px 16px;
   border: 1px solid #dee2e6;
@@ -647,13 +649,13 @@
   min-width: 200px;
 }
 
-.visit-form-card .issue-input-wrapper .form-input.issue-input:focus {
+.exec-f-sub-visit-form-card .exec-f-sub-issue-input-wrapper .exec-f-sub-form-input.exec-f-sub-issue-input:focus {
   outline: none;
   border-color: #4f46e5;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-.visit-form-card .add-issue-btn {
+.exec-f-sub-visit-form-card .exec-f-sub-add-issue-btn {
   padding: 12px 20px;
   background-color: #4f46e5;
   color: white;
@@ -666,20 +668,20 @@
   white-space: nowrap;
 }
 
-.visit-form-card .add-issue-btn:hover:not(:disabled) {
+.exec-f-sub-visit-form-card .exec-f-sub-add-issue-btn:hover:not(:disabled) {
   background-color: #4338ca;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
-.visit-form-card .add-issue-btn:disabled {
+.exec-f-sub-visit-form-card .exec-f-sub-add-issue-btn:disabled {
   background-color: #d1d5db;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-.visit-form-card .issues-list {
+.exec-f-sub-visit-form-card .exec-f-sub-issues-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -692,25 +694,25 @@
   overflow-y: auto;
 }
 
-.visit-form-card .issues-list::-webkit-scrollbar {
+.exec-f-sub-visit-form-card .exec-f-sub-issues-list::-webkit-scrollbar {
   width: 6px;
 }
 
-.visit-form-card .issues-list::-webkit-scrollbar-track {
+.exec-f-sub-visit-form-card .exec-f-sub-issues-list::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 3px;
 }
 
-.visit-form-card .issues-list::-webkit-scrollbar-thumb {
+.exec-f-sub-visit-form-card .exec-f-sub-issues-list::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 3px;
 }
 
-.visit-form-card .issues-list::-webkit-scrollbar-thumb:hover {
+.exec-f-sub-visit-form-card .exec-f-sub-issues-list::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
 
-.visit-form-card .issue-item {
+.exec-f-sub-visit-form-card .exec-f-sub-issue-item {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -723,7 +725,7 @@
   gap: 8px;
 }
 
-.visit-form-card .issue-text {
+.exec-f-sub-visit-form-card .exec-f-sub-issue-text {
   flex: 1;
   font-size: 14px;
   color: #212529;
@@ -732,7 +734,7 @@
   hyphens: auto;
 }
 
-.visit-form-card .remove-issue-btn {
+.exec-f-sub-visit-form-card .exec-f-sub-remove-issue-btn {
   background: none;
   border: none;
   color: #dc3545;
@@ -751,13 +753,13 @@
   margin-top: 1px; /* Slight adjustment for visual alignment */
 }
 
-.visit-form-card .remove-issue-btn:hover {
+.exec-f-sub-visit-form-card .exec-f-sub-remove-issue-btn:hover {
   background-color: #dc3545;
   color: white;
   transform: scale(1.1);
 }
 
-.visit-form-card .empty-issues-placeholder {
+.exec-f-sub-visit-form-card .exec-f-sub-empty-issues-placeholder {
   color: #9ca3af;
   font-size: 13px;
   font-style: italic;
@@ -777,84 +779,47 @@
 }
 
 /* Phone number input for persons met */
-.visit-form-card .person-phone-input {
+.exec-f-sub-visit-form-card .exec-f-sub-person-phone-input {
   flex: 1;
   min-width: 140px;
 }
 
-/* Responsive adjustments for people input with phone numbers */
-@media (max-width: 768px) {
-  .visit-form-card .person-input-wrapper {
-    flex-direction: column;
-  }
-  
-  .visit-form-card .person-name-input,
-  .visit-form-card .person-designation-input,
-  .visit-form-card .person-phone-input {
-    min-width: 100%;
-    flex: none;
-  }
-  
-  .visit-form-card .issue-input-wrapper {
-    flex-direction: column;
-  }
-  
-  .visit-form-card .issue-input-wrapper .form-input.issue-input {
-    min-width: 100%;
-    flex: none;
-    margin-bottom: 8px;
-  }
-  
-  .visit-form-card .add-issue-btn {
-    width: 100%;
-  }
-  
-  .visit-form-card .issue-text {
-    font-size: 13px;
-  }
-}
 
 @media (max-width: 480px) {
-  .visit-form-card .issues-list {
+  .exec-f-sub-visit-form-card .exec-f-sub-issues-list {
     max-height: 250px;
     padding: 8px;
   }
   
-  .visit-form-card .issue-item {
+  .exec-f-sub-visit-form-card .exec-f-sub-issue-item {
     padding: 8px 10px;
   }
   
-  .visit-form-card .issue-text {
+  .exec-f-sub-visit-form-card .exec-f-sub-issue-text {
     font-size: 12px;
   }
   
-  .visit-form-card .remove-issue-btn {
+  .exec-f-sub-visit-form-card .exec-f-sub-remove-issue-btn {
     font-size: 14px;
     width: 18px;
     height: 18px;
   }
   
-  .visit-form-card .empty-issues-placeholder {
+  .exec-f-sub-visit-form-card .exec-f-sub-empty-issues-placeholder {
     font-size: 12px;
     padding: 16px;
   }
 }
 
 /* Form Actions */
-.form-actions {
+.exec-f-sub-form-actions {
   display: flex;
   gap: 12px;
   margin-top: 24px;
 }
 
-@media (min-width: 992px) {
-  .form-actions {
-    gap: 16px;
-    margin-top: 32px;
-  }
-}
 
-.save-draft-btn {
+.exec-f-sub-save-draft-btn {
   flex: 1;
   padding: 12px 20px;
   border: 1px solid #6c757d;
@@ -867,13 +832,13 @@
   transition: all 0.2s;
 }
 
-.save-draft-btn:hover {
+.exec-f-sub-save-draft-btn:hover {
   background-color: #f8f9fa;
   border-color: #495057;
   color: #495057;
 }
 
-.submit-visit-btn {
+.exec-f-sub-submit-visit-btn {
   flex: 1;
   padding: 12px 20px;
   border: none;
@@ -886,83 +851,67 @@
   transition: background-color 0.2s;
 }
 
-.submit-visit-btn:hover {
+.exec-f-sub-submit-visit-btn:hover {
   background-color: #4338ca;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
-.save-draft-btn:active,
-.submit-visit-btn:active {
+.exec-f-sub-save-draft-btn:active,
+.exec-f-sub-submit-visit-btn:active {
   transform: translateY(0);
 }
 
 /* Touch feedback for mobile */
-@media (max-width: 768px) {
-  .save-draft-btn:active,
-  .submit-visit-btn:active {
-    transform: scale(0.98);
-  }
-  
-  /* Touch-friendly input sizes */
-  .form-select,
-  .form-date {
-    min-height: 44px;
-    font-size: 16px; /* Prevents zoom on iOS */
-  }
-  
-  .form-textarea {
-    font-size: 16px;
-    min-height: 100px;
-  }
-  
-  .save-draft-btn,
-  .submit-visit-btn {
-    min-height: 48px;
-  }
-}
 
 /* Past Visits Card */
-.past-visits-card {
+.exec-f-sub-past-visits-card {
   background: white;
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.visits-list {
+.exec-f-sub-visits-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.visit-item {
+.exec-f-sub-no-visits {
+  text-align: center;
+  padding: 24px;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.exec-f-sub-visit-item {
   padding: 16px;
   border: 1px solid #f1f3f4;
   border-radius: 8px;
   background-color: #fafafa;
 }
 
-.visit-header {
+.exec-f-sub-visit-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
 }
 
-.visit-date-status {
+.exec-f-sub-visit-date-status {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.visit-date {
+.exec-f-sub-visit-date {
   font-size: 14px;
   font-weight: 500;
   color: #212529;
 }
 
-.visit-status {
+.exec-f-sub-visit-status {
   padding: 4px 12px;
   border-radius: 16px;
   font-size: 11px;
@@ -971,7 +920,7 @@
   text-transform: capitalize;
 }
 
-.view-details-btn {
+.exec-f-sub-view-details-btn {
   background: none;
   border: none;
   color: #4f46e5;
@@ -981,11 +930,11 @@
   text-decoration: underline;
 }
 
-.view-details-btn:hover {
+.exec-f-sub-view-details-btn:hover {
   color: #4338ca;
 }
 
-.visit-representative {
+.exec-f-sub-visit-representative {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -994,14 +943,14 @@
   color: #495057;
 }
 
-.visit-description {
+.exec-f-sub-visit-description {
   font-size: 13px;
   color: #6c757d;
   line-height: 1.4;
   margin-bottom: 8px;
 }
 
-.admin-note {
+.exec-f-sub-admin-note {
   font-size: 13px;
   color: #28a745;
   line-height: 1.4;
@@ -1011,646 +960,301 @@
   border-left: 3px solid #28a745;
 }
 
+.exec-f-sub-visit-issues {
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.exec-f-sub-visit-issues strong {
+  color: #dc3545;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.exec-f-sub-issue-details {
+  font-size: 13px;
+  color: #495057;
+}
+
+.exec-f-sub-issue-status {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.exec-f-sub-visit-people {
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.exec-f-sub-visit-people strong {
+  color: #495057;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.exec-f-sub-person-met {
+  font-size: 13px;
+  color: #495057;
+}
+
 
 /* Desktop Large Screens */
 @media (min-width: 1200px) {
-  .form-header {
+  .exec-f-sub-header {
     padding: 16px 0;
     margin-bottom: 32px;
   }
 
-  .back-btn {
+  .exec-f-sub-back-btn {
     font-size: 18px;
     padding: 12px 0;
   }
 
-  .user-icon {
+  .exec-f-sub-user-icon {
     width: 42px;
     height: 42px;
     font-size: 16px;
   }
 
-  .form-title {
+  .exec-f-sub-title {
     font-size: 28px;
     margin-bottom: 8px;
   }
 
-  .form-subtitle {
+  .exec-f-sub-subtitle {
     font-size: 16px;
   }
 
-  .form-title-section {
+  .exec-f-sub-title-section {
     margin-bottom: 32px;
   }
 
-  .store-info-card,
-  .visit-form-card,
-  .past-visits-card {
+  .exec-f-sub-store-info-card,
+  .exec-f-sub-visit-form-card,
+  .exec-f-sub-past-visits-card {
     padding: 28px;
     margin-bottom: 24px;
     border-radius: 16px;
   }
 
-  .store-name {
+  .exec-f-sub-store-name {
     font-size: 22px;
     margin-bottom: 16px;
   }
 
-  .brand-tag {
+  .exec-f-sub-brand-tag {
     font-size: 14px;
     padding: 6px 16px;
   }
 
-  .detail-item {
+  .exec-f-sub-detail-item {
     font-size: 16px;
   }
 
-  .section-title {
+  .exec-f-sub-section-title {
     font-size: 18px;
     margin-bottom: 24px;
   }
 
-  .form-label {
+  .exec-f-sub-form-label {
     font-size: 16px;
     margin-bottom: 10px;
   }
 
-  .form-select,
-  .form-textarea,
-  .form-date {
+  .exec-f-sub-form-select,
+  .exec-f-sub-form-textarea,
+  .exec-f-sub-form-date {
     padding: 16px 20px;
     font-size: 16px;
   }
 
-  .form-group {
+  .exec-f-sub-form-group {
     margin-bottom: 24px;
   }
 
-  .checkbox-container {
+  .exec-f-sub-checkbox-container {
     font-size: 16px;
   }
 
-  .photo-upload-area {
+  .exec-f-sub-photo-upload-area {
     padding: 40px 30px;
     min-height: 140px;
   }
 
-  .upload-icon {
+  .exec-f-sub-upload-icon {
     font-size: 40px;
   }
 
-  .upload-text {
+  .exec-f-sub-upload-text {
     font-size: 16px;
   }
 
-  .uploaded-photos {
+  .exec-f-sub-uploaded-photos {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 12px;
   }
 
-  .photo-preview {
+  .exec-f-sub-photo-preview {
     width: 100px;
     height: 100px;
   }
 
-  .remove-photo {
+  .exec-f-sub-remove-photo {
     width: 24px;
     height: 24px;
     font-size: 12px;
   }
 
-  .save-draft-btn,
-  .submit-visit-btn {
+  .exec-f-sub-save-draft-btn,
+  .exec-f-sub-submit-visit-btn {
     padding: 16px 24px;
     font-size: 16px;
   }
 
-  .visit-item {
+  .exec-f-sub-visit-item {
     padding: 20px;
   }
 
-  .visit-date {
+  .exec-f-sub-visit-date {
     font-size: 16px;
   }
 
-  .visit-representative {
+  .exec-f-sub-visit-representative {
     font-size: 16px;
   }
 
-  .visit-description {
+  .exec-f-sub-visit-description {
     font-size: 15px;
   }
 
-  .admin-note {
+  .exec-f-sub-admin-note {
     font-size: 15px;
-  }
-}
-
-/* Desktop Medium Screens */
-@media (min-width: 992px) and (max-width: 1199px) {
-  .form-header {
-    padding: 14px 0;
-    margin-bottom: 28px;
-  }
-
-  .back-btn {
-    font-size: 17px;
-    padding: 10px 0;
-  }
-
-  .user-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 15px;
-  }
-
-  .form-title {
-    font-size: 26px;
-    margin-bottom: 6px;
-  }
-
-  .form-subtitle {
-    font-size: 15px;
-  }
-
-  .form-title-section {
-    margin-bottom: 28px;
-  }
-
-  .store-info-card,
-  .visit-form-card,
-  .past-visits-card {
-    padding: 24px;
-    margin-bottom: 22px;
-    border-radius: 14px;
-  }
-
-  .store-name {
-    font-size: 20px;
-    margin-bottom: 14px;
-  }
-
-  .brand-tag {
-    font-size: 13px;
-    padding: 5px 14px;
-  }
-
-  .detail-item {
-    font-size: 15px;
-  }
-
-  .section-title {
-    font-size: 17px;
-    margin-bottom: 22px;
-  }
-
-  .form-label {
-    font-size: 15px;
-    margin-bottom: 9px;
-  }
-
-  .form-select,
-  .form-textarea,
-  .form-date {
-    padding: 14px 18px;
-    font-size: 15px;
-  }
-
-  .form-group {
-    margin-bottom: 22px;
-  }
-
-  .checkbox-container {
-    font-size: 15px;
-  }
-
-  .photo-upload-area {
-    padding: 35px 25px;
-    min-height: 130px;
-  }
-
-  .upload-icon {
-    font-size: 36px;
-  }
-
-  .upload-text {
-    font-size: 15px;
-  }
-
-  .uploaded-photos {
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-    gap: 10px;
-  }
-
-  .photo-preview {
-    width: 90px;
-    height: 90px;
-  }
-
-  .remove-photo {
-    width: 22px;
-    height: 22px;
-    font-size: 11px;
-  }
-
-  .save-draft-btn,
-  .submit-visit-btn {
-    padding: 14px 22px;
-    font-size: 15px;
-  }
-
-  .visit-item {
-    padding: 18px;
-  }
-
-  .visit-date {
-    font-size: 15px;
-  }
-
-  .visit-representative {
-    font-size: 15px;
-  }
-
-  .visit-description {
-    font-size: 14px;
-  }
-
-  .admin-note {
-    font-size: 14px;
-  }
-}
-
-/* Tablet Styles */
-@media (min-width: 769px) and (max-width: 991px) {
-  .executive-form-content {
-    max-width: 100%;
-    padding: 24px 32px;
-  }
-
-  .form-header {
-    padding: 12px 0;
-    margin-bottom: 24px;
-  }
-
-  .back-btn {
-    font-size: 16px;
-  }
-
-  .user-icon {
-    width: 38px;
-    height: 38px;
-  }
-
-  .form-title {
-    font-size: 24px;
-  }
-
-  .store-info-card,
-  .visit-form-card,
-  .past-visits-card {
-    padding: 20px;
-    margin-bottom: 20px;
-  }
-
-  .form-actions {
-    gap: 14px;
-  }
-
-  .save-draft-btn,
-  .submit-visit-btn {
-    padding: 12px 20px;
-  }
-}
-
-/* Mobile Styles */
-@media (max-width: 768px) {
-  .executive-form-content {
-    padding: 16px;
-    max-width: 100%;
-  }
-
-  .form-header {
-    margin-bottom: 20px;
-    padding: 8px 0;
-  }
-
-  .back-btn {
-    font-size: 15px;
-  }
-
-  .user-icon {
-    width: 34px;
-    height: 34px;
-    font-size: 13px;
-  }
-
-  .user-icon::before {
-    width: 10px;
-    height: 10px;
-  }
-
-  .form-title {
-    font-size: 20px;
-  }
-
-  .form-subtitle {
-    font-size: 13px;
-  }
-
-  .form-title-section {
-    margin-bottom: 20px;
-  }
-
-  .store-info-card,
-  .visit-form-card,
-  .past-visits-card {
-    padding: 16px;
-    margin-bottom: 16px;
-  }
-
-  .store-name {
-    font-size: 16px;
-    margin-bottom: 10px;
-  }
-
-  .brand-tag {
-    font-size: 11px;
-    padding: 3px 10px;
-  }
-
-  .partner-brands {
-    gap: 6px;
-    margin-bottom: 14px;
-  }
-
-  .detail-item {
-    font-size: 13px;
-    gap: 6px;
-  }
-
-  .contact-number {
-    font-size: 12px;
-  }
-
-  .section-title {
-    font-size: 15px;
-    margin-bottom: 16px;
-  }
-
-  .form-group {
-    margin-bottom: 16px;
-  }
-
-  .form-label {
-    font-size: 13px;
-    margin-bottom: 6px;
-  }
-
-  .form-select,
-  .form-textarea,
-  .form-date {
-    padding: 10px 12px;
-    font-size: 14px;
-  }
-
-  .checkbox-container {
-    font-size: 13px;
-    gap: 8px;
-  }
-
-  .checkbox-container input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-  }
-
-  .photo-upload-area {
-    padding: 24px 16px;
-    min-height: 100px;
-  }
-
-  .upload-icon {
-    font-size: 28px;
-    margin-bottom: 6px;
-  }
-
-  .upload-text {
-    font-size: 13px;
-  }
-
-  .upload-formats {
-    font-size: 11px;
-  }
-
-  .uploaded-photos {
-    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-    gap: 6px;
-    margin-top: 8px;
-  }
-
-  .photo-preview {
-    width: 60px;
-    height: 60px;
-  }
-
-  .remove-photo {
-    width: 18px;
-    height: 18px;
-    font-size: 9px;
-    top: -2px;
-    right: -2px;
-  }
-
-  .date-input-container .calendar-icon {
-    font-size: 14px;
-    right: 10px;
-  }
-
-  .form-actions {
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 20px;
-  }
-
-  .save-draft-btn,
-  .submit-visit-btn {
-    width: 100%;
-    padding: 12px 16px;
-    font-size: 14px;
-  }
-
-  .visits-list {
-    gap: 12px;
-  }
-
-  .visit-item {
-    padding: 12px;
-  }
-
-  .visit-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-
-  .visit-date-status {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .visit-date {
-    font-size: 13px;
-  }
-
-  .visit-status {
-    font-size: 10px;
-    padding: 3px 10px;
-  }
-
-  .view-details-btn {
-    font-size: 11px;
-    align-self: flex-end;
-  }
-
-  .visit-representative {
-    font-size: 13px;
-    margin-bottom: 6px;
-  }
-
-  .visit-description {
-    font-size: 12px;
-    margin-bottom: 6px;
-  }
-
-  .admin-note {
-    font-size: 12px;
-    padding: 6px;
   }
 }
 
 /* Extra Small Mobile */
 @media (max-width: 480px) {
-  .executive-form-content {
+  .exec-f-sub-content {
     padding: 12px;
   }
 
-  .form-header {
+  .exec-f-sub-header {
     margin-bottom: 16px;
   }
 
-  .form-title {
+  .exec-f-sub-title {
     font-size: 18px;
   }
 
-  .form-subtitle {
+  .exec-f-sub-subtitle {
     font-size: 12px;
   }
 
-  .store-info-card,
-  .visit-form-card,
-  .past-visits-card {
+  .exec-f-sub-store-info-card,
+  .exec-f-sub-visit-form-card,
+  .exec-f-sub-past-visits-card {
     padding: 12px;
     margin-bottom: 12px;
   }
 
-  .store-name {
+  .exec-f-sub-store-name {
     font-size: 15px;
   }
 
-  .brand-tag {
+  .exec-f-sub-brand-tag {
     font-size: 10px;
     padding: 2px 8px;
   }
 
-  .partner-brands {
+  .exec-f-sub-partner-brands {
     gap: 4px;
   }
 
-  .detail-item {
+  .exec-f-sub-detail-item {
     font-size: 12px;
   }
 
-  .section-title {
+  .exec-f-sub-section-title {
     font-size: 14px;
     margin-bottom: 14px;
   }
 
-  .form-group {
+  .exec-f-sub-form-group {
     margin-bottom: 14px;
   }
 
-  .form-label {
+  .exec-f-sub-form-label {
     font-size: 12px;
     margin-bottom: 5px;
   }
 
-  .form-select,
-  .form-textarea,
-  .form-date {
+  .exec-f-sub-form-select,
+  .exec-f-sub-form-textarea,
+  .exec-f-sub-form-date {
     padding: 8px 10px;
     font-size: 13px;
   }
 
-  .checkbox-container {
+  .exec-f-sub-checkbox-container {
     font-size: 12px;
   }
 
-  .photo-upload-area {
+  .exec-f-sub-photo-upload-area {
     padding: 20px 12px;
     min-height: 80px;
   }
 
-  .upload-icon {
+  .exec-f-sub-upload-icon {
     font-size: 24px;
   }
 
-  .upload-text {
+  .exec-f-sub-upload-text {
     font-size: 12px;
   }
 
-  .uploaded-photos {
+  .exec-f-sub-uploaded-photos {
     grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
     gap: 4px;
   }
 
-  .photo-preview {
+  .exec-f-sub-photo-preview {
     width: 50px;
     height: 50px;
   }
 
-  .remove-photo {
+  .exec-f-sub-remove-photo {
     width: 16px;
     height: 16px;
     font-size: 8px;
   }
 
-  .save-draft-btn,
-  .submit-visit-btn {
+  .exec-f-sub-save-draft-btn,
+  .exec-f-sub-submit-visit-btn {
     padding: 10px 14px;
     font-size: 13px;
   }
 
-  .visit-item {
+  .exec-f-sub-visit-item {
     padding: 10px;
   }
 
-  .visit-date {
+  .exec-f-sub-visit-date {
     font-size: 12px;
   }
 
-  .visit-status {
+  .exec-f-sub-visit-status {
     font-size: 9px;
   }
 
-  .visit-representative {
+  .exec-f-sub-visit-representative {
     font-size: 12px;
   }
 
-  .visit-description {
+  .exec-f-sub-visit-description {
     font-size: 11px;
   }
 
-  .admin-note {
+  .exec-f-sub-admin-note {
     font-size: 11px;
     padding: 5px;
   }

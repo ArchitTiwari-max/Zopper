@@ -133,25 +133,24 @@ export async function GET(request: NextRequest) {
       const colorIndex = visit.executive.name.length % colors.length;
 
       // Determine issue status
-      let issueStatusResult: 'Pending' | 'Assigned' | 'Resolved';
+      let issueStatusResult: 'Pending' | 'Assigned' | 'Resolved' | null = null;
       let issues = 'None';
-      let issueId: number | undefined;
+      let issueId: string | undefined;
 
       if (visit.issues.length > 0) {
         const issue = visit.issues[0]; // Take first issue
         issues = issue.details;
-        issueId = parseInt(issue.id, 16); // Convert ObjectId to display number
+        issueId = issue.id; // Keep issue ID as string (ObjectId)
         issueStatusResult = issue.status as 'Pending' | 'Assigned' | 'Resolved';
-      } else {
-        issueStatusResult = 'Resolved'; // No issues means resolved
       }
 
       return {
-        id: parseInt(visit.id, 16), // Convert ObjectId to display number
+        id: visit.id, // Keep actual ObjectId for database operations
         executiveName: visit.executive.name,
         executiveInitials: initials,
         avatarColor: colors[colorIndex],
         storeName: visit.store.storeName,
+        storeId: visit.store.id, // Add store ID for linking
         partnerBrand: partnerBrands,
         visitDate: new Date(visit.createdAt).toISOString().split('T')[0],
         visitStatus: visit.status as 'PENDING_REVIEW' | 'REVIEWD',

@@ -157,14 +157,28 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    // Sort tasks to prioritize PENDING status first
+    const sortedTasks = transformedTasks.sort((a, b) => {
+      // Determine display status for both tasks (same logic as frontend)
+      const displayStatusA = a.status === AssignedStatus.Completed || a.hasReport ? 'Submitted' : 'Pending';
+      const displayStatusB = b.status === AssignedStatus.Completed || b.hasReport ? 'Submitted' : 'Pending';
+      
+      // Sort PENDING first, then SUBMITTED
+      if (displayStatusA === 'Pending' && displayStatusB === 'Submitted') return -1;
+      if (displayStatusA === 'Submitted' && displayStatusB === 'Pending') return 1;
+      
+      // Within same display status, sort by creation date (newest first)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
     // Create response with cache headers
     const response = NextResponse.json({
       success: true,
       data: {
-        tasks: transformedTasks,
-        totalTasks: transformedTasks.length,
-        pendingTasks: transformedTasks.filter(task => task.status === AssignedStatus.Assigned || task.status === AssignedStatus.In_Progress).length,
-        completedTasks: transformedTasks.filter(task => task.status === AssignedStatus.Completed).length
+        tasks: sortedTasks,
+        totalTasks: sortedTasks.length,
+        pendingTasks: sortedTasks.filter(task => task.status === AssignedStatus.Assigned || task.status === AssignedStatus.In_Progress).length,
+        completedTasks: sortedTasks.filter(task => task.status === AssignedStatus.Completed).length
       }
     });
 

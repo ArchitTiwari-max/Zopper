@@ -67,16 +67,16 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
   };
 
   return (
-    <div className="tab-panel">
-      <div className="table-container">
-        <table className="tasks-table">
+    <div className="exec-tasks-issues-panel">
+      <div className="exec-tasks-issues-table-container">
+        <table className="exec-tasks-issues-table">
           <thead>
             <tr>
               <th>STORE NAME</th>
               <th>ISSUE</th>
               <th>ADMIN COMMENT</th>
               <th>CITY</th>
-              <th className="action-header">ACTION</th>
+              <th className="exec-tasks-issues-action-header">ACTION</th>
             </tr>
           </thead>
           <tbody>
@@ -92,11 +92,11 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
             ) : error ? (
               <tr>
                 <td colSpan={5}>
-                  <div className="error-state">
+                  <div className="exec-tasks-issues-error-state">
                     <p>Error: {error}</p>
                     <button 
                       onClick={onRetry} 
-                      className="retry-btn"
+                      className="exec-tasks-issues-retry-btn"
                     >
                       Retry
                     </button>
@@ -106,7 +106,7 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
             ) : tasks.length === 0 ? (
               <tr>
                 <td colSpan={5}>
-                  <div className="no-data-state">
+                  <div className="exec-tasks-issues-no-data-state">
                     <span>No assigned issues</span>
                   </div>
                 </td>
@@ -116,36 +116,36 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
                 const displayStatus = task.status === 'Completed' || task.hasReport ? 'Submitted' : 'Pending';
                 
                 return (
-                  <tr key={task.id} className={expandedIssues.has(task.id) ? 'expanded-row' : ''}>
-                    <td className="stores-name">{task.storeName}</td>
-                    <td className="issue">
-                      <div className="issue-container">
+                  <tr key={task.id} className={expandedIssues.has(task.id) ? 'exec-tasks-issues-expanded-row' : ''}>
+                    <td className="exec-tasks-issues-stores-name">{task.storeName}</td>
+                    <td className="exec-tasks-issues-issue">
+                      <div className="exec-tasks-issues-issue-container">
                         <span 
-                          className={`issue-text ${task.issue.length > 50 ? 'expandable' : ''}`}
+                          className={`exec-tasks-issues-issue-text ${task.issue.length > 50 ? 'exec-tasks-issues-expandable' : ''}`}
                           onClick={() => task.issue.length > 50 ? toggleIssueExpansion(task.id) : null}
                         >
                           {expandedIssues.has(task.id) ? task.issue : truncateText(task.issue, 50)}
                         </span>
                       </div>
                     </td>
-                    <td className="admin-comment">
+                    <td className="exec-tasks-issues-admin-comment">
                       <span 
-                        className={`admin-comment-text ${task.adminComment && task.adminComment.length > 30 ? 'truncated' : ''}`}
+                        className={`exec-tasks-issues-admin-comment-text ${task.adminComment && task.adminComment.length > 30 ? 'exec-tasks-issues-truncated' : ''}`}
                         title={task.adminComment || ''}
                       >
                         {truncateAdminComment(task.adminComment, 30)}
                       </span>
                     </td>
-                    <td className="city">{task.city}</td>
-                    <td className="action-column">
-                      <div className="action-content">
+                    <td className="exec-tasks-issues-city">{task.city}</td>
+                    <td className="exec-tasks-issues-action-column">
+                      <div className="exec-tasks-issues-action-content">
                         <span 
-                          className={`status-badge ${displayStatus.toLowerCase()}`}
+                          className={`exec-tasks-issues-status-badge ${displayStatus.toLowerCase()}`}
                         >
                           {displayStatus}
                         </span>
                         <button 
-                          className="view-details-btn"
+                          className="exec-tasks-issues-view-details-btn"
                           onClick={() => onViewDetails(task)}
                         >
                           View Details

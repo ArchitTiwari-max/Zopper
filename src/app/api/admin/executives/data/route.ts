@@ -22,132 +22,58 @@ export async function GET(request: NextRequest) {
 
     // Get filter parameters
     const { searchParams } = new URL(request.url);
-    const executiveFilterId = searchParams.get('executiveId'); // From filter dropdown
-    const urlExecutiveId = searchParams.get('urlExecutiveId'); // From URL navigation
-    const storeFilterId = searchParams.get('storeId'); // From filter dropdown
-    const urlStoreId = searchParams.get('urlStoreId'); // From URL navigation
-    const brandId = searchParams.get('brandId');
+    const executiveId = searchParams.get('executiveId');
+    const storeId = searchParams.get('storeId');
 
     // Build where clause for executives
     let whereClause: any = {};
 
     // Filter by executive ID (exact match)
-    const execId = urlExecutiveId || executiveFilterId;
-    if (execId && execId !== 'All Executive') {
-      whereClause.id = execId;
+    if (executiveId && executiveId !== 'All Executive') {
+      whereClause.id = executiveId;
     }
 
     // Filter by store - if storeId is provided, filter executives who are assigned to that store
-    const currentStoreId = urlStoreId || storeFilterId;
-    if (currentStoreId && currentStoreId !== 'All Store') {
+    if (storeId && storeId !== 'All Store') {
       // Filter by assignedStoreIds array
       whereClause.assignedStoreIds = {
-        has: currentStoreId
+        has: storeId
       };
     }
 
-    // Filter by brand - if brandId is provided, filter executives who have worked with that brand
-    if (brandId && brandId !== 'All Brands') {
-      // If there's already a store filter, combine with AND logic
-      if (whereClause.assignedStoreIds) {
-        whereClause.AND = [
-          { assignedStoreIds: whereClause.assignedStoreIds },
-          {
-            visits: {
-              some: {
-                brandIds: {
-                  has: brandId
-                }
-              }
-            }
-          }
-        ];
-        delete whereClause.assignedStoreIds;
-      } else {
-        whereClause.visits = {
-          some: {
-            brandIds: {
-              has: brandId
-            }
-          }
-        };
-      }
-    }
-
-    // OPTIMIZED: Get executives, brands, and all visits concurrently with Promise.all
-    const [executives, brands, allExecutiveVisits] = await Promise.all([
-      // Get executives with latest visit data - no limits, fetch all data
-      prisma.executive.findMany({
-        where: whereClause,
-        include: {
-          visits: {
-            orderBy: {
-              createdAt: 'desc'
-            },
-            take: 1, // Get latest visit for last visit date
-            select: {
-              createdAt: true,
-              brandIds: true
-            }
+    // OPTIMIZED: Get executives data
+    const executives = await prisma.executive.findMany({
+      where: whereClause,
+      include: {
+        visits: {
+          orderBy: {
+            createdAt: 'desc'
           },
-          _count: {
-            select: {
-              visits: true
-            }
+          take: 1, // Get latest visit for last visit date
+          select: {
+            createdAt: true
           }
         },
-        orderBy: [
-          {
-            visits: {
-              _count: 'desc' // Order by most visits first
-            }
-          },
-          {
-            name: 'asc'
+        _count: {
+          select: {
+            visits: true
           }
-        ]
-      }),
-
-      // Get ALL brands for brand mapping - no limits
-      prisma.brand.findMany({
-        select: {
-          id: true,
-          brandName: true
         }
-      }),
-
-      // Get ALL visits with brand data for all executives at once - no limits
-      prisma.visit.findMany({
-        where: whereClause.id ? {
-          executiveId: whereClause.id
-        } : {}, // If filtering by specific executive, only get their visits, otherwise get all
-        select: {
-          executiveId: true,
-          brandIds: true
+      },
+      orderBy: [
+        {
+          visits: {
+            _count: 'desc' // Order by most visits first
+          }
+        },
+        {
+          name: 'asc'
         }
-      })
-    ]);
-    // Create lookup maps for better performance
-    const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
-    
-    // Build executive-brands map from bulk visit data
-    const executiveBrandsMap = new Map<string, Set<string>>();
-    allExecutiveVisits.forEach(visit => {
-      if (!executiveBrandsMap.has(visit.executiveId)) {
-        executiveBrandsMap.set(visit.executiveId, new Set());
-      }
-      const brandSet = executiveBrandsMap.get(visit.executiveId)!;
-      visit.brandIds.forEach(brandId => brandSet.add(brandId));
+      ]
     });
 
     // Process executives data efficiently without individual database calls
     const processedExecutives = executives.map((executive) => {
-      // Get all unique brands this executive has worked with from bulk data
-      const uniqueBrandIds = Array.from(executiveBrandsMap.get(executive.id) || new Set());
-
-      const partnerBrands = uniqueBrandIds
-        .map((brandId: unknown) => brandMap.get(brandId as string))
-        .filter(Boolean) as string[];
 
       // Get initials for avatar
       const initials = executive.name
@@ -169,12 +95,11 @@ export async function GET(request: NextRequest) {
         name: executive.name,
         initials: initials,
         region: executive.region || 'Not Assigned',
-        partnerBrands: partnerBrands, // Show ALL brands, no limit
         totalVisits: executive._count.visits,
         lastVisit: executive.visits[0]?.createdAt 
           ? new Date(executive.visits[0].createdAt).toISOString().split('T')[0]
           : 'Never',
-        assignedStores: 'View All',
+        assignedStoreIds: executive.assignedStoreIds || [],
         avatarColor: colors[colorIndex]
       };
     });

@@ -295,45 +295,45 @@ const VisitHistory: React.FC = () => {
   };
 
   return (
-    <div className="visit-history-container">
-      <div className="visit-history-content">
+    <div className="exec-visits-container">
+      <div className="exec-visits-content">
         {/* Header */}
-        <div className="history-header">
-          <div className="history-title-section">
-            <h1 className="history-title">My Visits</h1>
-            <p className="history-subtitle">
+        <div className="exec-visits-header">
+          <div className="exec-visits-title-section">
+            <h1 className="exec-visits-title">My Visits</h1>
+            <p className="exec-visits-subtitle">
               Track your store visits and executive feedback
             </p>
           </div>
-          <div className="history-date-filter">
+          <div className="exec-visits-date-filter">
             <DateFilter />
           </div>
         </div>
 
         {/* Filters Section */}
-        <div className="filters-section">
-          <div className="filters-header">
+        <div className="exec-visits-filters-section">
+          <div className="exec-visits-filters-header">
             <button 
-              className={`filters-toggle ${filtersOpen ? 'active' : ''}`}
+              className={`exec-visits-filters-toggle ${filtersOpen ? 'active' : ''}`}
               onClick={() => setFiltersOpen(!filtersOpen)}
               disabled={loading}
             >
               <span>Filters</span>
-              <span className="filter-arrow">▼</span>
+              <span className="exec-visits-filter-arrow">▼</span>
             </button>
             
-            <button className="export-btn" onClick={handleExportToExcel} disabled={loading}>
+            <button className="exec-visits-export-btn" onClick={handleExportToExcel} disabled={loading}>
               📊 Export
             </button>
           </div>
           
           {filtersOpen && (
-            <div className="filters-panel">
-              <div className="filter-group">
-                <label className="filter-label">Store Name</label>
+            <div className="exec-visits-filters-panel">
+              <div className="exec-visits-filter-group">
+                <label className="exec-visits-filter-label">Store Name</label>
                 <input
                   type="text"
-                  className="filter-input"
+                  className="exec-visits-filter-input"
                   placeholder="Enter store name..."
                   value={filters.storeName}
                   onChange={(e) => handleFilterChange('storeName', e.target.value)}
@@ -341,10 +341,10 @@ const VisitHistory: React.FC = () => {
                 />
               </div>
               
-              <div className="filter-group">
-                <label className="filter-label">Filter by City</label>
+              <div className="exec-visits-filter-group">
+                <label className="exec-visits-filter-label">Filter by City</label>
                 <select
-                  className="filter-select"
+                  className="exec-visits-filter-select"
                   value={filters.city}
                   onChange={(e) => handleFilterChange('city', e.target.value)}
                   disabled={loading}
@@ -355,10 +355,10 @@ const VisitHistory: React.FC = () => {
                 </select>
               </div>
               
-              <div className="filter-group">
-                <label className="filter-label">Filter by Partner Brand</label>
+              <div className="exec-visits-filter-group">
+                <label className="exec-visits-filter-label">Filter by Partner Brand</label>
                 <select
-                  className="filter-select"
+                  className="exec-visits-filter-select"
                   value={filters.partnerBrand}
                   onChange={(e) => handleFilterChange('partnerBrand', e.target.value)}
                   disabled={loading}
@@ -369,10 +369,10 @@ const VisitHistory: React.FC = () => {
                 </select>
               </div>
               
-              <div className="filter-group">
-                <label className="filter-label">Filter by Status</label>
+              <div className="exec-visits-filter-group">
+                <label className="exec-visits-filter-label">Filter by Status</label>
                 <select
-                  className="filter-select"
+                  className="exec-visits-filter-select"
                   value={filters.status}
                   onChange={(e) => handleFilterChange('status', e.target.value)}
                   disabled={loading}
@@ -383,10 +383,10 @@ const VisitHistory: React.FC = () => {
                 </select>
               </div>
               
-              <div className="filter-group">
-                <label className="filter-label">Sort By</label>
+              <div className="exec-visits-filter-group">
+                <label className="exec-visits-filter-label">Sort By</label>
                 <select
-                  className="filter-select"
+                  className="exec-visits-filter-select"
                   value={filters.sortBy}
                   onChange={(e) => handleFilterChange('sortBy', e.target.value)}
                   disabled={loading}
@@ -402,9 +402,9 @@ const VisitHistory: React.FC = () => {
         </div>
 
         {/* Visit History Table */}
-        <div className="visits-container">
-          <div className="visits-table-container">
-            <table className="visits-table">
+        <div className="exec-visits-container">
+          <div className="exec-visits-table-container">
+            <table className="exec-visits-table">
               <thead>
                 <tr>
                   <th>Store Name</th>
@@ -444,47 +444,47 @@ const VisitHistory: React.FC = () => {
                   filteredVisits.map((visit) => (
                     <tr key={visit.id}>
                       <td>
-                        <div className="store-cell">
-                          <span className="store-name-cell">{visit.storeName || 'N/A'}</span>
+                        <div className="exec-visits-store-cell">
+                          <span className="exec-visits-store-name-cell">{visit.storeName || 'N/A'}</span>
                         </div>
                       </td>
                       <td>
-                        <div className="brand-cell">
-                          <span className="partner-brand-cell">{visit.partnerBrand || 'N/A'}</span>
+                        <div className="exec-visits-brand-cell">
+                          <span className="exec-visits-partner-brand-cell">{visit.partnerBrand || 'N/A'}</span>
                         </div>
                       </td>
                       <td>
-                        <div className="person-cell">
+                        <div className="exec-visits-person-cell">
                           {visit.personMet && visit.personMet.length > 0 ? (
-                            <div className="person-met-list">
+                            <div className="exec-visits-person-met-list">
                               {visit.personMet.map((person, index) => (
-                                <div key={index} className="person-met-item">
-                                  <span className="person-name">{person.name}</span>
-                                  <span className="person-designation">({person.designation})</span>
-                                  {index < visit.personMet.length - 1 && <span className="person-separator">, </span>}
+                                <div key={index} className="exec-visits-person-met-item">
+                                  <span className="exec-visits-person-name">{person.name}</span>
+                                  <span className="exec-visits-person-designation">({person.designation})</span>
+                                  {index < visit.personMet.length - 1 && <span className="exec-visits-person-separator">, </span>}
                                 </div>
                               ))}
                             </div>
                           ) : (
-                            <span className="no-data">-</span>
+                            <span className="exec-visits-no-data">-</span>
                           )}
                         </div>
                       </td>
                       <td>
-                        <div className="date-cell">
-                          <span className="visit-date-table">{formatDate(visit.createdAt)}</span>
+                        <div className="exec-visits-date-cell">
+                          <span className="exec-visits-date-table">{formatDate(visit.createdAt)}</span>
                         </div>
                       </td>
                       <td>
-                        <div className="action-cell">
+                        <div className="exec-visits-action-cell">
                           <span 
-                            className="visit-status-badge"
+                            className="exec-visits-status-badge"
                             style={{ backgroundColor: getStatusColor(visit.status) }}
                           >
                             {visit.status === 'PENDING_REVIEW' ? 'Pending' : 'Reviewed'}
                           </span>
                           <button 
-                            className="view-details-btn-table"
+                            className="exec-visits-view-details-btn"
                             onClick={() => openVisitModal(visit)}
                           >
                             View Detail

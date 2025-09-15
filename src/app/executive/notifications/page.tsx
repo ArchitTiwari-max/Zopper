@@ -81,49 +81,49 @@ const Notifications: React.FC = () => {
   };
 
   return (
-    <div className="notifications-container">
-      <div className="notifications-content">
+    <div className="exec-notif-notifications-container">
+      <div className="exec-notif-notifications-content">
         {/* Header */}
-        <div className="notifications-header">
-          <button className="back-btn" onClick={handleBackToDashboard}>
-            <span className="back-arrow">←</span>
+        <div className="exec-notif-notifications-header">
+          <button className="exec-notif-back-btn" onClick={handleBackToDashboard}>
+            <span className="exec-notif-back-arrow">←</span>
             Back to Dashboard
           </button>
          
         </div>
 
         {/* Title Section */}
-        <div className="notifications-title-section">
-          <div className="title-row">
-            <h1 className="notifications-title">Notifications</h1>
-            <button className="mark-all-read-btn" onClick={markAllAsRead}>
+        <div className="exec-notif-notifications-title-section">
+          <div className="exec-notif-title-row">
+            <h1 className="exec-notif-notifications-title">Notifications</h1>
+            <button className="exec-notif-mark-all-read-btn" onClick={markAllAsRead}>
               Mark all read
             </button>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="notifications-filters">
-          <div className="filter-group">
+        <div className="exec-notif-notifications-filters">
+          <div className="exec-notif-filter-group">
             <label>Status:</label>
-            <div className="filter-tabs">
+            <div className="exec-notif-filter-tabs">
               <button 
-                className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
+                className={`exec-notif-filter-tab ${filter === 'all' ? 'active' : ''}`}
                 onClick={() => setFilter('all')}
               >
                 All ({notifications.length})
               </button>
               <button 
-                className={`filter-tab ${filter === 'unread' ? 'active' : ''}`}
+                className={`exec-notif-filter-tab ${filter === 'unread' ? 'active' : ''}`}
                 onClick={() => setFilter('unread')}
               >
                 Unread ({notifications.filter(n => n.status === 'UNREAD').length})
               </button>
               <button 
-                className={`filter-tab ${filter === 'read' ? 'active' : ''}`}
+                className={`exec-notif-filter-tab ${filter === 'read' ? 'active' : ''}`}
                 onClick={() => setFilter('read')}
               >
-                Read ({notifications.filter(n => n.status === 'READ').length})
+                Read ({notifications.filter(n => n.status === 'read').length})
               </button>
             </div>
           </div>
@@ -139,10 +139,10 @@ const Notifications: React.FC = () => {
 
         {/* Error State */}
         {error && (
-          <div className="error-state">
+          <div className="exec-notif-error-state">
             <h3>Error Loading Notifications</h3>
             <p>{error}</p>
-            <button onClick={refreshNotifications} className="retry-btn">
+            <button onClick={refreshNotifications} className="exec-notif-retry-btn">
               Try Again
             </button>
           </div>
@@ -150,7 +150,7 @@ const Notifications: React.FC = () => {
 
         {/* Notifications List */}
         {!loading && !error && (
-          <div className="notifications-list">
+          <div className="exec-notif-notifications-list">
             {notifications
               .filter(notification => {
                 if (filter === 'unread' && notification.status !== 'UNREAD') return false;
@@ -160,54 +160,76 @@ const Notifications: React.FC = () => {
               .map((notification) => (
                 <div 
                   key={notification.id} 
-                  className={`notification-item ${
+                  className={`exec-notif-notification-item ${
                     notification.status === 'UNREAD' ? 'unread' : ''
                   } priority-${notification.priority.toLowerCase()}`}
                   onClick={() => handleViewDetails(notification)}
                 >
-                  <div className="notification-content">
-                    <div className="notification-left">
-                      <div className="notification-icon">
+                  <div className="exec-notif-notification-content">
+                    <div className="exec-notif-notification-left">
+                      <div className="exec-notif-notification-icon">
                         {getNotificationIcon(notification.type, notification.priority)}
                       </div>
-                      <div className="notification-details">
-                        <div className="notification-title-row">
-                          <h3 className="notification-title">{notification.title}</h3>
-                          {notification.status === 'UNREAD' && <span className="unread-dot">●</span>}
+                      <div className="exec-notif-notification-details">
+                        <div className="exec-notif-notification-title-row">
+                          <h3 className="exec-notif-notification-title">{notification.title}</h3>
+                          {notification.status === 'UNREAD' && <span className="exec-notif-unread-dot">●</span>}
                         </div>
-                        <p className="notification-description">{notification.message}</p>
-                        <div className="notification-meta">
-                          <span className="notification-time">{getTimeAgo(notification.createdAt)}</span>
-                          <span className="notification-type">
-                            {getTypeDisplayName(notification.type)}
-                          </span>
-                          {(notification.priority === 'HIGH' || notification.priority === 'URGENT') && (
-                            <span className={`priority-badge priority-${notification.priority.toLowerCase()}`}>
-                              {notification.priority}
-                            </span>
-                          )}
-                        </div>
-                        <div className="notification-actions">
-                          {notification.status === 'UNREAD' && (
+                        <p className="exec-notif-notification-description">
+                          {(() => {
+                            let message = notification.type === 'VISIT_PLAN_ASSIGNED' && notification.metadata?.adminComment 
+                              ? notification.message.replace(new RegExp(`\. Comment: ${notification.metadata.adminComment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`), '')
+                              : notification.message;
+                            
+                            // For visit plan assignments, make store names bold
+                            if (notification.type === 'VISIT_PLAN_ASSIGNED' && notification.metadata?.storeNames) {
+                              const storeNames = notification.metadata.storeNames;
+                              storeNames.forEach(storeName => {
+                                // Use case-insensitive regex without word boundaries for names with special chars
+                                const escapedStoreName = storeName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                const regex = new RegExp(escapedStoreName, 'gi');
+                                message = message.replace(regex, (match) => `<strong>${match}</strong>`);
+                              });
+                              return <span dangerouslySetInnerHTML={{ __html: message }} />;
+                            }
+                            return message;
+                          })()
+                          }
+                        </p>
+                        {notification.type === 'VISIT_PLAN_ASSIGNED' && notification.metadata?.adminComment && (
+                          <p className="exec-notif-admin-comment">Admin Comment: {notification.metadata.adminComment}</p>
+                        )}
+                        <div className="exec-notif-notification-bottom">
+                          <div className="exec-notif-meta-left">
+                            <span className="exec-notif-notification-time">{getTimeAgo(notification.createdAt)}</span>
+                            {(notification.priority === 'HIGH' || notification.priority === 'URGENT') && (
+                              <span className={`exec-notif-priority-badge priority-${notification.priority.toLowerCase()}`}>
+                                {notification.priority}
+                              </span>
+                            )}
+                          </div>
+                          <div className="exec-notif-notification-actions">
+                            {notification.status === 'UNREAD' && (
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  markAsRead(notification.id);
+                                }}
+                                className="exec-notif-mark-read-btn"
+                              >
+                                Mark as Read
+                              </button>
+                            )}
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                markAsRead(notification.id);
+                                archiveNotification(notification.id);
                               }}
-                              className="mark-read-btn"
+                              className="exec-notif-archive-btn"
                             >
-                              Mark as Read
+                              Archive
                             </button>
-                          )}
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              archiveNotification(notification.id);
-                            }}
-                            className="archive-btn"
-                          >
-                            Archive
-                          </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -220,10 +242,10 @@ const Notifications: React.FC = () => {
 
         {/* Empty State */}
         {!loading && !error && notifications.length === 0 && (
-          <div className="empty-state">
-            <div className="empty-icon">🔔</div>
-            <h3 className="empty-title">No notifications yet</h3>
-            <p className="empty-description">When you receive notifications, they'll appear here</p>
+          <div className="exec-notif-empty-state">
+            <div className="exec-notif-empty-icon">🔔</div>
+            <h3 className="exec-notif-empty-title">No notifications yet</h3>
+            <p className="exec-notif-empty-description">When you receive notifications, they'll appear here</p>
           </div>
         )}
       </div>

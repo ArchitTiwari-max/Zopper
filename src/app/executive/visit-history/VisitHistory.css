@@ -1,45 +1,46 @@
 /* Visit History Styles */
-.visit-history-container {
+.exec-visits-container {
   min-height: 100vh;
   background-color: #f8f9fa;
   padding: 0;
 }
 
-.visit-history-content {
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 20px;
+.exec-visits-content {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 12px;
   background-color: #f8f9fa;
 }
 
 /* Header */
-.history-header {
+.exec-visits-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 24px;
 }
 
-.history-title-section {
+.exec-visits-title-section {
   display: flex;
   flex-direction: column;
   flex: 1;
 }
 
-.history-date-filter {
+.exec-visits-date-filter {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.history-title {
+.exec-visits-title {
   font-size: 24px;
   font-weight: 600;
   color: #212529;
   margin: 0 0 8px 0;
 }
 
-.history-subtitle {
+.exec-visits-subtitle {
   color: #6c757d;
   font-size: 14px;
   margin: 0;
@@ -99,18 +100,18 @@
 }
 
 /* Filters Section */
-.filters-section {
+.exec-visits-filters-section {
   margin-bottom: 20px;
 }
 
-.filters-header {
+.exec-visits-filters-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
 }
 
-.filters-toggle {
+.exec-visits-filters-toggle {
   background: none;
   border: none;
   color: #6c757d;
@@ -124,21 +125,21 @@
   transition: color 0.2s;
 }
 
-.filters-toggle:hover {
+.exec-visits-filters-toggle:hover {
   color: #495057;
 }
 
-.filter-arrow {
+.exec-visits-filter-arrow {
   font-size: 10px;
   transition: transform 0.2s;
 }
 
-.filters-toggle.active .filter-arrow {
+.exec-visits-filters-toggle.active .exec-visits-filter-arrow {
   transform: rotate(180deg);
 }
 
 /* Filter Panel */
-.filters-panel {
+.exec-visits-filters-panel {
   background: white;
   border: 1px solid #dee2e6;
   border-radius: 12px;
@@ -159,15 +160,15 @@
   }
 }
 
-.filter-group {
+.exec-visits-filter-group {
   margin-bottom: 20px;
 }
 
-.filter-group:last-child {
+.exec-visits-filter-group:last-child {
   margin-bottom: 0;
 }
 
-.filter-label {
+.exec-visits-filter-label {
   display: block;
   font-size: 14px;
   font-weight: 500;
@@ -175,7 +176,7 @@
   margin-bottom: 8px;
 }
 
-.filter-input {
+.exec-visits-filter-input {
   width: 100%;
   padding: 12px 16px;
   border: 1px solid #dee2e6;
@@ -186,17 +187,17 @@
   box-sizing: border-box;
 }
 
-.filter-input:focus {
+.exec-visits-filter-input:focus {
   outline: none;
   border-color: #4f46e5;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-.filter-input::placeholder {
+.exec-visits-filter-input::placeholder {
   color: #9ca3af;
 }
 
-.filter-select {
+.exec-visits-filter-select {
   width: 100%;
   padding: 12px 16px;
   border: 1px solid #dee2e6;
@@ -214,14 +215,14 @@
   cursor: pointer;
 }
 
-.filter-select:focus {
+.exec-visits-filter-select:focus {
   outline: none;
   border-color: #4f46e5;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 /* Compact Export Button */
-.export-btn {
+.exec-visits-export-btn {
   background-color: #28a745;
   color: white;
   border: none;
@@ -238,17 +239,17 @@
   min-width: auto;
 }
 
-.export-btn:hover {
+.exec-visits-export-btn:hover {
   background-color: #218838;
   transform: translateY(-1px);
 }
 
-.export-btn:active {
+.exec-visits-export-btn:active {
   background-color: #1e7e34;
   transform: translateY(0);
 }
 
-.export-btn:disabled {
+.exec-visits-export-btn:disabled {
   background-color: #6c757d;
   cursor: not-allowed;
   transform: none;
@@ -284,7 +285,7 @@
 }
 
 /* Visit History Content */
-.visits-container {
+.exec-visits-container {
   margin-bottom: 32px;
 }
 
@@ -292,29 +293,31 @@
 /* Loading states are now handled within the table only */
 
 /* Visits Table - Mobile First */
-.visits-table-container {
+.exec-visits-table-container {
   background: white;
-  border-radius: 8px;
+  border-radius: 6px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  margin: 0;
 }
 
-.visits-table {
+.exec-visits-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 11px;
   table-layout: fixed;
   min-width: 100%;
 }
 
-.visits-table thead {
+.exec-visits-table thead {
   background-color: #f8f9fa;
   position: relative;
   z-index: 1;
 }
 
-.visits-table th {
+.exec-visits-table th {
   padding: 12px 4px;
   text-align: left;
   font-weight: 600;
@@ -333,13 +336,13 @@
 }
 
 /* Equal width columns - Mobile First */
-.visits-table th:nth-child(1) { width: 20%; } /* Store Name */
-.visits-table th:nth-child(2) { width: 20%; } /* Partner Brand */
-.visits-table th:nth-child(3) { width: 20%; } /* Person Met */
-.visits-table th:nth-child(4) { width: 20%; } /* Date */
-.visits-table th:nth-child(5) { width: 20%; text-align: center; } /* Action */
+.exec-visits-table th:nth-child(1) { width: 20%; } /* Store Name */
+.exec-visits-table th:nth-child(2) { width: 20%; } /* Partner Brand */
+.exec-visits-table th:nth-child(3) { width: 20%; } /* Person Met */
+.exec-visits-table th:nth-child(4) { width: 20%; } /* Date */
+.exec-visits-table th:nth-child(5) { width: 20%; text-align: center; } /* Action */
 
-.visits-table td {
+.exec-visits-table td {
   padding: 12px 4px;
   border-bottom: 1px solid #f1f3f4;
   vertical-align: top;
@@ -350,41 +353,41 @@
 }
 
 /* Equal width columns for table data - Mobile First */
-.visits-table td:nth-child(1) { width: 20%; } /* Store Name */
-.visits-table td:nth-child(2) { width: 20%; } /* Partner Brand */
-.visits-table td:nth-child(3) { width: 20%; } /* Person Met */
-.visits-table td:nth-child(4) { width: 20%; } /* Date */
-.visits-table td:nth-child(5) { width: 20%; } /* Action */
+.exec-visits-table td:nth-child(1) { width: 20%; } /* Store Name */
+.exec-visits-table td:nth-child(2) { width: 20%; } /* Partner Brand */
+.exec-visits-table td:nth-child(3) { width: 20%; } /* Person Met */
+.exec-visits-table td:nth-child(4) { width: 20%; } /* Date */
+.exec-visits-table td:nth-child(5) { width: 20%; } /* Action */
 
-.visits-table tbody tr:hover {
+.exec-visits-table tbody tr:hover {
   background-color: #f8f9fa;
 }
 
-.store-cell {
+.exec-visits-store-cell {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
 }
 
-.brand-cell {
+.exec-visits-brand-cell {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
 }
 
-.person-cell {
+.exec-visits-person-cell {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
 }
 
-.date-cell {
+.exec-visits-date-cell {
   display: flex;
   align-items: center;
   justify-content: flex-start;
 }
 
-.action-cell {
+.exec-visits-action-cell {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -395,7 +398,7 @@
   padding: 4px;
 }
 
-.store-name-cell {
+.exec-visits-store-name-cell {
   font-weight: 500;
   color: #212529;
   font-size: 11px;
@@ -404,7 +407,7 @@
   line-height: 1.3;
 }
 
-.partner-brand-cell {
+.exec-visits-partner-brand-cell {
   font-weight: 400;
   color: #495057;
   font-size: 11px;
@@ -413,7 +416,7 @@
   line-height: 1.3;
 }
 
-.person-cell {
+.exec-visits-person-met-list {
   color: #495057;
   font-size: 10px;
   word-wrap: break-word;
@@ -421,29 +424,29 @@
   line-height: 1.3;
 }
 
-.person-met-item {
+.exec-visits-person-met-item {
   margin-bottom: 2px;
 }
 
-.person-name {
+.exec-visits-person-name {
   display: block;
   font-weight: 500;
 }
 
-.person-designation {
+.exec-visits-person-designation {
   display: block;
   font-size: 9px;
   color: #6c757d;
   font-style: italic;
 }
 
-.no-data {
+.exec-visits-no-data {
   color: #9ca3af;
   font-style: italic;
   font-size: 10px;
 }
 
-.visit-date-table {
+.exec-visits-date-table {
   color: #495057;
   font-size: 10px;
   word-wrap: break-word;
@@ -451,30 +454,33 @@
   line-height: 1.3;
 }
 
-.view-details-btn-table {
-  background: none;
+.exec-visits-view-details-btn {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
   border: none;
-  color: #4f46e5;
-  font-size: 9px;
-  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
-  text-decoration: underline;
-  padding: 4px 6px;
-  border-radius: 4px;
-  transition: all 0.2s;
-  white-space: normal;
-  min-height: 32px;
-  word-wrap: break-word;
-  line-height: 1.2;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+  min-width: 100px;
 }
 
-.view-details-btn-table:hover {
-  color: #4338ca;
-  background-color: #f0f0ff;
+.exec-visits-view-details-btn:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+}
+
+.exec-visits-view-details-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
 }
 
 /* Visit Status Badge in Action Column */
-.visit-status-badge {
+.exec-visits-status-badge {
   padding: 2px 5px;
   border-radius: 6px;
   font-size: 7px;
@@ -679,304 +685,165 @@
 }
 
 
-/* Desktop Responsive */
-@media (min-width: 1200px) {
-  .visit-history-content {
-    max-width: 1000px;
-    padding: 32px;
+/* Mobile Responsive */
+@media (max-width: 767px) {
+  .exec-visits-view-details-btn {
+    padding: 4px 8px;
+    font-size: 9px;
+    line-height: 1.2;
+    white-space: nowrap;
+    min-width: 70px;
+    width: auto;
+  }
+}
+
+/* Tablet and Large Mobile Responsive */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .exec-visits-content {
+    width: 100%;
+    padding: 16px;
   }
 
-  .visits-table-container {
+  .exec-visits-table-container {
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  }
+
+  .exec-visits-table {
+    font-size: 14px;
+  }
+
+  .exec-visits-table th {
+    padding: 16px 12px;
+    font-size: 13px;
+    min-height: 48px;
+  }
+
+  .exec-visits-table td {
+    padding: 16px 12px;
+    min-height: 52px;
+  }
+
+  .exec-visits-store-name-cell {
+    font-size: 14px;
+  }
+
+  .exec-visits-partner-brand-cell {
+    font-size: 14px;
+  }
+
+  .exec-visits-person-met-list {
+    font-size: 13px;
+  }
+
+  .exec-visits-date-table {
+    font-size: 13px;
+  }
+
+  .exec-visits-view-details-btn {
+    padding: 6px 12px;
+    font-size: 10px;
+    min-width: 85px;
+  }
+
+  .exec-visits-status-badge {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .exec-visits-title {
+    font-size: 28px;
+  }
+
+  .exec-visits-filter-input,
+  .exec-visits-filter-select {
+    padding: 14px 18px;
+    font-size: 15px;
+  }
+}
+
+/* Desktop Responsive */
+@media (min-width: 1200px) {
+  .exec-visits-content {
+    width: 100%;
+    max-width: none;
+    padding: 20px;
+  }
+
+  .exec-visits-table-container {
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   }
 
-  .visits-table {
-    font-size: 14px;
-  }
-
-  .visits-table th {
-    padding: 20px 12px;
-    font-size: 14px;
-    min-height: 48px;
-  }
-
-  .visits-table td {
-    padding: 20px 12px;
-    min-height: 56px;
-  }
-
-  .store-name-cell {
-    font-size: 14px;
-  }
-
-  .partner-brand-cell {
-    font-size: 14px;
-  }
-
-  .person-cell {
-    font-size: 13px;
-  }
-
-  .visit-date-table {
-    font-size: 13px;
-  }
-
-  .view-details-btn-table {
-    font-size: 12px;
-    padding: 8px 12px;
-    min-height: 40px;
-  }
-
-  .visit-status-badge {
-    padding: 4px 10px;
-    font-size: 10px;
-  }
-
-  .action-cell {
-    gap: 6px;
-  }
-
-  .history-title {
-    font-size: 28px;
-  }
-
-  .user-icon {
-    width: 42px;
-    height: 42px;
+  .exec-visits-table {
     font-size: 16px;
   }
 
-  .search-input,
-  .filter-select {
-    padding: 16px 20px;
-    font-size: 16px;
-  }
-
-}
-
-@media (min-width: 992px) and (max-width: 1199px) {
-  .visit-history-content {
-    max-width: 600px;
-    padding: 28px;
-  }
-
-  .history-title {
-    font-size: 26px;
-  }
-
-  .detailed-report-title {
-    font-size: 21px;
-  }
-
-  .user-icon {
-    width: 40px;
-    height: 40px;
+  .exec-visits-table th {
+    padding: 20px 16px;
     font-size: 15px;
-  }
-
-  .search-input,
-  .filter-select {
-    padding: 14px 18px;
-    font-size: 15px;
-  }
-
-  .store-name {
-    font-size: 17px;
-  }
-
-  .detail-value {
-    font-size: 15px;
-  }
-
-}
-
-/* Tablet Responsive */
-@media (min-width: 769px) and (max-width: 991px) {
-  .visit-history-content {
-    max-width: 100%;
-    padding: 24px 32px;
-  }
-
-  .visits-table-container {
-    border-radius: 10px;
-  }
-
-  .visits-table {
-    font-size: 13px;
-  }
-
-  .visits-table th {
-    padding: 16px 8px;
-    font-size: 12px;
-    min-height: 44px;
-  }
-
-  .visits-table td {
-    padding: 16px 8px;
     min-height: 52px;
   }
 
-  .store-name-cell {
-    font-size: 13px;
+  .exec-visits-table td {
+    padding: 20px 16px;
+    min-height: 60px;
   }
 
-  .partner-brand-cell {
-    font-size: 13px;
+  .exec-visits-store-name-cell {
+    font-size: 16px;
   }
 
-  .person-cell {
-    font-size: 12px;
+  .exec-visits-partner-brand-cell {
+    font-size: 16px;
   }
 
-  .visit-date-table {
-    font-size: 12px;
-  }
-
-  .view-details-btn-table {
-    font-size: 11px;
-    padding: 6px 8px;
-    min-height: 36px;
-  }
-
-  .visit-status-badge {
-    padding: 3px 8px;
-    font-size: 9px;
-  }
-
-  .history-title {
-    font-size: 24px;
-  }
-
-  .search-input,
-  .filter-select {
-    padding: 12px 16px;
-  }
-
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  .visit-history-content {
-    padding: 16px;
-    max-width: 100%;
-  }
-
-
-  .search-input,
-  .filter-select {
-    padding: 10px 12px;
-    font-size: 16px; /* Prevents zoom on iOS */
-    min-height: 44px; /* Touch-friendly */
-  }
-  
-
-  /* Mobile styles are now defined as base styles above */
-
-  .history-title {
-    font-size: 20px;
-  }
-
-  .detailed-report-title {
-    font-size: 18px;
-  }
-
-  .detailed-report-subtitle {
-    font-size: 13px;
-  }
-
-  .user-icon {
-    width: 34px;
-    height: 34px;
-    font-size: 13px;
-  }
-
-  .user-icon::before {
-    width: 10px;
-    height: 10px;
-  }
-
-  .search-input,
-  .filter-select {
-    padding: 10px 12px;
-    font-size: 14px;
-  }
-
-  .filter-label {
-    font-size: 13px;
-  }
-
-  .visit-card-header {
-    padding: 14px 16px;
-  }
-
-  .visit-details {
-    padding: 16px;
-  }
-
-  .store-name {
+  .exec-visits-person-met-list {
     font-size: 15px;
   }
 
-  .status-badge {
-    font-size: 10px;
-    padding: 3px 10px;
+  .exec-visits-date-table {
+    font-size: 15px;
   }
 
-  .detail-row {
-    margin-bottom: 12px;
-  }
-
-  .detail-icon {
-    font-size: 14px;
-  }
-
-  .detail-label {
+  .exec-visits-view-details-btn {
+    padding: 8px 16px;
     font-size: 12px;
+    min-width: 110px;
   }
 
-  .detail-value {
-    font-size: 13px;
+  .exec-visits-status-badge {
+    padding: 6px 12px;
+    font-size: 11px;
   }
 
-  .photos-container {
-    gap: 6px;
+  .exec-visits-action-cell {
+    gap: 8px;
   }
 
-  .photo-placeholder {
-    width: 50px;
-    height: 50px;
+  .exec-visits-title {
+    font-size: 32px;
   }
 
-  .admin-comment-box {
-    padding: 10px;
-    font-size: 13px;
-    min-height: 50px;
+  .user-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 17px;
   }
 
-  .collapsed-visit-card {
-    padding: 12px 16px;
+  .exec-visits-filter-input,
+  .exec-visits-filter-select {
+    padding: 16px 20px;
+    font-size: 16px;
   }
-
-  .collapsed-store-name {
-    font-size: 14px;
-  }
-
-  .collapsed-status-badge {
-    font-size: 9px;
-    padding: 2px 8px;
-  }
-
-
 }
 
-/* Extra Small Mobile */
 @media (max-width: 450px) {
-  .visit-history-content {
+  .exec-visits-content {
     padding: 12px;
   }
 
-  .history-title {
+  .exec-visits-title {
     font-size: 18px;
   }
 
@@ -1035,58 +902,59 @@
 
 
   /* Column widths remain equal for very small screens */
-  .visits-table th:nth-child(1), .visits-table td:nth-child(1) { width: 20%; } /* Store Name */
-  .visits-table th:nth-child(2), .visits-table td:nth-child(2) { width: 20%; } /* Partner Brand */
-  .visits-table th:nth-child(3), .visits-table td:nth-child(3) { width: 20%; } /* Person Met */
-  .visits-table th:nth-child(4), .visits-table td:nth-child(4) { width: 20%; } /* Date */
-  .visits-table th:nth-child(5), .visits-table td:nth-child(5) { width: 20%; } /* Action */
+  .exec-visits-table th:nth-child(1), .exec-visits-table td:nth-child(1) { width: 20%; } /* Store Name */
+  .exec-visits-table th:nth-child(2), .exec-visits-table td:nth-child(2) { width: 20%; } /* Partner Brand */
+  .exec-visits-table th:nth-child(3), .exec-visits-table td:nth-child(3) { width: 20%; } /* Person Met */
+  .exec-visits-table th:nth-child(4), .exec-visits-table td:nth-child(4) { width: 20%; } /* Date */
+  .exec-visits-table th:nth-child(5), .exec-visits-table td:nth-child(5) { width: 20%; } /* Action */
 
-  .visits-table th {
+  .exec-visits-table th {
     padding: 14px 6px;
     font-size: 11px;
     min-height: 44px;
   }
 
-  .visits-table td {
+  .exec-visits-table td {
     padding: 4px 4px !important;
     min-height: 28px !important;
     line-height: 1.1 !important;
   }
 
-  .store-name-cell {
+  .exec-visits-store-name-cell {
     font-size: 9px;
   }
 
-  .person-cell {
+  .exec-visits-person-met-list {
     font-size: 11px;
   }
 
-  .visit-date-table {
+  .exec-visits-date-table {
     font-size: 10px;
   }
 
-  .view-details-btn-table {
-    font-size: 9px !important;
-    padding: 3px 4px !important;
-    min-height: 18px !important;
-    line-height: 1.1 !important;
-    margin-top: 1px !important;
+  .exec-visits-view-details-btn {
+    padding: 3px 6px;
+    font-size: 8px;
+    line-height: 1.2;
+    white-space: nowrap;
+    min-width: 60px;
+    width: auto;
   }
 
-  .visit-status-badge {
+  .exec-visits-status-badge {
     font-size: 7px !important;
     padding: 2px 4px !important;
     border-radius: 4px !important;
-    margin-bottom: 0px !important;
+    margin-bottom: 2px !important;
     letter-spacing: 0 !important;
     line-height: 1.1 !important;
     display: block !important;
   }
 
-  .action-cell {
-    gap: 0px !important;
-    min-height: 24px !important;
-    padding: 1px !important;
+  .exec-visits-action-cell {
+    gap: 4px !important;
+    min-height: 32px !important;
+    padding: 4px 2px !important;
     justify-content: center !important;
     align-items: center !important;
   }
@@ -1094,35 +962,35 @@
 
 /* Extremely Small Screens - Enable horizontal scroll for 5 columns */
 @media (max-width: 320px) {
-  .visits-table-container {
+  .exec-visits-table-container {
     overflow-x: auto;
   }
 
-  .visits-table {
+  .exec-visits-table {
     min-width: 320px;
     table-layout: fixed;
   }
 
-  .visits-table th {
+  .exec-visits-table th {
     padding: 10px 2px;
     min-width: 64px;
     min-height: 40px;
   }
 
-  .visits-table td {
+  .exec-visits-table td {
     padding: 12px 2px;
     min-width: 64px;
     min-height: 48px;
   }
 
   /* Equal width columns for extremely small screens */
-  .visits-table th:nth-child(1), .visits-table td:nth-child(1) { width: 20%; min-width: 64px; } /* Store Name */
-  .visits-table th:nth-child(2), .visits-table td:nth-child(2) { width: 20%; min-width: 64px; } /* Partner Brand */
-  .visits-table th:nth-child(3), .visits-table td:nth-child(3) { width: 20%; min-width: 64px; } /* Person Met */
-  .visits-table th:nth-child(4), .visits-table td:nth-child(4) { width: 20%; min-width: 64px; } /* Date */
-  .visits-table th:nth-child(5), .visits-table td:nth-child(5) { width: 20%; min-width: 64px; } /* Action */
+  .exec-visits-table th:nth-child(1), .exec-visits-table td:nth-child(1) { width: 20%; min-width: 64px; } /* Store Name */
+  .exec-visits-table th:nth-child(2), .exec-visits-table td:nth-child(2) { width: 20%; min-width: 64px; } /* Partner Brand */
+  .exec-visits-table th:nth-child(3), .exec-visits-table td:nth-child(3) { width: 20%; min-width: 64px; } /* Person Met */
+  .exec-visits-table th:nth-child(4), .exec-visits-table td:nth-child(4) { width: 20%; min-width: 64px; } /* Date */
+  .exec-visits-table th:nth-child(5), .exec-visits-table td:nth-child(5) { width: 20%; min-width: 64px; } /* Action */
 
-  .store-name-cell {
+  .exec-visits-store-name-cell {
     max-width: 60px;
     word-wrap: break-word;
     white-space: normal;
@@ -1130,22 +998,24 @@
     font-size: 8px;
   }
 
-  .partner-brand-cell,
-  .person-cell {
+  .exec-visits-partner-brand-cell,
+  .exec-visits-person-met-list {
     max-width: 60px;
     word-wrap: break-word;
     white-space: normal;
     line-height: 1.2;
   }
 
-  .view-details-btn-table {
+  .exec-visits-view-details-btn {
+    padding: 2px 4px;
     font-size: 7px;
-    padding: 3px 3px;
-    min-height: 26px;
     line-height: 1.1;
+    white-space: nowrap;
+    min-width: 50px;
+    width: auto;
   }
 
-  .visit-status-badge {
+  .exec-visits-status-badge {
     font-size: 5px;
     padding: 1px 2px;
     border-radius: 4px;

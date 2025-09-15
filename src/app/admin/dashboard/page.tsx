@@ -129,7 +129,7 @@ const AdminDashboardPage: React.FC = () => {
             </svg>
           </div>
           <div className="admin-dashboard-metric-content">
-            <h3>Pending Reviews</h3>
+            <h3>Pending Visits Review</h3>
             <div className="admin-dashboard-metric-value">{dashboardData.pendingReviews.count}</div>
             <div className="admin-dashboard-metric-status admin-dashboard-metric-status--warning">
               {dashboardData.pendingReviews.status}
@@ -146,7 +146,7 @@ const AdminDashboardPage: React.FC = () => {
             </svg>
           </div>
           <div className="admin-dashboard-metric-content">
-            <h3>Issues Reported</h3>
+            <h3>Open Issues</h3>
             <div className="admin-dashboard-metric-value">{dashboardData.issuesReported.count}</div>
             <div className="admin-dashboard-metric-status admin-dashboard-metric-status--critical">
               {dashboardData.issuesReported.status}
