@@ -673,7 +673,7 @@ const AdminStoresPage: React.FC = () => {
             <div className="admin-stores-header-cell">STORE NAME</div>
             <div className="admin-stores-header-cell">PARTNER BRANDS</div>
             <div className="admin-stores-header-cell">ADDRESS</div>
-            <div className="admin-stores-header-cell">ASSIGNED TO</div>
+            <div className="admin-stores-header-cell">ASSIGNED EXECUTIVE</div>
             <div className="admin-stores-header-cell">Pending Reviews</div>
             <div className="admin-stores-header-cell">PENDING ISSUES</div>
           </div>
@@ -689,7 +689,7 @@ const AdminStoresPage: React.FC = () => {
               filteredStores.map(store => (
                 <div key={store.id} className="admin-stores-table-row">
                   <div className="admin-stores-cell admin-stores-store-name-cell">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', minWidth: 0 }}>
                       {isCreatingVisitPlan && (
                         <input
                           type="checkbox"
@@ -726,7 +726,7 @@ const AdminStoresPage: React.FC = () => {
                       </span>
                     ))}
                   </div>
-                  <div className="admin-stores-cell">{store.address}</div>
+                  <div className="admin-stores-cell admin-stores-address-cell">{store.address}</div>
                   <div className="admin-stores-cell">
                     <Link href={`/admin/executives?storeId=${store.id}`} className="admin-stores-view-all-link">
                       View All

@@ -166,12 +166,16 @@
   color: #374151;
   display: flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .admin-stores-store-name-cell {
   font-weight: 600;
   color: #1f2937;
-  max-width: 200px; /* Set max width for truncation */
+  justify-content: flex-start !important;
+  text-align: left;
+  overflow: hidden;
 }
 
 .admin-stores-store-name-truncated {
@@ -225,6 +229,15 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
+  justify-content: flex-start !important;
+  align-items: center;
+  text-align: left;
+}
+
+.admin-stores-address-cell {
+  justify-content: flex-start !important;
+  text-align: left;
+  align-items: center;
 }
 
 .admin-stores-brand-tag {
