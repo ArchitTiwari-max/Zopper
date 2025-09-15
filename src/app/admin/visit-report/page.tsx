@@ -184,9 +184,16 @@ const VisitReportPage: React.FC = () => {
         if (!visit.issueStatus && filters.issueStatus !== 'None') {
           return false;
         }
-        // Handle normal case where issue status matches
-        if (visit.issueStatus !== filters.issueStatus) {
-          return false;
+        // Handle special case: "Pending" filter includes both Pending and Assigned issues
+        if (filters.issueStatus === 'Pending') {
+          if (visit.issueStatus !== 'Pending' && visit.issueStatus !== 'Assigned') {
+            return false;
+          }
+        } else {
+          // Handle normal case where issue status matches exactly
+          if (visit.issueStatus !== filters.issueStatus) {
+            return false;
+          }
         }
       }
 
