@@ -24,6 +24,8 @@ interface VisitReportData {
   issueId?: string;
   feedback: string;
   POSMchecked: boolean | null;
+  peopleMet?: Array<{name: string, designation: string, phoneNumber?: string}>;
+  imageUrls?: string[];
 }
 
 interface VisitReportFilters {

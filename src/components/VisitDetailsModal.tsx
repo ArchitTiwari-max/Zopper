@@ -38,6 +38,7 @@ interface IssueAssignment {
 interface PersonMet {
   name: string;
   designation: string;
+  phoneNumber?: string;
 }
 
 interface VisitDetailsModalProps {
@@ -165,11 +166,33 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
           {visit.personMet && visit.personMet.length > 0 && (
             <div className="visit-detail-section">
               <h3 className="visit-detail-section-title">People Met</h3>
-              <div className="visit-people-met-list">
+              <div className="visit-people-met-compact-list">
                 {visit.personMet.map((person, index) => (
-                  <div key={index} className="visit-person-met-item">
-                    <span className="visit-person-name">{person.name}</span>
-                    <span className="visit-person-designation">({person.designation})</span>
+                  <div key={index} className="visit-person-met-compact-item" style={{ marginBottom: '8px' }}>
+                    <span className="visit-person-name">
+                      <strong>{person.name}</strong>
+                    </span>
+                    <span className="visit-person-details">
+                      {' '}({person.designation})
+                      {person.phoneNumber && (
+                        <>
+                          {' • '}
+                          <a 
+                            href={`tel:${person.phoneNumber}`} 
+                            className="visit-phone-link"
+                            style={{ 
+                              color: '#3b82f6', 
+                              textDecoration: 'none',
+                              fontSize: '0.875rem'
+                            }}
+                            onMouseOver={(e) => e.target.style.textDecoration = 'underline'}
+                            onMouseOut={(e) => e.target.style.textDecoration = 'none'}
+                          >
+                            📞 {person.phoneNumber}
+                          </a>
+                        </>
+                      )}
+                    </span>
                   </div>
                 ))}
               </div>

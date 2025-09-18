@@ -91,8 +91,8 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
     
     if (pathname.startsWith('/admin/issues/') && pathname !== '/admin/issues') {
       return {
-        title: 'Issue Management',
-        subtitle: 'Comprehensive issue tracking and resolution management'
+        title: 'Issue Details',
+        subtitle: 'View and manage individual issue resolution'
       };
     }
     
@@ -115,7 +115,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
         };
       case '/admin/issues':
         return {
-          title: 'Issues',
+          title: 'Issue Management',
           subtitle: 'Track and resolve store visit issues and concerns'
         };
       case '/admin/visit-report':

@@ -90,15 +90,20 @@ export async function GET(request: NextRequest) {
       ];
       const colorIndex = executive.name.length % colors.length;
 
+      // Format last visit date to dd/mm/yyyy format
+      let formattedLastVisit = 'Never';
+      if (executive.visits[0]?.createdAt) {
+        const lastVisitDate = new Date(executive.visits[0].createdAt);
+        formattedLastVisit = `${lastVisitDate.getDate().toString().padStart(2, '0')}/${(lastVisitDate.getMonth() + 1).toString().padStart(2, '0')}/${lastVisitDate.getFullYear()}`;
+      }
+
       return {
         id: executive.id,
         name: executive.name,
         initials: initials,
         region: executive.region || 'Not Assigned',
         totalVisits: executive._count.visits,
-        lastVisit: executive.visits[0]?.createdAt 
-          ? new Date(executive.visits[0].createdAt).toISOString().split('T')[0]
-          : 'Never',
+        lastVisit: formattedLastVisit,
         assignedStoreIds: executive.assignedStoreIds || [],
         avatarColor: colors[colorIndex]
       };

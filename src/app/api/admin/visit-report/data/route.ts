@@ -80,6 +80,8 @@ export async function GET(request: NextRequest) {
           brandIds: true,
           createdAt: true,
           POSMchecked: true,
+          personMet: true,
+          imageUrls: true,
           executive: {
             select: {
               id: true,
@@ -138,6 +140,17 @@ export async function GET(request: NextRequest) {
       ];
       const colorIndex = visit.executive.name.length % colors.length;
 
+      // Process personMet data - handle multiple people
+      let peopleMet: Array<{name: string, designation: string, phoneNumber?: string}> = [];
+      
+      if (visit.personMet && Array.isArray(visit.personMet) && visit.personMet.length > 0) {
+        peopleMet = visit.personMet.map((person: any) => ({
+          name: person?.name || '',
+          designation: person?.designation || '',
+          phoneNumber: person?.phoneNumber
+        })).filter(person => person.name); // Filter out empty entries
+      }
+
       // Determine issue status
       let issueStatusResult: 'Pending' | 'Assigned' | 'Resolved' | null = null;
       let issues = 'None';
@@ -150,6 +163,10 @@ export async function GET(request: NextRequest) {
         issueStatusResult = issue.status as 'Pending' | 'Assigned' | 'Resolved';
       }
 
+      // Format date to dd/mm/yyyy format
+      const visitDate = new Date(visit.createdAt);
+      const formattedVisitDate = `${visitDate.getDate().toString().padStart(2, '0')}/${(visitDate.getMonth() + 1).toString().padStart(2, '0')}/${visitDate.getFullYear()}`;
+
       return {
         id: visit.id, // Keep actual ObjectId for database operations
         executiveName: visit.executive.name,
@@ -158,14 +175,16 @@ export async function GET(request: NextRequest) {
         storeName: visit.store.storeName,
         storeId: visit.store.id, // Add store ID for linking
         partnerBrand: partnerBrands,
-        visitDate: new Date(visit.createdAt).toISOString().split('T')[0],
+        visitDate: formattedVisitDate,
         visitStatus: visit.status as 'PENDING_REVIEW' | 'REVIEWD',
         issueStatus: issueStatusResult,
         city: visit.store.city,
         issues: issues,
         issueId: issueId,
         feedback: visit.remarks || 'No feedback provided',
-        POSMchecked: visit.POSMchecked
+        POSMchecked: visit.POSMchecked,
+        peopleMet: peopleMet,
+        imageUrls: visit.imageUrls || []
       };
     });
 

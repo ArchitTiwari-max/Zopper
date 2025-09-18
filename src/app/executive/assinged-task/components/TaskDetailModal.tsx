@@ -141,11 +141,33 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             <div className="task-info-grid">
               <div className="info-item">
                 <label>Assigned Date:</label>
-                <span>{new Date(task.createdAt).toLocaleDateString()}</span>
+                <span>
+                  {(() => {
+                    // Check if the date is already in dd/mm/yyyy format
+                    if (task.createdAt && task.createdAt.includes('/') && task.createdAt.split('/').length === 3) {
+                      return task.createdAt;
+                    }
+                    
+                    const date = new Date(task.createdAt);
+                    if (isNaN(date.getTime())) return 'Invalid Date';
+                    const day = date.getDate().toString().padStart(2, '0');
+                    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                    const year = date.getFullYear();
+                    return `${day}/${month}/${year}`;
+                  })()
+                  }
+                </span>
               </div>
               <div className="info-item">
                 <label>Assigned Time:</label>
-                <span>{new Date(task.createdAt).toLocaleTimeString()}</span>
+                <span>
+                  {(() => {
+                    const date = new Date(task.createdAt);
+                    if (isNaN(date.getTime())) return 'Invalid Time';
+                    return date.toLocaleTimeString();
+                  })()
+                  }
+                </span>
               </div>
               <div className="info-item">
                 <label>Current Status:</label>

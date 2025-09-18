@@ -312,7 +312,35 @@ const IssueDetailPage: React.FC = () => {
                 </div>
                 <div className="admin-issue-detail-info-content">
                   <span className="admin-issue-detail-info-label">Date Reported:</span>
-                  <span className="admin-issue-detail-info-value">{new Date(issueData.dateReported).toLocaleDateString()}</span>
+                  <span className="admin-issue-detail-info-value">
+                    {(() => {
+                      // Check if the date is already in dd/mm/yyyy format
+                      if (issueData.dateReported && issueData.dateReported.includes('/') && issueData.dateReported.split('/').length === 3) {
+                        // Already formatted, return as is
+                        return issueData.dateReported;
+                      }
+                      
+                      // Otherwise, format from ISO date string
+                      const date = new Date(issueData.dateReported);
+                      if (isNaN(date.getTime())) {
+                        return 'Invalid Date';
+                      }
+                      return date.toLocaleDateString();
+                    })()
+                    }
+                  </span>
+                </div>
+              </div>
+              
+              <div className="admin-issue-detail-info-item">
+                <div className="admin-issue-detail-info-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
+                <div className="admin-issue-detail-info-content">
+                  <span className="admin-issue-detail-info-label">Reported by:</span>
+                  <span className="admin-issue-detail-info-value">{issueData.reportedBy} ({issueData.reportedByRole})</span>
                 </div>
               </div>
             </div>
@@ -392,7 +420,21 @@ const IssueDetailPage: React.FC = () => {
                       <span className="admin-issue-detail-executive-name">{assignment.executiveName}</span>
                     </div>
                     <div className="admin-issue-detail-cell">
-                      {new Date(assignment.dateAssigned).toLocaleDateString()}
+                      {(() => {
+                        // Check if the date is already in dd/mm/yyyy format
+                        if (assignment.dateAssigned && assignment.dateAssigned.includes('/') && assignment.dateAssigned.split('/').length === 3) {
+                          // Already formatted, return as is
+                          return assignment.dateAssigned;
+                        }
+                        
+                        // Otherwise, format from ISO date string
+                        const date = new Date(assignment.dateAssigned);
+                        if (isNaN(date.getTime())) {
+                          return 'Invalid Date';
+                        }
+                        return date.toLocaleDateString();
+                      })()
+                      }
                     </div>
                     <div className="admin-issue-detail-cell admin-issue-detail-admin-comment">
                       {assignment.adminComment}

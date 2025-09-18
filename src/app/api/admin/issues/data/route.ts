@@ -152,6 +152,10 @@ export async function GET(request: NextRequest) {
       
       const brandAssociated = visitBrands[0] || 'Unknown Brand';
 
+      // Format date to dd/mm/yyyy format
+      const issueDate = new Date(issue.createdAt);
+      const formattedDateReported = `${issueDate.getDate().toString().padStart(2, '0')}/${(issueDate.getMonth() + 1).toString().padStart(2, '0')}/${issueDate.getFullYear()}`;
+
       return {
         id: issue.id, // Use real MongoDB ObjectId
         issueId: issue.id, // Use clean 7-character ID
@@ -160,7 +164,7 @@ export async function GET(request: NextRequest) {
         location: issue.visit.store.fullAddress || issue.visit.store.city,
         brandAssociated: brandAssociated,
         city: issue.visit.store.city,
-        dateReported: new Date(issue.createdAt).toISOString().split('T')[0],
+        dateReported: formattedDateReported,
         reportedBy: issue.visit.executive.name,
         reportedByRole: 'Executive',
         status: issue.status,

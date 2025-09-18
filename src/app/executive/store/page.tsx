@@ -434,12 +434,18 @@ const Store: React.FC = () => {
                 />
                 {plannedVisitDate && (
                   <p className="exec-v-form-date-preview">
-                    🗓️ Visits scheduled for: <strong>{new Date(plannedVisitDate).toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}</strong>
+                    🗓️ Visits scheduled for: <strong>
+                      {(() => {
+                        const date = new Date(plannedVisitDate);
+                        if (isNaN(date.getTime())) return 'Invalid Date';
+                        const day = date.getDate().toString().padStart(2, '0');
+                        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                        const year = date.getFullYear();
+                        const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+                        return `${weekday}, ${day}/${month}/${year}`;
+                      })()
+                      }
+                    </strong>
                   </p>
                 )}
               </div>

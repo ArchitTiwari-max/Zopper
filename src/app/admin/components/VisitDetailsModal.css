@@ -241,6 +241,174 @@
   }
 }
 
+/* Compact Card-Based Styles */
+.admin-visit-detail-section-title-compact {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #3b82f6;
+  padding-bottom: 4px;
+  display: inline-block;
+  color: #1e293b;
+}
+
+.admin-visit-basic-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.admin-visit-unified-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.admin-visit-secondary-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.admin-visit-info-card {
+  background-color: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.admin-visit-info-card-inline {
+  background-color: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  display: inline-block;
+}
+
+.admin-visit-info-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.admin-visit-info-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.admin-visit-status-badge-compact {
+  color: white;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.admin-visit-executive-info-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-visit-executive-avatar-compact {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.admin-visit-executive-name-compact {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.admin-visit-brands-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.admin-visit-brand-tag-compact {
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.625rem;
+  font-weight: 500;
+}
+
+.admin-visit-people-met-compact {
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+}
+
+.admin-visit-person-name-bold {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.admin-visit-person-details-muted {
+  color: #64748b;
+}
+
+.admin-visit-phone-link {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.admin-visit-phone-link:hover {
+  text-decoration: underline;
+}
+
+.admin-visit-remarks-content {
+  font-size: 0.875rem;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.admin-visit-issues-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.admin-visit-issue-text {
+  font-size: 0.875rem;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.admin-visit-issue-status-badge-compact {
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.admin-visit-issue-id-compact {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.admin-visit-no-issues-compact {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
 @media (max-width: 480px) {
   .admin-visit-modal-overlay {
     padding: 0.25rem;
@@ -256,5 +424,17 @@
 
   .admin-visit-brands-list {
     gap: 0.25rem;
+  }
+
+  .admin-visit-basic-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-visit-unified-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-visit-secondary-info {
+    grid-template-columns: 1fr;
   }
 }

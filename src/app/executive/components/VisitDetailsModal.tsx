@@ -39,6 +39,7 @@ interface IssueAssignment {
 interface PersonMet {
   name: string;
   designation: string;
+  phoneNumber?: string;
 }
 
 interface VisitDetailsModalProps {
@@ -74,11 +75,21 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    // Check if the date is already in dd/mm/yyyy format
+    if (dateString && dateString.includes('/') && dateString.split('/').length === 3) {
+      // Already formatted, return as is
+      return dateString;
+    }
+    
+    // Otherwise, format to dd/mm/yyyy format
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return 'Invalid Date';
+    }
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   const handleOverlayClick = (e: React.MouseEvent) => {
@@ -147,7 +158,7 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
                   className="visit-detail-value visit-status-badge"
                   style={{ backgroundColor: getStatusColor(visit.status), color: 'white', padding: '2px 8px', borderRadius: '4px' }}
                 >
-                  {visit.status}
+                  {visit.status === 'PENDING_REVIEW' ? 'Pending Review' : visit.status === 'REVIEWD' ? 'Reviewed' : visit.status}
                 </span>
               </div>
             </div>
@@ -168,11 +179,33 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
           {visit.personMet && visit.personMet.length > 0 && (
             <div className="visit-detail-section">
               <h3 className="visit-detail-section-title">People Met</h3>
-              <div className="visit-people-met-list">
+              <div className="visit-people-met-compact-list">
                 {visit.personMet.map((person, index) => (
-                  <div key={index} className="visit-person-met-item">
-                    <span className="visit-person-name">{person.name}</span>
-                    <span className="visit-person-designation">({person.designation})</span>
+                  <div key={index} className="visit-person-met-compact-item" style={{ marginBottom: '8px' }}>
+                    <span className="visit-person-name">
+                      <strong>{person.name}</strong>
+                    </span>
+                    <span className="visit-person-details">
+                      {' '}({person.designation})
+                      {person.phoneNumber && (
+                        <>
+                          {' • '}
+                          <a 
+                            href={`tel:${person.phoneNumber}`} 
+                            className="visit-phone-link"
+                            style={{ 
+                              color: '#3b82f6', 
+                              textDecoration: 'none',
+                              fontSize: '0.875rem'
+                            }}
+                            onMouseOver={(e) => e.target.style.textDecoration = 'underline'}
+                            onMouseOut={(e) => e.target.style.textDecoration = 'none'}
+                          >
+                            📞 {person.phoneNumber}
+                          </a>
+                        </>
+                      )}
+                    </span>
                   </div>
                 ))}
               </div>

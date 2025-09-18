@@ -78,7 +78,7 @@ enum viststatus {
 }
 model Visit {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  personMet      Json     // [{ name: "Rajesh", designation: "Manager", phone: "1234567890" }]
+  personMet      Json     // [{ name: "Rajesh", designation: "Manager", phoneNumber: "1234567890" }]
   POSMchecked    Boolean? @map("displayChecked") // Point of Sale Material availability check (nullable for backward compatibility)
   remarks        String?
   imageUrls      String[]   // Array of image URLs

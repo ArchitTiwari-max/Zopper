@@ -418,7 +418,21 @@ const AdminIssuesPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="admin-issues-cell">
-                  {new Date(issue.dateReported).toLocaleDateString()}
+                  {(() => {
+                    // Check if the date is already in dd/mm/yyyy format
+                    if (issue.dateReported && issue.dateReported.includes('/') && issue.dateReported.split('/').length === 3) {
+                      // Already formatted, return as is
+                      return issue.dateReported;
+                    }
+                    
+                    // Otherwise, format from ISO date string
+                    const date = new Date(issue.dateReported);
+                    if (isNaN(date.getTime())) {
+                      return 'Invalid Date';
+                    }
+                    return date.toLocaleDateString();
+                  })()
+                  }
                 </div>
                 <div className="admin-issues-cell admin-issues-actions-cell">
                   <Link href={`/admin/issues/${issue.id}`} className="admin-issues-view-details-btn">
