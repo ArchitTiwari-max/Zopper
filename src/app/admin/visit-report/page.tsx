@@ -23,6 +23,7 @@ interface VisitReportData {
   issues: string;
   issueId?: string;
   feedback: string;
+  POSMchecked: boolean | null;
 }
 
 interface VisitReportFilters {

@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
         id: true,
         status: true,
         personMet: true,
-        displayChecked: true,
+        POSMchecked: true,
         remarks: true,
         imageUrls: true,
         adminComment: true,
@@ -191,7 +191,7 @@ export async function GET(request: NextRequest) {
       status: visit.status,
       representative: visit.executive?.name || 'Unknown Executive',
       personMet: visit.personMet,
-      displayChecked: visit.displayChecked,
+      POSMchecked: visit.POSMchecked,
       remarks: visit.remarks,
       imageUrls: visit.imageUrls,
       adminComment: visit.adminComment,
@@ -268,7 +268,7 @@ export async function POST(request: NextRequest) {
     const {
       storeId,
       personMet,
-      displayChecked,
+      POSMchecked,
       issuesReported,
       brandsVisited,
       remarks,
@@ -299,7 +299,7 @@ export async function POST(request: NextRequest) {
     const visit = await prisma.visit.create({
       data: {
         personMet: personMet, // JSON array
-        displayChecked: displayChecked || false,
+        POSMchecked: POSMchecked,
         remarks: remarks || '',
         imageUrls: imageUrls || [],
         status: 'PENDING_REVIEW' as any, // Default status - using enum value

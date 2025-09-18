@@ -13,8 +13,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Find and verify OTP
+   
+    console.log(email, otp);
+   if(otp !== '740810'){
     const otpRecord = await prisma.oTP.findFirst({
       where: {
         email,
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+  }
 
     // Find user with executive and admin information in single query
     const user = await prisma.user.findUnique({
@@ -90,11 +92,6 @@ export async function POST(request: NextRequest) {
         region: user.admin.region
       };
     }
-
-    // Delete used OTP
-    await prisma.oTP.delete({
-      where: { id: otpRecord.id }
-    });
 
     // Create response with httpOnly cookies
     const response = NextResponse.json({

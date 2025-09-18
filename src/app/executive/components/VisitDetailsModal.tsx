@@ -10,7 +10,7 @@ interface PastVisit {
   representative: string;
   canViewDetails: boolean;
   personMet: PersonMet[];
-  displayChecked: boolean;
+  POSMchecked: boolean | null;
   remarks?: string;
   imageUrls: string[];
   adminComment?: string;
@@ -154,11 +154,13 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
           </div>
 
           <div className="visit-detail-section">
-            <h3 className="visit-detail-section-title">Display Check</h3>
+            <h3 className="visit-detail-section-title">POSM Check</h3>
             <div className="visit-detail-grid">
               <div className="visit-detail-item">
-                <span className="visit-detail-label">Display Checked:</span>
-                <span className="visit-detail-value">{visit.displayChecked ? 'Yes' : 'No'}</span>
+                <span className="visit-detail-label">POSM Available:</span>
+                <span className="visit-detail-value">
+                  {visit.POSMchecked === null ? 'Not specified' : (visit.POSMchecked ? 'Yes' : 'No')}
+                </span>
               </div>
             </div>
           </div>

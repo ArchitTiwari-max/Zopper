@@ -19,6 +19,7 @@ const Store: React.FC = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
+  const [plannedVisitDate, setPlannedVisitDate] = useState<string>(new Date().toISOString().split('T')[0]); // Default to today
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -94,6 +95,7 @@ const Store: React.FC = () => {
   const handleCancel = () => {
     setIsCreateMode(false);
     setSelectedStores([]);
+    setPlannedVisitDate(new Date().toISOString().split('T')[0]); // Reset to today
   };
 
   const handlePreviewAndSend = () => {
@@ -106,6 +108,11 @@ const Store: React.FC = () => {
 
   const handleSubmitVisitPlan = async () => {
     if (selectedStores.length === 0) return;
+    
+    if (!plannedVisitDate) {
+      alert('Please select a planned visit date before submitting.');
+      return;
+    }
 
     try {
       setSubmitting(true);
@@ -118,27 +125,31 @@ const Store: React.FC = () => {
         },
         credentials: 'include',
         body: JSON.stringify({
-          storeIds: selectedStores
+          storeIds: selectedStores,
+          plannedVisitDate: plannedVisitDate
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to submit visit plan');
-      }
-
-      const result = await response.json();
-      
-      if (result.success) {
-        alert(`✅ Visit plan submitted successfully! ${selectedStores.length} stores scheduled for visits.`);
-        // Reset state
-        setIsCreateMode(false);
-        setSelectedStores([]);
-        setShowPreview(false);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          alert(`✅ Visit plan submitted successfully! ${selectedStores.length} stores scheduled for visits.`);
+          // Reset state
+          setIsCreateMode(false);
+          setSelectedStores([]);
+          setPlannedVisitDate(new Date().toISOString().split('T')[0]); // Reset to today
+          setShowPreview(false);
+        } else {
+          const errorMessage = result.details ? `${result.error}: ${result.details}` : (result.error || 'Failed to submit visit plan');
+          throw new Error(errorMessage);
+        }
       } else {
-        throw new Error(result.error || 'Failed to submit visit plan');
+        // Handle HTTP error responses (400, 500, etc.)
+        const errorResult = await response.json();
+        const errorMessage = errorResult.details ? `${errorResult.error}: ${errorResult.details}` : (errorResult.error || 'Failed to submit visit plan');
+        throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error('Error submitting visit plan:', error);
       alert(`❌ Error: ${error instanceof Error ? error.message : 'Failed to submit visit plan'}`);
     } finally {
       setSubmitting(false);
@@ -405,6 +416,32 @@ const Store: React.FC = () => {
                 <p className="exec-v-form-summary-text">
                   You have selected <strong>{selectedStores.length}</strong> {selectedStores.length === 1 ? 'store' : 'stores'} for visits:
                 </p>
+              </div>
+              
+              {/* Planned Visit Date Section */}
+              <div className="exec-v-form-date-section">
+                <label className="exec-v-form-date-label">
+                  📅 <strong>Planned Visit Date</strong> <span className="exec-v-form-required">*</span>
+                </label>
+                <input
+                  type="date"
+                  className="exec-v-form-date-input"
+                  value={plannedVisitDate}
+                  onChange={(e) => setPlannedVisitDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]} // Prevent past dates
+                  disabled={submitting}
+                  required
+                />
+                {plannedVisitDate && (
+                  <p className="exec-v-form-date-preview">
+                    🗓️ Visits scheduled for: <strong>{new Date(plannedVisitDate).toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}</strong>
+                  </p>
+                )}
               </div>
               
               <div className="exec-v-form-preview-stores-list">

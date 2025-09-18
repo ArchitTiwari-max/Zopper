@@ -252,27 +252,24 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.notification-item.no-click {
+  cursor: default;
+}
+
+.notification-item.no-click:hover {
+  transform: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
 .notification-content {
   padding: 24px 28px;
 }
 
 .notification-left {
   display: flex;
-  gap: 16px;
-  align-items: flex-start;
+  width: 100%;
 }
 
-.notification-icon {
-  width: 48px;
-  height: 48px;
-  background-color: #f8f9fa;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  flex-shrink: 0;
-}
 
 .notification-details {
   flex: 1;
@@ -362,32 +359,18 @@
   }
 }
 
-/* Priority-based item styling */
-.notification-item.priority-high .notification-icon {
-  background-color: #fef3c7;
-  border: 2px solid #f59e0b;
-}
-
-.notification-item.priority-urgent .notification-icon {
-  background-color: #fee2e2;
-  border: 2px solid #ef4444;
-  animation: iconPulse 2s infinite;
-}
-
-@keyframes iconPulse {
-  0%, 100% {
-    border-color: #ef4444;
-  }
-  50% {
-    border-color: #f87171;
-  }
-}
 
 /* Notification Actions */
 .notification-actions {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 8px;
-  justify-content: flex-end;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
 }
 
 .mark-read-btn,
@@ -438,6 +421,100 @@
   color: #4338ca;
 }
 
+/* Visit Plan Details */
+.visit-plan-details {
+  margin: 12px 0;
+  padding: 12px 16px;
+  background-color: #f8f9fc;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  border-left: 3px solid #4f46e5;
+}
+
+.planned-visit-date,
+.executive-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.store-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.planned-visit-date:last-child,
+.executive-info:last-child,
+.store-info:last-child {
+  margin-bottom: 0;
+}
+
+.visit-date-label,
+.executive-label,
+.store-label {
+  color: #6c757d;
+  font-weight: 500;
+  min-width: fit-content;
+}
+
+.visit-date-value {
+  color: #212529;
+  font-weight: 600;
+}
+
+.executive-value {
+  color: #212529;
+  font-weight: 500;
+}
+
+.store-value {
+  color: #212529;
+  font-weight: 500;
+}
+
+.store-names {
+  color: #6c757d;
+  font-size: 13px;
+}
+
+.store-value-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.store-names-expanded {
+  color: #6c757d;
+  font-size: 13px;
+  display: block;
+  margin-top: 4px;
+}
+
+.view-stores-btn,
+.hide-stores-btn {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  margin-left: 4px;
+  transition: color 0.2s ease;
+}
+
+.view-stores-btn:hover,
+.hide-stores-btn:hover {
+  color: #4338ca;
+}
+
 
 /* Tablet Responsive */
 @media (max-width: 1024px) {
@@ -450,11 +527,6 @@
     padding: 20px 24px;
   }
 
-  .notification-icon {
-    width: 44px;
-    height: 44px;
-    font-size: 18px;
-  }
 
   .notification-title {
     font-size: 16px;
@@ -512,15 +584,6 @@
     padding: 16px 18px;
   }
 
-  .notification-left {
-    gap: 12px;
-  }
-
-  .notification-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 16px;
-  }
 
   .notification-title {
     font-size: 15px;
@@ -538,6 +601,33 @@
   .notification-type {
     font-size: 11px;
     padding: 3px 8px;
+  }
+
+  /* Visit Plan Details - Mobile */
+  .visit-plan-details {
+    margin: 8px 0;
+    padding: 10px 12px;
+  }
+
+  .planned-visit-date,
+  .executive-info,
+  .store-info {
+    font-size: 13px;
+    gap: 6px;
+    margin-bottom: 5px;
+  }
+
+  .store-names {
+    font-size: 12px;
+  }
+
+  .store-names-expanded {
+    font-size: 12px;
+  }
+
+  .view-stores-btn,
+  .hide-stores-btn {
+    font-size: 12px;
   }
 }
 

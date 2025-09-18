@@ -19,6 +19,7 @@ const AdminNotifications: React.FC = () => {
   
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [expandedStores, setExpandedStores] = useState<Set<string>>(new Set());
   
   // Refresh notifications when page loads to ensure latest data
   useEffect(() => {
@@ -29,16 +30,6 @@ const AdminNotifications: React.FC = () => {
     router.push('/admin/dashboard');
   };
 
-  // Helper function to get notification icon
-  const getNotificationIcon = (type: string, priority: string) => {
-    switch (type) {
-      case 'VISIT_REVIEWED': return priority === 'HIGH' ? '📝' : '✅';
-      case 'ISSUE_ASSIGNED': return '📋';
-      case 'ADMIN_COMMENT_ADDED': return '💬';
-      case 'SYSTEM_ANNOUNCEMENT': return '📢';
-      default: return '🔔';
-    }
-  };
 
   // Helper function to format relative time
   const getTimeAgo = (dateString: string) => {
@@ -60,6 +51,7 @@ const AdminNotifications: React.FC = () => {
   // Get display title for notification types
   const getTypeDisplayName = (type: string) => {
     switch (type) {
+      case 'VISIT_PLAN_SUBMITTED': return null; // Don't show type for visit plans
       case 'VISIT_REVIEWED': return 'Visit Reviews';
       case 'ISSUE_ASSIGNED': return 'Issue Assignments';
       case 'ADMIN_COMMENT_ADDED': return 'Admin Comments';
@@ -76,6 +68,54 @@ const AdminNotifications: React.FC = () => {
     if (notification.actionUrl) {
       router.push(notification.actionUrl);
     }
+  };
+
+  // Helper function to format planned visit date
+  const formatPlannedVisitDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const day = date.getDate();
+      const month = date.toLocaleDateString('en-US', { month: 'short' });
+      const year = date.getFullYear();
+      return `${day} ${month} ${year}`;
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Helper function to extract metadata for visit plan notifications
+  const getVisitPlanMetadata = (notification: any) => {
+    if (notification.type !== 'VISIT_PLAN_SUBMITTED' || !notification.metadata) {
+      return null;
+    }
+    
+    try {
+      const metadata = typeof notification.metadata === 'string' 
+        ? JSON.parse(notification.metadata) 
+        : notification.metadata;
+      
+      return {
+        plannedVisitDate: metadata.plannedVisitDate,
+        executiveName: metadata.executiveName,
+        storeCount: metadata.storeCount,
+        storeNames: metadata.storeNames || []
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  // Toggle store details expansion
+  const toggleStoreExpansion = (notificationId: string) => {
+    setExpandedStores(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(notificationId)) {
+        newSet.delete(notificationId);
+      } else {
+        newSet.add(notificationId);
+      }
+      return newSet;
+    });
   };
 
   return (
@@ -150,25 +190,94 @@ const AdminNotifications: React.FC = () => {
                   key={notification.id} 
                   className={`notification-item ${
                     notification.status === 'UNREAD' ? 'unread' : ''
-                  } priority-${notification.priority.toLowerCase()}`}
-                  onClick={() => handleViewDetails(notification)}
+                  } priority-${notification.priority.toLowerCase()} ${
+                    notification.type === 'VISIT_PLAN_SUBMITTED' ? 'no-click' : ''
+                  }`}
+                  onClick={notification.type === 'VISIT_PLAN_SUBMITTED' ? undefined : () => handleViewDetails(notification)}
                 >
                   <div className="notification-content">
                     <div className="notification-left">
-                      <div className="notification-icon">
-                        {getNotificationIcon(notification.type, notification.priority)}
-                      </div>
                       <div className="notification-details">
                         <div className="notification-title-row">
                           <h3 className="notification-title">{notification.title}</h3>
                           {notification.status === 'UNREAD' && <span className="unread-dot">●</span>}
                         </div>
-                        <p className="notification-description">{notification.message}</p>
+                        {/* Only show message for non-visit plan notifications */}
+                        {notification.type !== 'VISIT_PLAN_SUBMITTED' && (
+                          <p className="notification-description">{notification.message}</p>
+                        )}
+                        
+                        {/* Visit Plan Specific Metadata */}
+                        {(() => {
+                          const visitPlanMeta = getVisitPlanMetadata(notification);
+                          if (visitPlanMeta) {
+                            return (
+                              <div className="visit-plan-details">
+                                {visitPlanMeta.plannedVisitDate && (
+                                  <div className="planned-visit-date">
+                                    <span className="visit-date-label">Planned Visit:</span>
+                                    <span className="visit-date-value">
+                                      {formatPlannedVisitDate(visitPlanMeta.plannedVisitDate)}
+                                    </span>
+                                  </div>
+                                )}
+                                {visitPlanMeta.executiveName && (
+                                  <div className="executive-info">
+                                    <span className="executive-label">👤 Executive:</span>
+                                    <span className="executive-value">{visitPlanMeta.executiveName}</span>
+                                  </div>
+                                )}
+                                {visitPlanMeta.storeCount > 0 && (
+                                  <div className="store-info">
+                                    <span className="store-label">🏪 Stores:</span>
+                                    <div className="store-value-container">
+                                      <span className="store-value">
+                                        {visitPlanMeta.storeCount} store{visitPlanMeta.storeCount !== 1 ? 's' : ''}
+                                        {visitPlanMeta.storeNames.length > 0 && visitPlanMeta.storeNames.length <= 3 && (
+                                          <span className="store-names"> - {visitPlanMeta.storeNames.join(', ')}</span>
+                                        )}
+                                        {visitPlanMeta.storeNames.length > 3 && !expandedStores.has(notification.id) && (
+                                          <span className="store-names"> - {visitPlanMeta.storeNames.slice(0, 2).join(', ')} 
+                                            <button 
+                                              className="view-stores-btn"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleStoreExpansion(notification.id);
+                                              }}
+                                            >
+                                              +{visitPlanMeta.storeNames.length - 2} more
+                                            </button>
+                                          </span>
+                                        )}
+                                        {visitPlanMeta.storeNames.length > 3 && expandedStores.has(notification.id) && (
+                                          <span className="store-names-expanded">
+                                            {' - '}{visitPlanMeta.storeNames.join(', ')}
+                                            <button 
+                                              className="hide-stores-btn"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleStoreExpansion(notification.id);
+                                              }}
+                                            >
+                                              Show less
+                                            </button>
+                                          </span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                         <div className="notification-meta">
-                          <span className="notification-time">{getTimeAgo(notification.createdAt)}</span>
-                          <span className="notification-type">
-                            {getTypeDisplayName(notification.type)}
-                          </span>
+                          {getTypeDisplayName(notification.type) && (
+                            <span className="notification-type">
+                              {getTypeDisplayName(notification.type)}
+                            </span>
+                          )}
                           {(notification.priority === 'HIGH' || notification.priority === 'URGENT') && (
                             <span className={`priority-badge priority-${notification.priority.toLowerCase()}`}>
                               {notification.priority}
@@ -176,26 +285,29 @@ const AdminNotifications: React.FC = () => {
                           )}
                         </div>
                         <div className="notification-actions">
-                          {notification.status === 'UNREAD' && (
+                          <span className="notification-time">{getTimeAgo(notification.createdAt)}</span>
+                          <div className="action-buttons">
+                            {notification.status === 'UNREAD' && (
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  markAsRead(notification.id);
+                                }}
+                                className="mark-read-btn"
+                              >
+                                Mark as Read
+                              </button>
+                            )}
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                markAsRead(notification.id);
+                                archiveNotification(notification.id);
                               }}
-                              className="mark-read-btn"
+                              className="archive-btn"
                             >
-                              Mark as Read
+                              Archive
                             </button>
-                          )}
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              archiveNotification(notification.id);
-                            }}
-                            className="archive-btn"
-                          >
-                            Archive
-                          </button>
+                          </div>
                         </div>
                       </div>
                     </div>

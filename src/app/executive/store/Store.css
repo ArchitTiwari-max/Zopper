@@ -171,6 +171,67 @@
 
 /* Store page uses global loading styles from base.css */
 
+/* Date Picker Section */
+.exec-v-form-date-section {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.exec-v-form-date-label {
+  display: block;
+  font-size: 14px;
+  color: #495057;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.exec-v-form-required {
+  color: #dc3545;
+  margin-left: 4px;
+}
+
+.exec-v-form-date-input {
+  width: 100%;
+  max-width: 300px;
+  padding: 12px 16px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #495057;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.exec-v-form-date-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.exec-v-form-date-input:disabled {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.exec-v-form-date-preview {
+  margin-top: 12px;
+  padding: 12px;
+  background: #e8f5e8;
+  border: 1px solid #c3e6c3;
+  border-radius: 6px;
+  color: #155724;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.exec-v-form-date-preview strong {
+  color: #0f4419;
+}
+
 /* Error State */
 .exec-v-form-error-state {
   display: flex;

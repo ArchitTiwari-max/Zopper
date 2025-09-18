@@ -13,7 +13,7 @@ interface PastVisit {
   representative: string;
   canViewDetails: boolean;
   personMet: PersonMet[];
-  displayChecked: boolean;
+  POSMchecked: boolean | null;
   remarks?: string;
   imageUrls: string[];
   adminComment?: string;
@@ -95,7 +95,7 @@ const ExecutiveFormContent: React.FC = () => {
   
   const [formData, setFormData] = useState({
     peopleMet: [] as PersonMet[],
-    displayChecked: false,
+    POSMchecked: null as boolean | null,
     issuesRaised: [] as string[],
     brandsVisited: [] as string[],
     remarks: '',
@@ -223,7 +223,7 @@ const ExecutiveFormContent: React.FC = () => {
       const visitData: any = {
         storeId,
         personMet: formData.peopleMet,
-        displayChecked: formData.displayChecked,
+        POSMchecked: formData.POSMchecked,
         imageUrls: formData.uploadedImages.map(img => img.url),
         brandsVisited: formData.brandsVisited,
         remarks: formData.remarks
@@ -262,41 +262,11 @@ const ExecutiveFormContent: React.FC = () => {
     }
   };
 
-  const addBrand = () => {
-    if (currentBrand === 'ALL_BRANDS') {
-      // Add all available brands that are not already selected
-      const availableBrands = storeData?.partnerBrands.filter(brand => 
-        !formData.brandsVisited.includes(brand)
-      ) || [];
-      
-      if (availableBrands.length > 0) {
-        setFormData(prev => ({
-          ...prev,
-          brandsVisited: [...prev.brandsVisited, ...availableBrands]
-        }));
-      }
-      setCurrentBrand('');
-    } else if (currentBrand.trim() && !formData.brandsVisited.includes(currentBrand.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        brandsVisited: [...prev.brandsVisited, currentBrand.trim()]
-      }));
-      setCurrentBrand('');
-    }
-  };
-
   const removeBrand = (brandToRemove: string) => {
     setFormData(prev => ({
       ...prev,
       brandsVisited: prev.brandsVisited.filter(brand => brand !== brandToRemove)
     }));
-  };
-
-  const handleBrandKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addBrand();
-    }
   };
 
   // Person management functions
@@ -521,17 +491,35 @@ const ExecutiveFormContent: React.FC = () => {
             </div>
           </div>
 
-          {/* <div className="form-group">
-            <label className="checkbox-container">
-              <input
-                type="checkbox"
-                checked={formData.displayChecked}
-                onChange={(e) => handleInputChange('displayChecked', e.target.checked)}
-              />
-              <span className="checkmark"></span>
-              Display Checked
-            </label>
-          </div> */}
+          <div className="exec-f-sub-form-group">
+            <label className="exec-f-sub-form-label">POSM Available</label>
+            <div className="exec-f-sub-radio-group">
+              <label className="exec-f-sub-radio-option">
+                <input
+                  type="radio"
+                  name="POSMchecked"
+                  value="true"
+                  checked={formData.POSMchecked === true}
+                  onChange={() => handleInputChange('POSMchecked', true)}
+                  className="exec-f-sub-radio-input"
+                />
+                <span className="exec-f-sub-radio-custom"></span>
+                <span className="exec-f-sub-radio-label">Yes</span>
+              </label>
+              <label className="exec-f-sub-radio-option">
+                <input
+                  type="radio"
+                  name="POSMchecked"
+                  value="false"
+                  checked={formData.POSMchecked === false}
+                  onChange={() => handleInputChange('POSMchecked', false)}
+                  className="exec-f-sub-radio-input"
+                />
+                <span className="exec-f-sub-radio-custom"></span>
+                <span className="exec-f-sub-radio-label">No</span>
+              </label>
+            </div>
+          </div>
 
           <div className="exec-f-sub-form-group">
             <label className="exec-f-sub-form-label">Raise Issues if</label>
@@ -592,8 +580,31 @@ const ExecutiveFormContent: React.FC = () => {
               <div className="exec-f-sub-brand-input-wrapper">
                 <select
                   className="exec-f-sub-form-select exec-f-sub-brand-select"
-                  value={currentBrand}
-                  onChange={(e) => setCurrentBrand(e.target.value)}
+                  value={""}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setCurrentBrand(e.target.value);
+                      // Auto-add the selected brand
+                      if (e.target.value === 'ALL_BRANDS') {
+                        const availableBrands = storeData?.partnerBrands.filter(brand => 
+                          !formData.brandsVisited.includes(brand)
+                        ) || [];
+                        
+                        if (availableBrands.length > 0) {
+                          setFormData(prev => ({
+                            ...prev,
+                            brandsVisited: [...prev.brandsVisited, ...availableBrands]
+                          }));
+                        }
+                      } else if (!formData.brandsVisited.includes(e.target.value)) {
+                        setFormData(prev => ({
+                          ...prev,
+                          brandsVisited: [...prev.brandsVisited, e.target.value]
+                        }));
+                      }
+                      setCurrentBrand('');
+                    }
+                  }}
                   disabled={storeLoading || !storeData}
                 >
                   <option value="">
@@ -610,14 +621,6 @@ const ExecutiveFormContent: React.FC = () => {
                     ))
                   }
                 </select>
-                <button
-                  type="button"
-                  className="exec-f-sub-add-brand-btn"
-                  onClick={addBrand}
-                  disabled={!currentBrand.trim() || storeLoading || !storeData}
-                >
-                  Add
-                </button>
               </div>
               {formData.brandsVisited.length > 0 && (
                 <div className="exec-f-sub-brands-list">

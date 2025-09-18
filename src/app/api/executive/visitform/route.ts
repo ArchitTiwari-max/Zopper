@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
             representative: visit.executive?.name || 'Unknown Executive',
             canViewDetails: true,
             personMet: visit.personMet,
-            displayChecked: visit.displayChecked,
+            POSMchecked: visit.POSMchecked,
             remarks: visit.remarks,
             imageUrls: visit.imageUrls,
             adminComment: visit.adminComment,
@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
             representative: visit.executive?.name || 'Unknown Executive',
             canViewDetails: false,
             personMet: visit.personMet, // Show contact person info for coordination
-            displayChecked: false, // No sensitive display info
+            POSMchecked: null, // No sensitive POSM info
             remarks: null, // No private remarks
             imageUrls: [], // No private images
             adminComment: null, // No admin comments
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
     const {
       storeId,
       personMet,
-      displayChecked,
+      POSMchecked,
       issuesRaised,
       brandsVisited,
       remarks,
@@ -221,7 +221,7 @@ export async function POST(request: NextRequest) {
     const visit = await prisma.visit.create({
       data: {
         personMet: personMet, // JSON array
-        displayChecked: displayChecked || false,
+        POSMchecked: POSMchecked,
         remarks: remarks || '',
         imageUrls: imageUrls || [],
         status: 'PENDING_REVIEW' as any, // Default status

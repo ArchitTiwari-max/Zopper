@@ -79,7 +79,7 @@ enum viststatus {
 model Visit {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
   personMet      Json     // [{ name: "Rajesh", designation: "Manager", phone: "1234567890" }]
-  displayChecked Boolean
+  POSMchecked    Boolean? @map("displayChecked") // Point of Sale Material availability check (nullable for backward compatibility)
   remarks        String?
   imageUrls      String[]   // Array of image URLs
   createdAt      DateTime @default(now())
@@ -189,6 +189,7 @@ model VisitPlan {
   submittedAt   DateTime @default(now())
   reviewedAt    DateTime?
   reviewNote    String?
+  plannedVisitDate DateTime  // The date when visits should be conducted
   
   // Admin creation support
   createdByAdminId String?  // Admin ID who created this plan (null for executive-created)

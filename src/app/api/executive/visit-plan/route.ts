@@ -16,10 +16,49 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { storeIds } = body;
+    const { storeIds, plannedVisitDate } = body;
 
     if (!storeIds || !Array.isArray(storeIds) || storeIds.length === 0) {
       return NextResponse.json({ error: 'Invalid store IDs provided' }, { status: 400 });
+    }
+
+    if (!plannedVisitDate) {
+      return NextResponse.json({ 
+        error: 'Planned visit date is required',
+        details: 'Please provide a valid date in YYYY-MM-DD format (e.g., 2025-01-20)'
+      }, { status: 400 });
+    }
+
+    // Validate and parse the planned visit date
+    const visitDate = new Date(plannedVisitDate);
+    if (isNaN(visitDate.getTime())) {
+      return NextResponse.json({ 
+        error: 'Invalid planned visit date format',
+        details: `Received: "${plannedVisitDate}". Expected format: YYYY-MM-DD (e.g., 2025-01-20)`
+      }, { status: 400 });
+    }
+
+    // Additional validation for unrealistic dates
+    const currentYear = new Date().getFullYear();
+    const visitYear = visitDate.getFullYear();
+    
+    if (visitYear < 2000 || visitYear > currentYear + 10) {
+      return NextResponse.json({
+        error: 'Invalid planned visit date',
+        details: `Year ${visitYear} is not realistic. Please select a date between 2000 and ${currentYear + 10}`
+      }, { status: 400 });
+    }
+
+    // Check if the planned date is not in the past
+    const today = new Date();
+    const todayDateString = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const visitDateString = visitDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+    
+    if (visitDateString < todayDateString) {
+      return NextResponse.json({
+        error: 'Past date not allowed',
+        details: `Please select today or a future date`
+      }, { status: 400 });
     }
 
     // Get executive details
@@ -66,7 +105,8 @@ export async function POST(request: NextRequest) {
         executiveId: executive.id,
         storeIds: storeIds,
         storesSnapshot: storesSnapshot as any,
-        status: 'SUBMITTED'
+        status: 'SUBMITTED',
+        plannedVisitDate: visitDate
       }
     });
 
@@ -81,7 +121,7 @@ export async function POST(request: NextRequest) {
 
     const notificationPromises = adminUsers.map(admin => 
       NotificationService.createNotification({
-        title: '📋 New Visit Plan Submitted',
+        title: `📋 New Visit Plan Submitted - ${visitDate.toLocaleDateString()}`,
         message: `${executive.name} has submitted a visit plan for ${storeCount} ${storeCount === 1 ? 'store' : 'stores'}: ${storeList}`,
         type: 'VISIT_PLAN_SUBMITTED',
         priority: 'MEDIUM',
@@ -93,10 +133,10 @@ export async function POST(request: NextRequest) {
         metadata: {
           planId: visitPlan.id,
           executiveName: executive.name,
-          executiveEmail: executive.user.email,
           storeCount: storeCount,
           storeIds: storeIds,
           storeNames: storeNames,
+          plannedVisitDate: visitDate.toISOString(),
           submissionTime: new Date().toISOString()
         },
         visitPlanId: visitPlan.id
@@ -136,7 +176,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error submitting visit plan:', error);
     return NextResponse.json(
-      { error: 'Failed to submit visit plan' },
+      { 
+        error: 'Failed to submit visit plan',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }
@@ -181,6 +224,7 @@ export async function GET(request: NextRequest) {
       submittedAt: plan.submittedAt,
       reviewedAt: plan.reviewedAt,
       reviewNote: plan.reviewNote,
+      plannedVisitDate: plan.plannedVisitDate,
       executive: {
         id: plan.executive.id,
         name: plan.executive.name,

@@ -15,7 +15,7 @@ interface VisitDetail {
   status: 'PENDING_REVIEW' | 'REVIEWD';
   personMet: PersonMet[];
   date: string;
-  displayChecked: boolean;
+  POSMchecked: boolean | null;
   remarks?: string;
   imageUrls: string[];
   adminComment?: string;
@@ -228,7 +228,7 @@ const VisitHistory: React.FC = () => {
           'Store Name': visit.storeName || 'N/A',
           'Partner Brand': visit.partnerBrand || 'N/A',
           'Status': visit.status === 'PENDING_REVIEW' ? 'Pending Review' : 'Reviewed',
-          'Display Checked': visit.displayChecked ? 'Yes' : 'No',
+          'POSM Available': visit.POSMchecked === null ? 'Not specified' : (visit.POSMchecked ? 'Yes' : 'No'),
           'Visit Date': formatDate(visit.createdAt),
           'Person Met': visit.personMet && visit.personMet.length > 0 
             ? visit.personMet.map((p, index) => `${index + 1}. ${p.name} (${p.designation})`).join('; ') 

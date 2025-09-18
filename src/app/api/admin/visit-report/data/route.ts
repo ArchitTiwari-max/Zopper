@@ -73,7 +73,13 @@ export async function GET(request: NextRequest) {
       // Get ALL visits with related data - no limits
       prisma.visit.findMany({
         where: whereClause,
-        include: {
+        select: {
+          id: true,
+          status: true,
+          remarks: true,
+          brandIds: true,
+          createdAt: true,
+          POSMchecked: true,
           executive: {
             select: {
               id: true,
@@ -158,7 +164,8 @@ export async function GET(request: NextRequest) {
         city: visit.store.city,
         issues: issues,
         issueId: issueId,
-        feedback: visit.remarks || 'No feedback provided'
+        feedback: visit.remarks || 'No feedback provided',
+        POSMchecked: visit.POSMchecked
       };
     });
 

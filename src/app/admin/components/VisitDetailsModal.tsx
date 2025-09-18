@@ -17,6 +17,7 @@ interface AdminVisitData {
   issues: string;
   issueId?: number;
   feedback: string;
+  POSMchecked: boolean | null;
 }
 
 interface VisitDetailsModalProps {
@@ -131,6 +132,18 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
                   style={{ backgroundColor: getStatusColor(visit.visitStatus), color: 'white', padding: '4px 12px', borderRadius: '4px' }}
                 >
                   {visit.visitStatus === 'PENDING_REVIEW' ? 'Pending Review' : 'Reviewed'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="admin-visit-detail-section">
+            <h3 className="admin-visit-detail-section-title">POSM Check</h3>
+            <div className="admin-visit-detail-grid">
+              <div className="admin-visit-detail-item">
+                <span className="admin-visit-detail-label">POSM Available:</span>
+                <span className="admin-visit-detail-value">
+                  {visit.POSMchecked === null ? 'Not specified' : (visit.POSMchecked ? 'Yes' : 'No')}
                 </span>
               </div>
             </div>
