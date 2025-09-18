@@ -29,21 +29,28 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Generate ETag for cache validation (1-minute intervals)
-    const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
-    const etag = `"${currentTime}-${executive.id}-tasks"`;
+    // Check if cache busting is requested (timestamp parameter)
+    const url = new URL(request.url);
+    const bustCache = url.searchParams.has('t');
     
-    // Check if client has cached version (conditional request)
-    const ifNoneMatch = request.headers.get('if-none-match');
-    if (ifNoneMatch === etag) {
-      // Return 304 Not Modified if ETag matches
-      return new NextResponse(null, { 
-        status: 304,
-        headers: {
-          'Cache-Control': 'public, max-age=60, s-maxage=60',
-          'ETag': etag
-        }
-      });
+    // Generate ETag for cache validation (1-minute intervals) - skip if cache busting
+    let etag = '';
+    if (!bustCache) {
+      const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
+      etag = `"${currentTime}-${executive.id}-tasks"`;
+      
+      // Check if client has cached version (conditional request)
+      const ifNoneMatch = request.headers.get('if-none-match');
+      if (ifNoneMatch === etag) {
+        // Return 304 Not Modified if ETag matches
+        return new NextResponse(null, { 
+          status: 304,
+          headers: {
+            'Cache-Control': 'public, max-age=60, s-maxage=60',
+            'ETag': etag
+          }
+        });
+      }
     }
 
     // Fetch assigned tasks for this executive with optimized query (select only needed fields)
@@ -92,17 +99,20 @@ export async function GET(request: NextRequest) {
       const response = NextResponse.json({
         success: true,
         data: {
-          tasks: [],
-          totalTasks: 0,
-          pendingTasks: 0,
-          completedTasks: 0
+          tasks: []
         }
       });
       
-      // Add caching headers - cache for 1 minute
-      response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
-      response.headers.set('CDN-Cache-Control', 'public, max-age=60');
-      response.headers.set('ETag', etag);
+      // Add caching headers conditionally
+      if (bustCache) {
+        response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
+      } else {
+        response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+        response.headers.set('CDN-Cache-Control', 'public, max-age=60');
+        response.headers.set('ETag', etag);
+      }
       
       return response;
     }
@@ -175,18 +185,23 @@ export async function GET(request: NextRequest) {
     const response = NextResponse.json({
       success: true,
       data: {
-        tasks: sortedTasks,
-        totalTasks: sortedTasks.length,
-        pendingTasks: sortedTasks.filter(task => task.status === AssignedStatus.Assigned || task.status === AssignedStatus.In_Progress).length,
-        completedTasks: sortedTasks.filter(task => task.status === AssignedStatus.Completed).length
+        tasks: sortedTasks
       }
     });
 
-    // Add caching headers - cache for 1 minute
-    response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
-    response.headers.set('CDN-Cache-Control', 'public, max-age=60');
-    response.headers.set('Vary', 'User-Agent');
-    response.headers.set('ETag', etag);
+    // Add caching headers conditionally
+    if (bustCache) {
+      // No caching for cache-busted requests
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
+    } else {
+      // Normal caching for regular requests
+      response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+      response.headers.set('CDN-Cache-Control', 'public, max-age=60');
+      response.headers.set('Vary', 'User-Agent');
+      response.headers.set('ETag', etag);
+    }
     
     return response;
 

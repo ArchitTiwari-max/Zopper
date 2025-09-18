@@ -1,11 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import './ExecutiveTodoList.css';
-import SubmitTaskModal from './SubmitTaskModal';
-import TaskDetailModal from './components/TaskDetailModal';
-import ViewReportModal from './components/ViewReportModal';
 import IssuesTab from './tabs/IssuesTab';
 import VisitsTab from './tabs/VisitsTab';
 import TrainingTab from './tabs/TrainingTab';
@@ -43,151 +40,87 @@ interface TasksResponse {
   error?: string;
 }
 
+interface CountsResponse {
+  success: boolean;
+  data: {
+    pendingIssuesCount: number;
+    pendingVisitsCount: number;
+    totalPendingCount: number;
+    executiveId: string;
+    timestamp: string;
+  };
+  error?: string;
+}
+
 type TaskCategory = 'visit' | 'issues' | 'training';
 
 const ExecutiveTodoList: React.FC = () => {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TaskCategory>('issues');
-  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [tasks, setTasks] = useState<AssignedTask[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [taskDetailModal, setTaskDetailModal] = useState<{
-    isOpen: boolean;
-    task: any;
-  }>({ isOpen: false, task: null });
-  const [viewReportModal, setViewReportModal] = useState<{
-    isOpen: boolean;
-    taskId: string;
-    storeName: string;
-  }>({ isOpen: false, taskId: '', storeName: '' });
-
-  // Fetch assigned tasks from API
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/executive/assigned-tasks', {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          // Handle different HTTP status codes
-          if (response.status === 401) {
-            setError('Authentication failed. Please login again.');
-            // Optionally redirect to login
-            // router.push('/auth/login');
-            return;
-          } else if (response.status === 403) {
-            setError('Access denied. Executive role required.');
-            return;
-          } else if (response.status === 404) {
-            setError('Executive profile not found.');
-            return;
-          } else {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-        }
-
-        const result: TasksResponse = await response.json();
-        
-        if (result.success) {
-          setTasks(result.data.tasks || []);
-          setError(null);
-        } else {
-          setError(result.error || 'Failed to fetch tasks');
-        }
-      } catch (err) {
-        console.error('Error fetching tasks:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch tasks');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTasks();
-  }, []);
-
-  // Navigation handlers removed - handled by layout Footer component
-
-  const handleSubmitTask = (taskId: string) => {
-    setSelectedTaskId(taskId);
-    setIsSubmitModalOpen(true);
+  const searchParams = useSearchParams();
+  
+  // Get tab from URL query parameter, default to 'visit'
+  const getInitialTab = (): TaskCategory => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'visit' || tabParam === 'issues' || tabParam === 'training') {
+      return tabParam as TaskCategory;
+    }
+    return 'visit'; // Default to 'visit' instead of 'issues'
   };
+  
+  const [activeTab, setActiveTab] = useState<TaskCategory>(getInitialTab());
+  const [visitCount, setVisitCount] = useState<number>(0);
+  const [issueCount, setIssueCount] = useState<number>(0);
 
-  const handleCloseModal = () => {
-    setIsSubmitModalOpen(false);
-    setSelectedTaskId(null);
-  };
-
-  const handleTaskSubmitted = () => {
-    // Refresh the task list by re-fetching data
-    const fetchTasks = async () => {
-      try {
-        const response = await fetch('/api/executive/assigned-tasks', {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const result: TasksResponse = await response.json();
-          if (result.success) {
-            setTasks(result.data.tasks);
-          }
-        }
-      } catch (err) {
-        console.error('Error refreshing tasks:', err);
-      }
-    };
-
-    fetchTasks();
-    handleCloseModal();
-  };
-
-
-  // Task Detail Modal handlers
-  const handleViewDetails = (task: AssignedTask) => {
-    setTaskDetailModal({ isOpen: true, task });
-  };
-
-  const handleCloseTaskDetail = () => {
-    setTaskDetailModal({ isOpen: false, task: null });
-  };
-
-  // View Report Modal handlers
-  const handleViewReport = (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (task) {
-      setViewReportModal({
-        isOpen: true,
-        taskId,
-        storeName: task.storeName
+  // Fetch counts from unified API
+  const fetchCounts = async () => {
+    try {
+      const response = await fetch('/api/executive/assigned-tasks/count', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
+
+      if (response.ok) {
+        const result: CountsResponse = await response.json();
+        if (result.success) {
+          setVisitCount(result.data.pendingVisitsCount);
+          setIssueCount(result.data.pendingIssuesCount);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching counts:', err);
     }
   };
 
-  const handleCloseViewReport = () => {
-    setViewReportModal({ isOpen: false, taskId: '', storeName: '' });
+  // Fetch counts on component mount
+  useEffect(() => {
+    fetchCounts();
+  }, []);
+
+  // Update tab when URL parameters change
+  useEffect(() => {
+    const newTab = getInitialTab();
+    if (newTab !== activeTab) {
+      setActiveTab(newTab);
+    }
+  }, [searchParams]);
+
+  // Update URL when tab changes
+  useEffect(() => {
+    const currentParams = new URLSearchParams(window.location.search);
+    currentParams.set('tab', activeTab);
+    const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+  }, [activeTab]);
+
+  // Navigation handlers removed - handled by layout Footer component
+
+  // Refresh counts when tasks are updated (called by tabs)
+  const refreshCounts = () => {
+    fetchCounts();
   };
-
-  // Calculate pending tasks count
-  const pendingTasksCount = tasks.filter(task => 
-    !task.hasReport && task.status !== 'Completed'
-  ).length;
-
-  // Retry handler
-  const handleRetry = () => {
-    window.location.reload();
-  };
-
   return (
     <div className="exec-tasks-container">
       {/* Header */}
@@ -209,7 +142,12 @@ const ExecutiveTodoList: React.FC = () => {
               onClick={() => setActiveTab('visit')}
             >
               <span className="exec-tasks-tab-icon">🏪</span>
-              <span className="exec-tasks-tab-label">Pending Visits</span>
+              <span className="exec-tasks-tab-label">
+                Pending Visits
+                {visitCount > 0 && (
+                  <span className="exec-tasks-tab-count">({visitCount})</span>
+                )}
+              </span>
             </button>
             <button 
               className={`exec-tasks-tab-btn ${activeTab === 'issues' ? 'active' : ''}`}
@@ -218,8 +156,8 @@ const ExecutiveTodoList: React.FC = () => {
               <span className="exec-tasks-tab-icon">⚠️</span>
               <span className="exec-tasks-tab-label">
                 Pending Issues
-                {pendingTasksCount > 0 && (
-                  <span className="exec-tasks-tab-count">({pendingTasksCount})</span>
+                {issueCount > 0 && (
+                  <span className="exec-tasks-tab-count">({issueCount})</span>
                 )}
               </span>
             </button>
@@ -235,17 +173,11 @@ const ExecutiveTodoList: React.FC = () => {
           {/* Tab Content */}
           <div className="exec-tasks-tab-content">
             {activeTab === 'visit' && (
-              <VisitsTab />
+              <VisitsTab onCountUpdate={refreshCounts} />
             )}
 
             {activeTab === 'issues' && (
-              <IssuesTab
-                tasks={tasks}
-                loading={loading}
-                error={error}
-                onViewDetails={handleViewDetails}
-                onRetry={handleRetry}
-              />
+              <IssuesTab onCountUpdate={refreshCounts} />
             )}
 
             {activeTab === 'training' && (
@@ -256,39 +188,6 @@ const ExecutiveTodoList: React.FC = () => {
       </main>
 
       {/* Bottom Navigation is handled by the layout Footer component */}
-      
-      {/* Submit Task Modal */}
-      {isSubmitModalOpen && selectedTaskId && (
-        <SubmitTaskModal
-          isOpen={isSubmitModalOpen}
-          onClose={handleCloseModal}
-          taskId={selectedTaskId}
-          storeName={tasks.find(t => t.id === selectedTaskId)?.storeName || ''}
-          storeDetails={tasks.find(t => t.id === selectedTaskId)?.storeDetails}
-          onTaskSubmitted={handleTaskSubmitted}
-        />
-      )}
-
-      {/* Task Detail Modal */}
-      {taskDetailModal.isOpen && taskDetailModal.task && (
-        <TaskDetailModal
-          isOpen={taskDetailModal.isOpen}
-          onClose={handleCloseTaskDetail}
-          task={taskDetailModal.task}
-          onSubmitTask={handleSubmitTask}
-          onViewReport={handleViewReport}
-        />
-      )}
-
-      {/* View Report Modal */}
-      {viewReportModal.isOpen && (
-        <ViewReportModal
-          isOpen={viewReportModal.isOpen}
-          onClose={handleCloseViewReport}
-          taskId={viewReportModal.taskId}
-          storeName={viewReportModal.storeName}
-        />
-      )}
     </div>
   );
 };

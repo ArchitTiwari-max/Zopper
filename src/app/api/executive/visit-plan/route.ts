@@ -99,7 +99,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Create a VisitPlan (PJP) record
-    const storesSnapshot = stores.map(s => ({ id: s.id, storeName: s.storeName, city: s.city, fullAddress: s.fullAddress }));
+    const storesSnapshot = stores.map(s => ({ 
+      id: s.id, 
+      storeName: s.storeName, 
+      city: s.city, 
+      fullAddress: s.fullAddress,
+      status: 'SUBMITTED' // Default status for each store
+    }));
     const visitPlan = await prisma.visitPlan.create({
       data: {
         executiveId: executive.id,
@@ -180,71 +186,6 @@ export async function POST(request: NextRequest) {
         error: 'Failed to submit visit plan',
         details: error instanceof Error ? error.message : String(error)
       },
-      { status: 500 }
-    );
-  }
-}
-
-// GET method to retrieve submitted visit plans (for admin view)
-export async function GET(request: NextRequest) {
-  try {
-    const authResult = await validateAndRefreshToken(request);
-    if (!authResult.isAuthenticated || !authResult.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Only admins can view all visit plans
-    if (authResult.user!.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Only admins can view visit plans' }, { status: 403 });
-    }
-
-    // Fetch all visit plans with related data
-    const visitPlans = await prisma.visitPlan.findMany({
-      include: {
-        executive: {
-          include: {
-            user: true
-          }
-        },
-        notifications: {
-          where: {
-            recipientId: authResult.user!.userId
-          }
-        }
-      },
-      orderBy: {
-        submittedAt: 'desc'
-      }
-    });
-
-    // Transform the data to include store details from snapshot
-    const transformedPlans = visitPlans.map(plan => ({
-      id: plan.id,
-      status: plan.status,
-      submittedAt: plan.submittedAt,
-      reviewedAt: plan.reviewedAt,
-      reviewNote: plan.reviewNote,
-      plannedVisitDate: plan.plannedVisitDate,
-      executive: {
-        id: plan.executive.id,
-        name: plan.executive.name,
-        email: plan.executive.user.email
-      },
-      storeCount: plan.storeIds.length,
-      stores: plan.storesSnapshot || [],
-      hasUnreadNotifications: plan.notifications.some(n => n.status === 'UNREAD')
-    }));
-
-    return NextResponse.json({
-      success: true,
-      data: transformedPlans,
-      totalPlans: transformedPlans.length
-    });
-
-  } catch (error) {
-    console.error('Error fetching visit plans:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch visit plans' },
       { status: 500 }
     );
   }

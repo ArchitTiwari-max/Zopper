@@ -132,6 +132,33 @@ main {
 .exec-tasks-issues-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* Column width distribution for desktop */
+.exec-tasks-issues-table th:nth-child(1),
+.exec-tasks-issues-table td:nth-child(1) {
+  width: 20%; /* Store Name */
+}
+
+.exec-tasks-issues-table th:nth-child(2),
+.exec-tasks-issues-table td:nth-child(2) {
+  width: 25%; /* Issue */
+}
+
+.exec-tasks-issues-table th:nth-child(3),
+.exec-tasks-issues-table td:nth-child(3) {
+  width: 20%; /* Admin Comment */
+}
+
+.exec-tasks-issues-table th:nth-child(4),
+.exec-tasks-issues-table td:nth-child(4) {
+  width: 15%; /* City */
+}
+
+.exec-tasks-issues-table th:nth-child(5),
+.exec-tasks-issues-table td:nth-child(5) {
+  width: 20%; /* Action */
 }
 
 .exec-tasks-issues-table thead {
@@ -345,14 +372,40 @@ main {
   max-width: none;
 }
 
-/* Status Badge Styles */
+/* Status Badge Styles - Moved to Action Column section to avoid duplication */
+
+/* Action Column Styles */
+.exec-tasks-issues-action-column {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.exec-tasks-issues-action-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+}
+
+.exec-tasks-issues-action-header {
+  text-align: center !important;
+  vertical-align: middle;
+}
+
+/* Status Badge in Action Column */
 .exec-tasks-issues-status-badge {
-  padding: 6px 12px;
+  padding: 4px 8px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: capitalize;
   display: inline-block;
+  margin-bottom: 6px;
+  min-width: 70px;
+  text-align: center;
 }
 
 .exec-tasks-issues-status-badge.pending {
@@ -365,35 +418,22 @@ main {
   color: #0c5460;
 }
 
-/* Action Column Styles */
-.exec-tasks-issues-action-column {
-  text-align: center;
-}
-
-.exec-tasks-issues-action-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.exec-tasks-issues-action-header {
-  text-align: center;
-}
-
 /* View Details Button */
 .exec-tasks-issues-view-details-btn {
   background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 6px 12px;
   border-radius: 6px;
-  font-size: 0.875rem;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
-  min-width: 100px;
+  width: 100%;
+  max-width: 100px;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .exec-tasks-issues-view-details-btn:hover {
@@ -405,6 +445,128 @@ main {
 .exec-tasks-issues-view-details-btn:active {
   transform: translateY(0);
   box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+}
+
+/* View Report Button */
+.exec-tasks-issues-view-report-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+  width: 100%;
+  max-width: 100px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.exec-tasks-issues-view-report-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.exec-tasks-issues-view-report-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+/* Issues Tab Empty State */
+.exec-tasks-issues-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6c757d;
+}
+
+.exec-tasks-issues-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.exec-tasks-issues-empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #495057;
+}
+
+.exec-tasks-issues-empty-text {
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0;
+  text-align: center;
+}
+
+/* Issues Tab Loading State */
+.exec-tasks-issues-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.exec-tasks-issues-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e9ecef;
+  border-top: 3px solid #007bff;
+  border-radius: 50%;
+  animation: exec-tasks-issues-spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes exec-tasks-issues-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.exec-tasks-issues-loading-text {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* Issues Tab Error State */
+.exec-tasks-issues-error {
+  padding: 20px;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  color: #721c24;
+  text-align: center;
+  font-size: 14px;
+}
+
+.exec-tasks-issues-error-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #721c24;
+  font-size: 16px;
+}
+
+.exec-tasks-issues-retry-btn {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 16px;
+}
+
+.exec-tasks-issues-retry-btn:hover {
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+  transform: translateY(-1px);
 }
 
 /* Loading and Error States - Using styles from ../base.css */
@@ -487,6 +649,12 @@ main {
     line-height: 1.2;
   }
   
+  .exec-tasks-issues-action-column {
+    min-width: 100px;
+    width: 25%;
+    padding: 8px 4px;
+  }
+  
   .exec-tasks-issues-action-content {
     gap: 3px;
     align-items: center;
@@ -499,6 +667,7 @@ main {
     margin-bottom: 2px;
     line-height: 1;
     white-space: nowrap;
+    min-width: 50px;
   }
   
   .exec-tasks-issues-view-details-btn {
@@ -506,7 +675,15 @@ main {
     font-size: 8px;
     line-height: 1.2;
     white-space: nowrap;
-    min-width: auto;
+    width: 100%;
+    max-width: 80px;
+  }
+  
+  .exec-tasks-issues-view-report-btn {
+    padding: 3px 6px;
+    font-size: 8px;
+    line-height: 1.2;
+    white-space: nowrap;
     width: 100%;
     max-width: 80px;
   }
@@ -630,6 +807,12 @@ main {
     line-height: 1.1;
   }
   
+  .exec-tasks-issues-action-column {
+    min-width: 80px;
+    width: 25%;
+    padding: 4px 2px;
+  }
+  
   .exec-tasks-issues-action-content {
     gap: 2px;
     align-items: center;
@@ -642,6 +825,7 @@ main {
     margin-bottom: 1px;
     line-height: 1;
     white-space: nowrap;
+    min-width: 40px;
   }
   
   .exec-tasks-issues-view-details-btn {
@@ -650,7 +834,14 @@ main {
     line-height: 1.1;
     white-space: nowrap;
     width: 100%;
-    min-width: auto;
+  }
+  
+  .exec-tasks-issues-view-report-btn {
+    padding: 2px 4px;
+    font-size: 7px;
+    line-height: 1.1;
+    white-space: nowrap;
+    width: 100%;
   }
   
   .exec-tasks-tabs {

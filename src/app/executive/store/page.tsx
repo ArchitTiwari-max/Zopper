@@ -19,7 +19,7 @@ const Store: React.FC = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
-  const [plannedVisitDate, setPlannedVisitDate] = useState<string>(new Date().toISOString().split('T')[0]); // Default to today
+  const [plannedVisitDate, setPlannedVisitDate] = useState<string>(''); // Will be set in useEffect
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -36,6 +36,16 @@ const Store: React.FC = () => {
     brands: ['All Brands'],
     sortOptions: ['Recently Visited First', 'Store Name A-Z', 'Store Name Z-A', 'City A-Z']
   });
+
+  // Initialize planned visit date to today (using local date)
+  useEffect(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayLocal = `${year}-${month}-${day}`;
+    setPlannedVisitDate(todayLocal);
+  }, []);
 
   // Fetch stores data from API
   useEffect(() => {
@@ -95,7 +105,13 @@ const Store: React.FC = () => {
   const handleCancel = () => {
     setIsCreateMode(false);
     setSelectedStores([]);
-    setPlannedVisitDate(new Date().toISOString().split('T')[0]); // Reset to today
+    // Reset to today using local date
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayLocal = `${year}-${month}-${day}`;
+    setPlannedVisitDate(todayLocal);
   };
 
   const handlePreviewAndSend = () => {
@@ -111,6 +127,18 @@ const Store: React.FC = () => {
     
     if (!plannedVisitDate) {
       alert('Please select a planned visit date before submitting.');
+      return;
+    }
+    
+    // Validate that the planned date is not in the past (using local date)
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayLocal = `${year}-${month}-${day}`;
+    
+    if (plannedVisitDate < todayLocal) {
+      alert('❌ Past date not allowed. Please select today or a future date.');
       return;
     }
 
@@ -137,7 +165,13 @@ const Store: React.FC = () => {
           // Reset state
           setIsCreateMode(false);
           setSelectedStores([]);
-          setPlannedVisitDate(new Date().toISOString().split('T')[0]); // Reset to today
+          // Reset to today using local date
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const day = String(today.getDate()).padStart(2, '0');
+          const todayLocal = `${year}-${month}-${day}`;
+          setPlannedVisitDate(todayLocal);
           setShowPreview(false);
         } else {
           const errorMessage = result.details ? `${result.error}: ${result.details}` : (result.error || 'Failed to submit visit plan');
@@ -428,7 +462,13 @@ const Store: React.FC = () => {
                   className="exec-v-form-date-input"
                   value={plannedVisitDate}
                   onChange={(e) => setPlannedVisitDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]} // Prevent past dates
+                  min={(() => {
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                  })()} // Prevent past dates using local date
                   disabled={submitting}
                   required
                 />

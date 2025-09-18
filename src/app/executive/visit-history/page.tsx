@@ -55,6 +55,7 @@ const VisitHistory: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedVisit, setSelectedVisit] = useState<VisitDetail | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [expandedPersonMet, setExpandedPersonMet] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState({
     storeName: '',
     city: 'All Cities',
@@ -160,15 +161,34 @@ const VisitHistory: React.FC = () => {
       return dateString;
     }
     
-    // Otherwise, format to dd/mm/yyyy format
+    // Parse the date
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
       return 'Invalid Date';
     }
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+
+    // Get today's date and yesterday's date for comparison
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    
+    // Reset time to 00:00:00 for accurate date comparison
+    const visitDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const yesterdayDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+    
+    // Check if the visit date is today or yesterday
+    if (visitDate.getTime() === todayDate.getTime()) {
+      return 'Today';
+    } else if (visitDate.getTime() === yesterdayDate.getTime()) {
+      return 'Yesterday';
+    } else {
+      // Format to dd/mm/yyyy format for other dates
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
   };
 
   const openVisitModal = (visit: VisitDetail) => {
@@ -179,6 +199,18 @@ const VisitHistory: React.FC = () => {
   const closeVisitModal = () => {
     setSelectedVisit(null);
     setShowModal(false);
+  };
+
+  const togglePersonMetExpansion = (visitId: string) => {
+    setExpandedPersonMet(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(visitId)) {
+        newSet.delete(visitId);
+      } else {
+        newSet.add(visitId);
+      }
+      return newSet;
+    });
   };
 
   const filteredVisits = visits.filter(visit => {
@@ -485,13 +517,53 @@ const VisitHistory: React.FC = () => {
                         <div className="exec-visits-person-cell">
                           {visit.personMet && visit.personMet.length > 0 ? (
                             <div className="exec-visits-person-met-list">
-                              {visit.personMet.map((person, index) => (
-                                <div key={index} className="exec-visits-person-met-item">
-                                  <span className="exec-visits-person-name">{person.name}</span>
-                                  <span className="exec-visits-person-designation">({person.designation})</span>
-                                  {index < visit.personMet.length - 1 && <span className="exec-visits-person-separator">, </span>}
+                              {visit.personMet.length === 1 ? (
+                                // Single person - show full details
+                                <div className="exec-visits-person-met-item">
+                                  <span className="exec-visits-person-name">{visit.personMet[0].name}</span>
+                                  <span className="exec-visits-person-designation">({visit.personMet[0].designation})</span>
                                 </div>
-                              ))}
+                              ) : visit.personMet.length === 2 ? (
+                                // Two people - show both
+                                <>
+                                  <div className="exec-visits-person-met-item">
+                                    <span className="exec-visits-person-name">{visit.personMet[0].name}</span>
+                                    <span className="exec-visits-person-designation">({visit.personMet[0].designation})</span>
+                                  </div>
+                                  <div className="exec-visits-person-met-item">
+                                    <span className="exec-visits-person-name">{visit.personMet[1].name}</span>
+                                    <span className="exec-visits-person-designation">({visit.personMet[1].designation})</span>
+                                  </div>
+                                </>
+                              ) : (
+                                // Multiple people - show first person + expandable list
+                                <>
+                                  <div className="exec-visits-person-met-item">
+                                    <span className="exec-visits-person-name">{visit.personMet[0].name}</span>
+                                    <span className="exec-visits-person-designation">({visit.personMet[0].designation})</span>
+                                  </div>
+                                  
+                                  {expandedPersonMet.has(visit.id) ? (
+                                    // Show all additional people when expanded
+                                    <>
+                                      {visit.personMet.slice(1).map((person, index) => (
+                                        <div key={index + 1} className="exec-visits-person-met-item">
+                                          <span className="exec-visits-person-name">{person.name}</span>
+                                          <span className="exec-visits-person-designation">({person.designation})</span>
+                                        </div>
+                                      ))}
+                                      <div className="exec-visits-person-more" onClick={() => togglePersonMetExpansion(visit.id)}>
+                                        <span className="exec-visits-more-count exec-visits-show-less">Show less</span>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    // Show "+ X more" button when collapsed
+                                    <div className="exec-visits-person-more" onClick={() => togglePersonMetExpansion(visit.id)}>
+                                      <span className="exec-visits-more-count">+{visit.personMet.length - 1} more</span>
+                                    </div>
+                                  )}
+                                </>
+                              )}
                             </div>
                           ) : (
                             <span className="exec-visits-no-data">-</span>

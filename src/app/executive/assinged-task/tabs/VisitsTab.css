@@ -1,0 +1,372 @@
+/* Mobile First Design - Base styles for screens under 420px */
+
+.pen-visit-tab-container {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  min-height: 400px;
+}
+
+/* Loading States */
+.pen-visit-tab-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.pen-visit-tab-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e9ecef;
+  border-top: 3px solid #007bff;
+  border-radius: 50%;
+  animation: pen-visit-tab-spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes pen-visit-tab-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.pen-visit-tab-loading-text {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* Error State */
+.pen-visit-tab-error {
+  padding: 20px;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  color: #721c24;
+  text-align: center;
+  font-size: 14px;
+}
+
+.pen-visit-tab-error-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* Empty State */
+.pen-visit-tab-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6c757d;
+}
+
+.pen-visit-tab-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.pen-visit-tab-empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #495057;
+}
+
+.pen-visit-tab-empty-text {
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0;
+  text-align: center;
+}
+
+/* Table Layout - Mobile First */
+.pen-visit-tab-table-container {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.pen-visit-tab-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background: white;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  border: none;
+}
+
+.pen-visit-tab-table th,
+.pen-visit-tab-table td {
+  padding: 6px 4px; /* Minimal padding for mobile */
+  border-bottom: 1px solid #e9ecef;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Column width distribution for mobile */
+.pen-visit-tab-table th:nth-child(1),
+.pen-visit-tab-table td:nth-child(1) {
+  width: 30%; /* Store Name - largest */
+  text-align: left;
+}
+
+.pen-visit-tab-table th:nth-child(2),
+.pen-visit-tab-table td:nth-child(2) {
+  width: 20%; /* City */
+  text-align: left;
+}
+
+.pen-visit-tab-table th:nth-child(3),
+.pen-visit-tab-table td:nth-child(3) {
+  width: 25%; /* Visit Date */
+  text-align: center;
+}
+
+.pen-visit-tab-table th:nth-child(4),
+.pen-visit-tab-table td:nth-child(4) {
+  width: 25%; /* Action (button + created by) */
+}
+
+.pen-visit-tab-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  font-size: 11px; /* Smaller header font */
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.pen-visit-tab-table td {
+  font-size: 12px; /* Smaller cell font */
+  color: #212529;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.pen-visit-tab-table tr:last-child td {
+  border-bottom: none;
+}
+
+.pen-visit-tab-table tr:hover {
+  background: #f8f9fa;
+}
+
+/* Action column styles */
+.pen-visit-tab-action-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  padding: 4px;
+}
+
+.pen-visit-tab-complete-btn {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: white;
+  border: none;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  max-width: 90px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.pen-visit-tab-complete-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+}
+
+.pen-visit-tab-complete-btn:active {
+  transform: translateY(0);
+}
+
+.pen-visit-tab-complete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pen-visit-tab-created-by {
+  color: #6b7280;
+  font-size: 8px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: normal;
+  word-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
+  background: none;
+  padding: 0;
+  text-align: center;
+  line-height: 1.2;
+}
+
+
+.pen-visit-tab-store-name {
+  font-weight: 600;
+  color: #212529;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.pen-visit-tab-city {
+  color: #6c757d;
+  font-size: 0.9em;
+  text-align: left;
+}
+
+.pen-visit-tab-date {
+  font-weight: 500;
+  color: #495057;
+  word-break: break-all;
+  text-align: center;
+}
+
+/* Responsive Design */
+
+/* Small phones (up to 380px) */
+@media (max-width: 421px) {
+  .pen-visit-tab-container {
+    padding: 0;
+  }
+  
+  .pen-visit-tab-table {
+    font-size: 10px;
+  }
+  
+  .pen-visit-tab-table th,
+  .pen-visit-tab-table td {
+    padding: 4px 2px;
+  }
+  
+  .pen-visit-tab-complete-btn {
+    font-size: 8px;
+    padding: 3px 4px;
+    max-width: 75px;
+  }
+  
+  .pen-visit-tab-created-by {
+    font-size: 7px;
+    padding: 1px 3px;
+  }
+  
+  /* Adjust column widths for very small screens */
+  .pen-visit-tab-table th:nth-child(1),
+  .pen-visit-tab-table td:nth-child(1) {
+    width: 35%; /* Store Name - more space */
+  }
+  
+  .pen-visit-tab-table th:nth-child(2),
+  .pen-visit-tab-table td:nth-child(2) {
+    width: 18%; /* City - less space */
+  }
+  
+  .pen-visit-tab-table th:nth-child(3),
+  .pen-visit-tab-table td:nth-child(3) {
+    width: 22%; /* Visit Date */
+  }
+  
+  .pen-visit-tab-table th:nth-child(4),
+  .pen-visit-tab-table td:nth-child(4) {
+    width: 25%; /* Action */
+  }
+}
+
+/* Tablets and small desktops (421px to 768px) */
+
+
+/* Large screens (769px and up) */
+@media (min-width: 769px) {
+  .pen-visit-tab-container {
+    padding: 0;
+    max-width: none;
+    margin: 0;
+  }
+  
+  .pen-visit-tab-table {
+    font-size: 14px;
+  }
+  
+  .pen-visit-tab-table th,
+  .pen-visit-tab-table td {
+    padding: 12px 16px;
+  }
+  
+  .pen-visit-tab-table th {
+    font-size: 13px;
+  }
+  
+  .pen-visit-tab-table td {
+    font-size: 14px;
+  }
+  
+  .pen-visit-tab-complete-btn {
+    font-size: 12px;
+    padding: 8px 12px;
+    max-width: 140px;
+  }
+  
+  .pen-visit-tab-created-by {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+  
+  /* Optimal column distribution for large screens */
+  .pen-visit-tab-table th:nth-child(1),
+  .pen-visit-tab-table td:nth-child(1) {
+    width: 30%; /* Store Name */
+  }
+  
+  .pen-visit-tab-table th:nth-child(2),
+  .pen-visit-tab-table td:nth-child(2) {
+    width: 18%; /* City */
+  }
+  
+  .pen-visit-tab-table th:nth-child(3),
+  .pen-visit-tab-table td:nth-child(3) {
+    width: 22%; /* Visit Date */
+  }
+  
+  .pen-visit-tab-table th:nth-child(4),
+  .pen-visit-tab-table td:nth-child(4) {
+    width: 30%; /* Action - more space for button + text */
+  }
+}
+
+/* Utility classes */
+.text-center {
+  text-align: center;
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}
+
+.mt-2 {
+  margin-top: 8px;
+}
+
+.text-muted {
+  color: #6c757d;
+}

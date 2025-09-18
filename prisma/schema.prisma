@@ -175,8 +175,7 @@ model AssignReport {
 
 enum VisitPlanStatus {
   SUBMITTED
-  APPROVED
-  REJECTED
+  COMPLETED
 }
 
 model VisitPlan {

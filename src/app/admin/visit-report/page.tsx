@@ -52,6 +52,12 @@ const VisitReportPage: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
   const [markingReviewedId, setMarkingReviewedId] = useState<string | null>(null);
   
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState<{
+    key: 'executiveName' | 'storeName' | 'visitDate' | null;
+    direction: 'asc' | 'desc';
+  }>({ key: null, direction: 'asc' });
+  
   // Filter data from API
   const [filterData, setFilterData] = useState<{
     stores: Array<{id: string, name: string, city: string}>;
@@ -132,7 +138,7 @@ const VisitReportPage: React.FC = () => {
     }
   };
 
-  // Apply filters to existing data (client-side filtering)
+  // Apply filters and sorting to existing data (client-side filtering and sorting)
   const applyFilters = () => {
     if (!visitData.length) {
       setFilteredVisits([]);
@@ -203,6 +209,39 @@ const VisitReportPage: React.FC = () => {
       return true;
     });
 
+    // Apply sorting if a sort column is selected
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        switch (sortConfig.key) {
+          case 'executiveName':
+            aValue = a.executiveName.toLowerCase();
+            bValue = b.executiveName.toLowerCase();
+            break;
+          case 'storeName':
+            aValue = a.storeName.toLowerCase();
+            bValue = b.storeName.toLowerCase();
+            break;
+          case 'visitDate':
+            aValue = new Date(a.visitDate).getTime();
+            bValue = new Date(b.visitDate).getTime();
+            break;
+          default:
+            return 0;
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
     setFilteredVisits(filtered);
   };
 
@@ -255,12 +294,12 @@ const VisitReportPage: React.FC = () => {
     }
   }, [filterData.stores, filterData.executives]); // Wait for filter data to be loaded
 
-  // Apply filters to existing data when filters change (but not on initial load)
+  // Apply filters and sorting to existing data when filters or sorting changes (but not on initial load)
   useEffect(() => {
     if (visitData.length > 0) { // Only apply filters if we have data
       applyFilters();
     }
-  }, [filters, visitData]);
+  }, [filters, visitData, sortConfig]);
 
   // Refetch data when date filter changes (requires server-side fetch)
   useEffect(() => {
@@ -384,6 +423,55 @@ const VisitReportPage: React.FC = () => {
     return status || 'None';
   };
 
+  // Smart date formatting function for visit dates
+  const formatVisitDate = (dateString: string): string => {
+    if (!dateString) return dateString;
+    
+    // Handle different date formats that might come from API
+    let visitDate: Date;
+    
+    // If it's already in dd/mm/yyyy format, parse it correctly
+    if (dateString.includes('/') && dateString.split('/').length === 3) {
+      const parts = dateString.split('/');
+      if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+        const year = parseInt(parts[2], 10);
+        visitDate = new Date(year, month, day);
+      } else {
+        visitDate = new Date(dateString);
+      }
+    } else {
+      visitDate = new Date(dateString);
+    }
+    
+    // Check if date is valid
+    if (isNaN(visitDate.getTime())) {
+      return dateString; // Return original if can't parse
+    }
+    
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    // Reset time to compare only dates
+    today.setHours(0, 0, 0, 0);
+    yesterday.setHours(0, 0, 0, 0);
+    visitDate.setHours(0, 0, 0, 0);
+    
+    if (visitDate.getTime() === today.getTime()) {
+      return 'Today';
+    } else if (visitDate.getTime() === yesterday.getTime()) {
+      return 'Yesterday';
+    } else {
+      // Format as dd/mm/yyyy
+      const day = visitDate.getDate().toString().padStart(2, '0');
+      const month = (visitDate.getMonth() + 1).toString().padStart(2, '0');
+      const year = visitDate.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+  };
+
   const getIssueStatusBadgeClass = (status: 'Pending' | 'Assigned' | 'Resolved' | null): string => {
     if (!status) return 'issue-status-default';
     
@@ -429,6 +517,24 @@ const VisitReportPage: React.FC = () => {
       { value: 'Pending', label: 'Pending' },
       { value: 'Resolved', label: 'Resolved' }
     ];
+  };
+
+  // Sorting functions
+  const handleSort = (key: 'executiveName' | 'storeName' | 'visitDate') => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (columnKey: 'executiveName' | 'storeName' | 'visitDate') => {
+    if (sortConfig.key !== columnKey) {
+      return '↕️'; // Both arrows when not sorted
+    }
+    return sortConfig.direction === 'asc' ? '↑' : '↓';
   };
 
   const getIssueIdByText = (issueText: string): number | null => {
@@ -662,10 +768,25 @@ const VisitReportPage: React.FC = () => {
         <div className="admin-visit-report-table">
           {/* Always show table header for context */}
           <div className="admin-visit-report-table-header">
-            <div className="admin-visit-report-header-cell">Executive Name</div>
-            <div className="admin-visit-report-header-cell">Store Name</div>
+            <div 
+              className="admin-visit-report-header-cell sortable-header" 
+              onClick={() => handleSort('executiveName')}
+            >
+              Executive Name <span className="sort-icon">{getSortIcon('executiveName')}</span>
+            </div>
+            <div 
+              className="admin-visit-report-header-cell sortable-header" 
+              onClick={() => handleSort('storeName')}
+            >
+              Store Name <span className="sort-icon">{getSortIcon('storeName')}</span>
+            </div>
             <div className="admin-visit-report-header-cell">Partner Brand</div>
-            <div className="admin-visit-report-header-cell">Visit Date</div>
+            <div 
+              className="admin-visit-report-header-cell sortable-header" 
+              onClick={() => handleSort('visitDate')}
+            >
+              Visit Date <span className="sort-icon">{getSortIcon('visitDate')}</span>
+            </div>
             <div className="admin-visit-report-header-cell">Issues</div>
             <div className="admin-visit-report-header-cell">Status</div>
             <div className="admin-visit-report-header-cell">Actions</div>
@@ -710,7 +831,7 @@ const VisitReportPage: React.FC = () => {
                 </div>
                 
                 <div className="admin-visit-report-cell admin-visit-report-date-cell">
-                  <span className="admin-visit-report-visit-date">📅 {visit.visitDate}</span>
+                  <span className="admin-visit-report-visit-date">📅 {formatVisitDate(visit.visitDate)}</span>
                 </div>
                 
                 <div className="admin-visit-report-cell admin-visit-report-issues-cell">

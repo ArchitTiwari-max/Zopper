@@ -274,6 +274,7 @@ export async function GET(request: NextRequest) {
         pendingIssues: pendingIssues,
         city: store.city,
         status: storeStatus,
+        lastVisit: lastVisitDate ? lastVisitDate.toISOString() : null,
         lastVisitDate: lastVisitDate // Add for sorting
       };
     });

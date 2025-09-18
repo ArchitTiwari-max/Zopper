@@ -42,6 +42,12 @@ const AdminStoresPage: React.FC = () => {
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
   const [showVisitPlanModal, setShowVisitPlanModal] = useState<boolean>(false);
   const [isSubmittingVisitPlan, setIsSubmittingVisitPlan] = useState<boolean>(false);
+  
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState<{
+    key: 'storeName' | 'city' | 'lastVisit' | null;
+    direction: 'asc' | 'desc';
+  }>({ key: null, direction: 'asc' });
 
   // Fetch filter data from API (fast)
   const fetchFilterData = async () => {
@@ -158,6 +164,43 @@ const AdminStoresPage: React.FC = () => {
       return true;
     });
 
+    // Apply sorting if a sort column is selected
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        switch (sortConfig.key) {
+          case 'storeName':
+            aValue = a.storeName.toLowerCase();
+            bValue = b.storeName.toLowerCase();
+            break;
+          case 'city':
+            aValue = a.city.toLowerCase();
+            bValue = b.city.toLowerCase();
+            break;
+          case 'lastVisit':
+            // Handle null values for lastVisit
+            if (!a.lastVisit && !b.lastVisit) return 0;
+            if (!a.lastVisit) return 1; // Put stores with no visits at the end
+            if (!b.lastVisit) return -1; // Put stores with no visits at the end
+            aValue = new Date(a.lastVisit).getTime();
+            bValue = new Date(b.lastVisit).getTime();
+            break;
+          default:
+            return 0;
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
     setFilteredStores(filtered);
     setIsFilterChanging(false);
   };
@@ -263,12 +306,12 @@ const AdminStoresPage: React.FC = () => {
     fetchFilterData();
   }, []);
 
-  // Apply client-side filters when filters or data change
+  // Apply client-side filters and sorting when filters, data, or sorting changes
   useEffect(() => {
     if (storeData.length > 0) {
       applyFilters();
     }
-  }, [filters, storeData]);
+  }, [filters, storeData, sortConfig]);
 
   // Optionally refetch when search params change if needed (e.g., deep link)
   useEffect(() => {
@@ -366,6 +409,51 @@ const AdminStoresPage: React.FC = () => {
       'Xiaomi': '#EF4444'
     };
     return brandColors[brand] || '#64748b';
+  };
+
+  // Smart date formatting function
+  const formatLastVisitDate = (dateString: string | null): string => {
+    if (!dateString) return 'Never';
+    
+    const visitDate = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    // Reset time to compare only dates
+    today.setHours(0, 0, 0, 0);
+    yesterday.setHours(0, 0, 0, 0);
+    visitDate.setHours(0, 0, 0, 0);
+    
+    if (visitDate.getTime() === today.getTime()) {
+      return 'Today';
+    } else if (visitDate.getTime() === yesterday.getTime()) {
+      return 'Yesterday';
+    } else {
+      // Format as dd/mm/yyyy
+      const day = visitDate.getDate().toString().padStart(2, '0');
+      const month = (visitDate.getMonth() + 1).toString().padStart(2, '0');
+      const year = visitDate.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+  };
+
+  // Sorting functions
+  const handleSort = (key: 'storeName' | 'city' | 'lastVisit') => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (columnKey: 'storeName' | 'city' | 'lastVisit') => {
+    if (sortConfig.key !== columnKey) {
+      return '↕️'; // Both arrows when not sorted
+    }
+    return sortConfig.direction === 'asc' ? '↑' : '↓';
   };
 
   // Get filter options from filter data (not store data for better performance)
@@ -670,11 +758,27 @@ const AdminStoresPage: React.FC = () => {
         <div className="admin-stores-table">
           {/* Always show table header for context */}
           <div className="admin-stores-table-header">
-            <div className="admin-stores-header-cell">STORE NAME</div>
+            <div 
+              className="admin-stores-header-cell sortable-header" 
+              onClick={() => handleSort('storeName')}
+            >
+              STORE NAME <span className="sort-icon">{getSortIcon('storeName')}</span>
+            </div>
             <div className="admin-stores-header-cell">PARTNER BRANDS</div>
-            <div className="admin-stores-header-cell">ADDRESS</div>
+            <div 
+              className="admin-stores-header-cell sortable-header" 
+              onClick={() => handleSort('city')}
+            >
+              CITY <span className="sort-icon">{getSortIcon('city')}</span>
+            </div>
             <div className="admin-stores-header-cell">ASSIGNED EXECUTIVE</div>
-            <div className="admin-stores-header-cell">Pending Reviews</div>
+            <div 
+              className="admin-stores-header-cell sortable-header" 
+              onClick={() => handleSort('lastVisit')}
+            >
+              LAST VISIT <span className="sort-icon">{getSortIcon('lastVisit')}</span>
+            </div>
+            <div className="admin-stores-header-cell">PENDING REVIEWS</div>
             <div className="admin-stores-header-cell">PENDING ISSUES</div>
           </div>
           
@@ -731,6 +835,11 @@ const AdminStoresPage: React.FC = () => {
                     <Link href={`/admin/executives?storeId=${store.id}`} className="admin-stores-view-all-link">
                       View All
                     </Link>
+                  </div>
+                  <div className="admin-stores-cell admin-stores-last-visit-cell">
+                    <span className="admin-stores-last-visit-text">
+                      {formatLastVisitDate(store.lastVisit)}
+                    </span>
                   </div>
                   <div className="admin-stores-cell">
                     {store.pendingReviews > 0 ? (

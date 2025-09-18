@@ -1,6 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import SubmitTaskModal from '../SubmitTaskModal';
+import TaskDetailModal from '../components/TaskDetailModal';
+import ViewReportModal from '../components/ViewReportModal';
 
 interface StoreDetails {
   id: string;
@@ -26,22 +29,144 @@ interface AssignedTask {
   storeId: string;
 }
 
-interface IssuesTabProps {
-  tasks: AssignedTask[];
-  loading: boolean;
-  error: string | null;
-  onViewDetails: (task: AssignedTask) => void;
-  onRetry: () => void;
+interface TasksResponse {
+  success: boolean;
+  data: {
+    tasks: AssignedTask[];
+    totalTasks: number;
+    pendingTasks: number;
+    completedTasks: number;
+  };
+  error?: string;
 }
 
-const IssuesTab: React.FC<IssuesTabProps> = ({
-  tasks,
-  loading,
-  error,
-  onViewDetails,
-  onRetry
-}) => {
+interface IssuesTabProps {
+  onCountUpdate?: () => void;
+}
+
+const IssuesTab: React.FC<IssuesTabProps> = ({ onCountUpdate }) => {
+  const [tasks, setTasks] = useState<AssignedTask[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedIssues, setExpandedIssues] = useState<Set<string>>(new Set());
+  
+  // Modal states
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [taskDetailModal, setTaskDetailModal] = useState<{
+    isOpen: boolean;
+    task: any;
+  }>({ isOpen: false, task: null });
+  const [viewReportModal, setViewReportModal] = useState<{
+    isOpen: boolean;
+    taskId: string;
+    storeName: string;
+  }>({ isOpen: false, taskId: '', storeName: '' });
+
+  // Fetch assigned tasks from API
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async (bustCache = false) => {
+    try {
+      setLoading(true);
+      // Add timestamp to URL to bust cache when needed
+      const url = bustCache 
+        ? `/api/executive/assigned-tasks/pending-issue?t=${Date.now()}`
+        : '/api/executive/assigned-tasks/pending-issue';
+        
+      const response = await fetch(url, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError('Authentication failed. Please login again.');
+          return;
+        } else if (response.status === 403) {
+          setError('Access denied. Executive role required.');
+          return;
+        } else if (response.status === 404) {
+          setError('Executive profile not found.');
+          return;
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+      }
+
+      const result: TasksResponse = await response.json();
+      
+      if (result.success) {
+        setTasks(result.data.tasks || []);
+        setError(null);
+      } else {
+        setError(result.error || 'Failed to fetch tasks');
+      }
+    } catch (err) {
+      console.error('Error fetching tasks:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch tasks');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Modal handlers
+  const handleSubmitTask = (taskId: string) => {
+    setSelectedTaskId(taskId);
+    setIsSubmitModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsSubmitModalOpen(false);
+    setSelectedTaskId(null);
+  };
+
+  const handleTaskSubmitted = async () => {
+    try {
+      // Wait a moment for database to update, then refresh data with cache busting
+      setTimeout(async () => {
+        await fetchTasks(true); // true = bust cache
+        if (onCountUpdate) onCountUpdate(); // Update counts in parent
+      }, 1000);
+    } catch (error) {
+      console.error('Error refreshing tasks after submission:', error);
+    }
+    handleCloseModal();
+  };
+
+  const handleViewDetails = (task: AssignedTask) => {
+    setTaskDetailModal({ isOpen: true, task });
+  };
+
+  const handleCloseTaskDetail = () => {
+    setTaskDetailModal({ isOpen: false, task: null });
+  };
+
+  const handleViewReport = (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      setViewReportModal({
+        isOpen: true,
+        taskId,
+        storeName: task.storeName
+      });
+    }
+  };
+
+  const handleCloseViewReport = () => {
+    setViewReportModal({ isOpen: false, taskId: '', storeName: '' });
+  };
+
+  const handleRetry = () => {
+    fetchTasks(true); // Use cache busting for retry
+  };
 
   const toggleIssueExpansion = (taskId: string) => {
     setExpandedIssues(prev => {
@@ -68,51 +193,45 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
 
   return (
     <div className="exec-tasks-issues-panel">
-      <div className="exec-tasks-issues-table-container">
-        <table className="exec-tasks-issues-table">
-          <thead>
-            <tr>
-              <th>STORE NAME</th>
-              <th>ISSUE</th>
-              <th>ADMIN COMMENT</th>
-              <th>CITY</th>
-              <th className="exec-tasks-issues-action-header">ACTION</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+      {loading ? (
+        <div className="exec-tasks-issues-loading">
+          <div className="exec-tasks-issues-loading-spinner"></div>
+          <span className="exec-tasks-issues-loading-text">Loading assigned tasks...</span>
+        </div>
+      ) : error ? (
+        <div className="exec-tasks-issues-error">
+          <div className="exec-tasks-issues-error-title">Error</div>
+          <div>{error}</div>
+          <button 
+            onClick={handleRetry} 
+            className="exec-tasks-issues-retry-btn"
+          >
+            Retry
+          </button>
+        </div>
+      ) : tasks.length === 0 ? (
+        <div className="exec-tasks-issues-empty">
+          <div className="exec-tasks-issues-empty-icon">⚠️</div>
+          <h3 className="exec-tasks-issues-empty-title">No Pending Issues</h3>
+          <p className="exec-tasks-issues-empty-text">
+            You don't have any pending issue assignments at the moment.
+            Check back later for new assignments.
+          </p>
+        </div>
+      ) : (
+        <div className="exec-tasks-issues-table-container">
+          <table className="exec-tasks-issues-table">
+            <thead>
               <tr>
-                <td colSpan={5}>
-                  <div className="loading-state">
-                    <div className="loading-spinner-large"></div>
-                    <span className="loading-text">Loading assigned tasks...</span>
-                  </div>
-                </td>
+                <th>STORE NAME</th>
+                <th>ISSUE</th>
+                <th>ADMIN COMMENT</th>
+                <th>CITY</th>
+                <th className="exec-tasks-issues-action-header">ACTION</th>
               </tr>
-            ) : error ? (
-              <tr>
-                <td colSpan={5}>
-                  <div className="exec-tasks-issues-error-state">
-                    <p>Error: {error}</p>
-                    <button 
-                      onClick={onRetry} 
-                      className="exec-tasks-issues-retry-btn"
-                    >
-                      Retry
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ) : tasks.length === 0 ? (
-              <tr>
-                <td colSpan={5}>
-                  <div className="exec-tasks-issues-no-data-state">
-                    <span>No assigned issues</span>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              tasks.map((task) => {
+            </thead>
+            <tbody>
+              {tasks.map((task) => {
                 const displayStatus = task.status === 'Completed' || task.hasReport ? 'Submitted' : 'Pending';
                 
                 return (
@@ -144,21 +263,63 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
                         >
                           {displayStatus}
                         </span>
-                        <button 
-                          className="exec-tasks-issues-view-details-btn"
-                          onClick={() => onViewDetails(task)}
-                        >
-                          View Details
-                        </button>
+                        {displayStatus === 'Pending' ? (
+                          <button 
+                            className="exec-tasks-issues-view-details-btn"
+                            onClick={() => handleViewDetails(task)}
+                          >
+                            View Details
+                          </button>
+                        ) : (
+                          <button 
+                            className="exec-tasks-issues-view-report-btn"
+                            onClick={() => handleViewReport(task.id)}
+                          >
+                            View Report
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
                 );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+      
+      {/* Submit Task Modal */}
+      {isSubmitModalOpen && selectedTaskId && (
+        <SubmitTaskModal
+          isOpen={isSubmitModalOpen}
+          onClose={handleCloseModal}
+          taskId={selectedTaskId}
+          storeName={tasks.find(t => t.id === selectedTaskId)?.storeName || ''}
+          storeDetails={tasks.find(t => t.id === selectedTaskId)?.storeDetails}
+          onTaskSubmitted={handleTaskSubmitted}
+        />
+      )}
+
+      {/* Task Detail Modal */}
+      {taskDetailModal.isOpen && taskDetailModal.task && (
+        <TaskDetailModal
+          isOpen={taskDetailModal.isOpen}
+          onClose={handleCloseTaskDetail}
+          task={taskDetailModal.task}
+          onSubmitTask={handleSubmitTask}
+          onViewReport={handleViewReport}
+        />
+      )}
+
+      {/* View Report Modal */}
+      {viewReportModal.isOpen && (
+        <ViewReportModal
+          isOpen={viewReportModal.isOpen}
+          onClose={handleCloseViewReport}
+          taskId={viewReportModal.taskId}
+          storeName={viewReportModal.storeName}
+        />
+      )}
     </div>
   );
 };

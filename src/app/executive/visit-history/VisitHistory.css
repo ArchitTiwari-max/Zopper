@@ -440,6 +440,36 @@
   font-style: italic;
 }
 
+.exec-visits-person-more {
+  margin-top: 4px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.exec-visits-more-count {
+  display: inline-block;
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 9px;
+  font-weight: 500;
+  border: 1px solid #bbdefb;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.exec-visits-more-count:active {
+  transform: scale(0.98);
+}
+
+.exec-visits-show-less {
+  background-color: #fff3e0;
+  color: #f57c00;
+  border-color: #ffcc02;
+}
+
 .exec-visits-no-data {
   color: #9ca3af;
   font-style: italic;

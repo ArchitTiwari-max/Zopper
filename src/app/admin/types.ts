@@ -49,6 +49,7 @@ export interface StoreData {
   pendingIssues: number;
   city: string;
   status: 'Active' | 'Inactive' | 'Pending';
+  lastVisit?: string | null;
 }
 
 export interface StoreFilters {

@@ -131,14 +131,19 @@ const SubmitTaskModal: React.FC<SubmitTaskModalProps> = ({
       const result = await response.json();
 
       if (result.success) {
-        onTaskSubmitted();
-        onClose();
+        // Show success popup
+        alert(result.message || 'Task submitted successfully!');
+        
         // Reset form
         setFormData({
           personMet: { name: '', designation: '' },
           remarks: '',
           photos: []
         });
+        
+        // Update parent and close modal
+        onTaskSubmitted();
+        onClose();
       } else {
         setErrors({ submit: result.error || 'Failed to submit task' });
       }

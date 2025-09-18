@@ -150,6 +150,23 @@
   text-overflow: ellipsis;
 }
 
+/* Sortable header styling */
+.admin-visit-report-table .sortable-header {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.admin-visit-report-table .sortable-header:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.admin-visit-report-table .sort-icon {
+  font-size: 0.75rem;
+  margin-left: 0.25rem;
+  opacity: 0.8;
+}
+
 .admin-visit-report-table .admin-visit-report-table-body {
   display: flex;
   flex-direction: column;
@@ -248,9 +265,14 @@
   color: white;
   font-size: 0.75rem;
   font-weight: 500;
-  padding: 0.125rem 0.5rem;
+  padding: 0.25rem 0.625rem;
   border-radius: 12px;
   text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
+  line-height: 1;
 }
 
 /* Date Cell */
