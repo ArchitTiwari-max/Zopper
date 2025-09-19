@@ -25,11 +25,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No image file provided' }, { status: 400 });
     }
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
+    // Validate file type - accept all image types including HEIC/HEIF and other formats
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.tif', '.svg', '.ico', '.avif', '.heic', '.heif'];
+    const fileName = file.name.toLowerCase();
+    const hasImageExtension = imageExtensions.some(ext => fileName.endsWith(ext));
+    
+    const isValidImageType = file.type.startsWith('image/') || hasImageExtension;
+    
+    if (!isValidImageType) {
       return NextResponse.json({ 
-        error: 'Invalid file type. Only JPEG, PNG, JPG, and WebP are allowed.' 
+        error: 'Invalid file type. Only image files are allowed.' 
       }, { status: 400 });
     }
 

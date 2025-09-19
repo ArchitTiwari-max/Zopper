@@ -11,11 +11,13 @@ async function main() {
 
   console.log("Detected headers:", Object.keys(stores[0])); // 🔍 debug
 
-  for (const store of stores) {
+ for (const store of stores) {
+  try {
     const rawBrands = store.partnerBrandIds || store["Partner Brands"] || "";
     const brandIds = rawBrands
       ? rawBrands.toString().split(",").map((id: string) => id.trim())
       : [];
+
     await prisma.store.create({
       data: {
         id: store.Store_ID,
@@ -25,8 +27,16 @@ async function main() {
         partnerBrandIds: brandIds,
       },
     });
-    console.log(`Inserted store: ${store.Store_Name || store["Store_Name"]}`);
+
+    console.log(`✅ Inserted store: ${store.Store_Name || store["Store_Name"]}`);
+  } catch (err) {
+    console.error(
+      `❌ Failed to insert store ${store.Store_Name || store["Store_Name"]}:`,
+    );
+    // continue loop
   }
+}
+
 
   console.log("Stores imported successfully!");
 }

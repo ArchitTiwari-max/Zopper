@@ -130,8 +130,8 @@ const ExecutiveTodoList: React.FC = () => {
         <div className="exec-tasks-section">
           <div className="exec-tasks-header">
             <div className="exec-tasks-title-section">
-              <h1 className="exec-tasks-title">Assigned Tasks</h1>
-              <p className="exec-tasks-subtitle">Complete your assigned tasks across different categories</p>
+              <h1 className="exec-tasks-title">Pending Tasks</h1>
+              <p className="exec-tasks-subtitle">Complete your pending tasks across different categories</p>
             </div>
           </div>
 
