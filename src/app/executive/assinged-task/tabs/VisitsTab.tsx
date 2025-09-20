@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import './VisitsTab.css';
+import VPOEditModal from '../../components/VPOEditModal';
 
 interface VisitPlan {
   planId: string;
@@ -11,6 +12,24 @@ interface VisitPlan {
   plannedVisitDate: string;
   createdByRole: 'ADMIN' | 'EXECUTIVE';
   status: 'SUBMITTED' | 'COMPLETED';
+}
+
+interface StoreDetails {
+  id: string;
+  storeName: string;
+  city: string;
+  fullAddress?: string;
+  partnerBrands: string[];
+}
+
+interface VPODataModal {
+  id: string;
+  status: string;
+  plannedVisitDate: string;
+  createdByRole: string;
+  adminComment?: string;
+  canEdit: boolean;
+  stores: StoreDetails[];
 }
 
 interface VisitPlansResponse {
@@ -32,6 +51,12 @@ const VisitsTab: React.FC<VisitsTabProps> = ({ onCountUpdate }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [completingPlanIds, setCompletingPlanIds] = useState<Set<string>>(new Set());
+
+  // VPO Edit modal state
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [vpoData, setVpoData] = useState<VPODataModal | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Fetch visit plans from API
   const fetchVisitPlans = async () => {
@@ -88,6 +113,74 @@ const VisitsTab: React.FC<VisitsTabProps> = ({ onCountUpdate }) => {
   useEffect(() => {
     fetchVisitPlans();
   }, []);
+
+  // Open edit modal for a given plan
+  const openEditModal = async (planId: string) => {
+    try {
+      setError(null);
+      setSelectedPlanId(planId);
+      // Fetch plan details
+      const response = await fetch(`/api/executive/visit-plan/${planId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        if (response.status === 404) throw new Error('Visit plan not found');
+        if (response.status === 403) throw new Error('You are not authorized to view this visit plan');
+        throw new Error('Failed to fetch visit plan');
+      }
+      const result = await response.json();
+      const data = result?.data?.visitPlan;
+      if (!result.success || !data) {
+        throw new Error(result.error || 'Invalid response while fetching visit plan');
+      }
+      setVpoData(data);
+      setIsEditOpen(true);
+    } catch (err) {
+      console.error('Error opening edit modal:', err);
+      setError(err instanceof Error ? err.message : 'Failed to open edit modal');
+    }
+  };
+
+  const closeEditModal = () => {
+    setIsEditOpen(false);
+    setSelectedPlanId(null);
+    setVpoData(null);
+  };
+
+  // Save handler for modal
+  const handleSaveVPO = async (payload: { storeIds: string[]; plannedVisitDate: string }) => {
+    if (!selectedPlanId) return;
+    try {
+      setIsSaving(true);
+      const response = await fetch(`/api/executive/visit-plan/${selectedPlanId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        const msg = errJson.details ? `${errJson.error}: ${errJson.details}` : (errJson.error || 'Failed to save changes');
+        throw new Error(msg);
+      }
+      // Refresh the list to reflect changes instantly
+      await fetchVisitPlans();
+      closeEditModal();
+      // Update parent counts if provided
+      if (onCountUpdate) onCountUpdate();
+    } catch (err) {
+      console.error('Error saving visit plan:', err);
+      setError(err instanceof Error ? err.message : 'Failed to save changes');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Format date for display
   const formatDate = (dateString: string): string => {
@@ -217,6 +310,15 @@ const VisitsTab: React.FC<VisitsTabProps> = ({ onCountUpdate }) => {
                       >
                         {completingPlanIds.has(`${plan.planId}-${plan.storeId}`) ? 'Marking...' : 'Mark Completed'}
                       </button>
+                      {plan.createdByRole === 'EXECUTIVE' && (
+                        <button
+                          className="pen-visit-tab-edit-btn"
+                          onClick={() => openEditModal(plan.planId)}
+                          style={{ marginLeft: '8px' }}
+                        >
+                          Edit Plan
+                        </button>
+                      )}
                       <span className="pen-visit-tab-created-by">
                         Created by {plan.createdByRole}
                       </span>
@@ -227,6 +329,16 @@ const VisitsTab: React.FC<VisitsTabProps> = ({ onCountUpdate }) => {
             </tbody>
           </table>
         </div>
+      )}
+      {/* Edit VPO Modal */}
+      {isEditOpen && vpoData && (
+        <VPOEditModal
+          isOpen={isEditOpen}
+          onClose={closeEditModal}
+          vpoData={vpoData}
+          onSave={handleSaveVPO}
+          isSubmitting={isSaving}
+        />
       )}
     </div>
   );

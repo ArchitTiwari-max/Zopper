@@ -1,0 +1,244 @@
+.vpo-edit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Above bottom-navigation (z-index: 10000) */
+  z-index: 20000;
+}
+
+.vpo-edit-modal {
+  width: 92vw;
+  max-width: 900px;
+  max-height: 86vh;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.vpo-edit-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.vpo-edit-modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.vpo-edit-modal-close-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+  color: #374151;
+}
+
+.vpo-edit-modal-body {
+  padding: 16px 20px;
+  overflow: auto;
+}
+
+.vpo-edit-error-message {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.vpo-edit-info-section {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.vpo-edit-info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.vpo-edit-info-label {
+  color: #6b7280;
+}
+
+.vpo-edit-status {
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #e5e7eb;
+}
+.vpo-edit-status.submitted { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+.vpo-edit-status.completed { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+
+.vpo-edit-created-by { color: #111827; font-weight: 500; }
+
+.vpo-edit-admin-comment {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  color: #1f2937;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.vpo-edit-readonly-notice {
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+  color: #9a3412;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.vpo-edit-date-section { margin-bottom: 16px; }
+
+.vpo-edit-form-label { display: block; margin-bottom: 6px; color: #374151; font-weight: 500; }
+
+.vpo-edit-date-input {
+  width: 260px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.vpo-edit-stores-section { }
+.vpo-edit-section-title { margin: 12px 0; font-size: 16px; font-weight: 600; color: #111827; }
+
+.vpo-edit-stores-list { display: flex; flex-direction: column; gap: 10px; }
+
+.vpo-edit-store-item {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.vpo-edit-store-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #111827;
+  font-weight: 600;
+}
+
+.vpo-edit-store-info { overflow: hidden; }
+.vpo-edit-store-name { margin: 0 0 2px 0; font-size: 15px; color: #111827; }
+.vpo-edit-store-location { margin: 0; color: #6b7280; font-size: 13px; }
+.vpo-edit-store-address { margin: 4px 0 0 0; color: #6b7280; font-size: 13px; }
+.vpo-edit-store-brands { margin: 6px 0 0 0; color: #374151; font-size: 13px; }
+
+.vpo-edit-store-actions { display: flex; align-items: center; gap: 8px; }
+
+.vpo-edit-replace-dropdown { display: flex; align-items: center; gap: 8px; }
+
+.vpo-edit-replace-select, .vpo-edit-add-select {
+  min-width: 260px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.vpo-edit-cancel-replace-btn, .vpo-edit-replace-btn, .vpo-edit-remove-btn,
+.vpo-edit-cancel-btn, .vpo-edit-save-btn, .vpo-edit-confirm-cancel-btn, .vpo-edit-confirm-confirm-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  color: #374151;
+  cursor: pointer;
+}
+
+.vpo-edit-replace-btn { background: #eef2ff; border-color: #c7d2fe; }
+.vpo-edit-remove-btn { background: #fee2e2; border-color: #fecaca; color: #991b1b; }
+
+.vpo-edit-add-store-section { margin-top: 12px; }
+.vpo-edit-add-title { margin: 0 0 8px 0; font-size: 14px; color: #374151; font-weight: 500; }
+
+.vpo-edit-loading { font-size: 14px; color: #6b7280; }
+
+.vpo-edit-modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.vpo-edit-save-btn { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+.vpo-edit-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.vpo-edit-loading-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #4f46e5;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  animation: vpo-spin 1s linear infinite;
+}
+
+@keyframes vpo-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+
+/* Confirmation Dialog */
+.vpo-edit-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Above modal overlay and bottom-navigation */
+  z-index: 21000;
+}
+
+.vpo-edit-confirm-modal {
+  background: #fff;
+  width: 92vw;
+  max-width: 520px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+}
+
+.vpo-edit-confirm-header { padding: 14px 16px; border-bottom: 1px solid #e5e7eb; }
+.vpo-edit-confirm-title { margin: 0; font-size: 16px; font-weight: 600; color: #111827; }
+.vpo-edit-confirm-body { padding: 14px 16px; }
+.vpo-edit-confirm-message { margin: 0; color: #374151; font-size: 14px; }
+.vpo-edit-confirm-footer { padding: 12px 16px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 10px; }
+
+/* Variants */
+.vpo-edit-confirm-info .vpo-edit-confirm-header { background: #eff6ff; }
+.vpo-edit-confirm-warning .vpo-edit-confirm-header { background: #fffbeb; }
+.vpo-edit-confirm-danger .vpo-edit-confirm-header { background: #fef2f2; }
+
+.vpo-edit-confirm-confirm-btn.vpo-edit-confirm-info { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+.vpo-edit-confirm-confirm-btn.vpo-edit-confirm-warning { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+.vpo-edit-confirm-confirm-btn.vpo-edit-confirm-danger { background: #ef4444; color: #fff; border-color: #ef4444; }
