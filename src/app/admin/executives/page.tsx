@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ExecutiveData, ExecutiveFilters, RegionFilterOption, TimeframeOption } from '../types';
 import './page.css';
+import VisitTicker, { VisitTickerItem } from './components/VisitTicker';
 
 
 const AdminExecutivesPage: React.FC = () => {
@@ -17,6 +18,12 @@ const AdminExecutivesPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [filterError, setFilterError] = useState<string | null>(null);
   const [isFiltersVisible, setIsFiltersVisible] = useState<boolean>(true);
+
+  // Ticker state
+  const [recentVisits, setRecentVisits] = useState<VisitTickerItem[]>([]);
+  const [isLoadingTicker, setIsLoadingTicker] = useState<boolean>(true);
+  const [tickerError, setTickerError] = useState<string | null>(null);
+  const tickerInFlight = useRef(false);
 
   // Filter data from API
   const [filterData, setFilterData] = useState<{
@@ -149,6 +156,26 @@ const AdminExecutivesPage: React.FC = () => {
   useEffect(() => {
     fetchFilterData();
     fetchExecutivesData();
+    fetchRecentVisitsForTicker();
+  }, []);
+
+  // Poll ticker every 5 seconds while mounted and refetch on tab focus
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      fetchRecentVisitsForTicker();
+    }, 5000);
+
+    const onVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchRecentVisitsForTicker();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, []);
 
   // Set initial filters from URL parameters (separate effect to avoid conflicts)
@@ -192,6 +219,45 @@ const AdminExecutivesPage: React.FC = () => {
       applyFilters();
     }
   }, [filters, executivesData]);
+
+  // Fetch latest 20 visits for ticker
+  const fetchRecentVisitsForTicker = async () => {
+    if (tickerInFlight.current) return;
+    tickerInFlight.current = true;
+    try {
+      setIsLoadingTicker(prev => prev && true); // keep loading state if first load
+      setTickerError(null);
+      const params = new URLSearchParams();
+      params.append('dateFilter', 'Last 30 Days');
+      const res = await fetch(`/api/admin/visit-report/data?${params.toString()}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Failed to fetch visit reports' }));
+        throw new Error(err.error || 'Failed to fetch visit reports');
+      }
+      const data = await res.json();
+      const visits = Array.isArray(data.visits) ? data.visits : [];
+      // API returns most recent first already; map to ticker items and limit to 20
+      const tickerItems: VisitTickerItem[] = visits.slice(0, 20).map((v: any) => ({
+        visitId: v.id,
+        executiveId: v.executiveId,
+        username: v.executiveName,
+        storeName: v.storeName,
+        // We don't have raw createdAt here; compose from dd/mm/yyyy string into Date for formatting (optional)
+        visitedAt: v.visitDate,
+      }));
+      setRecentVisits(tickerItems);
+    } catch (e) {
+      setTickerError(e instanceof Error ? e.message : 'Failed to load recent visits');
+      setRecentVisits([]);
+    } finally {
+      setIsLoadingTicker(false);
+      tickerInFlight.current = false;
+    }
+  };
 
 
   const getBrandColor = (brand: string): string => {
@@ -349,6 +415,17 @@ const AdminExecutivesPage: React.FC = () => {
 
         </div>
           )
+        )}
+      </div>
+
+      {/* Recent Visits Ticker */}
+      <div style={{ marginBottom: '1rem' }}>
+        {isLoadingTicker ? (
+          <div style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#6b7280' }}>Loading recent visits…</div>
+        ) : tickerError ? (
+          <div style={{ padding: '0.75rem', background: '#fee2e2', color: '#dc2626', borderRadius: 6 }}>Failed to load recent visits: {tickerError}</div>
+        ) : (
+          <VisitTicker visits={recentVisits} autoScroll={false} />
         )}
       </div>
 

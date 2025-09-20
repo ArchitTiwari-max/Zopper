@@ -169,6 +169,7 @@ export async function GET(request: NextRequest) {
 
       return {
         id: visit.id, // Keep actual ObjectId for database operations
+        executiveId: visit.executive.id,
         executiveName: visit.executive.name,
         executiveInitials: initials,
         avatarColor: colors[colorIndex],
