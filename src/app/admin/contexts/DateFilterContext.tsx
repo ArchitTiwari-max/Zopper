@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-export type DateFilterOption = 'Last 7 Days' | 'Last 30 Days' | 'Last 90 Days' | 'Last Year';
+export type DateFilterOption = 'Today' | 'Last 7 Days' | 'Last 30 Days' | 'Last 90 Days' | 'Last Year';
 
 interface DateFilterContextType {
   selectedDateFilter: DateFilterOption;

@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { ExecutiveData, ExecutiveFilters, RegionFilterOption, TimeframeOption } from '../types';
 import './page.css';
 import VisitTicker, { VisitTickerItem } from './components/VisitTicker';
+import { useDateFilter } from '../contexts/DateFilterContext';
 
 
 const AdminExecutivesPage: React.FC = () => {
@@ -13,6 +14,7 @@ const AdminExecutivesPage: React.FC = () => {
   const [executivesData, setExecutivesData] = useState<ExecutiveData[]>([]);
   const [filteredExecutives, setFilteredExecutives] = useState<ExecutiveData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { selectedDateFilter } = useDateFilter();
   const [isLoadingFilters, setIsLoadingFilters] = useState<boolean>(true);
   const [isFilterChanging, setIsFilterChanging] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +73,9 @@ const AdminExecutivesPage: React.FC = () => {
     setError(null);
     try {
       // No query parameters - fetch all data for client-side filtering
-      const response = await fetch('/api/admin/executives/data', {
+      const params = new URLSearchParams();
+      params.append('dateFilter', selectedDateFilter);
+      const response = await fetch(`/api/admin/executives/data?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -158,6 +162,11 @@ const AdminExecutivesPage: React.FC = () => {
     fetchExecutivesData();
     fetchRecentVisitsForTicker();
   }, []);
+
+  // Refetch executives on date filter change
+  useEffect(() => {
+    fetchExecutivesData();
+  }, [selectedDateFilter]);
 
   // Poll ticker every 5 seconds while mounted and refetch on tab focus
   useEffect(() => {

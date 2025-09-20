@@ -39,6 +39,9 @@ export async function GET(request: NextRequest) {
     let startDate: Date;
 
     switch (dateFilter) {
+      case 'Today':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        break;
       case 'Last 7 Days':
         startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         break;
