@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     const visit = await prisma.visit.create({
       data: {
         personMet: personMet, // JSON array
-        displayChecked: displayChecked || false,
+        POSMchecked: displayChecked || false,
         remarks: remarks || '',
         imageUrls: imageUrls || [],
         status: 'PENDING_REVIEW' as any, // Default status - using enum value

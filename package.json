@@ -14,7 +14,8 @@
     "export-brand": "tsx src/querryRunner/Brands/fetchbrand.ts ",
     "import-stores": "tsx src/querryRunner/stores/store.ts",
     "export-store": "tsx src/querryRunner/stores/fetchstore.ts ",
-    "import-users": "tsx src/querryRunner/user/user.ts"
+    "import-users": "tsx src/querryRunner/user/user.ts",
+    "send-emails": "tsx src/querryRunner/user/emailsender/email.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.14.0",
@@ -23,6 +24,7 @@
     "@types/nodemailer": "^7.0.1",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",
+    "dotenv": "^17.2.2",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.542.0",
     "next": "15.5.0",
