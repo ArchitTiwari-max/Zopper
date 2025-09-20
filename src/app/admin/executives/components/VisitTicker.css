@@ -44,22 +44,40 @@
 
 /* Card */
 .visit-ticker-card {
-  background: #f9fafb;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 12px;
-  min-height: 82px;
+  min-height: 92px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
   user-select: none;
+  box-shadow:
+    0 1px 1px rgba(16, 24, 40, 0.06),
+    0 2px 4px rgba(16, 24, 40, 0.06),
+    0 4px 6px rgba(16, 24, 40, 0.04);
+  will-change: transform;
 }
 
-.visit-ticker-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+.visit-ticker-card:hover,
+.visit-ticker-card:focus-visible {
+  transform: translateY(-3px);
   background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow:
+    0 6px 10px rgba(16, 24, 40, 0.10),
+    0 12px 20px rgba(16, 24, 40, 0.12),
+    0 20px 40px rgba(16, 24, 40, 0.08);
+  outline: none;
+}
+
+.visit-ticker-card:active {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 8px rgba(16, 24, 40, 0.10),
+    0 8px 16px rgba(16, 24, 40, 0.12);
 }
 
 .visit-ticker-user {
@@ -68,15 +86,9 @@
   font-size: 14px;
 }
 
-.visit-ticker-store {
+.visit-ticker-count {
   color: #374151;
   font-size: 13px;
-  margin-top: 4px;
-}
-
-.visit-ticker-date {
-  color: #6b7280;
-  font-size: 12px;
   margin-top: 4px;
 }
 

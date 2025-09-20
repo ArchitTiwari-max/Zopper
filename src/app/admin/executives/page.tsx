@@ -168,8 +168,11 @@ const AdminExecutivesPage: React.FC = () => {
     fetchExecutivesData();
   }, [selectedDateFilter]);
 
-  // Poll ticker every 5 seconds while mounted and refetch on tab focus
+  // Poll ticker every 5 seconds while mounted. If date period changes, fetch immediately and reset the timer.
   useEffect(() => {
+    // Immediate fetch when the component mounts or when selectedDateFilter changes
+    fetchRecentVisitsForTicker();
+
     const intervalId = window.setInterval(() => {
       fetchRecentVisitsForTicker();
     }, 5000);
@@ -185,7 +188,7 @@ const AdminExecutivesPage: React.FC = () => {
       window.clearInterval(intervalId);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, []);
+  }, [selectedDateFilter]);
 
   // Set initial filters from URL parameters (separate effect to avoid conflicts)
   useEffect(() => {
@@ -229,7 +232,7 @@ const AdminExecutivesPage: React.FC = () => {
     }
   }, [filters, executivesData]);
 
-  // Fetch latest 20 visits for ticker
+  // Fetch latest up to 20 executives by visit count for ticker (selected period)
   const fetchRecentVisitsForTicker = async () => {
     if (tickerInFlight.current) return;
     tickerInFlight.current = true;
@@ -237,27 +240,27 @@ const AdminExecutivesPage: React.FC = () => {
       setIsLoadingTicker(prev => prev && true); // keep loading state if first load
       setTickerError(null);
       const params = new URLSearchParams();
-      params.append('dateFilter', 'Last 30 Days');
-      const res = await fetch(`/api/admin/visit-report/data?${params.toString()}`, {
+      params.append('dateFilter', selectedDateFilter);
+      const res = await fetch(`/api/admin/executives/data?${params.toString()}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Failed to fetch visit reports' }));
-        throw new Error(err.error || 'Failed to fetch visit reports');
+        const err = await res.json().catch(() => ({ error: 'Failed to fetch executives' }));
+        throw new Error(err.error || 'Failed to fetch executives');
       }
       const data = await res.json();
-      const visits = Array.isArray(data.visits) ? data.visits : [];
-      // API returns most recent first already; map to ticker items and limit to 20
-      const tickerItems: VisitTickerItem[] = visits.slice(0, 20).map((v: any) => ({
-        visitId: v.id,
-        executiveId: v.executiveId,
-        username: v.executiveName,
-        storeName: v.storeName,
-        // We don't have raw createdAt here; compose from dd/mm/yyyy string into Date for formatting (optional)
-        visitedAt: v.visitDate,
-      }));
+      const execs = Array.isArray(data.executives) ? data.executives : [];
+      const tickerItems: VisitTickerItem[] = execs
+        .filter((e: any) => (e.totalVisits || 0) > 0)
+        .sort((a: any, b: any) => (b.totalVisits || 0) - (a.totalVisits || 0))
+        .slice(0, 20)
+        .map((e: any) => ({
+          executiveId: e.id,
+          username: e.name,
+          visitCount: e.totalVisits || 0,
+        }));
       setRecentVisits(tickerItems);
     } catch (e) {
       setTickerError(e instanceof Error ? e.message : 'Failed to load recent visits');

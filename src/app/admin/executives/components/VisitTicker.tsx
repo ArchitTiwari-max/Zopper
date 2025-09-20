@@ -5,11 +5,9 @@ import { useRouter } from 'next/navigation';
 import './VisitTicker.css';
 
 export type VisitTickerItem = {
-  visitId: string;
   executiveId: string;
   username: string;
-  storeName: string;
-  visitedAt: string | Date; // ISO string or Date
+  visitCount: number;
 };
 
 export type VisitTickerProps = {
@@ -31,7 +29,7 @@ function formatDate(d: string | Date) {
 
 const VisitTicker: React.FC<VisitTickerProps> = ({
   visits,
-  title = 'Latest Visit Reports',
+  title = 'Executive Visits (by selected period)',
   autoScroll = false,
   autoScrollSpeed = 80,
   className = '',
@@ -116,7 +114,7 @@ const VisitTicker: React.FC<VisitTickerProps> = ({
         ) : (
           limited.map((v) => (
             <div
-              key={v.visitId}
+              key={v.executiveId}
               className="visit-ticker-card"
               onClick={() => onCardClick(v.executiveId)}
               role="button"
@@ -124,8 +122,7 @@ const VisitTicker: React.FC<VisitTickerProps> = ({
               onKeyDown={(e) => (e.key === 'Enter' ? onCardClick(v.executiveId) : null)}
             >
               <div className="visit-ticker-user">{v.username}</div>
-              <div className="visit-ticker-store">{v.storeName}</div>
-              <div className="visit-ticker-date">{formatDate(v.visitedAt)}</div>
+              <div className="visit-ticker-count">{v.visitCount} {v.visitCount === 1 ? 'visit' : 'visits'}</div>
             </div>
           ))
         )}
