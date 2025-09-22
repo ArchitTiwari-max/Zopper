@@ -43,7 +43,18 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     const remainingSlots = maxFiles - images.length;
     
     if (fileArray.length > remainingSlots) {
-      setError(`You can only upload ${remainingSlots} more image(s). Maximum ${maxFiles} images allowed.`);
+      const errorMsg = `You can only upload ${remainingSlots} more image(s). Maximum ${maxFiles} images allowed.`;
+      setError(errorMsg);
+      return;
+    }
+
+    // Check file sizes before uploading (5MB = 5 * 1024 * 1024 bytes)
+    const maxSize = 5 * 1024 * 1024;
+    const oversizedFiles = fileArray.filter(file => file.size > maxSize);
+    
+    if (oversizedFiles.length > 0) {
+      const errorMsg = `File too large. Maximum size is 5MB. ${oversizedFiles.length} file(s) exceed the limit.`;
+      setError(errorMsg);
       return;
     }
 
@@ -70,7 +81,21 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           credentials: 'include'
         });
 
-        const result = await response.json();
+        // Check if response is JSON before parsing
+        const contentType = response.headers.get('content-type');
+        let result;
+        
+        if (contentType && contentType.includes('application/json')) {
+          result = await response.json();
+        } else {
+          // Handle non-JSON responses (like HTML error pages)
+          const text = await response.text();
+          throw new Error(
+            response.status === 413 || response.status === 400 
+              ? 'File too large. Maximum size is 5MB.' 
+              : `Server error: ${response.status}`
+          );
+        }
 
         if (result.success) {
           newImages.push(result.data);

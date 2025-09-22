@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import MaintenancePage from "@/components/MaintenancePage";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,10 +47,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Check maintenance mode - can be controlled via environment variable
+  const isMaintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true';
+  
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
+        {isMaintenanceMode ? <MaintenancePage /> : children}
       </body>
     </html>
   );
