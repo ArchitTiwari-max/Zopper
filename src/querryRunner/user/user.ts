@@ -27,10 +27,7 @@ async function main() {
                 id: row.Executive_id,
                 name: row.name,
                 contact_number:String(row.contact_number || ""),
-                region: row.region,
-                assignedStoreIds: row.assignedStoreIds
-                  ? row.assignedStoreIds.split(",").map((id: string) => id.trim())
-                  : [],
+                region: row.region
               },
             },
           },

@@ -428,12 +428,12 @@
 /* Issues Cell */
 .admin-visit-report-issues-cell {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .admin-visit-report-issues-content {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   width: 100%;
   min-width: 0;

@@ -94,6 +94,7 @@ const ExecutiveFormContent: React.FC = () => {
   };
   
   const [formData, setFormData] = useState({
+    visitDate: '', // Will be set to today in IST
     peopleMet: [] as PersonMet[],
     POSMchecked: null as boolean | null,
     issuesRaised: [] as string[],
@@ -110,31 +111,48 @@ const ExecutiveFormContent: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState<PastVisit | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // LocalStorage key for form data persistence
   const getFormStorageKey = () => `visit-form-data-${storeId}`;
 
-  // Load form data from localStorage
+  // Load form data from localStorage and set default visit date
   useEffect(() => {
     if (!storeId) return;
+    
+    // Set default visit date to today in IST
+    const today = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
+    const istDate = new Date(today.getTime() + istOffset);
+    const defaultVisitDate = istDate.toISOString().split('T')[0];
     
     const savedData = localStorage.getItem(getFormStorageKey());
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
-        setFormData(parsedData);
+        setFormData({
+          ...parsedData,
+          // Only set default visitDate if no saved visitDate exists
+          visitDate: parsedData.visitDate || defaultVisitDate
+        });
       } catch (error) {
         console.error('Error loading saved form data:', error);
+        setFormData(prev => ({ ...prev, visitDate: defaultVisitDate }));
       }
+    } else {
+      setFormData(prev => ({ ...prev, visitDate: defaultVisitDate }));
     }
+    
+    // Mark as initialized after loading is complete
+    setIsInitialized(true);
   }, [storeId]);
 
-  // Save form data to localStorage whenever it changes
+  // Save form data to localStorage whenever it changes (only after initialization)
   useEffect(() => {
-    if (!storeId) return;
+    if (!storeId || !isInitialized) return;
     
     localStorage.setItem(getFormStorageKey(), JSON.stringify(formData));
-  }, [formData, storeId]);
+  }, [formData, storeId, isInitialized]);
 
   // Separate loading states for different sections
   const [storeLoading, setStoreLoading] = useState(true);
@@ -207,6 +225,29 @@ const ExecutiveFormContent: React.FC = () => {
     }
 
     // Basic validation
+    if (!formData.visitDate) {
+      alert('Please select a visit date');
+      return;
+    }
+
+    // Validate visit date (IST)
+    const today = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istToday = new Date(today.getTime() + istOffset);
+    const todayStr = istToday.toISOString().split('T')[0];
+    const thirtyDaysAgo = new Date(istToday.getTime() - (30 * 24 * 60 * 60 * 1000));
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+    
+    if (formData.visitDate > todayStr) {
+      alert('Visit date cannot be in the future. Please select today or a past date.');
+      return;
+    }
+    
+    if (formData.visitDate < thirtyDaysAgoStr) {
+      alert('Visit date cannot be more than 30 days ago. Please select a more recent date.');
+      return;
+    }
+
     if (formData.peopleMet.length === 0) {
       alert('Please add at least one person met');
       return;
@@ -222,6 +263,7 @@ const ExecutiveFormContent: React.FC = () => {
     try {
       const visitData: any = {
         storeId,
+        visitDate: formData.visitDate,
         personMet: formData.peopleMet,
         POSMchecked: formData.POSMchecked,
         imageUrls: formData.uploadedImages.map(img => img.url),
@@ -428,6 +470,43 @@ const ExecutiveFormContent: React.FC = () => {
         {/* Visit Form */}
         <div className="exec-f-sub-visit-form-card">
           <h3 className="exec-f-sub-section-title">Log Visit Details</h3>
+          
+          {/* Visit Date Field */}
+          <div className="exec-f-sub-form-group">
+            <label className="exec-f-sub-form-label">
+              Visit Date <span className="exec-f-sub-required">*</span>
+            </label>
+            <input
+              type="date"
+              className="exec-f-sub-form-input"
+              value={formData.visitDate}
+              onChange={(e) => handleInputChange('visitDate', e.target.value)}
+              max={(() => {
+                // Get today's date in IST for max validation
+                const today = new Date();
+                const istOffset = 5.5 * 60 * 60 * 1000;
+                const istDate = new Date(today.getTime() + istOffset);
+                return istDate.toISOString().split('T')[0];
+              })()}
+              min={(() => {
+                // Get date 30 days ago in IST for min validation
+                const today = new Date();
+                const istOffset = 5.5 * 60 * 60 * 1000;
+                const istDate = new Date(today.getTime() + istOffset);
+                const thirtyDaysAgo = new Date(istDate.getTime() - (30 * 24 * 60 * 60 * 1000));
+                return thirtyDaysAgo.toISOString().split('T')[0];
+              })()}
+              style={{
+                padding: '12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+                backgroundColor: 'white',
+                width: '100%'
+              }}
+            />
+          </div>
           
           <div className="exec-f-sub-form-group">
             <label className="exec-f-sub-form-label">

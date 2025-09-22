@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { storeIds, executiveId, adminComment } = body;
+    const { storeIds, executiveId, adminComment, plannedVisitDate } = body;
 
     if (!storeIds || !Array.isArray(storeIds) || storeIds.length === 0) {
       return NextResponse.json({ error: 'Invalid store IDs provided' }, { status: 400 });
@@ -24,6 +24,10 @@ export async function POST(request: NextRequest) {
 
     if (!executiveId) {
       return NextResponse.json({ error: 'Executive assignment is required' }, { status: 400 });
+    }
+
+    if (!plannedVisitDate) {
+      return NextResponse.json({ error: 'Planned visit date is required' }, { status: 400 });
     }
 
     // Get admin details
@@ -36,10 +40,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin profile not found' }, { status: 404 });
     }
 
-    // Get executive details
+    // Get executive details with store assignments
     const executive = await prisma.executive.findUnique({
       where: { id: executiveId },
-      include: { user: true }
+      include: { 
+        user: true,
+        executiveStores: {
+          select: {
+            storeId: true
+          }
+        }
+      }
     });
 
     if (!executive) {
@@ -63,6 +74,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Some stores were not found' }, { status: 400 });
     }
 
+    // CRITICAL VALIDATION: Check if executive is assigned to all selected stores
+    const assignedStoreIds = executive.executiveStores.map(es => es.storeId);
+    const unassignedStoreIds = storeIds.filter(storeId => !assignedStoreIds.includes(storeId));
+    
+    if (unassignedStoreIds.length > 0) {
+      const unassignedStoreNames = stores
+        .filter(store => unassignedStoreIds.includes(store.id))
+        .map(store => store.storeName);
+      
+      return NextResponse.json({ 
+        error: `These stores do not come under executive ${executive.name}: ${unassignedStoreNames.join(', ')}`,
+        message: 'Please assign the executive to these stores first before creating a visit plan.',
+        code: 'STORES_NOT_ASSIGNED_TO_EXECUTIVE',
+        executiveName: executive.name,
+        unassignedStores: unassignedStoreNames,
+        unassignedStoreIds: unassignedStoreIds
+      }, { status: 400 });
+    }
+
     // Create a VisitPlan created by admin
     const storesSnapshot = stores.map(s => ({ 
       id: s.id, 
@@ -77,6 +107,7 @@ export async function POST(request: NextRequest) {
         storeIds: storeIds,
         storesSnapshot: storesSnapshot as any,
         status: 'SUBMITTED',
+        plannedVisitDate: new Date(plannedVisitDate),
         createdByAdminId: admin.id,
         adminComment: adminComment || null,
         createdByRole: 'ADMIN'

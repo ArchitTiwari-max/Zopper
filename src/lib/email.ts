@@ -12,6 +12,7 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendOTPEmail(email: string, otp: string): Promise<boolean> {
+  
   try {
     // // Path to the image in public folder
     // // const imagePath = path.join(process.cwd(), 'public', 'SalesDost.png');
@@ -61,8 +62,8 @@ export function generateOTP(): string {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const timestamp = new Date().toISOString();
   
-  // Proper logging for production visibility
-  console.log(`[OTP-GENERATOR] ${timestamp} - Generated OTP: ${otp}`);
+  // Enhanced logging for production visibility
+
   
   return otp;
 }

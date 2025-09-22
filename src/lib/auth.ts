@@ -128,8 +128,6 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<TokenP
           path: '/'
         });
       });
-      
-      console.log('🔄 Access token refreshed and set in response cookies');
     } catch (error) {
       console.error('Failed to set refreshed cookies:', error);
     }

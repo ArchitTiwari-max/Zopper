@@ -136,12 +136,38 @@ export async function GET(request: NextRequest) {
         .join('')
         .toUpperCase();
 
-      // Generate consistent avatar color
+      // Generate consistent avatar color based on first letter of name
       const colors = [
-        '#3B82F6', '#8B5CF6', '#F97316', '#EC4899', '#10B981',
-        '#EF4444', '#F59E0B', '#6366F1', '#84CC16', '#F43F5E'
+        '#E53E3E', // A - Red
+        '#DD6B20', // B - Orange  
+        '#D69E2E', // C - Yellow
+        '#38A169', // D - Green
+        '#00A3C4', // E - Teal
+        '#3182CE', // F - Blue
+        '#553C9A', // G - Purple
+        '#805AD5', // H - Violet
+        '#D53F8C', // I - Pink
+        '#F56500', // J - Dark Orange
+        '#319795', // K - Dark Teal
+        '#2D3748', // L - Dark Gray
+        '#744210', // M - Brown
+        '#065F46', // N - Dark Green
+        '#1A365D', // O - Dark Blue
+        '#44337A', // P - Dark Purple
+        '#97266D', // Q - Dark Pink
+        '#C53030', // R - Dark Red
+        '#B7791F', // S - Golden
+        '#2F855A', // T - Forest Green
+        '#2B6CB0', // U - Steel Blue
+        '#6B46C1', // V - Royal Purple
+        '#BE185D', // W - Magenta
+        '#DC2626', // X - Crimson
+        '#059669', // Y - Emerald
+        '#7C3AED'  // Z - Indigo
       ];
-      const colorIndex = visit.executive.name.length % colors.length;
+      const firstLetter = visit.executive.name.charAt(0).toUpperCase();
+      const colorIndex = firstLetter.charCodeAt(0) - 65; // Convert A-Z to 0-25
+      const safeColorIndex = Math.max(0, Math.min(colorIndex, colors.length - 1)); // Ensure valid index
 
       // Process personMet data - handle multiple people
       let peopleMet: Array<{name: string, designation: string, phoneNumber?: string}> = [];
@@ -175,7 +201,7 @@ export async function GET(request: NextRequest) {
         executiveId: visit.executive.id,
         executiveName: visit.executive.name,
         executiveInitials: initials,
-        avatarColor: colors[colorIndex],
+        avatarColor: colors[safeColorIndex],
         storeName: visit.store.storeName,
         storeId: visit.store.id, // Add store ID for linking
         partnerBrand: partnerBrands,

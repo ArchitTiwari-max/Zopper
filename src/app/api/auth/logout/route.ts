@@ -1,31 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { clearAuthCookies } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
-
     // Create response
     const response = NextResponse.json({
       message: 'Logout successful'
     });
 
-    // Clear cookies
-    response.cookies.set('accessToken', '', {
-      httpOnly: true,
-      secure: false, // Set to false for development (localhost)
-      sameSite: 'lax',
-      expires: new Date(0),
-      path: '/'
-    });
-
-    response.cookies.set('refreshToken', '', {
-      httpOnly: true,
-      secure: false, // Set to false for development (localhost)
-      sameSite: 'lax',
-      expires: new Date(0),
-      path: '/'
-    });
-
-    return response;
+    // Clear all authentication cookies including userInfo
+    return clearAuthCookies(response);
 
   } catch (error) {
     console.error('Logout error:', error);

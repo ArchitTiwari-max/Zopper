@@ -38,7 +38,15 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.findUnique({
       where: { email },
       include: {
-        executive: true,
+        executive: {
+          include: {
+            executiveStores: {
+              select: {
+                storeId: true
+              }
+            }
+          }
+        },
         admin: true
       }
     });
@@ -65,24 +73,22 @@ export async function POST(request: NextRequest) {
     const refreshTokenExpiry = getTokenExpiry(process.env.JWT_REFRESH_EXPIRY || '7d');
     const accessTokenExpiry = getTokenExpiry(process.env.JWT_ACCESS_EXPIRY || '15m');
 
-    // Create comprehensive user payload for cookie storage
+    // Create user payload for cookie storage (removed createdAt, updatedAt, assignedStoreIds)
     let userPayload: any = {
       id: user.id,
       email: user.email,
-      username: user.username, // Add missing username
-      role: user.role,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt
+      username: user.username,
+      role: user.role
     };
 
-    // Add role-specific information
+    // Add role-specific information (keeping contact_number and region)
     if (user.role === 'EXECUTIVE' && user.executive) {
       userPayload.executive = {
         id: user.executive.id,
         name: user.executive.name,
         contact_number: user.executive.contact_number,
-        region: user.executive.region,
-        assignedStoreIds: user.executive.assignedStoreIds
+        region: user.executive.region
+        // Removed assignedStoreIds to reduce cookie size
       };
     } else if (user.role === 'ADMIN' && user.admin) {
       userPayload.admin = {

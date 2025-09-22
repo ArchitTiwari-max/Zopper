@@ -29,7 +29,7 @@ function formatDate(d: string | Date) {
 
 const VisitTicker: React.FC<VisitTickerProps> = ({
   visits,
-  title = 'Executive Visits (by selected period)',
+  title = 'Executive Visits',
   autoScroll = false,
   autoScrollSpeed = 80,
   className = '',

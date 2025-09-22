@@ -49,17 +49,18 @@ export async function GET(request: NextRequest) {
       
       // Find stores assigned to this executive ID (only if execId is not null)
       if (execId) {
-        const executive = await prisma.executive.findUnique({
-          where: { id: execId },
-          select: { assignedStoreIds: true }
+        const executiveStores = await prisma.executiveStoreAssignment.findMany({
+          where: { executiveId: execId },
+          select: { storeId: true }
         });
         
-        if (executive && executive.assignedStoreIds.length > 0) {
+        if (executiveStores.length > 0) {
+          const assignedStoreIds = executiveStores.map(es => es.storeId);
           const currentStoreFilter = urlStoreId || storeFilterId;
           
           if (currentStoreFilter && currentStoreFilter !== 'All Store') {
             // If both executive and store are specified, check if the store is assigned to the executive
-            if (executive.assignedStoreIds.includes(currentStoreFilter)) {
+            if (assignedStoreIds.includes(currentStoreFilter)) {
               // Keep the existing store filter as the executive is assigned to this store
               // whereClause.id is already set above
             } else {
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
           } else {
             // If only executive is specified, show all stores assigned to them
             whereClause.id = {
-              in: executive.assignedStoreIds
+              in: assignedStoreIds
             };
           }
         } else {
@@ -118,12 +119,16 @@ export async function GET(request: NextRequest) {
         }
       }),
 
-      // Get ALL executives for assignment lookup - no limits
+      // Get ALL executives with their store assignments - no limits
       prisma.executive.findMany({
         select: {
           id: true,
           name: true,
-          assignedStoreIds: true
+          executiveStores: {
+            select: {
+              storeId: true
+            }
+          }
         }
       })
     ]);
@@ -135,8 +140,8 @@ export async function GET(request: NextRequest) {
     
     // Build executive-store assignment map
     allExecutives.forEach(exec => {
-      exec.assignedStoreIds.forEach(storeId => {
-        executiveStoreMap.set(storeId, exec.name);
+      exec.executiveStores.forEach(es => {
+        executiveStoreMap.set(es.storeId, exec.name);
       });
     });
 

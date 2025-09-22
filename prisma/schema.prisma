@@ -17,7 +17,7 @@ enum Role {
 
 model User {
   id        String   @id @map("_id")
-  email     String   @unique
+  email     String  @unique
   username  String   @unique
   password  String
   role      Role     @default(EXECUTIVE)
@@ -30,19 +30,6 @@ model User {
   @@map("User")
 }
 
-model Executive {
-  id        String   @id @map("_id") 
-  name      String
-  contact_number String
-  region    String?
-  visits    Visit[]
-  assigned  Assigned[]
-  visitPlans VisitPlan[]
-  userId String @unique 
-  user   User   @relation(fields: [userId], references: [id])
-  assignedStoreIds String[] 
-}
-
 model Admin {
   id        String   @id @map("_id") 
   name      String
@@ -51,6 +38,21 @@ model Admin {
   userId String @unique 
   user   User   @relation(fields: [userId], references: [id])
 }
+
+model Executive {
+  id        String   @id @map("_id") 
+  name      String
+  contact_number String
+  region    String?
+  visits    Visit[]
+  assigned  Assigned[]
+  visitPlans VisitPlan[]
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+  // Store assignments
+  executiveStores   ExecutiveStoreAssignment[]
+}
+
 //
 // Store & Brand 
 //
@@ -60,7 +62,20 @@ model Store {
   city           String
   fullAddress    String?
   visits Visit[]
-  partnerBrandIds String[] 
+  partnerBrandIds String[]
+  executiveStores   ExecutiveStoreAssignment[]
+}
+
+model ExecutiveStoreAssignment {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  executiveId   String
+  storeId       String
+  assignedAt    DateTime   @default(now())
+
+  executive     Executive  @relation(fields: [executiveId], references: [id])
+  store         Store      @relation(fields: [storeId], references: [id])
+
+  @@unique([executiveId, storeId])
 }
 
 model Brand {

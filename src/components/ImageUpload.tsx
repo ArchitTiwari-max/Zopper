@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface UploadedImage {
   url: string;
@@ -30,6 +30,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const [images, setImages] = useState<UploadedImage[]>(existingImages);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync internal images state with existingImages prop when it changes
+  useEffect(() => {
+    setImages(existingImages);
+  }, [existingImages]);
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;

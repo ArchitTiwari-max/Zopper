@@ -189,6 +189,7 @@ export async function POST(request: NextRequest) {
 
     const {
       storeId,
+      visitDate,
       personMet,
       POSMchecked,
       issuesRaised,
@@ -204,6 +205,53 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    if (!visitDate) {
+      return NextResponse.json({ 
+        error: 'Visit date is required' 
+      }, { status: 400 });
+    }
+
+    // Validate visit date (IST timezone)
+    const today = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000; // IST offset
+    const istToday = new Date(today.getTime() + istOffset);
+    const todayStr = istToday.toISOString().split('T')[0];
+    const thirtyDaysAgo = new Date(istToday.getTime() - (30 * 24 * 60 * 60 * 1000));
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+    
+    if (visitDate > todayStr) {
+      return NextResponse.json({
+        error: 'Visit date cannot be in the future',
+        message: 'Please select today or a past date within the last 30 days',
+        code: 'INVALID_VISIT_DATE_FUTURE'
+      }, { status: 400 });
+    }
+    
+    if (visitDate < thirtyDaysAgoStr) {
+      return NextResponse.json({
+        error: 'Visit date is too old',
+        message: 'Please select a date within the last 30 days',
+        code: 'INVALID_VISIT_DATE_TOO_OLD'
+      }, { status: 400 });
+    }
+
+    // CRITICAL: Validate that executive is assigned to this store
+    const assignment = await prisma.executiveStoreAssignment.findUnique({
+      where: {
+        executiveId_storeId: {
+          executiveId: executive.id,
+          storeId: storeId
+        }
+      }
+    });
+
+    if (!assignment) {
+      return NextResponse.json({
+        error: 'Access denied: You are not assigned to this store',
+        code: 'STORE_NOT_ASSIGNED'
+      }, { status: 403 });
+    }
+
     // Get brand IDs from brand names
     const brandIds: string[] = [];
     if (brandsVisited && brandsVisited.length > 0) {
@@ -217,6 +265,9 @@ export async function POST(request: NextRequest) {
       brandIds.push(...brands.map(brand => brand.id));
     }
 
+    // Convert visit date to proper DateTime for database
+    const visitDateTime = new Date(visitDate + 'T00:00:00.000Z');
+
     // Create the visit
     const visit = await prisma.visit.create({
       data: {
@@ -227,7 +278,8 @@ export async function POST(request: NextRequest) {
         status: 'PENDING_REVIEW' as any, // Default status
         executiveId: executive.id,
         storeId: storeId,
-        brandIds: brandIds
+        brandIds: brandIds,
+        createdAt: visitDateTime // The actual date when the visit occurred
       },
       include: {
         store: true,
@@ -253,7 +305,8 @@ export async function POST(request: NextRequest) {
               id: uniqueIssueId,
               details: issueDetail.trim(),
               visitId: visit.id,
-              status: 'Pending' // Default status
+              status: 'Pending', // Default status
+              createdAt: visitDateTime // Same date as the visit occurred
             }
           });
           createdIssues.push({

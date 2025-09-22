@@ -18,7 +18,7 @@ async function main(): Promise<void> {
   const rows: ExcelRow[] = XLSX.utils.sheet_to_json<ExcelRow>(workbook.Sheets[sheetName]);
 
   // ⚠️ rows[0] corresponds to Excel row 2 (since row 1 = header)
-  const startRow = 7; // Excel row number where you want to start
+  const startRow = 21; // Excel row number where you want to start
   const endRow = 21;  // Excel row number where you want to stop
 
   // Convert Excel rows into array slice

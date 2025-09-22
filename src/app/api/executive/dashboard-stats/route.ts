@@ -16,9 +16,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
     }
 
-    // Get executive from user ID
+    // Get executive from user ID with store assignments
     const executive = await prisma.executive.findUnique({
-      where: { userId: user.userId }
+      where: { userId: user.userId },
+      include: {
+        executiveStores: {
+          select: {
+            storeId: true
+          }
+        }
+      }
     });
 
     if (!executive) {
@@ -73,7 +80,7 @@ export async function GET(request: NextRequest) {
       prisma.store.findMany({
         where: {
           id: {
-            in: executive.assignedStoreIds
+            in: executive.executiveStores.map(es => es.storeId)
           }
         },
         select: {

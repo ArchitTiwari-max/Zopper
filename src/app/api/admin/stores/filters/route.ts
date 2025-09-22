@@ -40,7 +40,11 @@ export async function GET(request: NextRequest) {
           id: true,
           name: true,
           region: true,
-          assignedStoreIds: true
+          executiveStores: {
+            select: {
+              storeId: true
+            }
+          }
         },
         orderBy: {
           name: 'asc'
@@ -73,7 +77,7 @@ export async function GET(request: NextRequest) {
         id: executive.id,
         name: executive.name,
         region: executive.region,
-        assignedStoreIds: executive.assignedStoreIds
+        assignedStoreIds: executive.executiveStores.map(es => es.storeId)
       })),
       brands: brands.map(brand => ({
         id: brand.id,

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useDateFilter } from '../contexts/DateFilterContext';
@@ -37,6 +37,80 @@ interface VisitReportFilters {
   issueStatus: string;
 }
 
+// ExpandableText Component
+interface ExpandableTextProps {
+  text: string;
+  maxHeight?: number;
+  className?: string;
+}
+
+const ExpandableText: React.FC<ExpandableTextProps> = ({
+  text,
+  maxHeight = 40, // Default max height in pixels
+  className = ''
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showViewMore, setShowViewMore] = useState(false);
+  const textRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (textRef.current) {
+      const element = textRef.current;
+      // Check if content height exceeds maxHeight
+      if (element.scrollHeight > maxHeight) {
+        setShowViewMore(true);
+      } else {
+        setShowViewMore(false);
+      }
+    }
+  }, [text, maxHeight]);
+
+  const toggleExpanded = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsExpanded(!isExpanded);
+  };
+
+  if (!text || text.trim() === '') {
+    return null;
+  }
+
+  return (
+    <div className={`expandable-text-wrapper ${className}`}>
+      <div
+        ref={textRef}
+        className={`expandable-text-content ${isExpanded ? 'expanded' : 'collapsed'}`}
+        style={{
+          maxHeight: isExpanded ? 'none' : `${maxHeight}px`,
+          overflow: 'hidden',
+          lineHeight: '1.4'
+        }}
+      >
+        {text}
+      </div>
+      {showViewMore && (
+        <button
+          className="view-more-btn"
+          onClick={toggleExpanded}
+          type="button"
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#3b82f6',
+            cursor: 'pointer',
+            fontSize: '0.75rem',
+            fontWeight: '500',
+            marginTop: '0.25rem',
+            padding: '0',
+            textDecoration: 'underline'
+          }}
+        >
+          {isExpanded ? 'View Less' : 'View More'}
+        </button>
+      )}
+    </div>
+  );
+};
 
 const VisitReportPage: React.FC = () => {
   const searchParams = useSearchParams();
@@ -847,10 +921,18 @@ const VisitReportPage: React.FC = () => {
                             className="admin-visit-report-issue-link"
                             title={`View issue: ${visit.issues}`}
                           >
-                            {visit.issues}
+                            <ExpandableText 
+                              text={visit.issues} 
+                              maxHeight={40}
+                              className="issue-expandable-text"
+                            />
                           </Link>
                         ) : (
-                          <span className="admin-visit-report-has-issues">{visit.issues}</span>
+                          <ExpandableText 
+                            text={visit.issues} 
+                            maxHeight={40}
+                            className="admin-visit-report-has-issues issue-expandable-text"
+                          />
                         )}
                       </div>
                     )}

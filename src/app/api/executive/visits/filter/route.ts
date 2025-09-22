@@ -17,7 +17,14 @@ export async function GET(request: NextRequest) {
 
     // Get executive data
     const executive = await prisma.executive.findUnique({
-      where: { userId: user.userId }
+      where: { userId: user.userId },
+      include: {
+        executiveStores: {
+          select: {
+            storeId: true
+          }
+        }
+      }
     });
 
     if (!executive) {
@@ -49,7 +56,7 @@ export async function GET(request: NextRequest) {
       prisma.store.findMany({
         where: {
           id: {
-            in: executive.assignedStoreIds
+            in: executive.executiveStores.map(es => es.storeId)
           }
         },
         select: {
@@ -147,7 +154,7 @@ export async function GET(request: NextRequest) {
         },
         metadata: {
           executiveId: executive.id,
-          assignedStoresCount: executive.assignedStoreIds.length,
+          assignedStoresCount: executive.executiveStores.length,
           generatedAt: new Date().toISOString(),
           cacheExpiry: new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutes
         }

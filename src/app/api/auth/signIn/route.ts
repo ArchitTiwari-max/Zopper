@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
     
     // Generate OTP
     const otp = generateOTP();
+    console.log('Generated OTP:', otp);
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     
     // Delete existing OTPs for this email

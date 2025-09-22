@@ -21,7 +21,7 @@ interface VisitPlanModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedStores: Store[];
-  onSubmit: (data: { executiveId: string; adminComment: string }) => void;
+  onSubmit: (data: { executiveId: string; adminComment: string; plannedVisitDate: string }) => void;
   isSubmitting?: boolean;
 }
 
@@ -35,6 +35,7 @@ const VisitPlanModal: React.FC<VisitPlanModalProps> = ({
   const [executives, setExecutives] = useState<Executive[]>([]);
   const [selectedExecutiveId, setSelectedExecutiveId] = useState<string>('');
   const [adminComment, setAdminComment] = useState<string>('');
+  const [plannedVisitDate, setPlannedVisitDate] = useState<string>('');
   const [isLoadingExecutives, setIsLoadingExecutives] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,6 +46,12 @@ const VisitPlanModal: React.FC<VisitPlanModalProps> = ({
       // Reset form when modal opens
       setSelectedExecutiveId('');
       setAdminComment('');
+      // Set default date to today in IST
+      const today = new Date();
+      // Convert to IST (UTC + 5:30)
+      const istOffset = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
+      const istDate = new Date(today.getTime() + istOffset);
+      setPlannedVisitDate(istDate.toISOString().split('T')[0]);
       setError(null);
     }
   }, [isOpen]);
@@ -85,15 +92,22 @@ const VisitPlanModal: React.FC<VisitPlanModalProps> = ({
       return;
     }
 
+    if (!plannedVisitDate) {
+      setError('Please select a planned visit date');
+      return;
+    }
+
     onSubmit({
       executiveId: selectedExecutiveId,
-      adminComment: adminComment.trim()
+      adminComment: adminComment.trim(),
+      plannedVisitDate: plannedVisitDate
     });
   };
 
   const handleCancel = () => {
     setSelectedExecutiveId('');
     setAdminComment('');
+    setPlannedVisitDate('');
     setError(null);
     onClose();
   };
@@ -249,6 +263,47 @@ const VisitPlanModal: React.FC<VisitPlanModalProps> = ({
           )}
         </div>
 
+        {/* Planned Visit Date */}
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{
+            display: 'block',
+            fontSize: '14px',
+            fontWeight: '500',
+            color: '#374151',
+            marginBottom: '8px'
+          }}>
+            Planned Visit Date *
+          </label>
+          <input
+            type="date"
+            value={plannedVisitDate}
+            onChange={(e) => setPlannedVisitDate(e.target.value)}
+            min={(() => {
+              // Get today's date in IST
+              const today = new Date();
+              const istOffset = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
+              const istDate = new Date(today.getTime() + istOffset);
+              return istDate.toISOString().split('T')[0];
+            })()} // Prevent past dates (IST)
+            style={{
+              width: '100%',
+              padding: '12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              fontSize: '14px',
+              backgroundColor: 'white',
+              fontFamily: 'inherit'
+            }}
+          />
+          <p style={{
+            fontSize: '12px',
+            color: '#6b7280',
+            margin: '4px 0 0 0'
+          }}>
+            Select the date when the executive should visit these stores
+          </p>
+        </div>
+
         {/* Admin Comment */}
         <div style={{ marginBottom: '32px' }}>
           <label style={{
@@ -303,16 +358,16 @@ const VisitPlanModal: React.FC<VisitPlanModalProps> = ({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={isSubmitting || !selectedExecutiveId || isLoadingExecutives}
+            disabled={isSubmitting || !selectedExecutiveId || !plannedVisitDate || isLoadingExecutives}
             style={{
               padding: '12px 20px',
-              backgroundColor: selectedExecutiveId && !isLoadingExecutives ? '#4f46e5' : '#9ca3af',
+              backgroundColor: selectedExecutiveId && plannedVisitDate && !isLoadingExecutives ? '#4f46e5' : '#9ca3af',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
               fontSize: '14px',
               fontWeight: '500',
-              cursor: selectedExecutiveId && !isLoadingExecutives && !isSubmitting ? 'pointer' : 'not-allowed',
+              cursor: selectedExecutiveId && plannedVisitDate && !isLoadingExecutives && !isSubmitting ? 'pointer' : 'not-allowed',
               display: 'flex',
               alignItems: 'center',
               gap: '8px'

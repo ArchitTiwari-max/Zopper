@@ -14,7 +14,7 @@ function HomeContent() {
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifyLoading, setIsVerifyLoading] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // New loading state
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Auth loading state
   const [userEmail, setUserEmail] = useState(''); // Store email from API response
   
   // Forgot Password states
@@ -163,10 +163,8 @@ function HomeContent() {
           redirectUrl = '/admin/dashboard';
         }
         
-        // Small delay to ensure cookies are fully set before redirect
-        setTimeout(() => {
-          window.location.href = redirectUrl;
-        }, 100);
+        // Use router.replace for client-side navigation
+        window.location.href = redirectUrl;
       } else {
         alert(result.error || 'Invalid OTP');
       }

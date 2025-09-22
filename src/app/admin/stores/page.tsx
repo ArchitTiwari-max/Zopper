@@ -357,7 +357,7 @@ const AdminStoresPage: React.FC = () => {
     }
   };
 
-  const handleVisitPlanSubmit = async (data: { executiveId: string; adminComment: string }) => {
+  const handleVisitPlanSubmit = async (data: { executiveId: string; adminComment: string; plannedVisitDate: string }) => {
     setIsSubmittingVisitPlan(true);
     try {
       const response = await fetch('/api/admin/visit-plan', {
@@ -369,7 +369,8 @@ const AdminStoresPage: React.FC = () => {
         body: JSON.stringify({
           storeIds: selectedStores,
           executiveId: data.executiveId,
-          adminComment: data.adminComment
+          adminComment: data.adminComment,
+          plannedVisitDate: data.plannedVisitDate
         })
       });
 

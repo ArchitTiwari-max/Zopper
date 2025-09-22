@@ -20,7 +20,12 @@ export async function GET(request: NextRequest) {
     const executive = await prisma.executive.findUnique({
       where: { userId: user.userId },
       include: {
-        user: true
+        user: true,
+        executiveStores: {
+          select: {
+            storeId: true
+          }
+        }
       }
     });
 
@@ -52,7 +57,7 @@ export async function GET(request: NextRequest) {
       prisma.store.findMany({
         where: {
           id: {
-            in: executive.assignedStoreIds
+            in: executive.executiveStores.map(es => es.storeId)
           }
         },
         include: {

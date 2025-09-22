@@ -36,9 +36,11 @@ export async function GET(request: NextRequest) {
 
     // Filter by store - if storeId is provided, filter executives who are assigned to that store
     if (storeId && storeId !== 'All Store') {
-      // Filter by assignedStoreIds array
-      whereClause.assignedStoreIds = {
-        has: storeId
+      // Filter by ExecutiveStoreAssignment relationship
+      whereClause.executiveStores = {
+        some: {
+          storeId: storeId
+        }
       };
     }
 
@@ -70,7 +72,12 @@ export async function GET(request: NextRequest) {
         id: true,
         name: true,
         region: true,
-        assignedStoreIds: true,
+        executiveStores: {
+          select: {
+            storeId: true,
+            assignedAt: true
+          }
+        }
       },
       orderBy: {
         name: 'asc'
@@ -135,7 +142,7 @@ export async function GET(request: NextRequest) {
         region: executive.region || 'Not Assigned',
         totalVisits: visitCountMap.get(executive.id) || 0,
         lastVisit: formattedLastVisit,
-        assignedStoreIds: executive.assignedStoreIds || [],
+        assignedStoreIds: executive.executiveStores.map(es => es.storeId),
         avatarColor: colors[colorIndex]
       };
     });
