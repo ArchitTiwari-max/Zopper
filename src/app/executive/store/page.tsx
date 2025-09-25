@@ -12,6 +12,7 @@ interface StoreData {
   partnerBrands: string[];
   visited: string;
   lastVisitDate: string | null;
+  totalRevenue?: number; // current year total revenue
 }
 
 const Store: React.FC = () => {
@@ -85,8 +86,38 @@ const Store: React.FC = () => {
       ]);
       
       if (storeResult.success && filterResult.success) {
-        setStoreData(storeResult.data.stores);
+        const stores: StoreData[] = storeResult.data.stores;
         setFilterOptions(filterResult.data.filterOptions);
+
+        // Fetch sales summary for all stores (current year total revenue)
+        if (stores.length > 0) {
+          const ids = stores.map((s: StoreData) => s.id).join(',');
+          try {
+            const salesRes = await fetch(`/api/executive/sales/summary?storeIds=${encodeURIComponent(ids)}`, {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+            });
+            if (salesRes.ok) {
+              const salesJson = await salesRes.json();
+              if (salesJson.success && salesJson.totals) {
+                const merged = stores.map(s => ({
+                  ...s,
+                  totalRevenue: salesJson.totals[s.id]?.totalRevenue ?? undefined,
+                }));
+                setStoreData(merged);
+              } else {
+                setStoreData(stores);
+              }
+            } else {
+              setStoreData(stores);
+            }
+          } catch {
+            setStoreData(stores);
+          }
+        } else {
+          setStoreData(stores);
+        }
       } else {
         throw new Error(storeResult.error || filterResult.error || 'Failed to fetch data');
       }
@@ -370,7 +401,7 @@ const Store: React.FC = () => {
             )}
             <div className="exec-v-form-header-cell exec-v-form-store-name-header">STORE NAME</div>
             <div className="exec-v-form-header-cell exec-v-form-partner-header">PARTNER BRANDS</div>
-            <div className="exec-v-form-header-cell exec-v-form-city-header">CITY</div>
+            <div className="exec-v-form-header-cell exec-v-form-sales-header">STORE SALES</div>
             <div className="exec-v-form-header-cell exec-v-form-visited-header">VISITED</div>
           </div>
 
@@ -410,15 +441,24 @@ const Store: React.FC = () => {
                     </div>
                   )}
                   <div className="exec-v-form-table-cell exec-v-form-store-name-cell">
-                    <span className="exec-v-form-store-name-text">{store.storeName}</span>
+                    <div className="exec-v-form-store-name-wrapper">
+                      <span className="exec-v-form-store-name-text">{store.storeName}</span>
+                      <span className="exec-v-form-store-subtext">{store.city}</span>
+                    </div>
                   </div>
                   <div className="exec-v-form-table-cell exec-v-form-partner-cell">
                     <span className="exec-v-form-brand-text">
                       {store.partnerBrands.length > 0 ? store.partnerBrands.join(', ') : 'No brands'}
                     </span>
                   </div>
-                  <div className="exec-v-form-table-cell exec-v-form-city-cell">
-                    <span className="exec-v-form-city-text">{store.city}</span>
+                  <div className="exec-v-form-table-cell exec-v-form-sales-cell">
+                    <a
+                      className="exec-v-form-sales-link"
+                      href={`/executive/sales?store=${encodeURIComponent(store.storeName)}&storeId=${store.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      View Sales
+                    </a>
                   </div>
                   <div className="exec-v-form-table-cell exec-v-form-visited-cell">
                     <span className="exec-v-form-visited-text">{store.visited}</span>

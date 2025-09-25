@@ -501,14 +501,31 @@
 }
 
 /* Store Name Cell */
+.exec-v-form-store-name-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+}
+
 .exec-v-form-store-name-text {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: #212529;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
+}
+
+.exec-v-form-store-subtext {
+  font-size: 12px;
+  color: #6c757d;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Partner Brand Cell */
@@ -599,14 +616,28 @@
   background-color: #bbdefb;
 }
 
-/* City Cell */
-.exec-v-form-city-text {
+/* Sales Cell */
+.exec-v-form-sales-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.exec-v-form-sales-value {
   font-size: 14px;
-  color: #495057;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
+  font-weight: 600;
+  color: #212529;
+}
+
+.exec-v-form-sales-link {
+  font-size: 12px;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.exec-v-form-sales-link:hover {
+  text-decoration: underline;
 }
 
 /* Visited Cell */
@@ -709,9 +740,9 @@
     min-height: 70px;
   }
   
-  .exec-v-form-store-name-text,
+.exec-v-form-store-name-text,
+  .exec-v-form-store-subtext,
   .exec-v-form-brand-text,
-  .exec-v-form-city-text,
   .exec-v-form-visited-text {
     font-size: 16px;
   }
@@ -777,9 +808,9 @@
     min-height: 65px;
   }
   
-  .exec-v-form-store-name-text,
+.exec-v-form-store-name-text,
+  .exec-v-form-store-subtext,
   .exec-v-form-brand-text,
-  .exec-v-form-city-text,
   .exec-v-form-visited-text {
     font-size: 15px;
   }
@@ -909,7 +940,7 @@
     font-size: 8px;
   }
   
-  .exec-v-form-city-text,
+.exec-v-form-store-subtext,
   .exec-v-form-visited-text {
     font-size: 10px;
     word-break: break-word;
@@ -1006,7 +1037,7 @@
     word-break: break-word;
   }
   
-  .exec-v-form-city-text,
+.exec-v-form-store-subtext,
   .exec-v-form-visited-text {
     font-size: 9px;
     word-break: break-word;
