@@ -77,7 +77,8 @@
   color: #374151;
 }
 
-.admin-visit-report-filter-select {
+.admin-visit-report-filter-select,
+.admin-visit-report-filter-input {
   padding: 0.5rem 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -87,10 +88,16 @@
   transition: border-color 0.15s ease-in-out;
 }
 
-.admin-visit-report-filter-select:focus {
+.admin-visit-report-filter-select:focus,
+.admin-visit-report-filter-input:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.admin-visit-report-filter-input::placeholder {
+  color: #9ca3af;
+  font-style: italic;
 }
 
 /* Visit Reports Table */

@@ -143,7 +143,7 @@ const VisitReportPage: React.FC = () => {
   const [filters, setFilters] = useState<VisitReportFilters>({
     partnerBrand: 'All Brands',
     city: 'All City',
-    storeName: 'All Store',
+    storeName: '', // Changed to empty string for text input search
     executiveName: 'All Executive',
     visitStatus: 'All Status',
     issueStatus: 'All Status'
@@ -234,12 +234,18 @@ const VisitReportPage: React.FC = () => {
         }
       }
 
-      // Filter by store name
-      if (filters.storeName !== 'All Store') {
-        // If filters.storeName contains an ID, find the store name
-        const store = filterData.stores.find(s => s.id === filters.storeName);
-        const storeNameToMatch = store ? store.name : filters.storeName;
-        if (visit.storeName !== storeNameToMatch) {
+      // Filter by store - handle URL storeId and text input independently
+      const urlStoreId = searchParams.get('storeId');
+      
+      if (urlStoreId && urlStoreId !== 'All Store') {
+        // Priority: URL storeId filtering (exact match by store ID)
+        if (visit.storeId !== urlStoreId) {
+          return false;
+        }
+      } else if (filters.storeName && filters.storeName.trim() !== '') {
+        // Text-based store name filtering (partial match, case-insensitive)
+        const searchText = filters.storeName.toLowerCase().trim();
+        if (!visit.storeName.toLowerCase().includes(searchText)) {
           return false;
         }
       }
@@ -331,20 +337,18 @@ const VisitReportPage: React.FC = () => {
     if (filterData.stores.length === 0) return;
     
     const urlStoreId = searchParams.get('storeId');
+    const urlStoreName = searchParams.get('storeName');
     const urlExecutiveId = searchParams.get('executiveId');
     const urlPartnerBrand = searchParams.get('partnerBrand');
     const urlCity = searchParams.get('city');
     const urlVisitStatus = searchParams.get('visitStatus');
     const urlIssueStatus = searchParams.get('issueStatus');
     
-    if (urlStoreId || urlExecutiveId || urlPartnerBrand || urlCity || urlVisitStatus || urlIssueStatus) {
-      // Use store ID directly
-      let storeFilter = 'All Store';
-      if (urlStoreId && urlStoreId !== 'All Store') {
-        // Validate that the store ID exists in filter data
-        const matchingStore = filterData.stores.find(store => store.id === urlStoreId);
-        storeFilter = matchingStore ? urlStoreId : 'All Store';
-        console.log('[URL DEBUG] Store ID from URL:', urlStoreId, '→ Valid:', !!matchingStore);
+    if (urlStoreId || urlStoreName || urlExecutiveId || urlPartnerBrand || urlCity || urlVisitStatus || urlIssueStatus) {
+      // Set storeName from URL if present (for text-based search)
+      let storeNameFilter = '';
+      if (urlStoreName) {
+        storeNameFilter = urlStoreName;
       }
       
       // Use executive ID directly
@@ -360,7 +364,7 @@ const VisitReportPage: React.FC = () => {
         ...prevFilters,
         partnerBrand: urlPartnerBrand || prevFilters.partnerBrand,
         city: urlCity || prevFilters.city,
-        storeName: storeFilter,
+        storeName: storeNameFilter, // Set from URL storeName parameter
         executiveName: executiveFilter,
         visitStatus: urlVisitStatus || prevFilters.visitStatus,
         issueStatus: urlIssueStatus || prevFilters.issueStatus
@@ -426,9 +430,9 @@ const VisitReportPage: React.FC = () => {
       newUrl.searchParams.set('issueStatus', currentFilters.issueStatus);
     }
     
-    // Use IDs directly in URL for store and executive
-    if (currentFilters.storeName !== 'All Store') {
-      newUrl.searchParams.set('storeId', currentFilters.storeName);
+    // Use storeName parameter for text-based search
+    if (currentFilters.storeName && currentFilters.storeName.trim() !== '') {
+      newUrl.searchParams.set('storeName', currentFilters.storeName);
     }
     
     if (currentFilters.executiveName !== 'All Executive') {
@@ -766,18 +770,15 @@ const VisitReportPage: React.FC = () => {
               </div>
 
               <div className="admin-visit-report-filter-group">
-                <label>Filter by Store Name</label>
-                <select 
+                <label>Search by Store Name</label>
+                <input 
+                  type="text"
                   value={filters.storeName}
                   onChange={(e) => handleFilterChange('storeName', e.target.value)}
-                  className="admin-visit-report-filter-select"
+                  className="admin-visit-report-filter-input"
+                  placeholder="Type store name to search..."
                   disabled={isLoadingFilters}
-                >
-                  <option value="All Store">{isLoadingFilters ? 'Loading stores...' : 'All Store'}</option>
-                  {!isLoadingFilters && filterData.stores.map(store => (
-                    <option key={store.id} value={store.id}>{store.name}</option>
-                  ))}
-                </select>
+                />
                 {isLoadingFilters && (
                   <div className="filter-loading">
                     <div className="loading-spinner-small"></div>

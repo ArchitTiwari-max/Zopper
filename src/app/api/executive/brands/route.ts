@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         brandName: true,
-        category: true
+        // category field removed - using CategoryBrand relation
       },
       orderBy: {
         brandName: 'asc'

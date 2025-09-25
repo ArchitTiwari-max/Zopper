@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   const brands = await prisma.brand.findMany({
-    select: { id: true, brandName: true, category: true },
+    select: { id: true, brandName: true },
   });
 
   console.log(brands);

@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           brandName: true,
-          category: true
+          // category field removed - using CategoryBrand relation
         },
         orderBy: {
           brandName: 'asc'
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
     // Get brand categories for advanced filtering
     const categories = Array.from(new Set(
       allBrands
-        .map(brand => brand.category)
+        .map(brand => 'General') // TODO: Implement category lookup via CategoryBrand relation
         .filter(category => category && category.trim() !== '')
     )).sort();
     const brandCategories = ['All Categories', ...categories];

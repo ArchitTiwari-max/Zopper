@@ -60,11 +60,11 @@ async function main() {
   const rows: { Store_ID: string; 'Store Name': string; City: string; partneraBrandIds: string; Executive_IDs: string }[] = XLSX.utils.sheet_to_json(worksheet);
 
   for (const row of rows) {
-    const storeId = row.Store_ID;
-    const storeName = row['Store Name'];
-    const city = row.City;
+    const storeId = row.Store_ID?.trim() || '';
+    const storeName = row['Store Name']?.trim() || '';
+    const city = row.City?.trim() || '';
     const partnerBrandIdsString = row.partneraBrandIds || '';
-    const executiveIdsString = row.Executive_IDs;
+    const executiveIdsString = row.Executive_IDs || '';
     // Split brand IDs and executive IDs into arrays
     const partnerBrandIds = partnerBrandIdsString.split(',').map(id => id.trim()).filter(Boolean);
     const executiveIds = executiveIdsString.split(',').map(id => id.trim()).filter(Boolean);

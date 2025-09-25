@@ -57,13 +57,14 @@ model Executive {
 // Store & Brand 
 //
 model Store {
-  id             String   @id @map("_id") 
-  storeName      String
-  city           String
-  fullAddress    String?
-  visits Visit[]
-  partnerBrandIds String[]
+  id                String                      @id @map("_id") 
+  storeName         String
+  city              String
+  fullAddress       String?
+  visits            Visit[]
+  partnerBrandIds   String[]                    // references Brand IDs
   executiveStores   ExecutiveStoreAssignment[]
+  salesRecords      SalesRecord[]
 }
 
 model ExecutiveStoreAssignment {
@@ -79,9 +80,45 @@ model ExecutiveStoreAssignment {
 }
 
 model Brand {
+  id            String          @id @map("_id")
+  brandName     String
+  categories    CategoryBrand[]
+  salesRecords  SalesRecord[]
+}
+
+model Category {
+  id            String           @id @map("_id")
+  brandName      String
+  brands        CategoryBrand[]
+  salesRecords  SalesRecord[]
+}
+
+model CategoryBrand {
+  id          String   @id @map("_id")
+  brandId     String
+  categoryId  String
+
+  brand       Brand    @relation(fields: [brandId], references: [id])
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([brandId, categoryId])
+}
+
+model SalesRecord {
   id         String   @id @map("_id")
-  brandName  String
-  category   String?
+  storeId    String
+  brandId    String
+  categoryId String
+  year       Int
+
+  // Array of 12 months
+  monthlySales Json   // will store [{ month: 1, deviceSales: X, planSales: Y, attachPct: Z, revenue: R }, ...]
+
+  store      Store     @relation(fields: [storeId], references: [id])
+  brand      Brand     @relation(fields: [brandId], references: [id])
+  category   Category  @relation(fields: [categoryId], references: [id])
+
+  @@unique([storeId, brandId, categoryId, year])
 }
 //
 // Visit & Issue

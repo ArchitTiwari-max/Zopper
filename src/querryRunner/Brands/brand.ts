@@ -17,7 +17,7 @@ async function main(): Promise<void> {
       data: {
         id: brand.Brand_id,
         brandName: brand.brandName,
-        category: brand.category ?? null, // optional
+        // category field removed - now using CategoryBrand relationship
       },
     });
     console.log(`Inserted brand: ${brand.brandName}`);

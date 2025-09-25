@@ -781,6 +781,7 @@ const AdminStoresPage: React.FC = () => {
             </div>
             <div className="admin-stores-header-cell">PENDING REVIEWS</div>
             <div className="admin-stores-header-cell">PENDING ISSUES</div>
+            <div className="admin-stores-header-cell">SALES</div>
           </div>
           
           {/* Table body with loading state */}
@@ -859,6 +860,11 @@ const AdminStoresPage: React.FC = () => {
                     ) : (
                       <span className="admin-stores-count-zero">{store.pendingIssues}</span>
                     )}
+                  </div>
+                  <div className="admin-stores-cell">
+                    <Link href={`/admin/sales?storeId=${store.id}&storeName=${encodeURIComponent(store.storeName)}`} className="admin-stores-view-all-link">
+                      View Sales
+                    </Link>
                   </div>
                 </div>
               ))

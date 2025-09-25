@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           brandName: true,
-          category: true
+          // category field removed - using CategoryBrand relation
         }
       }),
       
@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
     const brandVisitCounts = relevantBrands.map(brand => ({
       id: brand.id,
       name: brand.brandName,
-      category: brand.category,
+      category: 'General', // TODO: Implement category lookup via CategoryBrand relation
       visits: brandVisitMap.get(brand.id) || 0
     }));
 
