@@ -1,5 +1,5 @@
 .view-sales-admin-page {
-  padding: 24px;
+  padding: 16px; /* mobile-first */
   max-width: 1400px;
   margin: 0 auto;
   background: #f9fafb;
@@ -140,10 +140,11 @@
 }
 
 .view-sales-table {
-  overflow-x: auto;
+  overflow-x: hidden; /* avoid horizontal scroll */
   width: 100%;
-  max-height: 80vh;
-  overflow-y: auto;
+  /* Let the table height be content-based to avoid extra blank space */
+  max-height: none;
+  overflow-y: visible;
 }
 
 .view-sales-table-content {
@@ -163,20 +164,20 @@
 
 .view-sales-table-header-row {
   display: grid;
-  grid-template-columns: 150px 120px repeat(12, 320px);
+  /* mobile-first: stack all */
+  grid-template-columns: 1fr;
   gap: 0;
-  padding: 16px 24px;
+  padding: 16px 16px;
   background: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
   align-items: stretch;
-  min-width: fit-content;
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
 .brand-name-col, .category-col {
-  border-right: 1px solid #e5e7eb;
+  border-right: none; /* mobile-first */
   padding: 8px;
   font-weight: 600;
   display: flex;
@@ -188,7 +189,7 @@
 }
 
 .month-group {
-  border-right: 1px solid #e5e7eb;
+  border-right: none; /* mobile-first */
   display: flex;
   flex-direction: column;
 }
@@ -207,7 +208,7 @@
 
 .month-subheaders {
   display: grid;
-  grid-template-columns: 80px 80px 80px 80px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
   font-size: 11px;
   font-weight: 600;
@@ -240,9 +241,10 @@
 
 .view-sales-table-row {
   display: grid;
-  grid-template-columns: 150px 120px repeat(12, 320px);
+  /* mobile-first: stack all */
+  grid-template-columns: 1fr;
   gap: 0;
-  padding: 16px 24px;
+  padding: 16px 16px;
   border-bottom: 1px solid #f3f4f6;
   transition: background-color 0.2s;
   align-items: center;
@@ -275,7 +277,7 @@
 
 .month-data-row {
   display: grid;
-  grid-template-columns: 80px 80px 80px 80px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
   width: 100%;
 }
@@ -456,34 +458,37 @@
   text-decoration: underline;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
+/* Responsive Design (mobile-first) */
+@media (min-width: 640px) {
   .view-sales-admin-page {
-    padding: 16px;
+    padding: 20px;
   }
-
-  .view-sales-page-title {
-    font-size: 24px;
-  }
-
-  .view-sales-stats-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .view-sales-filters-section {
-    flex-direction: column;
-    gap: 16px;
-  }
-
   .view-sales-table-header-row,
   .view-sales-table-row {
-    grid-template-columns: repeat(7, minmax(100px, 1fr));
-    gap: 12px;
+    grid-template-columns: 150px 1fr; /* brand/category then months container */
+    gap: 8px;
     padding: 12px 16px;
   }
+  .brand-name-col {
+    border-right: 1px solid #e5e7eb;
+  }
+}
 
-  .view-sales-summary-grid {
-    grid-template-columns: 1fr;
+@media (min-width: 992px) {
+  .view-sales-admin-page {
+    padding: 24px;
+  }
+  .view-sales-table-header-row,
+  .view-sales-table-row {
+    grid-template-columns: 150px 120px repeat(3, minmax(180px, 1fr));
+    gap: 0;
+    padding: 16px 24px;
+  }
+  .category-col {
+    border-right: 1px solid #e5e7eb;
+  }
+  .month-group,
+  .month-data-group {
+    border-right: 1px solid #f3f4f6;
   }
 }

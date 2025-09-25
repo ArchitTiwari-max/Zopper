@@ -217,6 +217,8 @@ const AdminSalesPage: React.FC = () => {
 
   const tableData = Object.values(groupedData);
 
+  const recentMonths = getRecentMonthsForYear(selectedYear, 3);
+
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -232,6 +234,18 @@ const AdminSalesPage: React.FC = () => {
     ];
     return monthNames[month - 1];
   };
+
+  // Get the last N months within a given year.
+  // If the selected year is the current year, it ends at the current month;
+  // otherwise, it ends at December. This does not cross year boundaries.
+  function getRecentMonthsForYear(year: number, count: number): number[] {
+    const now = new Date();
+    const endMonth = year === now.getFullYear() ? now.getMonth() + 1 : 12; // 1-12
+    const startMonth = Math.max(1, endMonth - count + 1);
+    const months: number[] = [];
+    for (let m = startMonth; m <= endMonth; m++) months.push(m);
+    return months;
+  }
 
   const formatMonth = (month: number, year: number): string => {
     const monthNames = [
@@ -293,27 +307,6 @@ const AdminSalesPage: React.FC = () => {
         <h1 className="view-sales-page-title">Sales Data for {storeName}</h1>
       </div>
 
-      {/* Stats Cards */}
-      {stats && (
-        <div className="view-sales-stats-grid">
-          <div className="view-sales-stat-card">
-            <div className="view-sales-stat-value">{stats.totalDeviceSales.toLocaleString()}</div>
-            <div className="view-sales-stat-label">Total Device Sales</div>
-          </div>
-          <div className="view-sales-stat-card">
-            <div className="view-sales-stat-value">{stats.totalPlanSales.toLocaleString()}</div>
-            <div className="view-sales-stat-label">Total Plan Sales</div>
-          </div>
-          <div className="view-sales-stat-card">
-            <div className="view-sales-stat-value">{(stats.averageAttachPct * 100).toFixed(1)}%</div>
-            <div className="view-sales-stat-label">Average Attach Rate</div>
-          </div>
-          <div className="view-sales-stat-card">
-            <div className="view-sales-stat-value">{formatCurrency(stats.totalRevenue)}</div>
-            <div className="view-sales-stat-label">Total Revenue</div>
-          </div>
-        </div>
-      )}
 
       {/* Filters */}
       <div className="view-sales-filters-section">
@@ -348,16 +341,15 @@ const AdminSalesPage: React.FC = () => {
       {/* Sales Data Table */}
       <div className="view-sales-table-container">
         <div className="view-sales-table-header">
-          <h2>Sales Records ({tableData.length} Brand-Category combinations)</h2>
+          <h2>Sales Records </h2>
         </div>
         <div className="view-sales-table">
           <div className="view-sales-table-content">
             <div className="view-sales-table-header-row">
               <div className="view-sales-table-header-cell brand-name-col">Brand Name</div>
               <div className="view-sales-table-header-cell category-col">Category</div>
-              {/* All 12 Months */}
-              {Array.from({ length: 12 }, (_, index) => {
-                const month = index + 1;
+              {/* Last 3 months within selected year */}
+              {recentMonths.map((month) => {
                 const year = selectedYear;
                 return (
                   <div key={month} className="view-sales-table-header-cell month-group">
@@ -387,9 +379,8 @@ const AdminSalesPage: React.FC = () => {
                     </div>
                     <div className="view-sales-table-cell category-cell">{row.categoryName}</div>
                     
-                    {/* All 12 Months Data */}
-                    {Array.from({ length: 12 }, (_, index) => {
-                      const month = index + 1;
+                    {/* Last 3 months data */}
+                    {recentMonths.map((month) => {
                       const monthData = row.months[month];
                       return (
                         <div key={month} className="view-sales-table-cell month-data-group">
@@ -415,49 +406,6 @@ const AdminSalesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Brand Performance Summary */}
-      {stats && (
-        <div className="view-sales-summary-section">
-          <h2>Performance Summary</h2>
-          <div className="view-sales-summary-grid">
-            <div className="view-sales-summary-card">
-              <h3>Top Performing Brands</h3>
-              <div className="view-sales-performance-list">
-                <div className="view-sales-performance-header">
-                  <span className="view-sales-header-brand">Brand Name</span>
-                  <span className="view-sales-header-value">Total Revenue</span>
-                </div>
-                {Object.entries(stats.salesByBrand)
-                  .sort(([,a], [,b]) => b.revenue - a.revenue)
-                  .slice(0, 3)
-                  .map(([brand, data]) => (
-                    <div key={brand} className="view-sales-performance-item">
-                      <span className="view-sales-brand-name">{brand}</span>
-                      <span className="view-sales-performance-value">{formatCurrency(data.revenue)}</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
-            <div className="view-sales-summary-card">
-              <h3>Category Performance</h3>
-              <div className="view-sales-performance-list">
-                <div className="view-sales-performance-header">
-                  <span className="view-sales-header-category">Category Name</span>
-                  <span className="view-sales-header-value">Total Revenue</span>
-                </div>
-                {Object.entries(stats.salesByCategory)
-                  .sort(([,a], [,b]) => b.revenue - a.revenue)
-                  .map(([category, data]) => (
-                    <div key={category} className="view-sales-performance-item">
-                      <span className="view-sales-category-name">{category}</span>
-                      <span className="view-sales-performance-value">{formatCurrency(data.revenue)}</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

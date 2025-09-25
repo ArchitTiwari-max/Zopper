@@ -1,0 +1,221 @@
+/* Mobile-first responsive styles for Executive Sales page */
+
+:root {
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #ffe873; /* light yellow, similar to screenshot banner */
+}
+
+.sales-page-container {
+  padding: 8px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sales-page-monthbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--accent);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+
+.sales-page-month-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.sales-page-month-select { position: relative; display: inline-block; }
+.sales-page-month-select select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 24px 6px 8px;
+  font-size: 12px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px 14px;
+}
+
+/* Back link */
+.sales-page-back-nav { margin: 8px 0 4px; }
+.sales-page-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #2563eb;
+  text-decoration: none;
+}
+.sales-page-back-link:hover { text-decoration: underline; }
+
+/* Header toggle button */
+.sales-page-toggle {
+  border: 1px solid var(--border);
+  background: #f9fafb;
+  color: #374151;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.sales-page-toggle:hover { background: #f3f4f6; }
+
+/* Simple store heading */
+.sales-page-store-heading {
+  margin: 16px 0 16px;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+@media (min-width: 600px) {
+  .sales-page-store-heading { font-size: 28px; margin: 20px 0 20px; }
+}
+
+@media (min-width: 1024px) {
+  .sales-page-store-heading { font-size: 30px; margin: 24px 0 24px; }
+}
+
+/* Page header */
+.sales-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+/* Section heading */
+.sales-page-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 10px 0 8px;
+  color: var(--text);
+}
+
+/* Banner row inside table */
+.sales-page-month-banner th {
+  background: var(--accent);
+  font-size: 14px;
+  padding: 10px;
+  text-align: center;
+}
+
+.sales-page-header .sales-page-titles .sales-page-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sales-page-header .sales-page-titles .sales-page-subtitle {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Table wrapper fits viewport; no horizontal scroll on page */
+.sales-page-table-wrapper {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow-x: hidden; /* prevent page-level horizontal bar */
+}
+
+/* Always fit table to screen width */
+.sales-page-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* columns scale to fit */
+}
+
+.sales-page-table thead { display: table-header-group; }
+.sales-page-table tbody tr { display: table-row; }
+
+/* Zebra rows */
+.sales-page-table tbody tr:nth-child(odd) { background: #fafafa; }
+
+/* Compact, wrap-enabled cells for small screens */
+.sales-page-table th,
+.sales-page-table td {
+  padding: 6px 4px;
+  font-size: 11px;
+  line-height: 1.25;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: normal; /* allow wrapping */
+  word-break: break-word;
+  overflow-wrap: anywhere; /* long words/numbers wrap */
+}
+
+.sales-page-table th {
+  background: #f3f4f6;
+  font-weight: 700;
+}
+
+/* Percentage-based column widths that sum to 100% */
+.sales-page-table th:nth-child(1),
+.sales-page-table td:nth-child(1) { width: 22%; }
+.sales-page-table th:nth-child(2),
+.sales-page-table td:nth-child(2) { width: 25%; }
+.sales-page-table th:nth-child(3),
+.sales-page-table td:nth-child(3) { width: 13%; }
+.sales-page-table th:nth-child(4),
+.sales-page-table td:nth-child(4) { width: 13%; }
+.sales-page-table th:nth-child(5),
+.sales-page-table td:nth-child(5) { width: 12%; }
+.sales-page-table th:nth-child(6),
+.sales-page-table td:nth-child(6) { width: 15%; }
+
+.sales-page-table tbody tr:last-child td { border-bottom: none; }
+
+/* Accessibility */
+.sales-page-visually-hidden {
+  position: absolute !important;
+  height: 1px; width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
+}
+
+/* Scale up slightly on wider screens while staying fluid */
+@media (min-width: 600px) {
+  .sales-page-month-title { font-size: 18px; }
+  .sales-page-table th, .sales-page-table td { font-size: 12px; padding: 8px 6px; }
+}
+
+@media (min-width: 1024px) {
+  .sales-page-month-title { font-size: 20px; }
+  .sales-page-table th, .sales-page-table td { font-size: 14px; padding: 10px 8px; }
+}
+
+/* Tablet: a bit more spacing */
+@media (min-width: 768px) {
+  .sales-page-container { padding: 16px 16px 48px; }
+  .sales-page-month-title { font-size: 22px; }
+  .sales-page-table th, .sales-page-table td { font-size: 14px; }
+}
+
+/* Desktop: comfortable layout */
+@media (min-width: 1024px) {
+  .sales-page-container { padding: 20px 20px 56px; }
+  .sales-page-month-title { font-size: 24px; }
+  .sales-page-table th, .sales-page-table td { font-size: 15px; }
+}
