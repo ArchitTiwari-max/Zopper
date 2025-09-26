@@ -478,7 +478,7 @@ const ExecutiveFormContent: React.FC = () => {
             </label>
             <input
               type="date"
-              className="exec-f-sub-form-input"
+              className="exec-f-sub-form-input exec-f-sub-form-date"
               value={formData.visitDate}
               onChange={(e) => handleInputChange('visitDate', e.target.value)}
               max={(() => {
@@ -496,15 +496,6 @@ const ExecutiveFormContent: React.FC = () => {
                 const thirtyDaysAgo = new Date(istDate.getTime() - (30 * 24 * 60 * 60 * 1000));
                 return thirtyDaysAgo.toISOString().split('T')[0];
               })()}
-              style={{
-                padding: '12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontFamily: 'inherit',
-                backgroundColor: 'white',
-                width: '100%'
-              }}
             />
           </div>
           

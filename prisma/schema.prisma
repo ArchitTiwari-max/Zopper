@@ -111,8 +111,11 @@ model SalesRecord {
   categoryId String
   year       Int
 
-  // Array of 12 months
-  monthlySales Json   // will store [{ month: 1, deviceSales: X, planSales: Y, attachPct: Z, revenue: R }, ...]
+  // Array of past 3 months only
+  monthlySales Json   // will store [{ month: 1, deviceSales: X, planSales: Y, attachPct: Z, revenue: R }, { month: 2, ... }, { month: 3, ... }]
+  
+  // Current datewise sales for this month
+  dailySales Json     // will store [{ date: "2024-01-15", deviceSales: X, planSales: Y, attachPct: Z, revenue: R }, ...]
 
   store      Store     @relation(fields: [storeId], references: [id])
   brand      Brand     @relation(fields: [brandId], references: [id])

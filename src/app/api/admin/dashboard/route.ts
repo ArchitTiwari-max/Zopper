@@ -27,23 +27,31 @@ export async function GET(request: NextRequest) {
     // Calculate date range based on filter
     const now = new Date();
     let startDate: Date;
+    let endDate: Date;
 
     switch (dateFilter) {
       case 'Today':
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        // For 'Today', include the entire day until 23:59:59
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        endDate.setMilliseconds(-1); // Set to 23:59:59.999
         break;
       case 'Last 7 Days':
         startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Add 1 day buffer for timezone issues
         break;
       case 'Last 90 Days':
         startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Add 1 day buffer for timezone issues
         break;
       case 'Last Year':
         startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Add 1 day buffer for timezone issues
         break;
       case 'Last 30 Days':
       default:
         startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Add 1 day buffer for timezone issues
     }
 
     // Get dashboard metrics concurrently (OPTIMIZED)
@@ -60,7 +68,7 @@ export async function GET(request: NextRequest) {
         where: {
           createdAt: {
             gte: startDate,
-            lte: now
+            lte: endDate
           }
         }
       }),
@@ -72,7 +80,7 @@ export async function GET(request: NextRequest) {
           status: 'PENDING_REVIEW',
           createdAt: {
             gte: startDate,
-            lte: now
+            lte: endDate
           }
         }
       }),
@@ -86,7 +94,7 @@ export async function GET(request: NextRequest) {
           },
           createdAt: {
             gte: startDate,
-            lte: now
+            lte: endDate
           }
         }
       }),
@@ -103,7 +111,7 @@ export async function GET(request: NextRequest) {
       }),
 
       // Brand-wise visit data (OPTIMIZED)
-      getBrandVisitDataOptimized(startDate, now)
+      getBrandVisitDataOptimized(startDate, endDate)
     ]);
 
     // Calculate percentage change (previous query moved to Promise.all)

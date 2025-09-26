@@ -258,6 +258,66 @@
   color: #9ca3af;
 }
 
+/* Date Input Styles - iOS Safari fixes */
+.exec-f-sub-form-date,
+.exec-f-sub-form-input[type="date"] {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background-color: white;
+  color: #495057;
+  transition: border-color 0.2s;
+  
+  /* iOS Safari specific fixes */
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  appearance: none;
+  
+  /* Prevent iOS from enlarging the input */
+  max-height: 44px;
+  min-height: 44px;
+  line-height: 1.4;
+  
+  /* Fix for iOS date picker button */
+  position: relative;
+}
+
+/* iOS date picker icon styling */
+.exec-f-sub-form-date::-webkit-calendar-picker-indicator,
+.exec-f-sub-form-input[type="date"]::-webkit-calendar-picker-indicator {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'/%3e%3c/svg%3e");
+  background-size: 20px 20px;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  margin-left: 8px;
+  opacity: 0.7;
+}
+
+.exec-f-sub-form-date:focus,
+.exec-f-sub-form-input[type="date"]:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* Additional iOS-specific fixes */
+@supports (-webkit-touch-callout: none) {
+  .exec-f-sub-form-date,
+  .exec-f-sub-form-input[type="date"] {
+    /* Ensure consistent sizing on iOS */
+    font-size: 16px; /* Prevents zoom on iOS */
+    transform: scale(0.875); /* Scale down to match 14px appearance */
+    transform-origin: left center;
+    width: 114.3%; /* Compensate for scale */
+  }
+}
+
 /* Checkbox */
 .exec-f-sub-checkbox-container {
   display: flex;

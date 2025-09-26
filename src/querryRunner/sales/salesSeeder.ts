@@ -10,6 +10,14 @@ interface MonthlySalesData {
   revenue: number;
 }
 
+interface DailySalesData {
+  date: string; // Format: "2024-01-15"
+  deviceSales: number;
+  planSales: number;
+  attachPct: number;
+  revenue: number;
+}
+
 async function seedSalesData() {
   try {
     console.log('🌱 Starting sales data seeding...');
@@ -30,10 +38,11 @@ async function seedSalesData() {
     for (const store of stores) {
       for (const brand of brands) {
         for (const category of categories) {
-          // Generate monthly sales data for current year
+          // Generate PAST 3 MONTHS sales data only
           const monthlySales: MonthlySalesData[] = [];
+          const past3Months = getPast3Months(currentMonth, currentYear);
 
-          for (let month = 1; month <= currentMonth; month++) {
+          for (const { month, year } of past3Months) {
             const avgRevenuePerDevice = getCategoryBasePrice(category.brandName);
             const seasonalMultiplier = getSeasonalMultiplier(month, category.brandName);
             
@@ -55,7 +64,34 @@ async function seedSalesData() {
             });
           }
 
-          // Create sales record
+          // Generate DAILY SALES data for current month
+          const dailySales: DailySalesData[] = [];
+          const daysInCurrentMonth = new Date(currentYear, currentMonth, 0).getDate();
+          
+          for (let day = 1; day <= daysInCurrentMonth; day++) {
+            const avgRevenuePerDevice = getCategoryBasePrice(category.brandName);
+            
+            // Daily sales are typically smaller than monthly totals
+            const baseDailyDeviceSales = Math.floor(Math.random() * 10) + 1; // 1-10 devices per day
+            const deviceSales = baseDailyDeviceSales;
+            
+            const attachRate = 0.4 + Math.random() * 0.3; // 40-70% attach rate
+            const planSales = Math.floor(deviceSales * attachRate);
+            const attachPct = deviceSales > 0 ? Math.round((planSales / deviceSales) * 10000) / 10000 : 0;
+            const revenue = deviceSales * avgRevenuePerDevice;
+
+            const dateStr = `${currentYear}-${currentMonth.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+            
+            dailySales.push({
+              date: dateStr,
+              deviceSales,
+              planSales,
+              attachPct,
+              revenue
+            });
+          }
+
+          // Create sales record with both monthly and daily data
           try {
             await prisma.salesRecord.create({
               data: {
@@ -63,7 +99,8 @@ async function seedSalesData() {
                 brandId: brand.id,
                 categoryId: category.id,
                 year: currentYear,
-                monthlySales: monthlySales
+                monthlySales: monthlySales,
+                dailySales: dailySales
               }
             });
             recordsCreated++;
@@ -82,6 +119,24 @@ async function seedSalesData() {
   } finally {
     await prisma.$disconnect();
   }
+}
+
+function getPast3Months(currentMonth: number, currentYear: number): { month: number; year: number }[] {
+  const past3Months = [];
+  
+  for (let i = 1; i <= 3; i++) {
+    let month = currentMonth - i;
+    let year = currentYear;
+    
+    if (month <= 0) {
+      month = 12 + month; // Handle year boundary
+      year = currentYear - 1;
+    }
+    
+    past3Months.unshift({ month, year }); // Add to beginning to maintain chronological order
+  }
+  
+  return past3Months;
 }
 
 function getCategoryBasePrice(category: string): number {
