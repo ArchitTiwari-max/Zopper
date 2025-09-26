@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { StoreData, StoreFilters } from '../types';
 import VisitPlanModal from './components/VisitPlanModal';
+import * as XLSX from 'xlsx';
 import './page.css';
 
 
@@ -457,6 +458,58 @@ const AdminStoresPage: React.FC = () => {
     return sortConfig.direction === 'asc' ? '↑' : '↓';
   };
 
+  // Build data for Excel export from the currently filtered rows
+  const buildExportAOA = (): (string | number)[][] => {
+    const headers = [
+      'Store Name',
+      'City',
+      'Partner Brands',
+      'Assigned Executive',
+      'Last Visit',
+      'Pending Reviews',
+      'Pending Issues'
+    ];
+
+    const rows = filteredStores.map((s) => [
+      s.storeName,
+      s.city,
+      s.partnerBrands.join(', '),
+      s.assignedTo || '',
+      formatLastVisitDate(s.lastVisit ?? null),
+      s.pendingReviews,
+      s.pendingIssues,
+    ]);
+
+    return [headers, ...rows];
+  };
+
+  const handleExportXLS = () => {
+    const aoa = buildExportAOA();
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+    // Column widths for readability
+    const cols = [
+      { wch: 28 }, // Store Name
+      { wch: 16 }, // City
+      { wch: 24 }, // Partner Brands
+      { wch: 22 }, // Assigned Executive
+      { wch: 14 }, // Last Visit
+      { wch: 16 }, // Pending Reviews
+      { wch: 16 }, // Pending Issues
+    ];
+    (ws as any)['!cols'] = cols;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Stores');
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const filename = `stores-${yyyy}-${mm}-${dd}.xls`;
+    XLSX.writeFile(wb, filename, { bookType: 'xls' });
+  };
+
   // Get filter options from filter data (not store data for better performance)
   const getFilterOptions = (type: 'brands' | 'cities' | 'stores' | 'executives' | 'statuses'): string[] => {
     switch (type) {
@@ -719,13 +772,37 @@ const AdminStoresPage: React.FC = () => {
         )}
       </div>
 
-      {/* Create Visit Plan Button - Between filters and table */}
+      {/* Actions - Export and Assign PJP */}
       <div style={{
         display: 'flex',
         justifyContent: 'flex-end',
+        gap: '10px',
         marginBottom: '20px',
         marginTop: '16px'
       }}>
+        <button
+          onClick={handleExportXLS}
+          style={{
+            padding: '10px 16px',
+            backgroundColor: '#2563eb',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'background-color 0.2s',
+            boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#1d4ed8';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#2563eb';
+          }}
+        >
+          Export XLS
+        </button>
         {!isCreatingVisitPlan && (
           <button 
             onClick={handleCreateVisitPlan}
@@ -766,12 +843,6 @@ const AdminStoresPage: React.FC = () => {
               STORE NAME <span className="sort-icon">{getSortIcon('storeName')}</span>
             </div>
             <div className="admin-stores-header-cell">PARTNER BRANDS</div>
-            <div 
-              className="admin-stores-header-cell sortable-header" 
-              onClick={() => handleSort('city')}
-            >
-              CITY <span className="sort-icon">{getSortIcon('city')}</span>
-            </div>
             <div className="admin-stores-header-cell">ASSIGNED EXECUTIVE</div>
             <div 
               className="admin-stores-header-cell sortable-header" 
@@ -781,7 +852,7 @@ const AdminStoresPage: React.FC = () => {
             </div>
             <div className="admin-stores-header-cell">PENDING REVIEWS</div>
             <div className="admin-stores-header-cell">PENDING ISSUES</div>
-            <div className="admin-stores-header-cell">SALES</div>
+            <div className="admin-stores-header-cell">STORE SALES</div>
           </div>
           
           {/* Table body with loading state */}
@@ -810,15 +881,18 @@ const AdminStoresPage: React.FC = () => {
                           }}
                         />
                       )}
-                      {isCreatingVisitPlan ? (
-                        <span className="admin-stores-store-name-truncated" title={store.storeName}>
-                          {store.storeName}
-                        </span>
-                      ) : (
-                        <Link href={`/admin/visit-report?storeId=${store.id}`} className="admin-stores-store-name-link admin-stores-store-name-truncated" title={store.storeName}>
-                          {store.storeName}
-                        </Link>
-                      )}
+                      <div className="admin-stores-name-wrap">
+                        {isCreatingVisitPlan ? (
+                          <span className="admin-stores-store-name-truncated" title={store.storeName}>
+                            {store.storeName}
+                          </span>
+                        ) : (
+                          <Link href={`/admin/visit-report?storeId=${store.id}`} className="admin-stores-store-name-link admin-stores-store-name-truncated" title={store.storeName}>
+                            {store.storeName}
+                          </Link>
+                        )}
+                        <div className="admin-stores-store-subtext">{store.city}</div>
+                      </div>
                     </div>
                   </div>
                   <div className="admin-stores-cell admin-stores-partner-brands-cell">
@@ -832,7 +906,6 @@ const AdminStoresPage: React.FC = () => {
                       </span>
                     ))}
                   </div>
-                  <div className="admin-stores-cell admin-stores-address-cell">{store.address}</div>
                   <div className="admin-stores-cell">
                     <Link href={`/admin/executives?storeId=${store.id}`} className="admin-stores-view-all-link">
                       View All

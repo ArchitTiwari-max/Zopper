@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useDateFilter } from '../contexts/DateFilterContext';
 import VisitDetailsModal from '../components/VisitDetailsModal';
+import * as XLSX from 'xlsx';
 import './page.css';
 
 // Types for visit report
@@ -566,6 +567,63 @@ const VisitReportPage: React.FC = () => {
     }
   };
 
+  // Build data for Excel export using the currently filtered rows
+  const buildExportAOA = (): (string | number | null)[][] => {
+    const headers = [
+      'Executive Name',
+      'Store Name',
+      'City',
+      'Partner Brands',
+      'Visit Date',
+      'Issues',
+      'Visit Status',
+      'Reviewer',
+      'Issue Status'
+    ];
+
+    const rows = filteredVisits.map(v => [
+      v.executiveName,
+      v.storeName,
+      v.city,
+      (v.partnerBrand || []).join(', '),
+      formatVisitDate(v.visitDate),
+      v.issues,
+      formatVisitStatus(v.visitStatus),
+      v.reviewerName || '',
+      formatIssueStatus(v.issueStatus)
+    ]);
+
+    return [headers, ...rows];
+  };
+
+  const handleExportXLS = () => {
+    const aoa = buildExportAOA();
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+    // Column widths for readability
+    (ws as any)['!cols'] = [
+      { wch: 22 }, // Executive
+      { wch: 28 }, // Store
+      { wch: 14 }, // City
+      { wch: 24 }, // Brands
+      { wch: 14 }, // Date
+      { wch: 40 }, // Issues
+      { wch: 16 }, // Visit Status
+      { wch: 18 }, // Reviewer
+      { wch: 16 }  // Issue Status
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'VisitReports');
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const filename = `visit-reports-${yyyy}-${mm}-${dd}.xls`;
+    XLSX.writeFile(wb, filename, { bookType: 'xls' });
+  };
+
   // Get unique values from filter data (not visit data for better performance)
   const getFilterOptions = (type: 'brands' | 'cities' | 'stores' | 'executives'): string[] => {
     switch (type) {
@@ -838,6 +896,34 @@ const VisitReportPage: React.FC = () => {
             </div>
           )
         )}
+      </div>
+
+      {/* Actions - Export */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'flex-end',
+        marginTop: '12px',
+        marginBottom: '12px'
+      }}>
+        <button
+          onClick={handleExportXLS}
+          style={{
+            padding: '10px 16px',
+            backgroundColor: '#2563eb',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'background-color 0.2s',
+            boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563eb'; }}
+        >
+          Export XLS
+        </button>
       </div>
 
       {/* Visit Reports Table */}
