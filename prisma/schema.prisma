@@ -37,6 +37,9 @@ model Admin {
   region    String?
   userId String @unique 
   user   User   @relation(fields: [userId], references: [id])
+
+  // Back-relation: visits reviewed by this admin
+  reviewedVisits Visit[]
 }
 
 model Executive {
@@ -138,6 +141,9 @@ model Visit {
   updatedAt      DateTime @updatedAt
   status         viststatus @default(PENDING_REVIEW)
   adminComment   String?
+  reviewedAt     DateTime?
+  reviewedByAdminId String?
+  reviewedByAdmin   Admin?   @relation(fields: [reviewedByAdminId], references: [id])
   // relations
   executiveId String  
   executive   Executive @relation(fields: [executiveId], references: [id])

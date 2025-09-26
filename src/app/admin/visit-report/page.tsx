@@ -8,7 +8,7 @@ import VisitDetailsModal from '../components/VisitDetailsModal';
 import './page.css';
 
 // Types for visit report
-interface VisitReportData {
+  interface VisitReportData {
   id: string; // ObjectId
   executiveName: string;
   executiveInitials: string;
@@ -18,6 +18,7 @@ interface VisitReportData {
   partnerBrand: string[];
   visitDate: string;
   visitStatus: 'PENDING_REVIEW' | 'REVIEWD';
+  reviewerName?: string;
   issueStatus: 'Pending' | 'Assigned' | 'Resolved' | null;
   city: string;
   issues: string;
@@ -660,11 +661,12 @@ const VisitReportPage: React.FC = () => {
       const result = await response.json();
       
       if (result.success) {
+        const reviewerName: string | undefined = result?.visit?.reviewedByAdmin?.name;
         // Update the local state to reflect the change
         setVisitData(prevVisits => 
           prevVisits.map(visit => 
             visit.id === visitId 
-              ? { ...visit, visitStatus: 'REVIEWD' as const }
+              ? { ...visit, visitStatus: 'REVIEWD' as const, reviewerName }
               : visit
           )
         );
@@ -673,7 +675,7 @@ const VisitReportPage: React.FC = () => {
         setFilteredVisits(prevVisits => 
           prevVisits.map(visit => 
             visit.id === visitId 
-              ? { ...visit, visitStatus: 'REVIEWD' as const }
+              ? { ...visit, visitStatus: 'REVIEWD' as const, reviewerName }
               : visit
           )
         );
@@ -943,7 +945,9 @@ const VisitReportPage: React.FC = () => {
                 <div className="admin-visit-report-cell admin-visit-report-status-cell">
                   <div className="admin-visit-report-status-badges">
                     <span className={`admin-visit-report-status-badge ${getVisitStatusBadgeClass(visit.visitStatus)}`}>
-                      {formatVisitStatus(visit.visitStatus)}
+                      {visit.visitStatus === 'REVIEWD' && visit.reviewerName
+                        ? `Reviewed by ${visit.reviewerName}`
+                        : formatVisitStatus(visit.visitStatus)}
                     </span>
                     {visit.issueStatus && visit.issues !== 'None' && (
                       <span className={`admin-visit-report-status-badge ${getIssueStatusBadgeClass(visit.issueStatus)}`}>

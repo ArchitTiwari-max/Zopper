@@ -85,6 +85,8 @@ export async function GET(request: NextRequest) {
           POSMchecked: true,
           personMet: true,
           imageUrls: true,
+          reviewedAt: true,
+          reviewedByAdmin: { select: { id: true, name: true } },
           executive: {
             select: {
               id: true,
@@ -207,6 +209,7 @@ export async function GET(request: NextRequest) {
         partnerBrand: partnerBrands,
         visitDate: formattedVisitDate,
         visitStatus: visit.status as 'PENDING_REVIEW' | 'REVIEWD',
+        reviewerName: visit.reviewedByAdmin?.name,
         issueStatus: issueStatusResult,
         city: visit.store.city,
         issues: issues,

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { generateUniqueIssueId } from '@/lib/issueIdGenerator';
 
 // GET endpoint to fetch all visits of the authenticated executive (for visit history page)
 // API Version: v2 - Added partnerBrand field to response structure
@@ -116,6 +115,8 @@ export async function GET(request: NextRequest) {
         brandIds: true,
         createdAt: true,
         updatedAt: true,
+        reviewedAt: true,
+        reviewedByAdmin: { select: { id: true, name: true } },
         store: {
           select: {
             id: true,
@@ -189,6 +190,7 @@ export async function GET(request: NextRequest) {
         ? visit.store.partnerBrandIds.map(brandId => brandMap.get(brandId) || 'Unknown Brand').join(', ')
         : 'N/A',
       status: visit.status,
+      reviewerName: visit.reviewedByAdmin?.name,
       representative: visit.executive?.name || 'Unknown Executive',
       personMet: visit.personMet,
       POSMchecked: visit.POSMchecked,
@@ -200,14 +202,14 @@ export async function GET(request: NextRequest) {
         month: 'long',
         day: 'numeric'
       }), // Add date field for VisitDetailsModal compatibility
-      issues: visit.issues.map(issue => ({
+      issues: visit.issues.map((issue: any) => ({
         id: issue.id,
         details: issue.details,
         status: issue.status,
         createdAt: issue.createdAt,
         assigned: issue.assigned
-          .filter(assignment => assignment.executive) // Filter out null executives
-          .map(assignment => ({
+          .filter((assignment: any) => assignment.executive) // Filter out null executives
+          .map((assignment: any) => ({
             id: assignment.id,
             adminComment: assignment.adminComment,
             status: assignment.status,

@@ -13,6 +13,7 @@ interface VisitDetail {
   storeName: string;
   partnerBrand?: string;
   status: 'PENDING_REVIEW' | 'REVIEWD';
+  reviewerName?: string;
   personMet: PersonMet[];
   date: string;
   POSMchecked: boolean | null;
@@ -269,7 +270,7 @@ const VisitHistory: React.FC = () => {
           'Visit ID': visit.id,
           'Store Name': visit.storeName || 'N/A',
           'Partner Brand': visit.partnerBrand || 'N/A',
-          'Status': visit.status === 'PENDING_REVIEW' ? 'Pending Review' : 'Reviewed',
+          'Status': visit.status === 'PENDING_REVIEW' ? 'Pending Review' : (visit.reviewerName ? `Reviewed by ${visit.reviewerName}` : 'Reviewed'),
           'POSM Available': visit.POSMchecked === null ? 'Not specified' : (visit.POSMchecked ? 'Yes' : 'No'),
           'Visit Date': formatDate(visit.createdAt),
           'Person Met': visit.personMet && visit.personMet.length > 0 
@@ -581,7 +582,9 @@ const VisitHistory: React.FC = () => {
                             className="exec-visits-status-badge"
                             style={{ backgroundColor: getStatusColor(visit.status) }}
                           >
-                            {visit.status === 'PENDING_REVIEW' ? 'Pending Review' : 'Reviewed'}
+                            {visit.status === 'PENDING_REVIEW' 
+                              ? 'Pending Review' 
+                              : (visit.reviewerName ? `Reviewed by ${visit.reviewerName}` : 'Reviewed')}
                           </span>
                           <button 
                             className="exec-visits-view-details-btn"

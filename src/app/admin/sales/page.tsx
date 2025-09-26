@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import * as XLSX from 'xlsx';
 import './view-sales.css';
 
 interface MonthlySalesData {
@@ -272,6 +273,59 @@ const AdminSalesPage: React.FC = () => {
     return brandColors[brand] || '#64748b';
   };
 
+  // Build CSV from the currently displayed tableData and recentMonths
+
+  // Build AOA (array of arrays) for Excel export
+  const buildAOA = (): (string | number)[][] => {
+    const monthHeaders = recentMonths.flatMap((month) => {
+      const year = selectedYear;
+      const label = `${getMonthName(month)} ${year.toString().slice(-2)}`;
+      return [
+        `${label} Device Sales`,
+        `${label} Plan Sales`,
+        `${label} Attach %`,
+        `${label} Revenue`
+      ];
+    });
+
+    const headers = ['Brand', 'Category', ...monthHeaders];
+
+    const rows = tableData.map((row) => {
+      const cols: (string | number)[] = [row.brandName, row.categoryName];
+      recentMonths.forEach((month) => {
+        const monthData = row.months[month];
+        cols.push(
+          monthData?.deviceSales ?? '',
+          monthData?.planSales ?? '',
+          monthData ? `${(monthData.attachPct * 100).toFixed(1)}%` : '',
+          monthData?.revenue ?? ''
+        );
+      });
+      return cols;
+    });
+
+    return [headers, ...rows];
+  };
+
+
+  // Export in legacy Excel .xls format
+  const handleExportXLS = () => {
+    const aoa = buildAOA();
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+    // Optional: set some reasonable column widths
+    const colCount = aoa[0]?.length || 0;
+    const cols = Array.from({ length: colCount }, (_, i) => ({ wch: i < 2 ? 16 : 14 }));
+    (ws as any)['!cols'] = cols;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, `Sales_${selectedYear}`);
+
+    const safeStore = (storeName || 'store').replace(/[^a-zA-Z0-9-_]+/g, '_');
+    const filename = `sales-report-${safeStore}-${selectedYear}.xls`;
+    XLSX.writeFile(wb, filename, { bookType: 'xls' });
+  };
+
   if (!storeId) {
     return (
       <div className="view-sales-admin-page">
@@ -341,7 +395,14 @@ const AdminSalesPage: React.FC = () => {
       {/* Sales Data Table */}
       <div className="view-sales-table-container">
         <div className="view-sales-table-header">
-          <h2>Sales Records </h2>
+          <div className="view-sales-table-header-content">
+            <h2>Sales Records </h2>
+            <div className="view-sales-actions">
+              <button type="button" className="view-sales-export-btn" onClick={handleExportXLS}>
+                Export Excel
+              </button>
+            </div>
+          </div>
         </div>
         <div className="view-sales-table">
           <div className="view-sales-table-content">

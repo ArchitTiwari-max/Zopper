@@ -12,6 +12,7 @@ interface AdminVisitData {
   partnerBrand: string[];
   visitDate: string;
   visitStatus: 'PENDING_REVIEW' | 'REVIEWD';
+  reviewerName?: string; // Admin who reviewed the visit (optional)
   issueStatus: 'Pending' | 'Assigned' | 'Resolved';
   city: string;
   issues: string;
@@ -130,6 +131,12 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
                   {visit.visitStatus === 'PENDING_REVIEW' ? 'PENDING_REVIEW' : 'REVIEWED'}
                 </span>
               </div>
+              {visit.visitStatus === 'REVIEWD' && (
+                <div className="admin-visit-info-card">
+                  <div className="admin-visit-info-label">Reviewed By:</div>
+                  <div className="admin-visit-info-value">{visit.reviewerName || '—'}</div>
+                </div>
+              )}
               <div className="admin-visit-info-card">
                 <div className="admin-visit-info-label">City:</div>
                 <div className="admin-visit-info-value">{visit.city}</div>

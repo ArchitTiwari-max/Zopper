@@ -18,6 +18,7 @@ interface PastVisit {
   createdAt: string;
   updatedAt: string;
   storeName: string;
+  reviewerName?: string; // Name of the admin who marked the visit as reviewed (optional)
 }
 
 interface VisitIssue {
@@ -161,6 +162,12 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
                   {visit.status === 'PENDING_REVIEW' ? 'Pending Review' : visit.status === 'REVIEWD' ? 'Reviewed' : visit.status}
                 </span>
               </div>
+              {visit.status === 'REVIEWD' && (
+                <div className="visit-detail-item">
+                  <span className="visit-detail-label">Reviewed By:</span>
+                  <span className="visit-detail-value">{visit.reviewerName || '—'}</span>
+                </div>
+              )}
             </div>
           </div>
 

@@ -132,11 +132,44 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
+.view-sales-table-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .view-sales-table-header h2 {
   margin: 0;
   font-size: 20px;
   font-weight: 600;
   color: #111827;
+}
+
+.view-sales-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.view-sales-export-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.view-sales-export-btn:hover {
+  background: #1d4ed8;
+}
+
+.view-sales-export-btn:active {
+  background: #1e40af;
 }
 
 .view-sales-table {

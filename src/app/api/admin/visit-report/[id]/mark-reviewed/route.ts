@@ -29,6 +29,19 @@ export async function PATCH(
     const body = await request.json().catch(() => ({}));
     const adminComment = body.adminComment || null;
 
+    // Find admin profile for reviewer tracking
+    const adminProfile = await prisma.admin.findUnique({
+      where: { userId: user.userId },
+      select: { id: true, name: true }
+    });
+
+    if (!adminProfile) {
+      return NextResponse.json(
+        { error: 'Admin profile not found' },
+        { status: 404 }
+      );
+    }
+
     // Find the visit first to verify it exists
     const existingVisit = await prisma.visit.findUnique({
       where: { id: visitId },
@@ -62,25 +75,29 @@ export async function PATCH(
       );
     }
 
-    // Update visit status to REVIEWD
+    // Update visit status to REVIEWD and record reviewer
     const updatedVisit = await prisma.visit.update({
       where: { id: visitId },
       data: {
         status: 'REVIEWD',
         adminComment: adminComment,
+        reviewedAt: new Date(),
+        reviewedByAdminId: adminProfile.id,
         updatedAt: new Date()
       },
       select: {
         id: true,
         status: true,
         adminComment: true,
+        reviewedAt: true,
+        reviewedByAdmin: { select: { id: true, name: true } },
         updatedAt: true
       }
     });
 
     return NextResponse.json({
       success: true,
-      message: `Visit for ${existingVisit.store.storeName} by ${existingVisit.executive.name} has been marked as reviewed`,
+      message: `Visit for ${existingVisit.store.storeName} by ${existingVisit.executive.name} has been marked as reviewed by ${adminProfile.name}`,
       visit: updatedVisit
     });
 
