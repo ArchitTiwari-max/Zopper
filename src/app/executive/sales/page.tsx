@@ -138,9 +138,7 @@ export default function SalesPage() {
               <tr>
                 <th>Date</th>
                 <th>Category</th>
-                <th>Device Sales</th>
                 <th>Plan Sales</th>
-                <th>Attach %</th>
                 <th>Revenue</th>
               </tr>
             </thead>
@@ -159,9 +157,7 @@ export default function SalesPage() {
                           <td rowSpan={dateCategories.length} data-label="Date">{dateStr}</td>
                         )}
                         <td data-label="Category">{cat}</td>
-                        <td data-label="Device Sales"></td>
                         <td data-label="Plan Sales"></td>
-                        <td data-label="Attach %"></td>
                         <td data-label="Revenue"></td>
                       </tr>
                     );

@@ -170,7 +170,7 @@
   font-weight: 700;
 }
 
-/* Percentage-based column widths that sum to 100% */
+/* Default: 6-column layout for previous months table */
 .sales-page-table th:nth-child(1),
 .sales-page-table td:nth-child(1) { width: 22%; }
 .sales-page-table th:nth-child(2),
@@ -183,6 +183,47 @@
 .sales-page-table td:nth-child(5) { width: 12%; }
 .sales-page-table th:nth-child(6),
 .sales-page-table td:nth-child(6) { width: 15%; }
+
+/* 4-column layout for current month (date-wise) table */
+.sales-page-datewise-section .sales-page-table th:nth-child(1),
+.sales-page-datewise-section .sales-page-table td:nth-child(1) { width: 25%; } /* Date */
+.sales-page-datewise-section .sales-page-table th:nth-child(2),
+.sales-page-datewise-section .sales-page-table td:nth-child(2) { width: 30%; } /* Category */
+.sales-page-datewise-section .sales-page-table th:nth-child(3),
+.sales-page-datewise-section .sales-page-table td:nth-child(3) { 
+  width: 22%; /* Plan Sales */
+  padding-right: 12px;
+  text-align: center;
+}
+.sales-page-datewise-section .sales-page-table th:nth-child(4),
+.sales-page-datewise-section .sales-page-table td:nth-child(4) { 
+  width: 23%; /* Revenue */
+  padding-left: 12px;
+  text-align: center;
+}
+
+/* Better spacing on larger screens for current month table */
+@media (min-width: 600px) {
+  .sales-page-datewise-section .sales-page-table th:nth-child(3),
+  .sales-page-datewise-section .sales-page-table td:nth-child(3) {
+    padding-right: 16px;
+  }
+  .sales-page-datewise-section .sales-page-table th:nth-child(4),
+  .sales-page-datewise-section .sales-page-table td:nth-child(4) {
+    padding-left: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sales-page-datewise-section .sales-page-table th:nth-child(3),
+  .sales-page-datewise-section .sales-page-table td:nth-child(3) {
+    padding-right: 20px;
+  }
+  .sales-page-datewise-section .sales-page-table th:nth-child(4),
+  .sales-page-datewise-section .sales-page-table td:nth-child(4) {
+    padding-left: 20px;
+  }
+}
 
 .sales-page-table tbody tr:last-child td { border-bottom: none; }
 
