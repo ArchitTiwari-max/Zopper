@@ -513,10 +513,10 @@
   font-size: 14px;
   font-weight: 600;
   color: #212529;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-wrap: break-word;
   width: 100%;
+  line-height: 1.3;
 }
 
 .exec-v-form-store-subtext {
