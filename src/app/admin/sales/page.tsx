@@ -236,15 +236,28 @@ const AdminSalesPage: React.FC = () => {
     return monthNames[month - 1];
   };
 
-  // Get the last N months within a given year.
-  // If the selected year is the current year, it ends at the current month;
+  // Get the previous N months within a given year (excluding current month).
+  // Returns months in reverse chronological order (most recent first).
+  // If the selected year is the current year, it ends at the previous month;
   // otherwise, it ends at December. This does not cross year boundaries.
   function getRecentMonthsForYear(year: number, count: number): number[] {
     const now = new Date();
-    const endMonth = year === now.getFullYear() ? now.getMonth() + 1 : 12; // 1-12
+    const currentMonth = now.getMonth() + 1; // 1-12
+    const currentYear = now.getFullYear();
+    
+    let endMonth: number;
+    if (year === currentYear) {
+      // For current year, show previous months (exclude current month)
+      endMonth = currentMonth - 1;
+    } else {
+      // For previous years, show up to December
+      endMonth = 12;
+    }
+    
     const startMonth = Math.max(1, endMonth - count + 1);
     const months: number[] = [];
-    for (let m = startMonth; m <= endMonth; m++) months.push(m);
+    // Build months in reverse order (most recent first)
+    for (let m = endMonth; m >= startMonth; m--) months.push(m);
     return months;
   }
 
@@ -405,65 +418,135 @@ const AdminSalesPage: React.FC = () => {
           </div>
         </div>
         <div className="view-sales-table">
-          <div className="view-sales-table-content">
-            <div className="view-sales-table-header-row">
-              <div className="view-sales-table-header-cell brand-name-col">Brand Name</div>
-              <div className="view-sales-table-header-cell category-col">Category</div>
-              {/* Last 3 months within selected year */}
-              {recentMonths.map((month) => {
-                const year = selectedYear;
-                return (
-                  <div key={month} className="view-sales-table-header-cell month-group">
-                    <div className="month-header">{getMonthName(month)} {year.toString().slice(-2)}</div>
-                    <div className="month-subheaders">
-                      <div>Device Sales</div>
-                      <div>Plan Sales</div>
-                      <div>Attach %</div>
-                      <div>Revenue</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="view-sales-table-body">
-            {tableData.length > 0 ? (
-              tableData.map((row, index) => {
-                return (
-                  <div key={`${row.brandName}-${row.categoryName}`} className="view-sales-table-row">
-                    <div className="view-sales-table-cell brand-name-cell">
-                      <span 
-                        className="view-sales-brand-tag" 
-                        style={{ backgroundColor: getBrandColor(row.brandName) }}
-                      >
-                        {row.brandName}
-                      </span>
-                    </div>
-                    <div className="view-sales-table-cell category-cell">{row.categoryName}</div>
-                    
-                    {/* Last 3 months data */}
-                    {recentMonths.map((month) => {
-                      const monthData = row.months[month];
-                      return (
-                        <div key={month} className="view-sales-table-cell month-data-group">
-                          <div className="month-data-row">
-                            <div className="data-cell">{monthData?.deviceSales?.toLocaleString() || '-'}</div>
-                            <div className="data-cell">{monthData?.planSales?.toLocaleString() || '-'}</div>
-                            <div className="data-cell">{monthData ? `${(monthData.attachPct * 100).toFixed(1)}%` : '-'}</div>
-                            <div className="data-cell">{monthData ? formatCurrency(monthData.revenue) : '-'}</div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })
-            ) : (
-              <div className="view-sales-no-data">
-                No sales data found for the selected filters.
-              </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ccc' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f5f5f5' }}>
+                <th style={{ border: '1px solid #ccc', padding: '10px', textAlign: 'center' }} rowSpan={2}>BRAND</th>
+                <th style={{ border: '1px solid #ccc', padding: '10px', textAlign: 'center' }} rowSpan={2}>CATEGORY</th>
+                <th style={{ border: '1px solid #ccc', padding: '10px', textAlign: 'center' }} colSpan={4}>AUG 25</th>
+                <th style={{ border: '1px solid #ccc', padding: '10px', textAlign: 'center' }} colSpan={4}>JUL 25</th>
+                <th style={{ border: '1px solid #ccc', padding: '10px', textAlign: 'center' }} colSpan={4}>JUN 25</th>
+              </tr>
+              <tr style={{ backgroundColor: '#f5f5f5' }}>
+                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>DS</th>
+                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>PS</th>
+                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>AP</th>
+                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>REV</th>
+                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>DS</th>
+                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>PS</th>
+                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>AP</th>
+                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>REV</th>
+                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>DS</th>
+                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>PS</th>
+                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>AP</th>
+                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>REV</th>
+              </tr>
+            </thead>
+            <tbody>
+            {tableData.length > 0 ? (() => {
+              // Group data by brand and sort
+              const brandGroups = tableData.reduce((acc, row) => {
+                if (!acc[row.brandName]) {
+                  acc[row.brandName] = [];
+                }
+                acc[row.brandName].push(row);
+                return acc;
+              }, {} as Record<string, typeof tableData>);
+
+              const brandNames = Object.keys(brandGroups).sort();
+              const allRows: React.ReactNode[] = [];
+
+              brandNames.forEach(brandName => {
+                const brandRows = brandGroups[brandName];
+                brandRows.forEach((row, brandRowIndex) => {
+                  const augData = row.months[recentMonths[0]]; // Most recent month
+                  const julData = row.months[recentMonths[1]]; // Second most recent
+                  const junData = row.months[recentMonths[2]]; // Oldest month
+
+                  allRows.push(
+                    <tr key={`${row.brandName}-${row.categoryName}`}>
+                      {brandRowIndex === 0 && (
+                        <td
+                          style={{
+                            border: '1px solid #ccc',
+                            padding: '10px',
+                            textAlign: 'center',
+                            verticalAlign: 'middle',
+                            backgroundColor: '#fff'
+                          }}
+                          rowSpan={brandRows.length}
+                        >
+                          <span
+                            style={{
+                              backgroundColor: getBrandColor(row.brandName),
+                              color: 'white',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            {row.brandName}
+                          </span>
+                        </td>
+                      )}
+                      <td style={{ border: '1px solid #ccc', padding: '10px', textAlign: 'left' }}>
+                        {row.categoryName}
+                      </td>
+                      {/* AUG 25 Data (Most Recent) */}
+                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
+                        {augData?.deviceSales || ''}
+                      </td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
+                        {augData?.planSales || ''}
+                      </td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
+                        {augData?.attachPct ? `${(augData.attachPct * 100).toFixed(1)}%` : ''}
+                      </td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
+                        {augData?.revenue ? formatCurrency(augData.revenue) : ''}
+                      </td>
+                      {/* JUL 25 Data */}
+                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
+                        {julData?.deviceSales || ''}
+                      </td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
+                        {julData?.planSales || ''}
+                      </td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
+                        {julData?.attachPct ? `${(julData.attachPct * 100).toFixed(1)}%` : ''}
+                      </td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
+                        {julData?.revenue ? formatCurrency(julData.revenue) : ''}
+                      </td>
+                      {/* JUN 25 Data (Oldest) */}
+                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
+                        {junData?.deviceSales || ''}
+                      </td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
+                        {junData?.planSales || ''}
+                      </td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
+                        {junData?.attachPct ? `${(junData.attachPct * 100).toFixed(1)}%` : ''}
+                      </td>
+                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
+                        {junData?.revenue ? formatCurrency(junData.revenue) : ''}
+                      </td>
+                    </tr>
+                  );
+                });
+              });
+
+              return allRows;
+            })() : (
+              <tr>
+                <td colSpan={14} style={{ border: '1px solid #ccc', padding: '20px', textAlign: 'center' }}>
+                  No sales data found for the selected filters.
+                </td>
+              </tr>
             )}
-          </div>
-          </div>
+            </tbody>
+          </table>
         </div>
       </div>
 

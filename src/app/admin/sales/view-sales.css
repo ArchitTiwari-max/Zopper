@@ -173,11 +173,193 @@
 }
 
 .view-sales-table {
-  overflow-x: hidden; /* avoid horizontal scroll */
+  overflow-x: auto; /* allow horizontal scroll for wide tables */
   width: 100%;
   /* Let the table height be content-based to avoid extra blank space */
   max-height: none;
   overflow-y: visible;
+}
+
+/* Clean HTML Table Styles */
+.sales-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 2px solid #374151;
+  background: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  table-layout: fixed;
+}
+
+/* Header Styles */
+.sales-data-table .header-row-1 th,
+.sales-data-table .header-row-2 th {
+  border: 1px solid #374151;
+  background: #f8f9fa;
+  font-weight: 700;
+  text-align: center;
+  color: #374151;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.sales-data-table .brand-header,
+.sales-data-table .category-header {
+  padding: 12px 8px;
+  background: #e5e7eb;
+  font-size: 13px;
+  min-width: 100px;
+}
+
+.sales-data-table .month-header {
+  padding: 8px;
+  background: #d1d5db;
+  font-size: 13px;
+  font-weight: 700;
+  border-bottom: 1px solid #6b7280;
+}
+
+.sales-data-table .data-header {
+  padding: 6px 4px;
+  background: #f3f4f6;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 60px;
+  color: #6b7280;
+}
+
+/* Body Styles */
+.sales-data-table .data-row {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sales-data-table .data-row:hover {
+  background: #f9fafb;
+}
+
+.sales-data-table .brand-cell {
+  border: 1px solid #374151;
+  border-right: 2px solid #374151;
+  background: #ffffff;
+  text-align: center;
+  vertical-align: middle;
+  padding: 8px;
+  min-width: 100px;
+}
+
+.sales-data-table .brand-name-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.sales-data-table .brand-tag {
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 70px;
+  display: inline-block;
+}
+
+.sales-data-table .category-cell {
+  border: 1px solid #374151;
+  border-right: 2px solid #374151;
+  background: #fafafa;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 500;
+  color: #374151;
+  font-size: 13px;
+  min-width: 120px;
+  max-width: 150px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sales-data-table .data-cell {
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  padding: 8px 6px;
+  text-align: center;
+  font-size: 12px;
+  color: #374151;
+  min-width: 60px;
+  max-width: 80px;
+  font-weight: 400;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  position: relative;
+}
+
+/* Clean data cell styling - no debug colors */
+.sales-data-table .ds-cell,
+.sales-data-table .ps-cell,
+.sales-data-table .ap-cell,
+.sales-data-table .rev-cell {
+  background: #ffffff;
+}
+
+/* Add thicker borders between month groups */
+/* First data column of each month group (after brand and category columns) */
+.sales-data-table .data-cell:nth-child(3),
+.sales-data-table .data-cell:nth-child(7),
+.sales-data-table .data-cell:nth-child(11) {
+  border-left: 2px solid #6b7280;
+}
+
+/* First header of each month group */
+.sales-data-table .data-header:nth-child(1),
+.sales-data-table .data-header:nth-child(5),
+.sales-data-table .data-header:nth-child(9) {
+  border-left: 2px solid #6b7280;
+}
+
+/* Month headers (except first) */
+.sales-data-table .month-header:not(:first-of-type) {
+  border-left: 2px solid #6b7280;
+}
+
+/* No data styling */
+.sales-data-table .no-data-cell {
+  border: 1px solid #e5e7eb;
+  padding: 32px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sales-data-table {
+    font-size: 11px;
+  }
+  
+  .sales-data-table .brand-header,
+  .sales-data-table .category-header {
+    font-size: 11px;
+    padding: 8px 6px;
+  }
+  
+  .sales-data-table .month-header {
+    font-size: 11px;
+    padding: 6px 4px;
+  }
+  
+  .sales-data-table .data-header {
+    font-size: 9px;
+    padding: 4px 2px;
+  }
+  
+  .sales-data-table .data-cell {
+    font-size: 10px;
+    padding: 6px 4px;
+  }
 }
 
 .view-sales-table-content {

@@ -133,6 +133,11 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
           title: 'Notification',
           subtitle: 'Manage your notifications and alerts'
         };
+      case '/admin/sales':
+        return {
+          title: 'Sales',
+          subtitle: 'Sales monitor of stores'
+        };
       default:
         return {
           title: currentPage || 'Dashboard',
