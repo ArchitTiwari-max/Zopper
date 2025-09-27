@@ -36,6 +36,12 @@ export async function GET(request: NextRequest) {
         endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
         endDate.setMilliseconds(-1); // Set to 23:59:59.999
         break;
+      case 'Yesterday':
+        const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+        startDate = yesterday;
+        // For 'Yesterday', include the entire day until 23:59:59
+        endDate = new Date(yesterday.getTime() + 24 * 60 * 60 * 1000 - 1);
+        break;
       case 'Last 7 Days':
         startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Add 1 day buffer for timezone issues

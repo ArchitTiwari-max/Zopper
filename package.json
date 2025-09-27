@@ -12,10 +12,13 @@
     "format": "biome format --write",
     "import-brands": "tsx src/querryRunner/Brands/brand.ts",
     "export-brand": "tsx src/querryRunner/Brands/fetchbrand.ts ",
+    "import-categories": "tsx src/querryRunner/Brands/category.ts",
     "import-stores": "tsx src/querryRunner/stores/store.ts",
-    "export-store": "tsx src/querryRunner/stores/fetchstore.ts ",
+    "export-store": "tsx src/querryRunner/stores/fetchstore.ts",
     "import-users": "tsx src/querryRunner/user/user.ts",
-    "send-emails": "tsx src/querryRunner/user/emailsender/email.ts"
+    "send-emails": "tsx src/querryRunner/user/emailsender/email.ts",
+    "import-sales": "tsx src/querryRunner/sales/sale.ts",
+    "import-datewisesale": "tsx src/querryRunner/sales/datewisesale.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.14.0",

@@ -903,7 +903,7 @@ const VisitReportPage: React.FC = () => {
               </div>
 
               <div className="admin-visit-report-filter-group">
-                <label>Search by Store Name</label>
+                <label>Filter by Store Name</label>
                 <input 
                   type="text"
                   value={filters.storeName}

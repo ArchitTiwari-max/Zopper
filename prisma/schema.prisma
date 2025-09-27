@@ -84,16 +84,18 @@ model ExecutiveStoreAssignment {
 
 model Brand {
   id            String          @id @map("_id")
-  brandName     String
+  brandName     String         @unique
   categories    CategoryBrand[]
   salesRecords  SalesRecord[]
 }
 
 model Category {
   id            String           @id @map("_id")
-  brandName      String
+  categoryName  String          @unique
   brands        CategoryBrand[]
   salesRecords  SalesRecord[]
+  
+  // Index for better performance when searching by category name
 }
 
 model CategoryBrand {
@@ -108,7 +110,7 @@ model CategoryBrand {
 }
 
 model SalesRecord {
-  id         String   @id @map("_id")
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
   storeId    String
   brandId    String
   categoryId String
@@ -118,7 +120,7 @@ model SalesRecord {
   monthlySales Json   // will store [{ month: 1, deviceSales: X, planSales: Y, attachPct: Z, revenue: R }, { month: 2, ... }, { month: 3, ... }]
   
   // Current datewise sales for this month
-  dailySales Json     // will store [{ date: "2024-01-15", deviceSales: X, planSales: Y, attachPct: Z, revenue: R }, ...]
+  dailySales Json     // will store [{ date: "2024-01-15", planSales: Y, revenue: R }, ...]
 
   store      Store     @relation(fields: [storeId], references: [id])
   brand      Brand     @relation(fields: [brandId], references: [id])
