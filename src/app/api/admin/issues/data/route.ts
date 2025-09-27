@@ -42,6 +42,9 @@ export async function GET(request: NextRequest) {
       case 'Today':
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         break;
+      case 'Yesterday':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+        break;
       case 'Last 7 Days':
         startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         break;

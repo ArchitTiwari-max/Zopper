@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import * as XLSX from 'xlsx';
@@ -40,6 +40,19 @@ interface SalesData {
   revenue: number;
 }
 
+interface DailySalesData {
+  id: string;
+  storeId: string;
+  storeName: string;
+  brandName: string;
+  categoryName: string;
+  year: number;
+  date: string;
+  countOfSales: number;
+  revenue: number;
+  displayDate: string;
+}
+
 interface StoreSalesStats {
   totalDeviceSales: number;
   totalPlanSales: number;
@@ -57,9 +70,13 @@ const AdminSalesPage: React.FC = () => {
   const [salesData, setSalesData] = useState<SalesData[]>([]);
   const [stats, setStats] = useState<StoreSalesStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedBrand, setSelectedBrand] = useState('All Brands');
-  const [selectedCategory, setSelectedCategory] = useState('All Categories');
+  
+  // Date-wise sales states
+  const [showDatewise, setShowDatewise] = useState(true);
+  const [dateWiseBrand, setDateWiseBrand] = useState('All Brands');
+  const [currentMonthData, setCurrentMonthData] = useState<SalesData[]>([]);
+  const [dailySalesData, setDailySalesData] = useState<DailySalesData[]>([]);
+  const [dailyLoading, setDailyLoading] = useState(false);
 
   // Sample data generator using new monthly structure
   const generateSampleSalesData = (storeId: string, storeName: string): SalesData[] => {
@@ -168,25 +185,98 @@ const AdminSalesPage: React.FC = () => {
     };
   };
 
-  useEffect(() => {
-    if (storeId) {
-      setLoading(true);
-      // Simulate API call delay
-      setTimeout(() => {
+  // Fetch real sales data from API
+  const fetchSalesData = async () => {
+    if (!storeId) {
+      console.error('Store ID not found');
+      setLoading(false);
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const params = new URLSearchParams({ storeId });
+      const response = await fetch(`/api/sales?${params}`);
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        setSalesData(result.data);
+        setStats(calculateStats(result.data));
+      } else {
+        console.error('Failed to fetch sales data:', result.error);
+        // Fallback to sample data if API fails
         const sampleData = generateSampleSalesData(storeId, storeName);
         setSalesData(sampleData);
         setStats(calculateStats(sampleData));
-        setLoading(false);
-      }, 500);
+      }
+    } catch (error) {
+      console.error('Error fetching sales data:', error);
+      // Fallback to sample data if API fails
+      const sampleData = generateSampleSalesData(storeId, storeName);
+      setSalesData(sampleData);
+      setStats(calculateStats(sampleData));
+    } finally {
+      setLoading(false);
     }
-  }, [storeId, storeName]);
+  };
 
-  const filteredData = salesData.filter(item => {
-    if (item.year !== selectedYear) return false;
-    if (selectedBrand !== 'All Brands' && item.brandName !== selectedBrand) return false;
-    if (selectedCategory !== 'All Categories' && item.categoryName !== selectedCategory) return false;
-    return true;
-  });
+  // Fetch daily sales data from API
+  const fetchDailySalesData = async () => {
+    if (!storeId) {
+      console.error('Store ID not found for daily sales');
+      return;
+    }
+    
+    setDailyLoading(true);
+    
+    try {
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      
+      const params = new URLSearchParams({ 
+        storeId, 
+        year: currentYear.toString(),
+        month: currentMonth.toString()
+      });
+      
+      const response = await fetch(`/api/sales/daily?${params}`);
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        setDailySalesData(result.data);
+      } else {
+        console.error('Failed to fetch daily sales data:', result.error);
+        setDailySalesData([]);
+      }
+    } catch (error) {
+      console.error('Error fetching daily sales data:', error);
+      setDailySalesData([]);
+    } finally {
+      setDailyLoading(false);
+    }
+  };
+  useEffect(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    
+    const currentMonthSales = salesData.filter(item => 
+      item.year === currentYear && item.month === currentMonth
+    );
+    
+    setCurrentMonthData(currentMonthSales);
+  }, [salesData]);
+
+  useEffect(() => {
+    if (storeId) {
+      fetchSalesData();
+      fetchDailySalesData();
+    }
+  }, [storeId]);
+
+  const filteredData = salesData;
 
   // Group data by brand and category for the table format
   const groupedData = filteredData.reduce((acc, item) => {
@@ -218,7 +308,13 @@ const AdminSalesPage: React.FC = () => {
 
   const tableData = Object.values(groupedData);
 
-  const recentMonths = getRecentMonthsForYear(selectedYear, 3);
+  // Get the actual months from the filtered data
+  const actualMonths = Array.from(new Set(
+    filteredData.map(item => item.month)
+  )).sort((a, b) => b - a).slice(0, 3); // Get latest 3 months, descending
+  
+  const currentYear = new Date().getFullYear();
+  const recentMonths = actualMonths.length > 0 ? actualMonths : getRecentMonthsForYear(currentYear, 3);
 
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-IN', {
@@ -226,6 +322,24 @@ const AdminSalesPage: React.FC = () => {
       currency: 'INR',
       maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  // Helper functions for date-wise sales
+  const formatDateDDMMYYYY = (d: Date) => {
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  };
+
+  const getDaysInMonth = (year: number, monthIndex0: number) => {
+    return new Date(year, monthIndex0 + 1, 0).getDate();
+  };
+
+  const getCurrentMonthLabel = () => {
+    const now = new Date();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[now.getMonth()]} ${String(now.getFullYear()).slice(2)}`;
   };
 
   const getMonthName = (month: number): string => {
@@ -290,35 +404,35 @@ const AdminSalesPage: React.FC = () => {
 
   // Build AOA (array of arrays) for Excel export
   const buildAOA = (): (string | number)[][] => {
-    const monthHeaders = recentMonths.flatMap((month) => {
-      const year = selectedYear;
-      const label = `${getMonthName(month)} ${year.toString().slice(-2)}`;
-      return [
-        `${label} Device Sales`,
-        `${label} Plan Sales`,
-        `${label} Attach %`,
-        `${label} Revenue`
-      ];
-    });
-
-    const headers = ['Brand', 'Category', ...monthHeaders];
-
-    const rows = tableData.map((row) => {
-      const cols: (string | number)[] = [row.brandName, row.categoryName];
-      recentMonths.forEach((month) => {
-        const monthData = row.months[month];
-        cols.push(
-          monthData?.deviceSales ?? '',
-          monthData?.planSales ?? '',
-          monthData ? `${(monthData.attachPct * 100).toFixed(1)}%` : '',
-          monthData?.revenue ?? ''
-        );
+      const currentYear = new Date().getFullYear();
+      const monthHeaders = recentMonths.flatMap((month) => {
+        const label = `${getMonthName(month)} ${currentYear.toString().slice(-2)}`;
+        return [
+          `${label} Device Sales`,
+          `${label} Plan Sales`, 
+          `${label} Attach Percentage`,
+          `${label} Revenue`
+        ];
       });
-      return cols;
-    });
 
-    return [headers, ...rows];
-  };
+      const headers = ['Brand', 'Category', ...monthHeaders];
+
+      const rows = tableData.map((row) => {
+        const cols: (string | number)[] = [row.brandName, row.categoryName];
+        recentMonths.forEach((month) => {
+          const monthData = row.months[month];
+          cols.push(
+            monthData?.deviceSales ?? '',
+            monthData?.planSales ?? '',
+            monthData ? `${(monthData.attachPct * 100).toFixed(1)}%` : '',
+            monthData?.revenue ?? ''
+          );
+        });
+        return cols;
+      });
+
+      return [headers, ...rows];
+    };
 
 
   // Export in legacy Excel .xls format
@@ -332,10 +446,11 @@ const AdminSalesPage: React.FC = () => {
     (ws as any)['!cols'] = cols;
 
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, `Sales_${selectedYear}`);
+    const currentYear = new Date().getFullYear();
+    XLSX.utils.book_append_sheet(wb, ws, `Sales_${currentYear}`);
 
     const safeStore = (storeName || 'store').replace(/[^a-zA-Z0-9-_]+/g, '_');
-    const filename = `sales-report-${safeStore}-${selectedYear}.xls`;
+    const filename = `sales-report-${safeStore}-${currentYear}.xls`;
     XLSX.writeFile(wb, filename, { bookType: 'xls' });
   };
 
@@ -374,72 +489,364 @@ const AdminSalesPage: React.FC = () => {
         <h1 className="view-sales-page-title">Sales Data for {storeName}</h1>
       </div>
 
-
-      {/* Filters */}
-      <div className="view-sales-filters-section">
-        <div className="view-sales-filter-group">
-          <label>Year:</label>
-          <select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))}>
-            {Array.from(new Set(salesData.map(item => item.year))).sort((a, b) => b - a).map(year => (
-              <option key={year} value={year}>{year}</option>
-            ))}
-          </select>
-        </div>
-        <div className="view-sales-filter-group">
-          <label>Brand:</label>
-          <select value={selectedBrand} onChange={(e) => setSelectedBrand(e.target.value)}>
-            <option value="All Brands">All Brands</option>
-            {Array.from(new Set(salesData.filter(item => item.year === selectedYear).map(item => item.brandName))).map(brand => (
-              <option key={brand} value={brand}>{brand}</option>
-            ))}
-          </select>
-        </div>
-        <div className="view-sales-filter-group">
-          <label>Category:</label>
-          <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
-            <option value="All Categories">All Categories</option>
-            {Array.from(new Set(salesData.filter(item => item.year === selectedYear).map(item => item.categoryName))).map(category => (
-              <option key={category} value={category}>{category}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Sales Data Table */}
-      <div className="view-sales-table-container">
-        <div className="view-sales-table-header">
-          <div className="view-sales-table-header-content">
-            <h2>Sales Records </h2>
-            <div className="view-sales-actions">
-              <button type="button" className="view-sales-export-btn" onClick={handleExportXLS}>
-                Export Excel
-              </button>
+      {/* Date wise sales of current month */}
+      <div className="view-sales-datewise-section" style={{ marginBottom: '40px' }}>
+        <div className="view-sales-datewise-header" style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '15px 20px',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '8px',
+          marginBottom: '15px',
+          border: '1px solid #e9ecef'
+        }}>
+          <h3 style={{ 
+            margin: 0, 
+            fontSize: '18px', 
+            fontWeight: '600',
+            color: '#2c3e50'
+          }}>
+            Daily Sales - {getCurrentMonthLabel()}
+          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label htmlFor="datewise-brand" style={{ 
+                fontSize: '14px', 
+                fontWeight: '500',
+                color: '#495057'
+              }}>Brand:</label>
+              <select 
+                id="datewise-brand" 
+                value={dateWiseBrand} 
+                onChange={(e) => setDateWiseBrand(e.target.value)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '4px',
+                  border: '1px solid #ced4da',
+                  fontSize: '14px'
+                }}
+              >
+                <option value="All Brands">All Brands</option>
+                {Array.from(new Set(dailySalesData.map(item => item.brandName))).map(brand => (
+                  <option key={brand} value={brand}>{brand}</option>
+                ))}
+              </select>
             </div>
+            <button
+              type="button"
+              onClick={() => setShowDatewise(!showDatewise)}
+              style={{
+                padding: '6px 16px',
+                borderRadius: '4px',
+                border: '1px solid #007bff',
+                backgroundColor: showDatewise ? '#007bff' : 'white',
+                color: showDatewise ? 'white' : '#007bff',
+                fontSize: '14px',
+                cursor: 'pointer',
+                fontWeight: '500'
+              }}
+            >
+              {showDatewise ? 'Hide' : 'Show'}
+            </button>
           </div>
         </div>
-        <div className="view-sales-table">
-          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ccc' }}>
+        
+        {showDatewise && (
+          <div className="view-sales-datewise-table" style={{
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            overflow: 'hidden',
+            border: '1px solid #e9ecef'
+          }}>
+            <table style={{ 
+              width: '100%', 
+              borderCollapse: 'collapse'
+            }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f8f9fa' }}>
+                  <th style={{ 
+                    border: '1px solid #dee2e6', 
+                    padding: '12px', 
+                    textAlign: 'center',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    color: '#495057'
+                  }}>Date</th>
+                  <th style={{ 
+                    border: '1px solid #dee2e6', 
+                    padding: '12px', 
+                    textAlign: 'center',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    color: '#495057'
+                  }}>Category</th>
+                  <th style={{ 
+                    border: '1px solid #dee2e6', 
+                    padding: '12px', 
+                    textAlign: 'center',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    color: '#495057'
+                  }}>Plan Sales</th>
+                  <th style={{ 
+                    border: '1px solid #dee2e6', 
+                    padding: '12px', 
+                    textAlign: 'center',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    color: '#495057'
+                  }}>Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(() => {
+                  if (dailyLoading) {
+                    return (
+                      <tr>
+                        <td colSpan={4} style={{ 
+                          border: '1px solid #dee2e6', 
+                          padding: '20px', 
+                          textAlign: 'center',
+                          color: '#6c757d'
+                        }}>
+                          Loading daily sales data...
+                        </td>
+                      </tr>
+                    );
+                  }
+                  
+                  // Filter daily sales data by selected brand
+                  const filteredDailySales = dateWiseBrand === 'All Brands' 
+                    ? dailySalesData 
+                    : dailySalesData.filter(item => item.brandName === dateWiseBrand);
+                  
+                  if (filteredDailySales.length === 0) {
+                    return (
+                      <tr>
+                        <td colSpan={4} style={{ 
+                          border: '1px solid #dee2e6', 
+                          padding: '20px', 
+                          textAlign: 'center',
+                          color: '#6c757d',
+                          fontStyle: 'italic'
+                        }}>
+                          No daily sales data available for current month
+                        </td>
+                      </tr>
+                    );
+                  }
+                  
+                  // Group by date, then show each category for that date
+                  const groupedByDate: Record<string, DailySalesData[]> = {};
+                  filteredDailySales.forEach(item => {
+                    if (!groupedByDate[item.displayDate]) {
+                      groupedByDate[item.displayDate] = [];
+                    }
+                    groupedByDate[item.displayDate].push(item);
+                  });
+                  
+                  const dates = Object.keys(groupedByDate).sort((a, b) => {
+                    const dateA = new Date(a.split('-').reverse().join('-'));
+                    const dateB = new Date(b.split('-').reverse().join('-'));
+                    return dateB.getTime() - dateA.getTime();
+                  });
+                  
+                  const rowsEls: React.ReactNode[] = [];
+                  
+                  dates.forEach(dateStr => {
+                    const dayData = groupedByDate[dateStr];
+                    dayData.forEach((item, idx) => {
+                      rowsEls.push(
+                        <tr key={`${dateStr}-${item.categoryName}`} style={{
+                          backgroundColor: idx % 2 === 0 ? '#f8f9fa' : 'white'
+                        }}>
+                          {idx === 0 && (
+                            <td 
+                              rowSpan={dayData.length} 
+                              style={{ 
+                                border: '1px solid #dee2e6', 
+                                padding: '10px',
+                                textAlign: 'center',
+                                verticalAlign: 'middle',
+                                fontWeight: '500',
+                                backgroundColor: '#e9ecef'
+                              }}
+                            >
+                              {dateStr}
+                            </td>
+                          )}
+                          <td style={{ 
+                            border: '1px solid #dee2e6', 
+                            padding: '10px',
+                            textAlign: 'center'
+                          }}>
+                            {item.categoryName}
+                          </td>
+                          <td style={{ 
+                            border: '1px solid #dee2e6', 
+                            padding: '10px',
+                            textAlign: 'center'
+                          }}>
+                            {item.countOfSales || 0}
+                          </td>
+                          <td style={{ 
+                            border: '1px solid #dee2e6', 
+                            padding: '10px',
+                            textAlign: 'center'
+                          }}>
+                            {formatCurrency(item.revenue || 0)}
+                          </td>
+                        </tr>
+                      );
+                    });
+                  });
+                  
+                  return rowsEls;
+                })()}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+
+      {/* Monthly Sales Section */}
+      <div className="view-sales-monthwise-section" style={{ marginTop: '40px', marginBottom: '30px' }}>
+        <div className="view-sales-monthwise-header" style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '15px 20px',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '8px',
+          marginBottom: '15px',
+          border: '1px solid #e9ecef'
+        }}>
+          <h3 style={{ 
+            margin: 0, 
+            fontSize: '18px', 
+            fontWeight: '600',
+            color: '#2c3e50'
+          }}>
+            Monthly Sales Summary
+          </h3>
+          <div className="view-sales-actions">
+            <button 
+              type="button" 
+              onClick={handleExportXLS}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '4px',
+                border: '1px solid #28a745',
+                backgroundColor: '#28a745',
+                color: 'white',
+                fontSize: '14px',
+                cursor: 'pointer',
+                fontWeight: '500'
+              }}
+            >
+              Export Excel
+            </button>
+          </div>
+        </div>
+        
+        <div className="view-sales-monthwise-table" style={{
+          backgroundColor: 'white',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          border: '1px solid #e9ecef'
+        }}>
+          <table style={{ 
+            width: '100%', 
+            borderCollapse: 'collapse',
+            tableLayout: 'fixed'
+          }}>
+            <colgroup>
+              <col style={{ width: '12%' }} /> {/* Brand */}
+              <col style={{ width: '15%' }} /> {/* Category */}
+              <col style={{ width: '8%' }} />  {/* Device Sales */}
+              <col style={{ width: '8%' }} />  {/* Plan Sales */}
+              <col style={{ width: '8%' }} />  {/* Attach % */}
+              <col style={{ width: '10%' }} /> {/* Revenue */}
+              <col style={{ width: '8%' }} />  {/* Device Sales */}
+              <col style={{ width: '8%' }} />  {/* Plan Sales */}
+              <col style={{ width: '8%' }} />  {/* Attach % */}
+              <col style={{ width: '10%' }} /> {/* Revenue */}
+              <col style={{ width: '8%' }} />  {/* Device Sales */}
+              <col style={{ width: '8%' }} />  {/* Plan Sales */}
+              <col style={{ width: '8%' }} />  {/* Attach % */}
+              <col style={{ width: '10%' }} /> {/* Revenue */}
+            </colgroup>
             <thead>
-              <tr style={{ backgroundColor: '#f5f5f5' }}>
-                <th style={{ border: '1px solid #ccc', padding: '10px', textAlign: 'center' }} rowSpan={2}>BRAND</th>
-                <th style={{ border: '1px solid #ccc', padding: '10px', textAlign: 'center' }} rowSpan={2}>CATEGORY</th>
-                <th style={{ border: '1px solid #ccc', padding: '10px', textAlign: 'center' }} colSpan={4}>AUG 25</th>
-                <th style={{ border: '1px solid #ccc', padding: '10px', textAlign: 'center' }} colSpan={4}>JUL 25</th>
-                <th style={{ border: '1px solid #ccc', padding: '10px', textAlign: 'center' }} colSpan={4}>JUN 25</th>
+              <tr style={{ backgroundColor: '#f8f9fa' }}>
+                <th style={{ 
+                  border: '1px solid #ccc', 
+                  padding: '12px 8px', 
+                  textAlign: 'center',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  wordWrap: 'break-word'
+                }} rowSpan={2}>BRAND</th>
+                <th style={{ 
+                  border: '1px solid #ccc', 
+                  padding: '12px 8px', 
+                  textAlign: 'center',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  wordWrap: 'break-word'
+                }} rowSpan={2}>CATEGORY</th>
+                {recentMonths.map((month) => (
+                  <th key={month} style={{ 
+                    border: '1px solid #ccc', 
+                    padding: '12px 8px', 
+                    textAlign: 'center',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                  }} colSpan={4}>{getMonthName(month).toUpperCase()} {currentYear.toString().slice(-2)}</th>
+                ))}
               </tr>
-              <tr style={{ backgroundColor: '#f5f5f5' }}>
-                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>DS</th>
-                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>PS</th>
-                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>AP</th>
-                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>REV</th>
-                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>DS</th>
-                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>PS</th>
-                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>AP</th>
-                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>REV</th>
-                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>DS</th>
-                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>PS</th>
-                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>AP</th>
-                <th style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>REV</th>
+              <tr style={{ backgroundColor: '#f9f9f9' }}>
+                {recentMonths.map((month) => (
+                  <React.Fragment key={`subheader-${month}`}>
+                    <th style={{ 
+                      border: '1px solid #ccc', 
+                      padding: '8px 4px', 
+                      textAlign: 'center',
+                      fontSize: '10px',
+                      fontWeight: 'bold',
+                      wordWrap: 'break-word',
+                      lineHeight: '1.2'
+                    }}>Device<br/>Sales</th>
+                    <th style={{ 
+                      border: '1px solid #ccc', 
+                      padding: '8px 4px', 
+                      textAlign: 'center',
+                      fontSize: '10px',
+                      fontWeight: 'bold',
+                      wordWrap: 'break-word',
+                      lineHeight: '1.2'
+                    }}>Plan<br/>Sales</th>
+                    <th style={{ 
+                      border: '1px solid #ccc', 
+                      padding: '8px 4px', 
+                      textAlign: 'center',
+                      fontSize: '10px',
+                      fontWeight: 'bold',
+                      wordWrap: 'break-word',
+                      lineHeight: '1.2'
+                    }}>Attach<br/>%</th>
+                    <th style={{ 
+                      border: '1px solid #ccc', 
+                      padding: '8px 4px', 
+                      textAlign: 'center',
+                      fontSize: '10px',
+                      fontWeight: 'bold',
+                      wordWrap: 'break-word',
+                      lineHeight: '1.2'
+                    }}>Revenue</th>
+                  </React.Fragment>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -458,21 +865,19 @@ const AdminSalesPage: React.FC = () => {
 
               brandNames.forEach(brandName => {
                 const brandRows = brandGroups[brandName];
-                brandRows.forEach((row, brandRowIndex) => {
-                  const augData = row.months[recentMonths[0]]; // Most recent month
-                  const julData = row.months[recentMonths[1]]; // Second most recent
-                  const junData = row.months[recentMonths[2]]; // Oldest month
-
-                  allRows.push(
+                  brandRows.forEach((row, brandRowIndex) => {
+                    allRows.push(
                     <tr key={`${row.brandName}-${row.categoryName}`}>
                       {brandRowIndex === 0 && (
                         <td
                           style={{
                             border: '1px solid #ccc',
-                            padding: '10px',
+                            padding: '12px 8px',
                             textAlign: 'center',
                             verticalAlign: 'middle',
-                            backgroundColor: '#fff'
+                            backgroundColor: '#fff',
+                            wordWrap: 'break-word',
+                            minHeight: '50px'
                           }}
                           rowSpan={brandRows.length}
                         >
@@ -490,48 +895,69 @@ const AdminSalesPage: React.FC = () => {
                           </span>
                         </td>
                       )}
-                      <td style={{ border: '1px solid #ccc', padding: '10px', textAlign: 'left' }}>
+                      <td style={{ 
+                        border: '1px solid #ccc', 
+                        padding: '12px 8px', 
+                        textAlign: 'center',
+                        verticalAlign: 'middle',
+                        wordWrap: 'break-word',
+                        fontSize: '12px',
+                        minHeight: '50px'
+                      }}>
                         {row.categoryName}
                       </td>
-                      {/* AUG 25 Data (Most Recent) */}
-                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
-                        {augData?.deviceSales || ''}
-                      </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
-                        {augData?.planSales || ''}
-                      </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
-                        {augData?.attachPct ? `${(augData.attachPct * 100).toFixed(1)}%` : ''}
-                      </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
-                        {augData?.revenue ? formatCurrency(augData.revenue) : ''}
-                      </td>
-                      {/* JUL 25 Data */}
-                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
-                        {julData?.deviceSales || ''}
-                      </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
-                        {julData?.planSales || ''}
-                      </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
-                        {julData?.attachPct ? `${(julData.attachPct * 100).toFixed(1)}%` : ''}
-                      </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
-                        {julData?.revenue ? formatCurrency(julData.revenue) : ''}
-                      </td>
-                      {/* JUN 25 Data (Oldest) */}
-                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
-                        {junData?.deviceSales || ''}
-                      </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
-                        {junData?.planSales || ''}
-                      </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
-                        {junData?.attachPct ? `${(junData.attachPct * 100).toFixed(1)}%` : ''}
-                      </td>
-                      <td style={{ border: '1px solid #ccc', padding: '8px', textAlign: 'center' }}>
-                        {junData?.revenue ? formatCurrency(junData.revenue) : ''}
-                      </td>
+                      {/* Dynamic Month Data */}
+                      {recentMonths.map((month) => {
+                        const monthData = row.months[month];
+                        return (
+                          <React.Fragment key={`${row.brandName}-${row.categoryName}-${month}`}>
+                            <td style={{ 
+                              border: '1px solid #ccc', 
+                              padding: '10px 6px', 
+                              textAlign: 'center',
+                              verticalAlign: 'middle',
+                              fontSize: '11px',
+                              wordWrap: 'break-word',
+                              minHeight: '50px'
+                            }}>
+                              {monthData?.deviceSales ?? ''}
+                            </td>
+                            <td style={{ 
+                              border: '1px solid #ccc', 
+                              padding: '10px 6px', 
+                              textAlign: 'center',
+                              verticalAlign: 'middle',
+                              fontSize: '11px',
+                              wordWrap: 'break-word',
+                              minHeight: '50px'
+                            }}>
+                              {monthData?.planSales ?? ''}
+                            </td>
+                            <td style={{ 
+                              border: '1px solid #ccc', 
+                              padding: '10px 6px', 
+                              textAlign: 'center',
+                              verticalAlign: 'middle',
+                              fontSize: '11px',
+                              wordWrap: 'break-word',
+                              minHeight: '50px'
+                            }}>
+                              {monthData && typeof monthData.attachPct === 'number' ? `${(monthData.attachPct * 100).toFixed(1)}%` : ''}
+                            </td>
+                            <td style={{ 
+                              border: '1px solid #ccc', 
+                              padding: '10px 6px', 
+                              textAlign: 'center',
+                              verticalAlign: 'middle',
+                              fontSize: '10px',
+                              wordWrap: 'break-word',
+                              minHeight: '50px'
+                            }}>
+                              {monthData && typeof monthData.revenue === 'number' ? formatCurrency(monthData.revenue) : ''}
+                            </td>
+                          </React.Fragment>
+                        );
+                      })}
                     </tr>
                   );
                 });
@@ -539,11 +965,18 @@ const AdminSalesPage: React.FC = () => {
 
               return allRows;
             })() : (
-              <tr>
-                <td colSpan={14} style={{ border: '1px solid #ccc', padding: '20px', textAlign: 'center' }}>
-                  No sales data found for the selected filters.
-                </td>
-              </tr>
+                <tr>
+                  <td colSpan={2 + (recentMonths.length * 4)} style={{ 
+                    border: '1px solid #ccc', 
+                    padding: '30px 20px', 
+                    textAlign: 'center',
+                    fontSize: '14px',
+                    color: '#666',
+                    backgroundColor: '#f9f9f9'
+                  }}>
+                    No sales data found for the selected filters.
+                  </td>
+                </tr>
             )}
             </tbody>
           </table>

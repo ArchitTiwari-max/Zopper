@@ -176,6 +176,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
               onChange={(e) => setSelectedDateFilter(e.target.value as any)}
             >
               <option value="Today">Today</option>
+              <option value="Yesterday">Yesterday</option>
               <option value="Last 7 Days">Last 7 Days</option>
               <option value="Last 30 Days">Last 30 Days</option>
               <option value="Last 90 Days">Last 90 Days</option>
