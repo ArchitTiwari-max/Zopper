@@ -567,38 +567,107 @@ const VisitReportPage: React.FC = () => {
     }
   };
 
+  // Format date for XLS only: always dd/mm/yyyy (no Today/Yesterday)
+  const formatDateForXLS = (dateStr: string): string => {
+    if (!dateStr) return '';
+    // If already dd/mm/yyyy, return as is
+    if (dateStr.includes('/') && dateStr.split('/').length === 3) return dateStr;
+    const today = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    if (dateStr === 'Today') {
+      return `${pad(today.getDate())}/${pad(today.getMonth() + 1)}/${today.getFullYear()}`;
+    }
+    if (dateStr === 'Yesterday') {
+      const y = new Date(today);
+      y.setDate(today.getDate() - 1);
+      return `${pad(y.getDate())}/${pad(y.getMonth() + 1)}/${y.getFullYear()}`;
+    }
+    // Fallback: try Date parse
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+    }
+    return dateStr;
+  };
+
   // Build data for Excel export using the currently filtered rows
   const buildExportAOA = (): (string | number | null)[][] => {
-    const headers = [
+    // Determine maximum photos across filtered visits (cap at 3 to keep sheet compact)
+    const maxPhotos = Math.min(3, Math.max(0, ...filteredVisits.map(v => v.imageUrls?.length || 0)));
+
+    const baseHeaders = [
       'Executive Name',
       'Store Name',
       'City',
       'Partner Brands',
       'Visit Date',
+      'Persons Met',
+      'POSM Available',
+      'Remarks',
       'Issues',
       'Visit Status',
       'Reviewer',
       'Issue Status'
     ];
+    const photoHeaders = Array.from({ length: maxPhotos }, (_, i) => `Photo ${i + 1}`);
+    const headers = [...baseHeaders, ...photoHeaders];
 
-    const rows = filteredVisits.map(v => [
-      v.executiveName,
-      v.storeName,
-      v.city,
-      (v.partnerBrand || []).join(', '),
-      formatVisitDate(v.visitDate),
-      v.issues,
-      formatVisitStatus(v.visitStatus),
-      v.reviewerName || '',
-      formatIssueStatus(v.issueStatus)
-    ]);
+    const rows = filteredVisits.map(v => {
+      const persons = (v.peopleMet || [])
+        .map((p, idx) => `${idx + 1}. ${p.name}${p.designation ? ` (${p.designation})` : ''}${p.phoneNumber ? ` [${p.phoneNumber}]` : ''}`)
+        .join('; ');
+
+      const posm = v.POSMchecked === null || v.POSMchecked === undefined
+        ? 'Not specified'
+        : v.POSMchecked ? 'Yes' : 'No';
+
+      const photoCells = Array.from({ length: maxPhotos }, (_, i) => v.imageUrls?.[i] || '');
+
+      return [
+        v.executiveName,
+        v.storeName,
+        v.city,
+        (v.partnerBrand || []).join(', '),
+        formatDateForXLS(v.visitDate),
+        persons,
+        posm,
+        v.feedback || 'No feedback provided',
+        v.issues,
+        formatVisitStatus(v.visitStatus),
+        v.reviewerName || '',
+        formatIssueStatus(v.issueStatus),
+        ...photoCells
+      ];
+    });
 
     return [headers, ...rows];
   };
 
   const handleExportXLS = () => {
+    // Build sheet data first
     const aoa = buildExportAOA();
     const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+    // Add hyperlinks to each photo URL cell
+    // Find how many photo columns were added by looking at header row
+    const header = aoa[0];
+    const photoStartIdx = header.findIndex(h => String(h).startsWith('Photo '));
+    const photoCount = photoStartIdx === -1 ? 0 : header.length - photoStartIdx;
+
+    if (photoCount > 0) {
+      filteredVisits.forEach((v, rowIdx) => {
+        for (let j = 0; j < photoCount; j++) {
+          const url = v.imageUrls?.[j];
+          if (!url) continue;
+          const cellAddr = XLSX.utils.encode_cell({ c: photoStartIdx + j, r: rowIdx + 1 }); // +1 to skip header
+          const cell = (ws as any)[cellAddr] || { t: 's', v: url };
+          // Display URL text and make it clickable
+          cell.v = url;
+          cell.l = { Target: url, Tooltip: `Open Photo ${j + 1}` };
+          (ws as any)[cellAddr] = cell;
+        }
+      });
+    }
 
     // Column widths for readability
     (ws as any)['!cols'] = [
@@ -606,11 +675,15 @@ const VisitReportPage: React.FC = () => {
       { wch: 28 }, // Store
       { wch: 14 }, // City
       { wch: 24 }, // Brands
-      { wch: 14 }, // Date
+      { wch: 12 }, // Date
+      { wch: 40 }, // Persons Met
+      { wch: 14 }, // POSM
+      { wch: 40 }, // Remarks
       { wch: 40 }, // Issues
       { wch: 16 }, // Visit Status
       { wch: 18 }, // Reviewer
-      { wch: 16 }  // Issue Status
+      { wch: 16 }, // Issue Status
+      ...Array.from({ length: photoCount }, () => ({ wch: 50 })) // Photo columns
     ];
 
     const wb = XLSX.utils.book_new();
@@ -620,8 +693,8 @@ const VisitReportPage: React.FC = () => {
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
-    const filename = `visit-reports-${yyyy}-${mm}-${dd}.xls`;
-    XLSX.writeFile(wb, filename, { bookType: 'xls' });
+    const filename = `visit-reports-${yyyy}-${mm}-${dd}.xlsx`;
+    XLSX.writeFile(wb, filename, { bookType: 'xlsx' });
   };
 
   // Get unique values from filter data (not visit data for better performance)
