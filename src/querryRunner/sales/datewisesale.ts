@@ -7,22 +7,22 @@ export async function postDailySales(rowObj: Record<string, any>, successCount: 
     const { Store_ID, Brand, Category, ...dateMetrics } = rowObj;
     const context = `Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${Category || 'N/A'}`;
     if (!Store_ID || !Brand || !Category) {
-      return `Missing Store_ID, Brand, or Category. ${context}`;
+      return `❌ Missing Store_ID, Brand, or Category. ${context}`;
     }
     const store = await prisma.store.findUnique({ where: { id: Store_ID } });
-    if (!store) return `Store not found. ${context}`;
+    if (!store) return `❌ Store not found. ${context}`;
     const brand = await prisma.brand.findUnique({ where: { brandName: Brand } });
-    if (!brand) return `Brand not found. ${context}`;
+    if (!brand) return `❌ Brand not found. ${context}`;
     const category = await prisma.category.findUnique({ where: { categoryName: Category } });
-    if (!category) return `Category not found. ${context}`;
+    if (!category) return `❌ Category not found. ${context}`;
     if (!store.partnerBrandIds.includes(brand.id)) {
-      return `Brand is not mapped to this store. ${context}`;
+      return `❌ Brand is not mapped to this store. ${context}`;
     }
     const catBrand = await prisma.categoryBrand.findUnique({
       where: { brandId_categoryId: { brandId: brand.id, categoryId: category.id } }
     });
     if (!catBrand) {
-      return `Category is not mapped to this brand. ${context}`;
+      return `❌ Category is not mapped to this brand. ${context}`;
     }
 
     // Build dailySales array
@@ -62,11 +62,11 @@ export async function postDailySales(rowObj: Record<string, any>, successCount: 
         dailySales,
       },
     });
-    return `Daily sales stored for ${context}. Total successful: ${successCount}`;
+    return `✅ Daily sales stored for ${context}. Total successful: ${successCount}`;
   } catch (err) {
     console.error(err);
     const { Store_ID, Brand, Category } = rowObj;
-    return `Internal server error for Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${Category || 'N/A'}`;
+    return `❌ Internal server error for Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${Category || 'N/A'}`;
   }
 }
 
@@ -126,7 +126,7 @@ async function main() {
           }
         }
         const message = await postDailySales(rowObj, successful + 1);
-        if (message.startsWith('Daily sales stored')) {
+        if (message.startsWith('✅ Daily sales stored')) {
           successful++;
         } else {
           failed++;
@@ -135,7 +135,7 @@ async function main() {
         console.log(message);
       } catch (err) {
         failed++;
-        const msg = `Error parsing row ${r - range.s.r - 1}: ${err}`;
+        const msg = `❌ Error parsing row ${r - range.s.r - 1}: ${err}`;
         errorLogs.push(msg);
         console.error(msg);
         continue;
@@ -147,7 +147,7 @@ async function main() {
     console.log(`Successful daily sales pushes: ${successful}`);
     console.log(`Unsuccessful pushes: ${failed}`);
     if (errorLogs.length) {
-      console.log('Error details:');
+      console.log('❌ Error details:');
       errorLogs.forEach(e => console.log(e));
     }
   }

@@ -7,7 +7,7 @@ export async function postSales(rowObj: Record<string, any>, storeCount: number)
     const { Store_ID, Brand, Category, ...monthMetrics } = rowObj;
     const context = `Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${Category || 'N/A'}`;
     if (!Store_ID || !Brand || !Category) {
-      return `Missing Store_ID, Brand, or Category. ${context}`;
+      return `❌ Missing Store_ID, Brand, or Category. ${context}`;
     }
 
     const store = await prisma.store.findUnique({ where: { id: Store_ID } });
@@ -17,13 +17,13 @@ export async function postSales(rowObj: Record<string, any>, storeCount: number)
     const category = await prisma.category.findUnique({ where: { categoryName: Category } });
     if (!category) return `Category not found. ${context}`;
     if (!store.partnerBrandIds.includes(brand.id)) {
-      return `Brand is not mapped to this store. ${context}`;
+      return `❌ Brand is not mapped to this store. ${context}`;
     }
     const catBrand = await prisma.categoryBrand.findUnique({
       where: { brandId_categoryId: { brandId: brand.id, categoryId: category.id } }
     });
     if (!catBrand) {
-      return `Category is not mapped to this brand. ${context}`;
+      return `❌ Category is not mapped to this brand. ${context}`;
     }
 
     const salesByYear: Record<number, any[]> = {};
@@ -68,11 +68,11 @@ export async function postSales(rowObj: Record<string, any>, storeCount: number)
         },
       });
     }
-    return `Sales data stored successfully for ${context}. Total stores pushed: ${storeCount}`;
+    return `✅ Sales data stored successfully for ${context}. Total stores pushed: ${storeCount}`;
   } catch (err) {
     console.error(err);
     const { Store_ID, Brand, Category } = rowObj;
-    return `Internal server error for Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${Category || 'N/A'}`;
+    return `❌ Internal server error for Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${Category || 'N/A'}`;
   }
 }
 
@@ -133,7 +133,7 @@ async function main() {
           }
         }
         const message = await postSales(rowObj, successful + 1); // Pass next success count
-        if (message.startsWith('Sales data stored successfully')) {
+        if (message.startsWith('✅ Sales data stored successfully')) {
           successful++;
         } else {
           failed++;
@@ -142,7 +142,7 @@ async function main() {
         console.log(message);
       } catch (err) {
         failed++;
-        const msg = `Error parsing row ${r - range.s.r - 1}: ${err}`;
+        const msg = `❌ Error parsing row ${r - range.s.r - 1}: ${err}`;
         errorLogs.push(msg);
         console.error(msg);
         continue;
@@ -155,7 +155,7 @@ async function main() {
     console.log(`Successful store pushes: ${successful}`);
     console.log(`Unsuccessful store pushes: ${failed}`);
     if (errorLogs.length) {
-      console.log('Error details:');
+      console.log('❌ Error details:');
       errorLogs.forEach(e => console.log(e));
     }
   }

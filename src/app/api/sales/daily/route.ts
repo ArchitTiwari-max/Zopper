@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
     console.error('GET /api/sales/daily error:', err);
     return NextResponse.json({ 
       success: false, 
-      error: 'Internal server error' 
+      error: '❌ Internal server error' 
     }, { status: 500 });
   }
 }

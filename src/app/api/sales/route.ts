@@ -75,7 +75,7 @@ export async function GET(request: Request) {
     console.error('GET /api/sales error:', err);
     return NextResponse.json({ 
       success: false, 
-      error: 'Internal server error' 
+      error: '❌ Internal server error' 
     }, { status: 500 });
   }
 }
@@ -85,24 +85,24 @@ export async function POST(request: Request) {
     const data = await request.json();
     const { Store_ID, Brand, Category, ...monthMetrics } = data;
     if (!Store_ID || !Brand || !Category) {
-      return NextResponse.json({ error: 'Missing Store_ID, Brand, or Category' }, { status: 400 });
+      return NextResponse.json({ error: '⚠️ Missing Store_ID, Brand, or Category' }, { status: 400 });
     }
 
     // 1. Find store by id
     const store = await prisma.store.findUnique({ where: { id: Store_ID } });
-    if (!store) return NextResponse.json({ error: 'Store not found' }, { status: 400 });
+    if (!store) return NextResponse.json({ error: '⚠️ Store not found' }, { status: 400 });
 
     // 2. Find brand by name
     const brand = await prisma.brand.findUnique({ where: { brandName: Brand } });
-    if (!brand) return NextResponse.json({ error: 'Brand not found' }, { status: 400 });
+    if (!brand) return NextResponse.json({ error: '⚠️ Brand not found' }, { status: 400 });
 
     // 3. Find category by name
     const category = await prisma.category.findUnique({ where: { categoryName: Category } });
-    if (!category) return NextResponse.json({ error: 'Category not found' }, { status: 400 });
+    if (!category) return NextResponse.json({ error: '⚠️ Category not found' }, { status: 400 });
 
     // 4. Check brand is mapped to store
     if (!store.partnerBrandIds.includes(brand.id)) {
-      return NextResponse.json({ error: 'Brand is not mapped to this store' }, { status: 400 });
+      return NextResponse.json({ error: '⚠️ Brand is not mapped to this store' }, { status: 400 });
     }
 
     // 5. Check category is mapped to brand
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       where: { brandId_categoryId: { brandId: brand.id, categoryId: category.id } }
     });
     if (!catBrand) {
-      return NextResponse.json({ error: 'Category is not mapped to this brand' }, { status: 400 });
+      return NextResponse.json({ error: '⚠️ Category is not mapped to this brand' }, { status: 400 });
     }
 
     // 6. Group month-metric keys by year
@@ -158,9 +158,9 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ message: 'Sales data stored successfully' }, { status: 200 });
+    return NextResponse.json({ message: '✅ Sales data stored successfully' }, { status: 200 });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: '❌ Internal server error' }, { status: 500 });
   }
 }
