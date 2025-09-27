@@ -935,7 +935,7 @@ const AdminStoresPage: React.FC = () => {
                     )}
                   </div>
                   <div className="admin-stores-cell">
-                    <Link href={`/admin/sales?storeId=${store.id}&storeName=${encodeURIComponent(store.storeName)}`} className="admin-stores-view-all-link">
+                    <Link href={`/admin/sales?storeId=${store.id}&storeName=${encodeURIComponent(store.storeName)}`} className="admin-stores-view-all-link" target="_blank" rel="noopener noreferrer">
                       View Sales
                     </Link>
                   </div>

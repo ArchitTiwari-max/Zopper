@@ -36,6 +36,8 @@ const Navigation: React.FC = () => {
               <Link 
                 href={item.href} 
                 className={`nav-item ${item.active ? 'active' : ''}`}
+                target={item.id === 'visit-report' ? '_blank' : undefined}
+                rel={item.id === 'visit-report' ? 'noopener noreferrer' : undefined}
               >
                 <i className={item.icon}></i>
                 <span>{item.label}</span>

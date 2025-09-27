@@ -435,7 +435,7 @@ const AdminIssuesPage: React.FC = () => {
                   }
                 </div>
                 <div className="admin-issues-cell admin-issues-actions-cell">
-                  <Link href={`/admin/issues/${issue.id}`} className="admin-issues-view-details-btn">
+                  <Link href={`/admin/issues/${issue.id}`} className="admin-issues-view-details-btn" target="_blank" rel="noopener noreferrer">
                     View Details
                   </Link>
                 </div>
