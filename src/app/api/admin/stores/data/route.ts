@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
     const urlExecutiveId = searchParams.get('urlExecutiveId'); // From URL navigation
     const visitStatus = searchParams.get('visitStatus');
     const issueStatus = searchParams.get('issueStatus');
+    const dateFilter = searchParams.get('dateFilter') || 'Last 30 Days';
 
     // Build where clause for stores
     let whereClause: any = {};
@@ -78,6 +79,30 @@ export async function GET(request: NextRequest) {
           whereClause.id = 'no-stores-found';
         }
       }
+    }
+
+    // Resolve date range from dateFilter
+    const now = new Date();
+    let startDate: Date;
+    switch (dateFilter) {
+      case 'Today':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        break;
+      case 'Yesterday':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+        break;
+      case 'Last 7 Days':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case 'Last 90 Days':
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
+      case 'Last Year':
+        startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        break;
+      case 'Last 30 Days':
+      default:
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
 
     // OPTIMIZED: Get stores, brands, and executives concurrently with Promise.all
@@ -148,13 +173,17 @@ export async function GET(request: NextRequest) {
     // OPTIMIZED: Get all store statistics in bulk with Promise.all - simplified approach
     const storeIds = stores.map(s => s.id);
     const [allPendingIssues, allRecentVisits, visitStatusData, issueStatusData] = await Promise.all([
-      // Get ALL pending issues for all stores at once - simplified
+      // Get pending issues within selected date range for all stores at once
       prisma.issue.findMany({
         where: {
           visit: {
             storeId: { in: storeIds }
           },
-          status: { in: ['Pending', 'Assigned'] }
+          status: { in: ['Pending', 'Assigned'] },
+          createdAt: {
+            gte: startDate,
+            lte: now
+          }
         },
         select: {
           id: true,
@@ -173,12 +202,13 @@ export async function GET(request: NextRequest) {
         return issueCountMap;
       }),
 
-      // Get ALL recent visit counts for all stores at once - simplified
+      // Get total visits within selected date range for all stores at once
       prisma.visit.findMany({
         where: {
           storeId: { in: storeIds },
           createdAt: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+            gte: startDate,
+            lte: now
           }
         },
         select: { storeId: true }
@@ -276,7 +306,9 @@ export async function GET(request: NextRequest) {
         contactPerson: 'Store Manager', // This info is not in schema, using placeholder
         assignedTo: assignedExecutive,
         pendingReviews: store.visits.filter(v => v.status === 'PENDING_REVIEW').length,
+        // Date-filtered metrics
         pendingIssues: pendingIssues,
+        totalVisits: allRecentVisits.get(store.id) || 0,
         city: store.city,
         status: storeStatus,
         lastVisit: lastVisitDate ? lastVisitDate.toISOString() : null,

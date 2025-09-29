@@ -314,6 +314,57 @@
   background-color: #ef4444;
 }
 
+/* Total visits badge */
+.admin-stores-visits-badge {
+  background-color: #3b82f6; /* blue */
+}
+
+/* Clickable badge for pending reviews */
+.admin-stores-clickable-badge {
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.admin-stores-clickable-badge:hover {
+  background-color: #059669 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.admin-stores-clickable-badge:visited {
+  color: white;
+}
+
+.admin-stores-clickable-badge:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+/* Clickable badge for pending issues */
+.admin-stores-clickable-badge-issues {
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.admin-stores-clickable-badge-issues:hover {
+  background-color: #dc2626 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+.admin-stores-clickable-badge-issues:visited {
+  color: white;
+}
+
+.admin-stores-clickable-badge-issues:focus {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+}
+
 .admin-stores-count-zero {
   color: #9ca3af;
   font-size: 0.875rem;

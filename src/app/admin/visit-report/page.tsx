@@ -865,6 +865,25 @@ const VisitReportPage: React.FC = () => {
             </div>
           ) : (
             <div className="admin-visit-report-filters-grid">
+              {/* Store filter first */}
+              <div className="admin-visit-report-filter-group">
+                <label>Filter by Store Name</label>
+                <input 
+                  type="text"
+                  value={filters.storeName}
+                  onChange={(e) => handleFilterChange('storeName', e.target.value)}
+                  className="admin-visit-report-filter-input"
+                  placeholder="Type store name to search..."
+                  disabled={isLoadingFilters}
+                />
+                {isLoadingFilters && (
+                  <div className="filter-loading">
+                    <div className="loading-spinner-small"></div>
+                  </div>
+                )}
+              </div>
+
+              {/* Then Partner Brand */}
               <div className="admin-visit-report-filter-group">
                 <label>Filter by Partner Brand</label>
                 <select 
@@ -885,6 +904,7 @@ const VisitReportPage: React.FC = () => {
                 )}
               </div>
 
+              {/* Then City */}
               <div className="admin-visit-report-filter-group">
                 <label>Filter by City</label>
                 <select 
@@ -905,23 +925,7 @@ const VisitReportPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="admin-visit-report-filter-group">
-                <label>Filter by Store Name</label>
-                <input 
-                  type="text"
-                  value={filters.storeName}
-                  onChange={(e) => handleFilterChange('storeName', e.target.value)}
-                  className="admin-visit-report-filter-input"
-                  placeholder="Type store name to search..."
-                  disabled={isLoadingFilters}
-                />
-                {isLoadingFilters && (
-                  <div className="filter-loading">
-                    <div className="loading-spinner-small"></div>
-                  </div>
-                )}
-              </div>
-
+              {/* Then Executive */}
               <div className="admin-visit-report-filter-group">
                 <label>Filter by Executive Name</label>
                 <select 
@@ -942,6 +946,7 @@ const VisitReportPage: React.FC = () => {
                 )}
               </div>
 
+              {/* Then other filters */}
               <div className="admin-visit-report-filter-group">
                 <label>Filter by Review Status</label>
                 <select 

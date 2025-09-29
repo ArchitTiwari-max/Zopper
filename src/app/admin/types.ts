@@ -47,6 +47,7 @@ export interface StoreData {
   assignedTo: string;
   pendingReviews: number;
   pendingIssues: number;
+  totalVisits: number;
   city: string;
   status: 'Active' | 'Inactive' | 'Pending';
   lastVisit?: string | null;
