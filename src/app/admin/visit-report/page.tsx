@@ -1049,7 +1049,7 @@ const VisitReportPage: React.FC = () => {
                 </div>
                 
                 <div className="admin-visit-report-cell admin-visit-report-store-name-cell">
-                  <Link href={`/admin/stores?storeId=${visit.storeId}`} className="admin-visit-report-store-name-link" target="_blank" rel="noopener noreferrer">
+                  <Link href={`/admin/stores?storeId=${visit.storeId}`} className="admin-visit-report-store-name-link">
                     {visit.storeName}
                   </Link>
                 </div>
@@ -1082,8 +1082,6 @@ const VisitReportPage: React.FC = () => {
                             href={`/admin/issues/${visit.issueId}`}
                             className="admin-visit-report-issue-link"
                             title={`View issue: ${visit.issues}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
                           >
                             <ExpandableText 
                               text={visit.issues} 

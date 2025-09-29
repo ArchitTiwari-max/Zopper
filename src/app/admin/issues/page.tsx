@@ -18,6 +18,7 @@ const AdminIssuesPage: React.FC = () => {
   const [isFilterChanging, setIsFilterChanging] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [filterError, setFilterError] = useState<string | null>(null);
+  const [hasInitialLoad, setHasInitialLoad] = useState<boolean>(false);
   
   // Filter data from API
   const [filterData, setFilterData] = useState<{
@@ -87,11 +88,13 @@ const AdminIssuesPage: React.FC = () => {
 
       const data = await response.json();
       setIssuesData(data.issues || []);
+      setHasInitialLoad(true);
       // applyFilters will be triggered by issuesData change and handle filtering
     } catch (error) {
       console.error('Failed to fetch issues data:', error);
       setError(error instanceof Error ? error.message : 'Failed to load issues data');
       setIssuesData([]);
+      setHasInitialLoad(true);
     } finally {
       setIsLoading(false);
       setIsFilterChanging(false);
@@ -176,17 +179,16 @@ const AdminIssuesPage: React.FC = () => {
 
   // Apply filters to existing data when filters change
   useEffect(() => {
-    if (issuesData.length > 0) { // Only apply filters if we have data
-      applyFilters();
-    }
+    applyFilters(); // Always apply filters, even if issuesData is empty
   }, [filters, issuesData]);
 
   // Refetch data when date filter changes (requires server-side fetch)
   useEffect(() => {
-    if (issuesData.length > 0) { // Only refetch if we already have data (not on initial load)
+    if (hasInitialLoad) { // Only refetch after initial load is complete
+      setIsLoading(true); // Show loading when date filter changes
       fetchIssuesData();
     }
-  }, [selectedDateFilter]);
+  }, [selectedDateFilter, hasInitialLoad]);
 
   const handleFilterChange = (filterType: keyof IssueFilters, value: string) => {
     setIsFilterChanging(true);
