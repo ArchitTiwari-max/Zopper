@@ -36,6 +36,9 @@ const AdminIssuesPage: React.FC = () => {
     dateRange: 'Last 30 Days'
   });
 
+  // Local search text for store name (partial)
+  const [storeSearchText, setStoreSearchText] = useState<string>('');
+
   // Fetch filter data from API (fast)
   const fetchFilterData = async () => {
     setIsLoadingFilters(true);
@@ -110,12 +113,19 @@ const AdminIssuesPage: React.FC = () => {
     }
 
     let filtered = issuesData.filter(issue => {
-      // Filter by store name
+      // Filter by store name (dropdown by ID)
       if (filters.storeName !== 'All Stores') {
-        // If filters.storeName contains an ID, find the store name
         const store = filterData.stores.find(s => s.id === filters.storeName);
         const storeNameToMatch = store ? store.name : filters.storeName;
         if (issue.storeName !== storeNameToMatch) {
+          return false;
+        }
+      }
+
+      // Filter by store name (partial search text)
+      if (storeSearchText.trim() !== '') {
+        const q = storeSearchText.trim().toLowerCase();
+        if (!issue.storeName.toLowerCase().includes(q)) {
           return false;
         }
       }
@@ -180,7 +190,7 @@ const AdminIssuesPage: React.FC = () => {
   // Apply filters to existing data when filters change
   useEffect(() => {
     applyFilters(); // Always apply filters, even if issuesData is empty
-  }, [filters, issuesData]);
+  }, [filters, issuesData, storeSearchText]);
 
   // Refetch data when date filter changes (requires server-side fetch)
   useEffect(() => {
@@ -219,13 +229,7 @@ const AdminIssuesPage: React.FC = () => {
       newUrl.searchParams.set('status', currentFilters.status);
     }
     
-    // For store, convert ID back to name for readable URLs
-    if (currentFilters.storeName !== 'All Stores') {
-      const store = filterData.stores.find(s => s.id === currentFilters.storeName);
-      if (store) {
-        newUrl.searchParams.set('storeName', store.name);
-      }
-    }
+    // Intentionally avoid writing storeName/storeId to URL to keep store filtering client-side only
     
     // Update URL without reloading page
     window.history.pushState({}, '', newUrl.toString());
@@ -336,17 +340,15 @@ const AdminIssuesPage: React.FC = () => {
         ) : (
         <div className="admin-issues-filters-grid">
           <div className="admin-issues-filter-group">
-            <label>Filter by Store</label>
-            <select 
-              value={filters.storeName}
-              onChange={(e) => handleFilterChange('storeName', e.target.value)}
-              className="admin-issues-filter-select"
-            >
-              <option value="All Stores">All Stores</option>
-              {filterData.stores.map(store => (
-                <option key={store.id} value={store.id}>{store.name}</option>
-              ))}
-            </select>
+            <label>Filter by Store Name</label>
+            <input
+              type="text"
+              value={storeSearchText}
+              onChange={(e) => { setIsFilterChanging(true); setStoreSearchText(e.target.value); }}
+              className="admin-issues-filter-input"
+              placeholder="Type to search store name..."
+              style={{ padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+            />
           </div>
 
           <div className="admin-issues-filter-group">

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { StoreData, StoreFilters } from '../types';
+import { useDateFilter } from '../contexts/DateFilterContext';
 import VisitPlanModal from './components/VisitPlanModal';
 import * as XLSX from 'xlsx';
 import './page.css';
@@ -11,6 +12,7 @@ import './page.css';
 
 const AdminStoresPage: React.FC = () => {
   const searchParams = useSearchParams();
+  const { selectedDateFilter } = useDateFilter();
   const [storeData, setStoreData] = useState<StoreData[]>([]);
   const [filteredStores, setFilteredStores] = useState<StoreData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -37,6 +39,9 @@ const AdminStoresPage: React.FC = () => {
     showOnlyUnresolvedIssues: false,
     showOnlyUnreviewedVisits: false
   });
+
+  // Local search text for store name (partial match)
+  const [storeSearchText, setStoreSearchText] = useState<string>('');
 
   // Visit plan creation state
   const [isCreatingVisitPlan, setIsCreatingVisitPlan] = useState<boolean>(false);
@@ -83,7 +88,9 @@ const AdminStoresPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/admin/stores/data', {
+      const params = new URLSearchParams();
+      params.append('dateFilter', selectedDateFilter);
+      const response = await fetch(`/api/admin/stores/data?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -117,10 +124,17 @@ const AdminStoresPage: React.FC = () => {
     }
 
     let filtered = storeData.filter(store => {
-      // Filter by store name
+      // Filter by store name (exact by ID via dropdown)
       if (filters.storeName !== 'All Store') {
-        // filters.storeName contains store ID
         if (store.id !== filters.storeName) {
+          return false;
+        }
+      }
+
+      // Filter by store name (partial text search)
+      if (storeSearchText.trim() !== '') {
+        const txt = storeSearchText.trim().toLowerCase();
+        if (!store.storeName.toLowerCase().includes(txt)) {
           return false;
         }
       }
@@ -307,12 +321,18 @@ const AdminStoresPage: React.FC = () => {
     fetchFilterData();
   }, []);
 
+  // Refetch data when date filter changes
+  useEffect(() => {
+    fetchStoreData();
+  }, [selectedDateFilter]);
+
+
   // Apply client-side filters and sorting when filters, data, or sorting changes
   useEffect(() => {
     if (storeData.length > 0) {
       applyFilters();
     }
-  }, [filters, storeData, sortConfig]);
+  }, [filters, storeData, sortConfig, storeSearchText]);
 
   // Optionally refetch when search params change if needed (e.g., deep link)
   useEffect(() => {
@@ -460,23 +480,23 @@ const AdminStoresPage: React.FC = () => {
 
   // Build data for Excel export from the currently filtered rows
   const buildExportAOA = (): (string | number)[][] => {
-    const headers = [
+          const headers = [
       'Store Name',
       'City',
       'Partner Brands',
       'Assigned Executive',
       'Last Visit',
-      'Pending Reviews',
+      'Total Visits',
       'Pending Issues'
     ];
 
-    const rows = filteredStores.map((s) => [
+      const rows = filteredStores.map((s) => [
       s.storeName,
       s.city,
       s.partnerBrands.join(', '),
       s.assignedTo || '',
       formatLastVisitDate(s.lastVisit ?? null),
-      s.pendingReviews,
+      s.totalVisits,
       s.pendingIssues,
     ]);
 
@@ -494,7 +514,7 @@ const AdminStoresPage: React.FC = () => {
       { wch: 24 }, // Partner Brands
       { wch: 22 }, // Assigned Executive
       { wch: 14 }, // Last Visit
-      { wch: 16 }, // Pending Reviews
+      { wch: 16 }, // Total Visits
       { wch: 16 }, // Pending Issues
     ];
     (ws as any)['!cols'] = cols;
@@ -603,6 +623,19 @@ const AdminStoresPage: React.FC = () => {
           ) : (
         <>
         <div className="admin-stores-filters-grid">
+          {/* Store filter first */}
+          <div className="admin-stores-filter-group">
+            <label>Filter by Store Name</label>
+            <input
+              type="text"
+              value={storeSearchText}
+              onChange={(e) => { setIsFilterChanging(true); setStoreSearchText(e.target.value); }}
+              className="filter-input"
+              placeholder="Type to search store name..."
+            />
+          </div>
+
+          {/* Then Partner Brand */}
           <div className="admin-stores-filter-group">
             <label>Filter by Partner Brand</label>
             <select 
@@ -617,6 +650,7 @@ const AdminStoresPage: React.FC = () => {
             </select>
           </div>
 
+          {/* Then City */}
           <div className="admin-stores-filter-group">
             <label>Filter by City</label>
             <select 
@@ -631,20 +665,7 @@ const AdminStoresPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="admin-stores-filter-group">
-            <label>Filter by Store Name</label>
-            <select 
-              value={filters.storeName}
-              onChange={(e) => handleFilterChange('storeName', e.target.value)}
-              className="admin-stores-filter-select"
-            >
-              <option value="All Store">All Store</option>
-              {filterData.stores.map(store => (
-                <option key={store.id} value={store.id}>{store.name}</option>
-              ))}
-            </select>
-          </div>
-
+          {/* Then Assigned Executive */}
           <div className="admin-stores-filter-group">
             <label>Assigned Executive</label>
             <select 
@@ -850,7 +871,7 @@ const AdminStoresPage: React.FC = () => {
             >
               LAST VISIT <span className="sort-icon">{getSortIcon('lastVisit')}</span>
             </div>
-            <div className="admin-stores-header-cell">PENDING REVIEWS</div>
+              <div className="admin-stores-header-cell">TOTAL VISITS</div>
             <div className="admin-stores-header-cell">PENDING ISSUES</div>
             <div className="admin-stores-header-cell">STORE SALES</div>
           </div>
@@ -887,7 +908,7 @@ const AdminStoresPage: React.FC = () => {
                             {store.storeName}
                           </span>
                         ) : (
-                          <Link href={`/admin/visit-report?storeId=${store.id}`} className="admin-stores-store-name-link admin-stores-store-name-truncated" title={store.storeName}>
+                          <Link href={`/admin/visit-report?storeId=${store.id}&dateFilter=${encodeURIComponent(selectedDateFilter)}`} className="admin-stores-store-name-link admin-stores-store-name-truncated" title={store.storeName} target="_blank" rel="noopener noreferrer">
                             {store.storeName}
                           </Link>
                         )}
@@ -917,19 +938,21 @@ const AdminStoresPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="admin-stores-cell">
-                    {store.pendingReviews > 0 ? (
-                      <span className="admin-stores-count-badge admin-stores-reviews-badge">
-                        {store.pendingReviews}
-                      </span>
-                    ) : (
-                      <span className="admin-stores-count-zero">{store.pendingReviews}</span>
-                    )}
+                    <span className="admin-stores-count-badge admin-stores-visits-badge" title={`Total visits for ${store.storeName}`}>
+                      {store.totalVisits ?? 0}
+                    </span>
                   </div>
                   <div className="admin-stores-cell">
                     {store.pendingIssues > 0 ? (
-                      <span className="admin-stores-count-badge admin-stores-issues-badge">
+                      <Link 
+                        href={`/admin/issues?storeId=${encodeURIComponent(store.id)}&status=Pending&dateFilter=${encodeURIComponent(selectedDateFilter)}`} 
+                        className="admin-stores-count-badge admin-stores-issues-badge admin-stores-clickable-badge-issues"
+                        title={`View ${store.pendingIssues} pending issues for ${store.storeName}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         {store.pendingIssues}
-                      </span>
+                      </Link>
                     ) : (
                       <span className="admin-stores-count-zero">{store.pendingIssues}</span>
                     )}

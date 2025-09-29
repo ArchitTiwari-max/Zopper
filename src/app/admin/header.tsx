@@ -151,6 +151,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
   // Check if current page should show date filter
   const shouldShowDateFilter = () => {
     return pathname === '/admin/dashboard' ||
+           pathname === '/admin/stores' ||
            pathname === '/admin/issues' || 
            pathname === '/admin/visit-report' ||
            pathname === '/admin/executives' ||
