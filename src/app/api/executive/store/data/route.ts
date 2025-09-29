@@ -16,15 +16,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
     }
 
-    // Get executive data using userId from token
+    // Get executive data
     const executive = await prisma.executive.findUnique({
       where: { userId: user.userId },
       include: {
         user: true,
         executiveStores: {
-          select: {
-            storeId: true
-          }
+          select: { storeId: true }
         }
       }
     });
@@ -33,87 +31,60 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
-    // Generate ETag for cache validation (1-minute intervals)
+    // ETag for cache validation (optional)
     const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
-    const apiVersion = 'v2-data-only'; // Updated version - data only without filter options
+    const apiVersion = 'v2-data-only';
     const etag = `"${currentTime}-${executive.id}-${apiVersion}"`;
-    
-    // Check if client has cached version (conditional request)
+
     const ifNoneMatch = request.headers.get('if-none-match');
     if (ifNoneMatch === etag) {
-      // Return 304 Not Modified if ETag matches
-      return new NextResponse(null, { 
+      return new NextResponse(null, {
         status: 304,
         headers: {
-          'Cache-Control': 'public, max-age=60, s-maxage=60',
+          'Cache-Control': 'private, max-age=120, stale-while-revalidate=60',
           'ETag': etag
         }
       });
     }
 
-    // Get all stores and all brands in parallel to avoid N+1 queries
+    // Fetch stores and brands in parallel
     const [stores, allBrands] = await Promise.all([
-      // Get all stores assigned to this executive
       prisma.store.findMany({
         where: {
-          id: {
-            in: executive.executiveStores.map(es => es.storeId)
-          }
+          id: { in: executive.executiveStores.map(es => es.storeId) }
         },
         include: {
           visits: {
-            where: {
-              executiveId: executive.id
-            },
-            orderBy: {
-              createdAt: 'desc'
-            },
-            take: 1 // Get only the most recent visit
+            where: { executiveId: executive.id },
+            orderBy: { createdAt: 'desc' },
+            take: 1
           }
         }
       }),
-      
-      // Get all brands that might be used by these stores (single query)
-      prisma.brand.findMany({
-        select: {
-          id: true,
-          brandName: true
-        }
-      })
+      prisma.brand.findMany({ select: { id: true, brandName: true } })
     ]);
 
-    // Create a Map for fast brand lookups
     const brandMap = new Map(allBrands.map(brand => [brand.id, brand]));
 
-    // Transform the data (now synchronous - no more database queries in loop)
-    const transformedStores = stores.map((store) => {
-      // Get partner brands for this store from the brandMap
+    const transformedStores = stores.map(store => {
       const partnerBrands = store.partnerBrandIds
         .map(brandId => brandMap.get(brandId))
-        .filter(Boolean) // Remove undefined brands
-        .map(brand => brand!.brandName);
+        .filter(Boolean)
+        .map(b => b!.brandName);
 
-      // Calculate visit status dynamically
       let visitStatus = 'No visit';
-      let lastVisitDate = null;
-      
+      let lastVisitDate: Date | null = null;
+
       if (store.visits.length > 0) {
         const lastVisit = store.visits[0];
         lastVisitDate = lastVisit.createdAt;
         const now = new Date();
         const visitDate = new Date(lastVisit.createdAt);
-        
-        // Calculate difference in days
-        const diffTime = Math.abs(now.getTime() - visitDate.getTime());
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        
-        if (diffDays === 0) {
-          visitStatus = 'Today';
-        } else if (diffDays === 1) {
-          visitStatus = '1 day ago';
-        } else {
-          visitStatus = `${diffDays} days ago`;
-        }
+        const diffDays = Math.floor(Math.abs(now.getTime() - visitDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) visitStatus = 'Today';
+        else if (diffDays === 1) visitStatus = '1 day ago';
+        else visitStatus = `${diffDays} days ago`;
       }
 
       return {
@@ -121,23 +92,21 @@ export async function GET(request: NextRequest) {
         storeName: store.storeName,
         city: store.city,
         fullAddress: store.fullAddress,
-        partnerBrands: partnerBrands,
+        partnerBrands,
         visited: visitStatus,
-        lastVisitDate: lastVisitDate,
-        // For sorting purposes - stores with no visits go to the end
+        lastVisitDate,
         sortOrder: lastVisitDate ? new Date(lastVisitDate).getTime() : 0
       };
     });
 
-    // Sort by recently visited first (stores with recent visits first, then no visits)
     transformedStores.sort((a, b) => {
-      if (a.sortOrder === 0 && b.sortOrder === 0) return 0; // Both have no visits
-      if (a.sortOrder === 0) return 1; // a has no visits, goes to end
-      if (b.sortOrder === 0) return -1; // b has no visits, goes to end
-      return b.sortOrder - a.sortOrder; // Most recent first
+      if (a.sortOrder === 0 && b.sortOrder === 0) return 0;
+      if (a.sortOrder === 0) return 1;
+      if (b.sortOrder === 0) return -1;
+      return b.sortOrder - a.sortOrder;
     });
 
-    // Create response with store data only (filter data is handled by /api/executive/store/filter)
+    // Create response
     const response = NextResponse.json({
       success: true,
       data: {
@@ -150,26 +119,18 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Add caching headers - cache for 2 minutes (data changes less frequently now)
-    response.headers.set('Cache-Control', 'public, max-age=120, s-maxage=120, stale-while-revalidate=60');
-    response.headers.set('CDN-Cache-Control', 'public, max-age=120');
-    response.headers.set('Vary', 'User-Agent');
-    
-    // Add performance headers
-    response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('X-Cache-Status', 'MISS');
-    
-    // Add ETag for cache validation
-    response.headers.set('ETag', etag);
-    
+    // ===== SAFE HEADERS =====
+    response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=60'); // Browser-only cache
+    response.headers.set('ETag', etag); // Conditional requests
+    response.headers.set('X-Content-Type-Options', 'nosniff'); // Security
+    response.headers.set('X-Cache-Status', 'MISS'); // Debug info
+    // Removed Vary: User-Agent because not needed for user-specific data
+
     return response;
 
   } catch (error) {
     console.error('Error fetching stores:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch stores' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch stores' }, { status: 500 });
   }
 }
 

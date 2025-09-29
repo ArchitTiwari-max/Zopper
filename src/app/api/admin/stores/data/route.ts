@@ -32,6 +32,28 @@ export async function GET(request: NextRequest) {
     const issueStatus = searchParams.get('issueStatus');
     const dateFilter = searchParams.get('dateFilter') || 'Last 30 Days';
 
+    // Generate ETag for cache validation (2-minute intervals)
+    const currentTime = Math.floor(Date.now() / (2 * 60 * 1000)) * (2 * 60 * 1000);
+    const cacheKey = JSON.stringify({ 
+      partnerBrand, city, storeFilterId, urlStoreId, 
+      executiveFilterId, urlExecutiveId, visitStatus, issueStatus, dateFilter 
+    });
+    const crypto = await import('crypto');
+    const paramsHash = crypto.createHash('md5').update(cacheKey).digest('hex');
+    const etag = `"${currentTime}-admin-stores-${paramsHash}"`;
+    
+    // Check if client has cached version (conditional request)
+    const ifNoneMatch = request.headers.get('if-none-match');
+    if (ifNoneMatch === etag) {
+      return new NextResponse(null, { 
+        status: 304,
+        headers: {
+          'Cache-Control': 'private, max-age=120, stale-while-revalidate=60',
+          'ETag': etag
+        }
+      });
+    }
+
     // Build where clause for stores
     let whereClause: any = {};
 
@@ -335,10 +357,17 @@ export async function GET(request: NextRequest) {
     // Remove lastVisitDate from response as it's only used for sorting
     const finalStores = filteredStores.map(({ lastVisitDate, ...store }) => store);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       stores: finalStores,
       total: finalStores.length
     });
+    
+    // Add secure caching headers
+    response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=60');
+    response.headers.set('Vary', 'Authorization');
+    response.headers.set('ETag', etag);
+    
+    return response;
 
   } catch (error) {
     console.error('Stores Data API Error:', error);

@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
         return new NextResponse(null, { 
           status: 304,
           headers: {
-            'Cache-Control': 'public, max-age=60, s-maxage=60',
+            'Cache-Control': 'private, max-age=60',
             'ETag': etag
           }
         });
@@ -109,8 +109,8 @@ export async function GET(request: NextRequest) {
         response.headers.set('Pragma', 'no-cache');
         response.headers.set('Expires', '0');
       } else {
-        response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
-        response.headers.set('CDN-Cache-Control', 'public, max-age=60');
+        response.headers.set('Cache-Control', 'private, max-age=60');
+        response.headers.set('Vary', 'Authorization');
         response.headers.set('ETag', etag);
       }
       
@@ -197,9 +197,8 @@ export async function GET(request: NextRequest) {
       response.headers.set('Expires', '0');
     } else {
       // Normal caching for regular requests
-      response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
-      response.headers.set('CDN-Cache-Control', 'public, max-age=60');
-      response.headers.set('Vary', 'User-Agent');
+      response.headers.set('Cache-Control', 'private, max-age=60');
+      response.headers.set('Vary', 'Authorization');
       response.headers.set('ETag', etag);
     }
     

@@ -24,7 +24,7 @@ const MaintenancePage: React.FC = () => {
           <div className="maintenance-details">
             <div className="detail-item">
               <span className="detail-icon">⏰</span>
-              <span>Time Remaining: 5 minutes</span>
+              <span>Time Remaining: 10 minutes</span>
             </div>
             <div className="detail-item">
               <span className="detail-icon">🔄</span>

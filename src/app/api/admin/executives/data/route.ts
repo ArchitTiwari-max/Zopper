@@ -26,6 +26,25 @@ export async function GET(request: NextRequest) {
     const storeId = searchParams.get('storeId');
     const dateFilter = searchParams.get('dateFilter') || 'Last 30 Days';
 
+    // Generate ETag for cache validation (2-minute intervals)
+    const currentTime = Math.floor(Date.now() / (2 * 60 * 1000)) * (2 * 60 * 1000);
+    const cacheKey = JSON.stringify({ executiveId, storeId, dateFilter });
+    const crypto = await import('crypto');
+    const paramsHash = crypto.createHash('md5').update(cacheKey).digest('hex');
+    const etag = `"${currentTime}-admin-executives-${paramsHash}"`;
+    
+    // Check if client has cached version (conditional request)
+    const ifNoneMatch = request.headers.get('if-none-match');
+    if (ifNoneMatch === etag) {
+      return new NextResponse(null, { 
+        status: 304,
+        headers: {
+          'Cache-Control': 'private, max-age=120, stale-while-revalidate=60',
+          'ETag': etag
+        }
+      });
+    }
+
     // Build where clause for executives
     let whereClause: any = {};
 
@@ -150,10 +169,17 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       executives: processedExecutives,
       total: processedExecutives.length
     });
+    
+    // Add secure caching headers
+    response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=60');
+    response.headers.set('Vary', 'Authorization');
+    response.headers.set('ETag', etag);
+    
+    return response;
 
   } catch (error) {
     console.error('Executives Data API Error:', error);

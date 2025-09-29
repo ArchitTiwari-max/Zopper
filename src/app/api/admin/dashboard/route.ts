@@ -149,11 +149,11 @@ export async function GET(request: NextRequest) {
       brandData: brandVisitsData
     };
 
-    // Add caching headers for better performance
+    // Add caching headers - PRIVATE cache for admin data security
     return NextResponse.json(dashboardData, {
       headers: {
-        'Cache-Control': 'public, max-age=300, stale-while-revalidate=600', // 5min cache, 10min stale
-        'CDN-Cache-Control': 'public, max-age=60', // 1min cache on CDN
+        'Cache-Control': 'private, max-age=300, stale-while-revalidate=600', // 5min private cache
+        'Vary': 'Authorization', // Ensure different admins get separate cache
       }
     });
 

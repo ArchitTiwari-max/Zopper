@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       return new NextResponse(null, { 
         status: 304,
         headers: {
-          'Cache-Control': 'public, max-age=60, s-maxage=60',
+          'Cache-Control': 'private, max-age=60',
           'ETag': etag
         }
       });
@@ -227,10 +227,9 @@ export async function GET(request: NextRequest) {
       data: transformedVisits
     });
 
-    // Add caching headers - cache for 1 minute
-    response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
-    response.headers.set('CDN-Cache-Control', 'public, max-age=60');
-    response.headers.set('Vary', 'User-Agent');
+    // Add caching headers - PRIVATE cache to prevent data leakage between executives
+    response.headers.set('Cache-Control', 'private, max-age=60');
+    response.headers.set('Vary', 'Authorization, User-Agent'); // Vary on auth token for user-specific caching
     response.headers.set('ETag', etag);
     
     return response;

@@ -60,7 +60,9 @@ export async function GET(request: NextRequest) {
     }
 
     const response = NextResponse.json({ success: true, totals, year: currentYear });
-    response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+    // Use private caching to prevent data leakage between executives
+    response.headers.set('Cache-Control', 'private, max-age=60');
+    response.headers.set('Vary', 'Authorization');
     return response;
   } catch (error) {
     console.error('Error fetching sales summary:', error);

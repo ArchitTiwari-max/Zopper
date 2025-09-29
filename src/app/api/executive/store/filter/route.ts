@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     // Generate ETag for cache validation (longer cache for filter data - 10 minutes)
     const currentTime = Math.floor(Date.now() / (10 * 60 * 1000)) * (10 * 60 * 1000);
     const apiVersion = 'v1-comprehensive'; // Comprehensive filter data version
-    const etag = `"${currentTime}-filters-${apiVersion}"`;
+    const etag = `"${currentTime}-${executive.id}-filters-${apiVersion}"`; // CRITICAL: Include executive ID
     
     // Check if client has cached version (conditional request)
     const ifNoneMatch = request.headers.get('if-none-match');
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       return new NextResponse(null, { 
         status: 304,
         headers: {
-          'Cache-Control': 'public, max-age=600, s-maxage=600, stale-while-revalidate=300',
+          'Cache-Control': 'private, max-age=600, stale-while-revalidate=300',
           'ETag': etag,
           'X-Cache-Status': 'HIT'
         }
@@ -153,10 +153,9 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Add caching headers - cache for 10 minutes (filter data changes very rarely)
-    response.headers.set('Cache-Control', 'public, max-age=600, s-maxage=600, stale-while-revalidate=300');
-    response.headers.set('CDN-Cache-Control', 'public, max-age=600');
-    response.headers.set('Vary', 'User-Agent');
+    // Add caching headers - PRIVATE cache to prevent data leakage between executives
+    response.headers.set('Cache-Control', 'private, max-age=600, stale-while-revalidate=300');
+    response.headers.set('Vary', 'Authorization, User-Agent'); // Vary on auth token for user-specific caching
     response.headers.set('ETag', etag);
     
     // Add performance headers

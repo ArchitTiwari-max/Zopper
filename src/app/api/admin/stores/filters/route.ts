@@ -20,6 +20,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Generate ETag for cache validation (10-minute intervals for filter data)
+    const currentTime = Math.floor(Date.now() / (10 * 60 * 1000)) * (10 * 60 * 1000);
+    const etag = `"${currentTime}-admin-store-filters"`;
+    
+    // Check if client has cached version (conditional request)
+    const ifNoneMatch = request.headers.get('if-none-match');
+    if (ifNoneMatch === etag) {
+      return new NextResponse(null, { 
+        status: 304,
+        headers: {
+          'Cache-Control': 'private, max-age=600, stale-while-revalidate=300',
+          'ETag': etag
+        }
+      });
+    }
+
     // Get all filter data in parallel for better performance
     const [stores, executives, brands] = await Promise.all([
       // Get all stores
@@ -87,7 +103,14 @@ export async function GET(request: NextRequest) {
       statuses: ['Active', 'Inactive', 'Pending'] // Static status options
     };
 
-    return NextResponse.json(filterData);
+    const response = NextResponse.json(filterData);
+    
+    // Add secure caching headers - longer cache for filter data
+    response.headers.set('Cache-Control', 'private, max-age=600, stale-while-revalidate=300');
+    response.headers.set('Vary', 'Authorization');
+    response.headers.set('ETag', etag);
+    
+    return response;
 
   } catch (error) {
     console.error('Stores Filters API Error:', error);

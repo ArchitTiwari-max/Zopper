@@ -21,46 +21,22 @@ export async function GET(request: NextRequest) {
       where: { userId: user.userId },
       include: {
         executiveStores: {
-          select: {
-            storeId: true
-          }
+          select: { storeId: true }
         }
       }
     });
 
     if (!executive) {
-      return NextResponse.json(
-        { success: false, error: 'Executive profile not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Executive profile not found' }, { status: 404 });
     }
 
-    // Get date period from query params
+    // Get period from query params
     const url = new URL(request.url);
     const period = url.searchParams.get('period') || 'Last 30 Days';
-    
-    // Generate cache key for ETag validation
-    const cacheKey = `dashboard-${executive.id}-${period}`;
-    const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000); // Round to 1-minute intervals
-    const etag = `"${currentTime}-${executive.id}-${period}"`;
-    
-    // Check if client has cached version (conditional request)
-    const ifNoneMatch = request.headers.get('if-none-match');
-    if (ifNoneMatch === etag) {
-      // Return 304 Not Modified if ETag matches
-      return new NextResponse(null, { 
-        status: 304,
-        headers: {
-          'Cache-Control': 'public, max-age=60, s-maxage=60',
-          'ETag': etag
-        }
-      });
-    }
 
     // Calculate date range based on period
     const now = new Date();
     let startDate: Date;
-
     switch (period) {
       case 'Last 7 Days':
         startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -74,130 +50,95 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    // Execute ALL queries in parallel for maximum performance (CRITICAL for N+1 prevention)
+    // Fetch all data in parallel
     const [storeData, allBrands, visits, taskStats] = await Promise.all([
-      // Get stores assigned to this executive
       prisma.store.findMany({
-        where: {
-          id: {
-            in: executive.executiveStores.map(es => es.storeId)
-          }
-        },
-        select: {
-          partnerBrandIds: true
-        }
+        where: { id: { in: executive.executiveStores.map(es => es.storeId) } },
+        select: { partnerBrandIds: true }
       }),
-      
-      // Get all brands (we'll filter after to avoid sequential dependency)
-      prisma.brand.findMany({
-        select: {
-          id: true,
-          brandName: true,
-          // category field removed - using CategoryBrand relation
-        }
-      }),
-      
-      // Get executive visits with brand filtering for efficiency
+      prisma.brand.findMany({ select: { id: true, brandName: true } }),
       prisma.visit.findMany({
-        where: {
-          executiveId: executive.id,
-          createdAt: {
-            gte: startDate,
-            lte: now
-          }
-        },
-        select: {
-          brandIds: true
-        }
+        where: { executiveId: executive.id, createdAt: { gte: startDate, lte: now } },
+        select: { brandIds: true }
       }),
-      
-      // Get task counts using groupBy (single query)
       prisma.assigned.groupBy({
         by: ['status'],
-        where: {
-          executiveId: executive.id
-        },
-        _count: {
-          id: true
-        }
+        where: { executiveId: executive.id },
+        _count: { id: true }
       })
     ]);
 
-    // Extract unique brand IDs from the executive's assigned stores
-    const uniqueBrandIds = Array.from(
-      new Set(storeData.flatMap(store => store.partnerBrandIds))
-    );
-
-    // Filter brands to only include those assigned to the executive's stores
-    const relevantBrands = allBrands.filter(brand => uniqueBrandIds.includes(brand.id));
-    
-    // Create a Set of relevant brand IDs for fast lookup
+    // Filter relevant brands
+    const uniqueBrandIds = Array.from(new Set(storeData.flatMap(s => s.partnerBrandIds)));
+    const relevantBrands = allBrands.filter(b => uniqueBrandIds.includes(b.id));
     const relevantBrandIds = new Set(uniqueBrandIds);
 
-    // Calculate brand visit counts with filtering for only relevant brands
+    // Count visits for relevant brands
     const brandVisitMap = new Map<string, number>();
-    
-    // Count visits for each relevant brand only
     visits.forEach(visit => {
       visit.brandIds.forEach(brandId => {
-        // Only count visits for brands that are relevant to this executive
         if (relevantBrandIds.has(brandId)) {
           brandVisitMap.set(brandId, (brandVisitMap.get(brandId) || 0) + 1);
         }
       });
     });
 
-    // Build brand visit counts array using only relevant brands
     const brandVisitCounts = relevantBrands.map(brand => ({
       id: brand.id,
       name: brand.brandName,
-      category: 'General', // TODO: Implement category lookup via CategoryBrand relation
+      category: 'General',
       visits: brandVisitMap.get(brand.id) || 0
-    }));
+    })).sort((a, b) => b.visits - a.visits);
 
-    // Sort brands by visit count in descending order (most visits to least visits)
-    brandVisitCounts.sort((a, b) => b.visits - a.visits);
-
-    // Calculate task statistics
-    const pendingTasks = taskStats
-      .filter(stat => ['Assigned', 'In_Progress'].includes(stat.status))
+    // Task stats
+    const pendingTasks = taskStats.filter(stat => ['Assigned', 'In_Progress'].includes(stat.status))
       .reduce((sum, stat) => sum + stat._count.id, 0);
-      
-    const completedTasks = taskStats
-      .find(stat => stat.status === 'Completed')?._count.id || 0;
-      
+    const completedTasks = taskStats.find(stat => stat.status === 'Completed')?._count.id || 0;
     const totalVisits = visits.length;
 
-    // Create response with cache headers for maximum performance
+    // -----------------------------
+    // 1️⃣ Generate per-user data hash for ETag
+    // -----------------------------
+    const dataString = JSON.stringify({ brandVisitCounts, pendingTasks, completedTasks, totalVisits, period });
+    const crypto = await import('crypto'); // Node.js crypto
+    const dataHash = crypto.createHash('md5').update(dataString).digest('hex');
+    const etag = `"${executive.id}-${dataHash}"`;
+
+    // -----------------------------
+    // 2️⃣ Conditional request check
+    // -----------------------------
+    const ifNoneMatch = request.headers.get('if-none-match');
+    if (ifNoneMatch === etag) {
+      return new NextResponse(null, {
+        status: 304,
+        headers: {
+          'Cache-Control': 'private, max-age=120, stale-while-revalidate=60',
+          'ETag': etag
+        }
+      });
+    }
+
+    // -----------------------------
+    // 3️⃣ Send response with safe headers
+    // -----------------------------
     const response = NextResponse.json({
       success: true,
       data: {
         brandVisits: brandVisitCounts,
-        totalVisits: totalVisits,
-        tasks: {
-          pending: pendingTasks,
-          completed: completedTasks,
-          total: pendingTasks + completedTasks
-        },
-        period: period
+        totalVisits,
+        tasks: { pending: pendingTasks, completed: completedTasks, total: pendingTasks + completedTasks },
+        period
       }
     });
 
-    // Add caching headers - cache for 1 minute
-    response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
-    response.headers.set('CDN-Cache-Control', 'public, max-age=60');
-    response.headers.set('Vary', 'User-Agent');
-    
-    // Add ETag for cache validation (use consistent etag from earlier)
+    // Browser-only caching, safe for multi-user
+    response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=60');
     response.headers.set('ETag', etag);
-    
+
     return response;
 
   } catch (error) {
     console.error('Fetch dashboard stats error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch dashboard statistics' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Failed to fetch dashboard statistics' }, { status: 500 });
   }
 }

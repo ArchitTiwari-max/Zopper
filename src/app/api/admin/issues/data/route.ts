@@ -30,6 +30,27 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const issueId = searchParams.get('issueId');
 
+    // Generate ETag for cache validation (2-minute intervals)
+    const currentTime = Math.floor(Date.now() / (2 * 60 * 1000)) * (2 * 60 * 1000);
+    const cacheKey = JSON.stringify({ 
+      dateFilter, storeName, storeId, executiveId, executiveName, status, issueId 
+    });
+    const crypto = await import('crypto');
+    const paramsHash = crypto.createHash('md5').update(cacheKey).digest('hex');
+    const etag = `"${currentTime}-admin-issues-${paramsHash}"`;
+    
+    // Check if client has cached version (conditional request)
+    const ifNoneMatch = request.headers.get('if-none-match');
+    if (ifNoneMatch === etag) {
+      return new NextResponse(null, { 
+        status: 304,
+        headers: {
+          'Cache-Control': 'private, max-age=120, stale-while-revalidate=60',
+          'ETag': etag
+        }
+      });
+    }
+
     console.log('Issues Data API - Filter parameters:', {
       dateFilter, storeName, storeId, executiveId, executiveName, status, issueId
     });
@@ -202,10 +223,17 @@ export async function GET(request: NextRequest) {
 
     console.log('Issues Data API - Final processed issues:', processedIssues.length);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       issues: processedIssues,
       total: processedIssues.length
     });
+    
+    // Add secure caching headers
+    response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=60');
+    response.headers.set('Vary', 'Authorization');
+    response.headers.set('ETag', etag);
+    
+    return response;
 
   } catch (error) {
     console.error('Issues Data API Error:', error);

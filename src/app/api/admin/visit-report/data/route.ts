@@ -32,6 +32,28 @@ export async function GET(request: NextRequest) {
     const visitStatus = searchParams.get('visitStatus');
     const issueStatus = searchParams.get('issueStatus');
 
+    // Generate ETag for cache validation (2-minute intervals)
+    const currentTime = Math.floor(Date.now() / (2 * 60 * 1000)) * (2 * 60 * 1000);
+    const cacheKey = JSON.stringify({ 
+      dateFilter, partnerBrand, city, storeName, storeId, 
+      executiveName, executiveId, visitStatus, issueStatus 
+    });
+    const crypto = await import('crypto');
+    const paramsHash = crypto.createHash('md5').update(cacheKey).digest('hex');
+    const etag = `"${currentTime}-admin-visit-reports-${paramsHash}"`;
+    
+    // Check if client has cached version (conditional request)
+    const ifNoneMatch = request.headers.get('if-none-match');
+    if (ifNoneMatch === etag) {
+      return new NextResponse(null, { 
+        status: 304,
+        headers: {
+          'Cache-Control': 'private, max-age=120, stale-while-revalidate=60',
+          'ETag': etag
+        }
+      });
+    }
+
     // Calculate date range based on filter
     const now = new Date();
     let startDate: Date;
@@ -280,10 +302,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       visits: processedVisits,
       total: processedVisits.length
     });
+    
+    // Add secure caching headers
+    response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=60');
+    response.headers.set('Vary', 'Authorization');
+    response.headers.set('ETag', etag);
+    
+    return response;
 
   } catch (error) {
     console.error('Visit Report Data API Error:', error);
