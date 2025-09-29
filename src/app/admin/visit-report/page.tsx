@@ -772,7 +772,7 @@ const VisitReportPage: React.FC = () => {
   };
 
   // Mark visit as reviewed
-  const markAsReviewed = async (visitId: string, adminComment?: string) => {
+  const markAsReviewed = async (visitId: string, requiresFollowUp: boolean = false, adminComment?: string) => {
     setMarkingReviewedId(visitId);
     try {
       const response = await fetch(`/api/admin/visit-report/${visitId}/mark-reviewed`, {
@@ -781,7 +781,10 @@ const VisitReportPage: React.FC = () => {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ adminComment })
+        body: JSON.stringify({ 
+          requiresFollowUp, 
+          adminComment 
+        })
       });
 
       if (!response.ok) {
@@ -1127,7 +1130,7 @@ const VisitReportPage: React.FC = () => {
                     {visit.visitStatus === 'PENDING_REVIEW' && (
                       <button 
                         className="admin-visit-report-mark-reviewed-btn"
-                        onClick={() => markAsReviewed(visit.id)}
+                        onClick={() => markAsReviewed(visit.id, false)}
                         disabled={markingReviewedId === visit.id}
                         style={{
                           opacity: markingReviewedId === visit.id ? 0.6 : 1,
@@ -1161,6 +1164,8 @@ const VisitReportPage: React.FC = () => {
         isOpen={showModal}
         onClose={closeVisitModal}
         visit={selectedVisit}
+        onMarkReviewed={markAsReviewed}
+        isMarkingReviewed={markingReviewedId === selectedVisit?.id}
       />
     </div>
   );

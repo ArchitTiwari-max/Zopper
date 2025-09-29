@@ -27,13 +27,35 @@ interface VisitDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   visit: AdminVisitData | null;
+  onMarkReviewed?: (visitId: string, requiresFollowUp?: boolean, adminComment?: string) => void;
+  isMarkingReviewed?: boolean;
 }
 
 const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
   isOpen,
   onClose,
-  visit
+  visit,
+  onMarkReviewed,
+  isMarkingReviewed = false
 }) => {
+  const [showFollowUpForm, setShowFollowUpForm] = React.useState(false);
+  const [adminComment, setAdminComment] = React.useState('');
+
+  const handleMarkReviewWithFollow = () => {
+    setShowFollowUpForm(true);
+    setAdminComment('Follow-up required for visit remarks'); // Default comment
+  };
+
+  const handleSendFollowUp = () => {
+    if (onMarkReviewed) {
+      onMarkReviewed(visit.id.toString(), true, adminComment.trim());
+    }
+  };
+
+  const handleCancelFollowUp = () => {
+    setShowFollowUpForm(false);
+    setAdminComment('');
+  };
   const getStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
       case 'PENDING_REVIEW':
@@ -89,6 +111,10 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
         document.removeEventListener('keydown', handleKeyDown);
         document.body.style.overflow = 'unset';
       };
+    } else {
+      // Reset form state when modal closes
+      setShowFollowUpForm(false);
+      setAdminComment('');
     }
   }, [isOpen, onClose]);
 
@@ -290,6 +316,68 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
               </div>
             )}
           </div>
+
+          {/* Action Buttons - only show if visit is pending review */}
+          {visit.visitStatus === 'PENDING_REVIEW' && onMarkReviewed && (
+            <div className="admin-visit-modal-actions">
+              {!showFollowUpForm ? (
+                // Initial buttons
+                <>
+                  <button 
+                    className="admin-visit-modal-mark-reviewed-btn"
+                    onClick={() => onMarkReviewed(visit.id.toString(), false)}
+                    disabled={isMarkingReviewed}
+                  >
+                    {isMarkingReviewed ? 'Marking...' : 'Mark Reviewed'}
+                  </button>
+                  {/* Only show follow-up button if visit has remarks */}
+                  {visit.feedback && visit.feedback.trim() !== '' && visit.feedback !== 'No feedback provided' && (
+                    <button 
+                      className="admin-visit-modal-mark-reviewed-follow-btn"
+                      onClick={handleMarkReviewWithFollow}
+                      disabled={isMarkingReviewed}
+                    >
+                      Mark Review with Follow
+                    </button>
+                  )}
+                </>
+              ) : (
+                // Follow-up form
+                <>
+                  <div className="admin-visit-modal-follow-up-form">
+                    <label htmlFor="admin-comment" className="admin-visit-modal-comment-label">
+                      Admin Comment:
+                    </label>
+                    <textarea
+                      id="admin-comment"
+                      className="admin-visit-modal-comment-textarea"
+                      value={adminComment}
+                      onChange={(e) => setAdminComment(e.target.value)}
+                      placeholder="Enter your comment for the follow-up issue..."
+                      rows={3}
+                      disabled={isMarkingReviewed}
+                    />
+                  </div>
+                  <div className="admin-visit-modal-follow-up-buttons">
+                    <button 
+                      className="admin-visit-modal-cancel-btn"
+                      onClick={handleCancelFollowUp}
+                      disabled={isMarkingReviewed}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      className="admin-visit-modal-send-btn"
+                      onClick={handleSendFollowUp}
+                      disabled={isMarkingReviewed || !adminComment.trim()}
+                    >
+                      {isMarkingReviewed ? 'Sending...' : 'Send'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

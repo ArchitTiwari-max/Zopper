@@ -25,9 +25,10 @@ export async function PATCH(
 
     const visitId = params.id;
 
-    // Parse request body for admin comment (optional)
+    // Parse request body for admin comment and follow-up flag
     const body = await request.json().catch(() => ({}));
     const adminComment = body.adminComment || null;
+    const requiresFollowUp = body.requiresFollowUp || false;
 
     // Find admin profile for reviewer tracking
     const adminProfile = await prisma.admin.findUnique({
@@ -48,6 +49,8 @@ export async function PATCH(
       select: {
         id: true,
         status: true,
+        remarks: true,
+        executiveId: true,
         store: {
           select: {
             storeName: true
@@ -95,10 +98,52 @@ export async function PATCH(
       }
     });
 
+    let createdIssue = null;
+    let createdAssignment = null;
+    let responseMessage = `Visit for ${existingVisit.store.storeName} by ${existingVisit.executive.name} has been marked as reviewed by ${adminProfile.name}`;
+
+    // If follow-up is required, create an issue from visit remarks
+    if (requiresFollowUp && existingVisit.remarks && existingVisit.remarks.trim() !== '') {
+      try {
+        // Generate unique issue ID
+        const issueId = new Date().getTime().toString().slice(-7);
+        
+        // Create issue from visit remarks
+        createdIssue = await prisma.issue.create({
+          data: {
+            id: issueId,
+            details: existingVisit.remarks,
+            createdBy: 'ADMIN', // Admin created this issue during review
+            status: 'Assigned', // Directly assign to executive
+            visitId: visitId
+          }
+        });
+
+        // Create assignment to the same executive who created the visit
+        createdAssignment = await prisma.assigned.create({
+          data: {
+            adminComment: adminComment || 'Follow-up required for visit remarks',
+            status: 'Assigned',
+            issueId: createdIssue.id,
+            executiveId: existingVisit.executiveId
+          }
+        });
+
+        responseMessage += ` and an issue (#${createdIssue.id}) has been created and assigned to the executive for follow-up`;
+        console.log(`Created issue ${createdIssue.id} and assigned to executive ${existingVisit.executiveId}`);
+      } catch (issueError) {
+        console.error('Error creating issue during follow-up:', issueError);
+        // Don't fail the entire request if issue creation fails
+        responseMessage += ` (Note: Follow-up issue creation failed)`;
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      message: `Visit for ${existingVisit.store.storeName} by ${existingVisit.executive.name} has been marked as reviewed by ${adminProfile.name}`,
-      visit: updatedVisit
+      message: responseMessage,
+      visit: updatedVisit,
+      issue: createdIssue,
+      assignment: createdAssignment
     });
 
   } catch (error) {

@@ -216,21 +216,21 @@ export async function POST(request: NextRequest) {
     const istOffset = 5.5 * 60 * 60 * 1000; // IST offset
     const istToday = new Date(today.getTime() + istOffset);
     const todayStr = istToday.toISOString().split('T')[0];
-    const thirtyDaysAgo = new Date(istToday.getTime() - (30 * 24 * 60 * 60 * 1000));
-    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+    const ninetyDaysAgo = new Date(istToday.getTime() - (90 * 24 * 60 * 60 * 1000));
+    const ninetyDaysAgoStr = ninetyDaysAgo.toISOString().split('T')[0];
     
     if (visitDate > todayStr) {
       return NextResponse.json({
         error: 'Visit date cannot be in the future',
-        message: 'Please select today or a past date within the last 30 days',
+        message: 'Please select today or a past date within the last 90 days',
         code: 'INVALID_VISIT_DATE_FUTURE'
       }, { status: 400 });
     }
     
-    if (visitDate < thirtyDaysAgoStr) {
+    if (visitDate < ninetyDaysAgoStr) {
       return NextResponse.json({
         error: 'Visit date is too old',
-        message: 'Please select a date within the last 30 days',
+        message: 'Please select a date within the last 90 days',
         code: 'INVALID_VISIT_DATE_TOO_OLD'
       }, { status: 400 });
     }

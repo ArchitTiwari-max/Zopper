@@ -438,3 +438,151 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Action buttons for the modal */
+.admin-visit-modal-actions {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.admin-visit-modal-mark-reviewed-btn,
+.admin-visit-modal-mark-reviewed-follow-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  background: #10b981;
+  color: white;
+}
+
+.admin-visit-modal-mark-reviewed-btn:hover,
+.admin-visit-modal-mark-reviewed-follow-btn:hover {
+  background: #059669;
+}
+
+.admin-visit-modal-mark-reviewed-btn:disabled,
+.admin-visit-modal-mark-reviewed-follow-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Follow-up form styles */
+.admin-visit-modal-follow-up-form {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.admin-visit-modal-comment-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.admin-visit-modal-comment-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #374151;
+  background: white;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.admin-visit-modal-comment-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.admin-visit-modal-comment-textarea:disabled {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.admin-visit-modal-follow-up-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+/* Compact buttons matching original Mark Reviewed button size */
+.admin-visit-modal-cancel-btn,
+.admin-visit-modal-send-btn {
+  padding: 0.375rem 0.875rem;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  min-width: fit-content;
+  height: fit-content;
+}
+
+.admin-visit-modal-cancel-btn {
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+}
+
+.admin-visit-modal-cancel-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.admin-visit-modal-send-btn {
+  border: none;
+  background: #10b981;
+  color: white;
+}
+
+.admin-visit-modal-send-btn:hover {
+  background: #059669;
+}
+
+.admin-visit-modal-send-btn:disabled,
+.admin-visit-modal-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .admin-visit-modal-actions {
+    flex-direction: column;
+  }
+  
+  .admin-visit-modal-mark-reviewed-btn,
+  .admin-visit-modal-mark-reviewed-follow-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .admin-visit-modal-follow-up-buttons {
+    flex-direction: column;
+  }
+  
+  .admin-visit-modal-cancel-btn,
+  .admin-visit-modal-send-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

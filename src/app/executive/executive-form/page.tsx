@@ -235,16 +235,16 @@ const ExecutiveFormContent: React.FC = () => {
     const istOffset = 5.5 * 60 * 60 * 1000;
     const istToday = new Date(today.getTime() + istOffset);
     const todayStr = istToday.toISOString().split('T')[0];
-    const thirtyDaysAgo = new Date(istToday.getTime() - (30 * 24 * 60 * 60 * 1000));
-    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+    const ninetyDaysAgo = new Date(istToday.getTime() - (90 * 24 * 60 * 60 * 1000));
+    const ninetyDaysAgoStr = ninetyDaysAgo.toISOString().split('T')[0];
     
     if (formData.visitDate > todayStr) {
       alert('Visit date cannot be in the future. Please select today or a past date.');
       return;
     }
     
-    if (formData.visitDate < thirtyDaysAgoStr) {
-      alert('Visit date cannot be more than 30 days ago. Please select a more recent date.');
+    if (formData.visitDate < ninetyDaysAgoStr) {
+      alert('Visit date cannot be more than 90 days ago. Please select a more recent date.');
       return;
     }
 
@@ -489,12 +489,12 @@ const ExecutiveFormContent: React.FC = () => {
                 return istDate.toISOString().split('T')[0];
               })()}
               min={(() => {
-                // Get date 30 days ago in IST for min validation
+                // Get date 90 days ago in IST for min validation
                 const today = new Date();
                 const istOffset = 5.5 * 60 * 60 * 1000;
                 const istDate = new Date(today.getTime() + istOffset);
-                const thirtyDaysAgo = new Date(istDate.getTime() - (30 * 24 * 60 * 60 * 1000));
-                return thirtyDaysAgo.toISOString().split('T')[0];
+                const ninetyDaysAgo = new Date(istDate.getTime() - (90 * 24 * 60 * 60 * 1000));
+                return ninetyDaysAgo.toISOString().split('T')[0];
               })()}
             />
           </div>
