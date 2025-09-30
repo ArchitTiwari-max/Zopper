@@ -29,29 +29,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if cache busting is requested (timestamp parameter)
-    const url = new URL(request.url);
-    const bustCache = url.searchParams.has('t');
-    
-    // Generate ETag for cache validation (1-minute intervals) - skip if cache busting
-    let etag = '';
-    if (!bustCache) {
-      const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
-      etag = `"${currentTime}-${executive.id}-tasks"`;
-      
-      // Check if client has cached version (conditional request)
-      const ifNoneMatch = request.headers.get('if-none-match');
-      if (ifNoneMatch === etag) {
-        // Return 304 Not Modified if ETag matches
-        return new NextResponse(null, { 
-          status: 304,
-          headers: {
-            'Cache-Control': 'private, max-age=60',
-            'ETag': etag
-          }
-        });
-      }
-    }
+    // No caching - always return fresh data for immediate updates
 
     // Fetch assigned tasks for this executive with optimized query (select only needed fields)
     const assignedTasks = await prisma.assigned.findMany({
@@ -103,16 +81,10 @@ export async function GET(request: NextRequest) {
         }
       });
       
-      // Add caching headers conditionally
-      if (bustCache) {
-        response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-        response.headers.set('Pragma', 'no-cache');
-        response.headers.set('Expires', '0');
-      } else {
-        response.headers.set('Cache-Control', 'private, max-age=60');
-        response.headers.set('Vary', 'Authorization');
-        response.headers.set('ETag', etag);
-      }
+      // No caching for immediate updates
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
       
       return response;
     }
@@ -181,7 +153,7 @@ export async function GET(request: NextRequest) {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
-    // Create response with cache headers
+    // Create response with no caching for immediate updates
     const response = NextResponse.json({
       success: true,
       data: {
@@ -189,18 +161,11 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Add caching headers conditionally
-    if (bustCache) {
-      // No caching for cache-busted requests
-      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-      response.headers.set('Pragma', 'no-cache');
-      response.headers.set('Expires', '0');
-    } else {
-      // Normal caching for regular requests
-      response.headers.set('Cache-Control', 'private, max-age=60');
-      response.headers.set('Vary', 'Authorization');
-      response.headers.set('ETag', etag);
-    }
+    // No caching for immediate updates
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    response.headers.set('X-Content-Type-Options', 'nosniff'); // Security
     
     return response;
 

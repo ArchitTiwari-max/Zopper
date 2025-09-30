@@ -137,6 +137,95 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<TokenP
 }
 
 /**
+ * Clears all user-specific cache and storage data (client-side)
+ * Call this function on logout to prevent data leakage between users
+ */
+export function clearAllCache(): void {
+  console.log('🧹 Starting cache clearing process...');
+  
+  try {
+    // Clear localStorage
+    if (typeof Storage !== 'undefined' && localStorage) {
+      const localStorageCount = localStorage.length;
+      localStorage.clear();
+      console.log(`✅ LocalStorage cleared (${localStorageCount} items)`);
+    } else {
+      console.log('⚠️ LocalStorage not available');
+    }
+    
+    // Clear sessionStorage  
+    if (typeof Storage !== 'undefined' && sessionStorage) {
+      const sessionStorageCount = sessionStorage.length;
+      sessionStorage.clear();
+      console.log(`✅ SessionStorage cleared (${sessionStorageCount} items)`);
+    } else {
+      console.log('⚠️ SessionStorage not available');
+    }
+    
+    // Clear all cookies manually (in addition to server-side clearing)
+    if (typeof document !== 'undefined') {
+      const cookiesBefore = document.cookie;
+      console.log('🍪 Cookies before clearing:', cookiesBefore);
+      
+      document.cookie.split(';').forEach(cookie => {
+        const eqPos = cookie.indexOf('=');
+        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        if (name) {
+          // Clear cookie for current path
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+          // Clear cookie for domain
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
+          console.log(`🗑️ Cleared cookie: ${name}`);
+        }
+      });
+      
+      const cookiesAfter = document.cookie;
+      console.log('🍪 Cookies after clearing:', cookiesAfter);
+    } else {
+      console.log('⚠️ Document not available for cookie clearing');
+    }
+    
+    // Clear Service Worker caches
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        console.log(`🗄️ Found ${names.length} cache(s) to clear:`, names);
+        names.forEach(name => {
+          caches.delete(name).then(success => {
+            console.log(`${success ? '✅' : '❌'} Cache '${name}' deletion: ${success}`);
+          });
+        });
+      }).catch(error => {
+        console.warn('❌ Could not clear Service Worker caches:', error);
+      });
+    } else {
+      console.log('⚠️ Service Worker caches not available');
+    }
+    
+    // Clear any React/Next.js specific cached data
+    if (typeof window !== 'undefined') {
+      // Clear Next.js router cache
+      if ((window as any).__NEXT_DATA__) {
+        delete (window as any).__NEXT_DATA__;
+        console.log('✅ Cleared __NEXT_DATA__');
+      }
+      if ((window as any).__NEXT_LOADED_PAGES__) {
+        delete (window as any).__NEXT_LOADED_PAGES__;
+        console.log('✅ Cleared __NEXT_LOADED_PAGES__');
+      }
+      // Clear any global app state
+      if ((window as any).__APP_STATE__) {
+        delete (window as any).__APP_STATE__;
+        console.log('✅ Cleared __APP_STATE__');
+      }
+    }
+    
+    console.log('✅ All user cache cleared successfully');
+  } catch (error) {
+    console.error('❌ Error clearing user cache:', error);
+  }
+}
+
+/**
  * Stores user information in cookie as JSON string
  */
 export function storeUserInfo(response: NextResponse, userPayload: any): NextResponse {

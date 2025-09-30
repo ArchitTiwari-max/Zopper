@@ -31,11 +31,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
-    // ETag for cache validation (optional)
+    // ETag for cache validation (includes user ID for security)
     const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
     const apiVersion = 'v2-data-only';
-    const etag = `"${currentTime}-${executive.id}-${apiVersion}"`;
-
+    const etag = `"${currentTime}-${executive.id}-${user.userId}-${apiVersion}"`;
+    console.log('executive.id:', executive.id);
     const ifNoneMatch = request.headers.get('if-none-match');
     if (ifNoneMatch === etag) {
       return new NextResponse(null, {
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
     response.headers.set('ETag', etag); // Conditional requests
     response.headers.set('X-Content-Type-Options', 'nosniff'); // Security
     response.headers.set('X-Cache-Status', 'MISS'); // Debug info
-    // Removed Vary: User-Agent because not needed for user-specific data
+    response.headers.set('Vary', 'Cookie'); // Cache varies by cookies (user session)
 
     return response;
 

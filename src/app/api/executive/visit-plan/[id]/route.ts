@@ -1,32 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateAndRefreshToken } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { Role } from '@prisma/client';
 
 // GET method to retrieve a specific visit plan for editing
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authResult = await validateAndRefreshToken(request);
-    if (!authResult.isAuthenticated || !authResult.user) {
+    // Get authenticated user from token
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Ensure the user is an executive
-    if (authResult.user!.role !== 'EXECUTIVE') {
-      return NextResponse.json({ error: 'Only executives can access visit plans' }, { status: 403 });
+    // Check if user is an executive
+    if (user.role !== 'EXECUTIVE') {
+      return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
     }
 
-    const planId = params.id;
+    // Await params in Next.js 15+
+    const { id: planId } = await params;
     if (!planId) {
       return NextResponse.json({ error: 'Plan ID is required' }, { status: 400 });
     }
 
     // Get executive details
     const executive = await prisma.executive.findUnique({
-      where: { userId: authResult.user!.userId },
+      where: { userId: user.userId },
       select: { id: true, name: true }
     });
 
@@ -118,20 +121,23 @@ export async function GET(
 // PUT method to update an executive's own visit plan
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authResult = await validateAndRefreshToken(request);
-    if (!authResult.isAuthenticated || !authResult.user) {
+    // Get authenticated user from token
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Ensure the user is an executive
-    if (authResult.user!.role !== 'EXECUTIVE') {
-      return NextResponse.json({ error: 'Only executives can edit visit plans' }, { status: 403 });
+    // Check if user is an executive
+    if (user.role !== 'EXECUTIVE') {
+      return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
     }
 
-    const planId = params.id;
+    // Await params in Next.js 15+
+    const { id: planId } = await params;
     if (!planId) {
       return NextResponse.json({ error: 'Plan ID is required' }, { status: 400 });
     }
@@ -145,7 +151,7 @@ export async function PUT(
 
     // Get executive details
     const executive = await prisma.executive.findUnique({
-      where: { userId: authResult.user!.userId },
+      where: { userId: user.userId },
       select: { id: true, name: true }
     });
 
@@ -257,7 +263,7 @@ export async function PUT(
           priority: 'MEDIUM',
           recipientId: admin.id,
           recipientRole: Role.ADMIN,
-          senderId: authResult.user!.userId,
+          senderId: user.userId,
           senderRole: Role.EXECUTIVE,
           actionUrl: '/admin/visit-plans',
           metadata: {
@@ -277,7 +283,8 @@ export async function PUT(
       await Promise.allSettled(notificationPromises);
     }
 
-    return NextResponse.json({
+    // Create response with cache invalidation headers
+    const response = NextResponse.json({
       success: true,
       message: `Visit plan updated successfully for ${stores.length} ${stores.length === 1 ? 'store' : 'stores'}`,
       data: {
@@ -285,6 +292,17 @@ export async function PUT(
         updatedStores: stores
       }
     });
+
+    // ===== CACHE INVALIDATION HEADERS =====
+    // Tell browser to not cache this response
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    // Bust related caches by including a timestamp
+    response.headers.set('X-Cache-Bust', Date.now().toString());
+    response.headers.set('X-Visit-Plan-Updated', updatedPlan.id);
+
+    return response;
 
   } catch (error) {
     console.error('Error updating visit plan:', error);

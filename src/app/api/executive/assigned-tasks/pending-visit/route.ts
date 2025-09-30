@@ -1,50 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateAndRefreshToken } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { Role } from '@prisma/client';
 
 // GET method for executive to retrieve their visit plans
 export async function GET(request: NextRequest) {
   try {
-    const authResult = await validateAndRefreshToken(request);
-    if (!authResult.isAuthenticated || !authResult.user) {
+    // Get authenticated user from token
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Ensure the user is an executive
-    if (authResult.user!.role !== 'EXECUTIVE') {
-      return NextResponse.json({ error: 'Only executives can view their visit plans' }, { status: 403 });
+    // Check if user is an executive
+    if (user.role !== 'EXECUTIVE') {
+      return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
     }
 
-    // Fetch executive and visit plans in parallel to avoid N+1
-    const [executive, visitPlans] = await Promise.all([
-      prisma.executive.findUnique({
-        where: { userId: authResult.user!.userId },
-        select: { id: true, name: true } // Only select what we need
-      }),
-      
-      prisma.visitPlan.findMany({
-        where: {
-          executive: { userId: authResult.user!.userId } // Join through executive relationship
-        },
-        select: {
-          id: true,
-          storesSnapshot: true,
-          plannedVisitDate: true,
-          submittedAt: true,
-          createdByRole: true,
-          adminComment: true,
-          status: true
-        },
-        orderBy: {
-          plannedVisitDate: 'asc' // Upcoming visits first
-        }
-      })
-    ]);
+    // Get executive data first
+    const executive = await prisma.executive.findUnique({
+      where: { userId: user.userId },
+      include: {
+        user: true
+      }
+    });
 
     if (!executive) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
+
+    // Fetch visit plans with updatedAt for cache invalidation
+    const visitPlans = await prisma.visitPlan.findMany({
+      where: {
+        executive: { userId: user.userId } // Join through executive relationship
+      },
+      select: {
+        id: true,
+        storesSnapshot: true,
+        plannedVisitDate: true,
+        submittedAt: true,
+        createdByRole: true,
+        adminComment: true,
+        status: true
+      },
+      orderBy: {
+        plannedVisitDate: 'asc' // Upcoming visits first
+      }
+    });
 
     // Flatten the data to show each store as a separate row
     const flattenedStores: any[] = [];
@@ -70,12 +73,21 @@ export async function GET(request: NextRequest) {
       });
     });
 
-    return NextResponse.json({
+    // Create response with no caching for immediate updates
+    const response = NextResponse.json({
       success: true,
       data: {
         visitPlans: flattenedStores
       }
     });
+
+    // ===== NO CACHE HEADERS FOR IMMEDIATE UPDATES =====
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    response.headers.set('X-Content-Type-Options', 'nosniff'); // Security
+
+    return response;
 
   } catch (error) {
     console.error('Error fetching executive visit plans:', error);
@@ -89,14 +101,16 @@ export async function GET(request: NextRequest) {
 // PUT method to mark individual store as completed
 export async function PUT(request: NextRequest) {
   try {
-    const authResult = await validateAndRefreshToken(request);
-    if (!authResult.isAuthenticated || !authResult.user) {
+    // Get authenticated user from token
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Ensure the user is an executive
-    if (authResult.user!.role !== 'EXECUTIVE') {
-      return NextResponse.json({ error: 'Only executives can update their visit plans' }, { status: 403 });
+    // Check if user is an executive
+    if (user.role !== 'EXECUTIVE') {
+      return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -114,7 +128,7 @@ export async function PUT(request: NextRequest) {
     const visitPlan = await prisma.visitPlan.findFirst({
       where: {
         id: planId,
-        executive: { userId: authResult.user!.userId } // Join through executive relationship
+        executive: { userId: user.userId } // Join through executive relationship
       },
       include: {
         executive: {
@@ -157,7 +171,8 @@ export async function PUT(request: NextRequest) {
       data: updateData
     });
 
-    return NextResponse.json({
+    // Create response with cache invalidation
+    const response = NextResponse.json({
       success: true,
       message: allStoresCompleted ? 'All stores completed! Visit plan marked as completed.' : 'Store marked as completed',
       data: {
@@ -166,6 +181,16 @@ export async function PUT(request: NextRequest) {
         allStoresCompleted: allStoresCompleted
       }
     });
+
+    // ===== CACHE INVALIDATION HEADERS =====
+    // Tell browser to not cache this response
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    // Bust related caches by including a timestamp
+    response.headers.set('X-Cache-Bust', Date.now().toString());
+
+    return response;
 
   } catch (error) {
     console.error('Error updating visit plan:', error);

@@ -115,8 +115,12 @@ const AdminSettingsPage: React.FC = () => {
       });
 
       if (response.ok) {
-        // Redirect to login page
-        window.location.href = '/';
+        // Clear all cache and user data
+        const { clearAllCache } = await import('@/lib/auth');
+        clearAllCache();
+        
+        // Force hard reload to login page (bypasses all caches)
+        window.location.replace('/?_=' + Date.now());
       } else {
         throw new Error('Logout failed');
       }

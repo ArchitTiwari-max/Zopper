@@ -96,13 +96,10 @@ export async function GET(request: NextRequest) {
     const completedTasks = taskStats.find(stat => stat.status === 'Completed')?._count.id || 0;
     const totalVisits = visits.length;
 
-    // -----------------------------
-    // 1️⃣ Generate per-user data hash for ETag
-    // -----------------------------
-    const dataString = JSON.stringify({ brandVisitCounts, pendingTasks, completedTasks, totalVisits, period });
-    const crypto = await import('crypto'); // Node.js crypto
-    const dataHash = crypto.createHash('md5').update(dataString).digest('hex');
-    const etag = `"${executive.id}-${dataHash}"`;
+    // ETag for cache validation (same pattern as store/data)
+    const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
+    const apiVersion = 'v1-dashboard-stats';
+    const etag = `"${currentTime}-${executive.id}-${user.userId}-${apiVersion}"`;
 
     // -----------------------------
     // 2️⃣ Conditional request check
@@ -131,9 +128,10 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Browser-only caching, safe for multi-user
+    // Browser-only caching with user isolation
     response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=60');
     response.headers.set('ETag', etag);
+    response.headers.set('Vary', 'Cookie'); // Cache varies by cookies (user session)
 
     return response;
 

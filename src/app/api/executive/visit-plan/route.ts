@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateAndRefreshToken } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { Role } from '@prisma/client';
 
 export async function POST(request: NextRequest) {
   try {
-    const authResult = await validateAndRefreshToken(request);
-    if (!authResult.isAuthenticated || !authResult.user) {
+    // Get authenticated user from token
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Ensure the user is an executive
-    if (authResult.user!.role !== 'EXECUTIVE') {
-      return NextResponse.json({ error: 'Only executives can submit visit plans' }, { status: 403 });
+    // Check if user is an executive
+    if (user.role !== 'EXECUTIVE') {
+      return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     // Get executive details
     const executive = await prisma.executive.findUnique({
-      where: { userId: authResult.user!.userId },
+      where: { userId: user.userId },
       include: { user: true }
     });
 
@@ -133,7 +135,7 @@ export async function POST(request: NextRequest) {
         priority: 'MEDIUM',
         recipientId: admin.id,
         recipientRole: Role.ADMIN,
-        senderId: authResult.user!.userId,
+        senderId: user.userId,
         senderRole: Role.EXECUTIVE,
         actionUrl: '/admin/visit-plans',
         metadata: {

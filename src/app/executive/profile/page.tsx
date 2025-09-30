@@ -99,22 +99,33 @@ const Settings: React.FC = () => {
   };
 
   const handleLogout = async () => {
+    console.log('🚪 Starting logout process...');
     setIsLoggingOut(true);
     
     try {
+      console.log('📡 Making logout API call...');
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include',
       });
 
       if (response.ok) {
-        // Redirect to login page
-        window.location.href = '/';
+        console.log('✅ Logout API call successful');
+        
+        // Clear all cache and user data
+        console.log('🧹 Importing and calling clearAllCache...');
+        const { clearAllCache } = await import('@/lib/auth');
+        clearAllCache();
+        
+        console.log('🔄 Forcing hard reload to login page...');
+        // Force hard reload to login page (bypasses all caches)
+        window.location.replace('/?_=' + Date.now());
       } else {
+        console.error('❌ Logout API call failed:', response.status, response.statusText);
         throw new Error('Logout failed');
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('❌ Logout error:', error);
       alert('Failed to logout. Please try again.');
     } finally {
       setIsLoggingOut(false);

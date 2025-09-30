@@ -26,10 +26,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
-    // Generate ETag for cache validation (1-minute intervals)
+    // ETag for cache validation (same pattern as store/data)
     const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
-    const apiVersion = 'v2'; // Updated version to include partnerBrand field
-    const etag = `"${currentTime}-${executive.id}-visits-${apiVersion}"`;
+    const apiVersion = 'v2-visits-data';
+    const etag = `"${currentTime}-${executive.id}-${user.userId}-${apiVersion}"`;
     
     // Check if client has cached version (conditional request)
     const ifNoneMatch = request.headers.get('if-none-match');
@@ -229,7 +229,7 @@ export async function GET(request: NextRequest) {
 
     // Add caching headers - PRIVATE cache to prevent data leakage between executives
     response.headers.set('Cache-Control', 'private, max-age=60');
-    response.headers.set('Vary', 'Authorization, User-Agent'); // Vary on auth token for user-specific caching
+    response.headers.set('Vary', 'Cookie'); // Cache varies by cookies (user session)
     response.headers.set('ETag', etag);
     
     return response;

@@ -3,9 +3,15 @@ import { clearAuthCookies } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    // Create response
+    // Create response with cache-busting headers
     const response = NextResponse.json({
       message: 'Logout successful'
+    }, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
 
     // Clear all authentication cookies including userInfo

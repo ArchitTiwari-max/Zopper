@@ -68,7 +68,8 @@ export async function GET(request: NextRequest) {
 
     // Generate ETag for cache validation (1-minute intervals)
     const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
-    const etag = `"${currentTime}-${executive.id}-counts"`;
+    const apiVersion = 'v2-data-only';
+    const etag = `"${currentTime}-${executive.id}-${user.userId}-${apiVersion}"`; // CRITICAL: Include executive ID
     
     // Check if client has cached version (conditional request)
     const ifNoneMatch = request.headers.get('if-none-match');
@@ -97,7 +98,7 @@ export async function GET(request: NextRequest) {
 
     // Add caching headers - PRIVATE cache to prevent data leakage between executives
     response.headers.set('Cache-Control', 'private, max-age=60');
-    response.headers.set('Vary', 'Authorization');
+    response.headers.set('Vary', 'Cookie'); // Cache varies by cookies (user session)
     response.headers.set('ETag', etag);
     
     return response;

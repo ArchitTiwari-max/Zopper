@@ -12,7 +12,6 @@ interface StoreData {
   partnerBrands: string[];
   visited: string;
   lastVisitDate: string | null;
-  totalRevenue?: number; // current year total revenue
 }
 
 const Store: React.FC = () => {
@@ -88,36 +87,7 @@ const Store: React.FC = () => {
       if (storeResult.success && filterResult.success) {
         const stores: StoreData[] = storeResult.data.stores;
         setFilterOptions(filterResult.data.filterOptions);
-
-        // Fetch sales summary for all stores (current year total revenue)
-        if (stores.length > 0) {
-          const ids = stores.map((s: StoreData) => s.id).join(',');
-          try {
-            const salesRes = await fetch(`/api/executive/sales/summary?storeIds=${encodeURIComponent(ids)}`, {
-              method: 'GET',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-            });
-            if (salesRes.ok) {
-              const salesJson = await salesRes.json();
-              if (salesJson.success && salesJson.totals) {
-                const merged = stores.map(s => ({
-                  ...s,
-                  totalRevenue: salesJson.totals[s.id]?.totalRevenue ?? undefined,
-                }));
-                setStoreData(merged);
-              } else {
-                setStoreData(stores);
-              }
-            } else {
-              setStoreData(stores);
-            }
-          } catch {
-            setStoreData(stores);
-          }
-        } else {
-          setStoreData(stores);
-        }
+        setStoreData(stores);
       } else {
         throw new Error(storeResult.error || filterResult.error || 'Failed to fetch data');
       }
