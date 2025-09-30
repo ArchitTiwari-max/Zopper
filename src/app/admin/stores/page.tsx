@@ -40,6 +40,10 @@ const AdminStoresPage: React.FC = () => {
     showOnlyUnreviewedVisits: false
   });
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const pageSize = 20;
+
   // Local search text for store name (partial match)
   const [storeSearchText, setStoreSearchText] = useState<string>('');
 
@@ -233,6 +237,8 @@ const AdminStoresPage: React.FC = () => {
     newUrl.searchParams.delete('executiveName');
     newUrl.searchParams.delete('showUnresolvedIssues');
     newUrl.searchParams.delete('showUnreviewedVisits');
+    // Always reset page to 1 when filters change
+    newUrl.searchParams.delete('page');
     
     // Add current filter values to URL using IDs (only if not default)
     
@@ -267,6 +273,9 @@ const AdminStoresPage: React.FC = () => {
     if (currentFilters.showOnlyUnreviewedVisits) {
       newUrl.searchParams.set('showUnreviewedVisits', 'true');
     }
+
+    // Set page=1 on any filter change
+    newUrl.searchParams.set('page', '1');
     
     // Update URL without reloading page
     window.history.pushState({}, '', newUrl.toString());
@@ -278,6 +287,7 @@ const AdminStoresPage: React.FC = () => {
     const executiveId = searchParams.get('executiveId');
     const brandId = searchParams.get('brandId');
     const city = searchParams.get('city');
+    const pageParam = parseInt(searchParams.get('page') || '1', 10);
     const showUnresolvedIssues = searchParams.get('showUnresolvedIssues') === 'true';
     const showUnreviewedVisits = searchParams.get('showUnreviewedVisits') === 'true';
 
@@ -300,6 +310,11 @@ const AdminStoresPage: React.FC = () => {
 
     if (city && filters.city !== city) {
       setFilters(prev => ({ ...prev, city: city }));
+    }
+
+    // Sync page from URL
+    if (!Number.isNaN(pageParam) && pageParam > 0 && currentPage !== pageParam) {
+      setCurrentPage(pageParam);
     }
 
     // Update checkbox filter states from URL
@@ -334,6 +349,11 @@ const AdminStoresPage: React.FC = () => {
     }
   }, [filters, storeData, sortConfig, storeSearchText]);
 
+  // Reset to page 1 when filters or search text change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, storeSearchText]);
+
   // Optionally refetch when search params change if needed (e.g., deep link)
   useEffect(() => {
     // No refetch needed since we always fetch all data; just sync filter state from URL
@@ -345,6 +365,9 @@ const AdminStoresPage: React.FC = () => {
       ...prev,
       [filterType]: value
     }));
+
+    // Reset to first page when filters change
+    setCurrentPage(1);
 
     // Update URL with current filter state using IDs
     const newFilters = { ...filters, [filterType]: value } as StoreFilters;
@@ -584,6 +607,45 @@ const AdminStoresPage: React.FC = () => {
     return exec ? exec.name : null;
   })();
 
+  // Derived pagination values
+  const totalPages = Math.max(1, Math.ceil(filteredStores.length / pageSize));
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const currentPageStores = filteredStores.slice(startIndex, endIndex);
+  const totalCount = filteredStores.length;
+  const rangeStart = totalCount === 0 ? 0 : startIndex + 1;
+  const rangeEnd = Math.min(endIndex, totalCount);
+
+  // Count summary text based on selected filters
+  const getCountSummary = () => {
+    const count = filteredStores.length;
+    const brand = filters.partnerBrand !== 'All Brands' ? filters.partnerBrand : null;
+    const city = filters.city !== 'All City' ? filters.city : null;
+    if (brand && city) return `${count} stores found for ${brand} in ${city}`;
+    if (brand) return `${count} stores found for ${brand}`;
+    if (city) return `${count} stores found in ${city}`;
+    return `${count} stores found`;
+  };
+
+  // Update only page in URL (preserving other params)
+  const updateUrlPage = (page: number) => {
+    const newUrl = new URL(window.location.href);
+    if (page <= 1) {
+      newUrl.searchParams.delete('page');
+    } else {
+      newUrl.searchParams.set('page', String(page));
+    }
+    window.history.pushState({}, '', newUrl.toString());
+  };
+
+  const handlePageChange = (page: number) => {
+    const clamped = Math.max(1, Math.min(totalPages, page));
+    if (clamped !== currentPage) {
+      setCurrentPage(clamped);
+      updateUrlPage(clamped);
+    }
+  };
+
   return (
     <div className="admin-stores-overview">
       {/* Executive Filter Header */}
@@ -793,6 +855,16 @@ const AdminStoresPage: React.FC = () => {
         )}
       </div>
 
+      {/* Count Summary */}
+      <div style={{
+        marginTop: '12px',
+        marginBottom: '8px',
+        color: '#374151',
+        fontWeight: 600
+      }}>
+        {getCountSummary()}
+      </div>
+
       {/* Actions - Export and Assign PJP */}
       <div style={{
         display: 'flex',
@@ -884,7 +956,7 @@ const AdminStoresPage: React.FC = () => {
                 <span className="loading-text">Loading stores data...</span>
               </div>
             ) : filteredStores.length > 0 ? (
-              filteredStores.map(store => (
+              currentPageStores.map(store => (
                 <div key={store.id} className="admin-stores-table-row">
                   <div className="admin-stores-cell admin-stores-store-name-cell">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', minWidth: 0 }}>
@@ -976,6 +1048,45 @@ const AdminStoresPage: React.FC = () => {
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Pagination Controls */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginTop: '16px' }}>
+        <div style={{ flex: 1 }}>
+          <button
+            aria-label="Previous page"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage <= 1}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '8px',
+              padding: '8px 14px', borderRadius: '8px', border: 'none',
+              backgroundColor: currentPage <= 1 ? '#e5e7eb' : '#065f46',
+              color: currentPage <= 1 ? '#9ca3af' : 'white', cursor: currentPage <= 1 ? 'not-allowed' : 'pointer'
+            }}
+          >
+            <span style={{ fontSize: '16px' }}>‹</span>
+            <span style={{ fontWeight: 600 }}>PREVIOUS</span>
+          </button>
+        </div>
+        <div style={{ flex: 1, textAlign: 'center', fontWeight: 700, color: '#0f172a' }}>
+          {rangeStart}-{rangeEnd} of {totalCount} results
+        </div>
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            aria-label="Next page"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage >= totalPages}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '8px',
+              padding: '8px 14px', borderRadius: '8px', border: 'none',
+              backgroundColor: currentPage >= totalPages ? '#e5e7eb' : '#065f46',
+              color: currentPage >= totalPages ? '#9ca3af' : 'white', cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer'
+            }}
+          >
+            <span style={{ fontWeight: 600 }}>NEXT</span>
+            <span style={{ fontSize: '16px' }}>›</span>
+          </button>
         </div>
       </div>
       
