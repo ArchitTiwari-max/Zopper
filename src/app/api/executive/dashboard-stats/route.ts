@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch all data in parallel
-    const [storeData, allBrands, visits, taskStats] = await Promise.all([
+    const [storeData, allBrands, visits, pendingTasksCount, completedTasksCount] = await Promise.all([
       prisma.store.findMany({
         where: { id: { in: executive.executiveStores.map(es => es.storeId) } },
         select: { partnerBrandIds: true }
@@ -61,10 +61,12 @@ export async function GET(request: NextRequest) {
         where: { executiveId: executive.id, createdAt: { gte: startDate, lte: now } },
         select: { brandIds: true }
       }),
-      prisma.assigned.groupBy({
-        by: ['status'],
-        where: { executiveId: executive.id },
-        _count: { id: true }
+      // MongoDB provider does not support groupBy in Prisma. Use count queries instead.
+      prisma.assigned.count({
+        where: { executiveId: executive.id, status: { in: ['Assigned', 'In_Progress'] } }
+      }),
+      prisma.assigned.count({
+        where: { executiveId: executive.id, status: 'Completed' }
       })
     ]);
 
@@ -91,9 +93,8 @@ export async function GET(request: NextRequest) {
     })).sort((a, b) => b.visits - a.visits);
 
     // Task stats
-    const pendingTasks = taskStats.filter(stat => ['Assigned', 'In_Progress'].includes(stat.status))
-      .reduce((sum, stat) => sum + stat._count.id, 0);
-    const completedTasks = taskStats.find(stat => stat.status === 'Completed')?._count.id || 0;
+    const pendingTasks = pendingTasksCount;
+    const completedTasks = completedTasksCount;
     const totalVisits = visits.length;
 
     // ETag for cache validation (same pattern as store/data)

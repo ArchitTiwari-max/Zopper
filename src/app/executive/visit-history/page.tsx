@@ -504,17 +504,17 @@ const VisitHistory: React.FC = () => {
                 ) : (
                   filteredVisits.map((visit) => (
                     <tr key={visit.id}>
-                      <td>
+                      <td data-label="Store Name">
                         <div className="exec-visits-store-cell">
                           <span className="exec-visits-store-name-cell">{visit.storeName || 'N/A'}</span>
                         </div>
                       </td>
-                      <td>
+                      <td data-label="Partner Brand">
                         <div className="exec-visits-brand-cell">
                           <span className="exec-visits-partner-brand-cell">{visit.partnerBrand || 'N/A'}</span>
                         </div>
                       </td>
-                      <td>
+                      <td data-label="Person Met">
                         <div className="exec-visits-person-cell">
                           {visit.personMet && visit.personMet.length > 0 ? (
                             <div className="exec-visits-person-met-list">
@@ -571,12 +571,12 @@ const VisitHistory: React.FC = () => {
                           )}
                         </div>
                       </td>
-                      <td>
+                      <td data-label="Date">
                         <div className="exec-visits-date-cell">
                           <span className="exec-visits-date-table">{formatDate(visit.createdAt)}</span>
                         </div>
                       </td>
-                      <td>
+                      <td data-label="Action">
                         <div className="exec-visits-action-cell">
                           <span 
                             className="exec-visits-status-badge"
