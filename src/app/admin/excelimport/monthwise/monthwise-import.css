@@ -1,0 +1,529 @@
+/* Monthly Excel Import Styles */
+
+.import-container {
+  min-height: 100vh;
+  background-color: #f9fafb;
+  padding: 1.5rem;
+}
+
+.import-card {
+  max-width: 64rem;
+  margin: 0 auto;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+}
+
+.import-header {
+  margin-bottom: 1.5rem;
+}
+
+.import-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.import-description {
+  color: #6b7280;
+}
+
+/* Template Download Section */
+.template-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #dbeafe;
+  border: 1px solid #93c5fd;
+  border-radius: 0.5rem;
+}
+
+.template-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.template-info h3 {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1e3a8a;
+}
+
+.template-info p {
+  font-size: 0.75rem;
+  color: #1d4ed8;
+}
+
+.template-button {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background-color: #2563eb;
+  color: white;
+  font-size: 0.875rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.template-button:hover {
+  background-color: #1d4ed8;
+}
+
+/* File Upload Area */
+.upload-section {
+  margin-bottom: 1.5rem;
+}
+
+.upload-area {
+  border: 2px dashed #d1d5db;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.upload-area:hover {
+  border-color: #9ca3af;
+}
+
+.upload-area.drag-active {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.upload-area.file-uploaded {
+  background-color: #f0fdf4;
+  border-color: #16a34a;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.file-details {
+  text-align: left;
+}
+
+.file-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #16a34a;
+}
+
+.file-size {
+  font-size: 0.75rem;
+  color: #15803d;
+}
+
+.clear-file-button {
+  padding: 0.25rem;
+  color: #dc2626;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.clear-file-button:hover {
+  color: #b91c1c;
+}
+
+.upload-icon {
+  width: 3rem;
+  height: 3rem;
+  color: #9ca3af;
+  margin: 0 auto 1rem;
+}
+
+.upload-text-primary {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.upload-text-secondary {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.upload-text-info {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+/* Import Button */
+.import-button-section {
+  margin-bottom: 1.5rem;
+}
+
+.import-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  background-color: #2563eb;
+  color: white;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.import-button:hover {
+  background-color: #1d4ed8;
+}
+
+.import-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  border-radius: 50%;
+  height: 1.25rem;
+  width: 1.25rem;
+  border: 2px solid transparent;
+  border-top: 2px solid white;
+  margin-right: 0.75rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Status Messages */
+.error-message {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+}
+
+.error-content {
+  display: flex;
+  align-items: flex-start;
+}
+
+.error-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #7f1d1d;
+  margin-bottom: 0.25rem;
+}
+
+.error-text {
+  font-size: 0.875rem;
+  color: #b91c1c;
+}
+
+.success-message {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.5rem;
+}
+
+.success-content {
+  display: flex;
+  align-items: flex-start;
+}
+
+.success-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #14532d;
+  margin-bottom: 0.5rem;
+}
+
+/* Results Grid */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.result-card {
+  background: white;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #e5e7eb;
+}
+
+.result-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.result-number.success {
+  color: #16a34a;
+}
+
+.result-number.error {
+  color: #dc2626;
+}
+
+.result-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Error Details */
+.error-details {
+  max-height: 10rem;
+  overflow-y: auto;
+  background-color: #fef2f2;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+}
+
+.error-item {
+  margin-bottom: 0.25rem;
+  color: #7f1d1d;
+}
+
+/* Format Information */
+.format-info {
+  padding: 1rem;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+.format-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.format-list {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.format-list p {
+  margin-bottom: 0.25rem;
+}
+
+.format-list strong {
+  font-weight: 600;
+}
+
+/* Console Activity Log Styles */
+.console-section {
+  margin-bottom: 1.5rem;
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.console-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.console-header-left {
+  display: flex;
+  align-items: center;
+}
+
+.console-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.console-count {
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.console-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.console-clear-button {
+  padding: 0.375rem;
+  background: none;
+  border: 1px solid #dc2626;
+  color: #dc2626;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.console-clear-button:hover {
+  background-color: #dc2626;
+  color: white;
+}
+
+.console-toggle-button {
+  padding: 0.375rem 0.75rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.console-toggle-button:hover {
+  background-color: #1d4ed8;
+}
+
+.console-body {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.console-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.console-empty-text {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.console-logs {
+  padding: 0.5rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.console-log {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  word-wrap: break-word;
+}
+
+.console-log-info {
+  background-color: #eff6ff;
+  border-left: 3px solid #3b82f6;
+}
+
+.console-log-success {
+  background-color: #f0fdf4;
+  border-left: 3px solid #10b981;
+}
+
+.console-log-error {
+  background-color: #fef2f2;
+  border-left: 3px solid #ef4444;
+}
+
+.console-log-warning {
+  background-color: #fffbeb;
+  border-left: 3px solid #f59e0b;
+}
+
+.console-timestamp {
+  color: #6b7280;
+  margin-right: 0.5rem;
+  font-weight: 600;
+  min-width: 70px;
+  flex-shrink: 0;
+}
+
+.console-message {
+  color: #374151;
+  flex: 1;
+  word-break: break-word;
+}
+
+.console-log-info .console-message {
+  color: #1e40af;
+}
+
+.console-log-success .console-message {
+  color: #059669;
+}
+
+.console-log-error .console-message {
+  color: #dc2626;
+}
+
+.console-log-warning .console-message {
+  color: #d97706;
+}
+
+/* Progress Bar Styles */
+.console-progress {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.progress-text {
+  color: #374151;
+  font-weight: 500;
+}
+
+.progress-percentage {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
