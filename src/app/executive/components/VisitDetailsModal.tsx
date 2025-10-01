@@ -122,9 +122,40 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
     }
   }, [isOpen, onClose]);
 
+  // NOTE: Hooks must be unconditional. Keep this before any conditional return.
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
   if (!isOpen || !visit) {
     return null;
   }
+
+  const handleDelete = async () => {
+    if (visit.status === 'REVIEWD') return; // safety
+    const ok = window.confirm('Are you sure you want to delete this visit?');
+    if (!ok) return;
+
+    try {
+      setIsDeleting(true);
+      const res = await fetch(`/api/executive/visits/${visit.id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error || 'Failed to delete visit');
+      }
+      // Close and refresh list
+      onClose();
+      // Soft refresh - let parent re-fetch; fallback to hard reload
+      try { (window as any).dispatchEvent(new CustomEvent('visit-deleted', { detail: { id: visit.id } })); } catch {}
+      setTimeout(() => { if (typeof window !== 'undefined') window.location.reload(); }, 50);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete visit');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div 
@@ -294,6 +325,19 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
                 ))}
               </div>
             </div>
+          )}
+        </div>
+
+        <div className="visit-modal-footer">
+          {visit.status !== 'REVIEWD' && (
+            <button
+              className={`visit-delete-button${isDeleting ? ' disabled' : ''}`}
+              onClick={handleDelete}
+              disabled={isDeleting}
+              title={'Delete this visit'}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Visit'}
+            </button>
           )}
         </div>
       </div>
