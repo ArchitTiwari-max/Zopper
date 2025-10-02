@@ -15,6 +15,7 @@ enum Role {
   EXECUTIVE
 }
 
+
 model User {
   id        String   @id @map("_id")
   email     String  @unique
@@ -59,6 +60,14 @@ model Executive {
 //
 // Store & Brand 
 //
+
+// Brand type classification for partner brands associated to a store
+enum PartnerBrandType {
+  A_PLUS @map("A+")
+  A
+  B
+  C
+}
 model Store {
   id                String                      @id @map("_id") 
   storeName         String
@@ -66,6 +75,7 @@ model Store {
   fullAddress       String?
   visits            Visit[]
   partnerBrandIds   String[]                    // references Brand IDs
+  partnerBrandTypes PartnerBrandType[]         // aligned with partnerBrandIds by index; values ∈ {"A+", "A", "B", "C"}
   executiveStores   ExecutiveStoreAssignment[]
   salesRecords      SalesRecord[]
 }
