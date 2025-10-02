@@ -1,0 +1,451 @@
+/* Store Excel Import Styles */
+
+.excel-stor-sale-import-container {
+  min-height: 100vh;
+  background-color: #f9fafb;
+  padding: 1.5rem;
+}
+
+.excel-stor-sale-import-card {
+  max-width: 64rem;
+  margin: 0 auto;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+}
+
+/* Back Button */
+.excel-stor-sale-back-button-section {
+  margin-bottom: 1.5rem;
+}
+
+.excel-stor-sale-back-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: #f3f4f6;
+  color: #374151;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+  border: 1px solid #e5e7eb;
+}
+
+.excel-stor-sale-back-button:hover {
+  background-color: #e5e7eb;
+  color: #1f2937;
+  text-decoration: none;
+}
+
+.excel-stor-sale-import-header {
+  margin-bottom: 1.5rem;
+}
+
+.excel-stor-sale-import-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.excel-stor-sale-import-description {
+  color: #6b7280;
+}
+
+/* Template Download Section */
+.excel-stor-sale-template-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #dcfce7;
+  border: 1px solid #86efac;
+  border-radius: 0.5rem;
+}
+
+.excel-stor-sale-template-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.excel-stor-sale-template-info h3 {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #166534;
+}
+
+.excel-stor-sale-template-info p {
+  font-size: 0.75rem;
+  color: #15803d;
+}
+
+.excel-stor-sale-template-button {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background-color: #16a34a;
+  color: white;
+  font-size: 0.875rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.excel-stor-sale-template-button:hover {
+  background-color: #15803d;
+}
+
+/* File Upload Area */
+.excel-stor-sale-upload-section {
+  margin-bottom: 1.5rem;
+}
+
+.excel-stor-sale-upload-area {
+  border: 2px dashed #d1d5db;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.excel-stor-sale-upload-area:hover {
+  border-color: #9ca3af;
+}
+
+.excel-stor-sale-upload-area.drag-active {
+  border-color: #16a34a;
+  background-color: #f0fdf4;
+}
+
+.excel-stor-sale-upload-area.file-uploaded {
+  background-color: #f0fdf4;
+  border-color: #16a34a;
+}
+
+.excel-stor-sale-file-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.excel-stor-sale-file-details {
+  text-align: left;
+}
+
+.excel-stor-sale-file-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #16a34a;
+}
+
+.excel-stor-sale-file-size {
+  font-size: 0.75rem;
+  color: #15803d;
+}
+
+.excel-stor-sale-clear-file-button {
+  padding: 0.25rem;
+  color: #dc2626;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.excel-stor-sale-clear-file-button:hover {
+  color: #b91c1c;
+}
+
+.excel-stor-sale-upload-icon {
+  width: 3rem;
+  height: 3rem;
+  color: #9ca3af;
+  margin: 0 auto 1rem;
+}
+
+.excel-stor-sale-upload-text-primary {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.excel-stor-sale-upload-text-secondary {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.excel-stor-sale-upload-text-info {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+/* Import Button */
+.excel-stor-sale-import-button-section {
+  margin-bottom: 1.5rem;
+}
+
+.excel-stor-sale-import-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  background-color: #16a34a;
+  color: white;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 0.5rem;
+}
+
+.excel-stor-sale-import-button:hover:not(:disabled) {
+  background-color: #15803d;
+  transform: translateY(-1px);
+}
+
+.excel-stor-sale-import-button:disabled {
+  background-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.excel-stor-sale-loading-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Progress Bar */
+.excel-stor-sale-progress-section {
+  margin-bottom: 1.5rem;
+}
+
+.excel-stor-sale-progress-bar {
+  width: 100%;
+  height: 0.5rem;
+  background-color: #f3f4f6;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.excel-stor-sale-progress-fill {
+  height: 100%;
+  background-color: #16a34a;
+  transition: width 0.3s ease;
+  border-radius: 0.25rem;
+}
+
+.excel-stor-sale-progress-text {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+/* Console Section */
+.excel-stor-sale-console-section {
+  margin-top: 1.5rem;
+}
+
+.excel-stor-sale-console-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background-color: #1f2937;
+  color: white;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.excel-stor-sale-console-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.excel-stor-sale-console-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.excel-stor-sale-console-control-button {
+  padding: 0.25rem 0.5rem;
+  background-color: #374151;
+  color: #d1d5db;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.excel-stor-sale-console-control-button:hover {
+  background-color: #4b5563;
+}
+
+.excel-stor-sale-console-body {
+  background-color: #111827;
+  color: #f9fafb;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  height: 20rem;
+  overflow-y: auto;
+  padding: 1rem;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  border: 1px solid #374151;
+}
+
+.excel-stor-sale-console-log {
+  margin-bottom: 0.25rem;
+  word-wrap: break-word;
+}
+
+.excel-stor-sale-console-log.info {
+  color: #93c5fd;
+}
+
+.excel-stor-sale-console-log.success {
+  color: #86efac;
+}
+
+.excel-stor-sale-console-log.error {
+  color: #fca5a5;
+}
+
+.excel-stor-sale-console-log.warning {
+  color: #fbbf24;
+}
+
+.excel-stor-sale-console-timestamp {
+  color: #6b7280;
+  margin-right: 0.5rem;
+}
+
+.excel-stor-sale-console-empty {
+  color: #6b7280;
+  font-style: italic;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* Result Display */
+.excel-stor-sale-result-section {
+  margin-top: 1.5rem;
+}
+
+.excel-stor-sale-result-success {
+  padding: 1rem;
+  background-color: #dcfce7;
+  border: 1px solid #86efac;
+  border-radius: 0.5rem;
+  color: #166534;
+}
+
+.excel-stor-sale-result-error {
+  padding: 1rem;
+  background-color: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 0.5rem;
+  color: #dc2626;
+}
+
+.excel-stor-sale-result-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.excel-stor-sale-result-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.excel-stor-sale-result-stat {
+  background-color: rgba(255, 255, 255, 0.5);
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+}
+
+.excel-stor-sale-result-stat-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  opacity: 0.8;
+}
+
+.excel-stor-sale-result-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 0.25rem;
+}
+
+/* Executive Change Indicators */
+.executive-changes {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.executive-change {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.executive-added {
+  color: #16a34a;
+}
+
+.executive-removed {
+  color: #dc2626;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .excel-stor-sale-import-container {
+    padding: 1rem;
+  }
+  
+  .excel-stor-sale-import-card {
+    padding: 1rem;
+  }
+  
+  .excel-stor-sale-template-content {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .excel-stor-sale-result-stats {
+    grid-template-columns: 1fr;
+  }
+}
