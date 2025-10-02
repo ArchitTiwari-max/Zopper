@@ -84,6 +84,11 @@
   padding: 0;
 }
 
+.section-icon.excel-import {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+}
+
 .profile-avatar {
   width: 40px;
   height: 40px;
@@ -228,6 +233,65 @@
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
   margin-top: 1rem;
+}
+
+/* Data Management Controls */
+.data-management-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.data-management-info {
+  flex: 1;
+}
+
+.data-management-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.data-management-info p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.data-management-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 180px;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.data-management-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.data-management-btn:active {
+  transform: translateY(0);
+}
+
+.data-management-btn svg {
+  flex-shrink: 0;
 }
 
 /* Account Management Section Styles */
@@ -400,6 +464,17 @@
   }
   
   .logout-btn {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .excel-import-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .excel-import-btn {
     width: 100%;
     min-width: auto;
   }

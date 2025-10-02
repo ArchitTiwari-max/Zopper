@@ -2,9 +2,9 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, AlertCircle, CheckCircle, X, Download, Calendar, ArrowLeft, Terminal, Trash2 } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle, X, Download, Terminal, Trash2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import './datewise-import.css';
+import './monthwise-import.css';
 
 interface ImportResult {
   totalRows: number;
@@ -26,7 +26,7 @@ interface ConsoleLog {
   message: string;
 }
 
-const DatewiseExcelImport = () => {
+const MonthwiseExcelImport = () => {
   const [importStatus, setImportStatus] = useState<ImportStatus>({
     isImporting: false,
     result: null,
@@ -134,7 +134,7 @@ const DatewiseExcelImport = () => {
     // Show console automatically when import starts
     setShowConsole(true);
     addConsoleLog('info', '🚀 Starting import process...');
-    addConsoleLog('info', `📆 Processing daily sales file: ${uploadedFile.name}`);
+    addConsoleLog('info', `📊 Processing file: ${uploadedFile.name}`);
 
     setImportStatus({
       isImporting: true,
@@ -145,6 +145,10 @@ const DatewiseExcelImport = () => {
     try {
       addConsoleLog('info', '📤 Uploading file to server...');
       
+      const formData = new FormData();
+      formData.append('file', uploadedFile);
+      formData.append('type', 'monthly');
+
       // Set a dynamic timeout based on file size (larger files need more time)
       const fileSize = uploadedFile.size / (1024 * 1024); // Size in MB
       const timeoutDuration = Math.max(60000, fileSize * 10000); // At least 60s, +10s per MB
@@ -152,12 +156,8 @@ const DatewiseExcelImport = () => {
       const timeoutId = setTimeout(() => {
         addConsoleLog('info', `🔄 Processing large file (${fileSize.toFixed(1)} MB) - this may take a few minutes...`);
       }, timeoutDuration);
-      
-      const formData = new FormData();
-      formData.append('file', uploadedFile);
-      formData.append('type', 'daily');
 
-      const response = await fetch('/api/admin/excel-import-stream-optimized', {
+      const response = await fetch('/api/admin/excel-import/salesimport', {
         method: 'POST',
         body: formData,
       });
@@ -208,7 +208,7 @@ const DatewiseExcelImport = () => {
                     const logType = status === 'success' ? 'success' : 'error';
                     
                     addConsoleLog(logType, `${icon} Row ${data.currentRow}/${data.totalRows}: ${Store_ID} | ${Brand} | ${Category}`);
-                    if (message && message !== 'Total successful:') {
+                    if (message && message !== 'Total stores pushed:') {
                       addConsoleLog(logType === 'success' ? 'info' : 'error', `   └─ ${message}`);
                     }
                   }
@@ -288,8 +288,8 @@ const DatewiseExcelImport = () => {
   const downloadTemplate = () => {
     // Create a link to download the template
     const link = document.createElement('a');
-    link.href = '/templates/daily-sales-template.xlsx';
-    link.download = 'daily-sales-template.xlsx';
+    link.href = '/templates/monthly-sales-template.xlsx';
+    link.download = 'monthly-sales-template.xlsx';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -306,40 +306,34 @@ const DatewiseExcelImport = () => {
   };
 
   return (
-    <div className="import-container daily-import-theme">
-      <div className="import-card">
+    <div className="excel-mon-sale-import-container">
+      <div className="excel-mon-sale-import-card">
         {/* Back Button */}
-        <div className="back-button-section">
-          <Link href="/admin/excelimport" className="back-button">
+        <div className="excel-mon-sale-back-button-section">
+          <Link href="/admin/datamanagement" className="excel-mon-sale-back-button">
             <ArrowLeft className="w-5 h-5 mr-2" />
-            Back to Excel Import Dashboard
+            Back to Data Management
           </Link>
         </div>
         
-        <div className="import-header">
-          <div className="header-content">
-            <Calendar className="header-icon" />
-            <div>
-              <h1 className="import-title">Daily Sales Data Import</h1>
-              <p className="import-subtitle">Datewise sales data import</p>
-            </div>
-          </div>
-          <p className="import-description">
-            Upload Excel files with daily sales data. The file should contain Store_ID, Brand, Category, 
-            and date columns with metrics like Count of Sales and Revenue.
+        <div className="excel-mon-sale-import-header">
+          <h1 className="excel-mon-sale-import-title">Monthly Sales Data Import</h1>
+          <p className="excel-mon-sale-import-description">
+            Upload Excel files with monthly sales data. The file should contain Store_ID, Brand, Category, 
+            and date columns with metrics like device sales, plan sales, attach %, and revenue.
           </p>
         </div>
 
         {/* Template Download */}
-        <div className="template-section">
-          <div className="template-content">
-            <div className="template-info">
+        <div className="excel-mon-sale-template-section">
+          <div className="excel-mon-sale-template-content">
+            <div className="excel-mon-sale-template-info">
               <h3>Need a template?</h3>
-              <p>Download the Excel template to see the expected format for daily data</p>
+              <p>Download the Excel template to see the expected format</p>
             </div>
             <button
               onClick={downloadTemplate}
-              className="template-button"
+              className="excel-mon-sale-template-button"
             >
               <Download className="w-4 h-4 mr-2" />
               Download Template
@@ -348,21 +342,21 @@ const DatewiseExcelImport = () => {
         </div>
 
         {/* File Upload Area */}
-        <div className="upload-section">
+        <div className="excel-mon-sale-upload-section">
           <div
             {...getRootProps()}
-            className={`upload-area ${
+            className={`excel-mon-sale-upload-area ${
               isDragActive ? 'drag-active' : ''
             } ${uploadedFile ? 'file-uploaded' : ''}`}
           >
             <input {...getInputProps()} />
             
             {uploadedFile ? (
-              <div className="file-info">
+              <div className="excel-mon-sale-file-info">
                 <FileText className="w-8 h-8 text-green-600" />
-                <div className="file-details">
-                  <p className="file-name">{uploadedFile.name}</p>
-                  <p className="file-size">
+                <div className="excel-mon-sale-file-details">
+                  <p className="excel-mon-sale-file-name">{uploadedFile.name}</p>
+                  <p className="excel-mon-sale-file-size">
                     {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
@@ -371,23 +365,23 @@ const DatewiseExcelImport = () => {
                     e.stopPropagation();
                     clearFile();
                   }}
-                  className="clear-file-button"
+                  className="excel-mon-sale-clear-file-button"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
             ) : (
               <div>
-                <Upload className="upload-icon" />
+                <Upload className="excel-mon-sale-upload-icon" />
                 {isDragActive ? (
-                  <p className="drag-active-text">Drop the Excel file here...</p>
+                  <p className="excel-mon-sale-upload-text-primary">Drop the Excel file here...</p>
                 ) : (
                   <div>
-                    <p className="upload-text-primary">
+                    <p className="excel-mon-sale-upload-text-primary">
                       Drag and drop your Excel file here
                     </p>
-                    <p className="upload-text-secondary">or click to browse</p>
-                    <p className="upload-text-info">
+                    <p className="excel-mon-sale-upload-text-secondary">or click to browse</p>
+                    <p className="excel-mon-sale-upload-text-info">
                       Supports .xlsx and .xls files up to 10MB
                     </p>
                   </div>
@@ -399,21 +393,21 @@ const DatewiseExcelImport = () => {
 
         {/* Import Button */}
         {uploadedFile && (
-          <div className="import-button-section">
+          <div className="excel-mon-sale-import-button-section">
             <button
               onClick={handleImport}
               disabled={importStatus.isImporting}
-              className="import-button"
+              className="excel-mon-sale-import-button"
             >
               {importStatus.isImporting ? (
                 <>
-                  <div className="spinner"></div>
+                  <div className="excel-mon-sale-spinner"></div>
                   Processing Import...
                 </>
               ) : (
                 <>
                   <Upload className="w-5 h-5 mr-2" />
-                  Import Daily Sales Data
+                  Import Monthly Sales Data
                 </>
               )}
             </button>
@@ -422,12 +416,12 @@ const DatewiseExcelImport = () => {
 
         {/* Error Display */}
         {importStatus.error && (
-          <div className="error-message">
-            <div className="error-content">
+          <div className="excel-mon-sale-error-message">
+            <div className="excel-mon-sale-error-content">
               <AlertCircle className="w-5 h-5 text-red-500 mr-3 mt-0.5" />
               <div>
-                <h3 className="error-title">Import Failed</h3>
-                <p className="error-text">{importStatus.error}</p>
+                <h3 className="excel-mon-sale-error-title">Import Failed</h3>
+                <p className="excel-mon-sale-error-text">{importStatus.error}</p>
               </div>
             </div>
           </div>
@@ -435,39 +429,39 @@ const DatewiseExcelImport = () => {
 
         {/* Success/Results Display */}
         {importStatus.result && (
-          <div className="success-message">
-            <div className="success-content">
+          <div className="excel-mon-sale-success-message">
+            <div className="excel-mon-sale-success-content">
               <CheckCircle className="w-5 h-5 text-green-500 mr-3 mt-0.5" />
               <div className="flex-1">
-                <h3 className="success-title">Import Completed</h3>
+                <h3 className="excel-mon-sale-success-title">Import Completed</h3>
                 
-                <div className="results-grid">
-                  <div className="result-card">
-                    <div className="result-number">
+                <div className="excel-mon-sale-results-grid">
+                  <div className="excel-mon-sale-result-card">
+                    <div className="excel-mon-sale-result-number">
                       {importStatus.result.totalRows}
                     </div>
-                    <div className="result-label">Total Rows</div>
+                    <div className="excel-mon-sale-result-label">Total Rows</div>
                   </div>
-                  <div className="result-card">
-                    <div className="result-number success">
+                  <div className="excel-mon-sale-result-card">
+                    <div className="excel-mon-sale-result-number success">
                       {importStatus.result.successful}
                     </div>
-                    <div className="result-label">Successful</div>
+                    <div className="excel-mon-sale-result-label">Successful</div>
                   </div>
-                  <div className="result-card">
-                    <div className="result-number error">
+                  <div className="excel-mon-sale-result-card">
+                    <div className="excel-mon-sale-result-number error">
                       {importStatus.result.failed}
                     </div>
-                    <div className="result-label">Failed</div>
+                    <div className="excel-mon-sale-result-label">Failed</div>
                   </div>
                 </div>
 
                 {importStatus.result.errors.length > 0 && (
                   <div>
-                    <h4 className="error-title">Error Details:</h4>
-                    <div className="error-details">
+                    <h4 className="excel-mon-sale-error-title">Error Details:</h4>
+                    <div className="excel-mon-sale-error-details">
                       {importStatus.result.errors.map((error, index) => (
-                        <div key={index} className="error-item">
+                        <div key={index} className="excel-mon-sale-error-item">
                           {error}
                         </div>
                       ))}
@@ -480,18 +474,18 @@ const DatewiseExcelImport = () => {
         )}
 
         {/* Console Activity Log */}
-        <div className="console-section">
-          <div className="console-header">
-            <div className="console-header-left">
+        <div className="excel-mon-sale-console-section">
+          <div className="excel-mon-sale-console-header">
+            <div className="excel-mon-sale-console-header-left">
               <Terminal className="w-5 h-5 mr-2" />
-              <h3 className="console-title">Activity Log</h3>
-              <span className="console-count">({consoleLogs.length})</span>
+              <h3 className="excel-mon-sale-console-title">Activity Log</h3>
+              <span className="excel-mon-sale-console-count">({consoleLogs.length})</span>
             </div>
-            <div className="console-header-right">
+            <div className="excel-mon-sale-console-header-right">
               {consoleLogs.length > 0 && (
                 <button
                   onClick={clearConsole}
-                  className="console-clear-button"
+                  className="excel-mon-sale-console-clear-button"
                   title="Clear logs"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -499,7 +493,7 @@ const DatewiseExcelImport = () => {
               )}
               <button
                 onClick={() => setShowConsole(!showConsole)}
-                className="console-toggle-button"
+                className="excel-mon-sale-console-toggle-button"
               >
                 {showConsole ? 'Hide' : 'Show'}
               </button>
@@ -508,18 +502,18 @@ const DatewiseExcelImport = () => {
           
           {/* Progress Bar */}
           {progressData && importStatus.isImporting && (
-            <div className="console-progress">
-              <div className="progress-info">
-                <span className="progress-text">
+            <div className="excel-mon-sale-console-progress">
+              <div className="excel-mon-sale-progress-info">
+                <span className="excel-mon-sale-progress-text">
                   Processing row {progressData.current} of {progressData.total}
                 </span>
-                <span className="progress-percentage">
+                <span className="excel-mon-sale-progress-percentage">
                   {Math.round((progressData.current / progressData.total) * 100)}%
                 </span>
               </div>
-              <div className="progress-bar">
+              <div className="excel-mon-sale-progress-bar">
                 <div 
-                  className="progress-fill"
+                  className="excel-mon-sale-progress-fill"
                   style={{ width: `${(progressData.current / progressData.total) * 100}%` }}
                 ></div>
               </div>
@@ -527,18 +521,18 @@ const DatewiseExcelImport = () => {
           )}
           
           {showConsole && (
-            <div className="console-body">
+            <div className="excel-mon-sale-console-body">
               {consoleLogs.length === 0 ? (
-                <div className="console-empty">
+                <div className="excel-mon-sale-console-empty">
                   <Terminal className="w-8 h-8 text-gray-400 mb-2" />
-                  <p className="console-empty-text">No activity yet. Upload and import a file to see logs.</p>
+                  <p className="excel-mon-sale-console-empty-text">No activity yet. Upload and import a file to see logs.</p>
                 </div>
               ) : (
-                <div className="console-logs">
+                <div className="excel-mon-sale-console-logs">
                   {consoleLogs.map((log) => (
-                    <div key={log.id} className={`console-log console-log-${log.type}`}>
-                      <span className="console-timestamp">[{log.timestamp}]</span>
-                      <span className="console-message">{log.message}</span>
+                    <div key={log.id} className={`excel-mon-sale-console-log excel-mon-sale-console-log-${log.type}`}>
+                      <span className="excel-mon-sale-console-timestamp">[{log.timestamp}]</span>
+                      <span className="excel-mon-sale-console-message">{log.message}</span>
                     </div>
                   ))}
                   <div ref={consoleEndRef} />
@@ -549,15 +543,14 @@ const DatewiseExcelImport = () => {
         </div>
 
         {/* Format Information */}
-        <div className="format-info">
-          <h3 className="format-title">Expected Excel Format for Daily Sales:</h3>
-          <div className="format-list">
+        <div className="excel-mon-sale-format-info">
+          <h3 className="excel-mon-sale-format-title">Expected Excel Format:</h3>
+          <div className="excel-mon-sale-format-list">
             <p>• <strong>Required columns:</strong> Store_ID, Brand, Category</p>
             <p>• <strong>Date columns:</strong> Format as DD-MM-YYYY (e.g., 01-01-2024)</p>
-            <p>• <strong>Daily Metrics:</strong> Count of Sales, Revenue</p>
+            <p>• <strong>Metrics:</strong> Device Sales, Plan Sales, Attach %, Revenue</p>
             <p>• <strong>Header structure:</strong> Two-row headers with dates and metrics</p>
             <p>• <strong>Data rows:</strong> Start from row 3 onwards</p>
-            <p>• <strong>Note:</strong> This imports daily/datewise sales data only</p>
           </div>
         </div>
       </div>
@@ -565,4 +558,4 @@ const DatewiseExcelImport = () => {
   );
 };
 
-export default DatewiseExcelImport;
+export default MonthwiseExcelImport;
