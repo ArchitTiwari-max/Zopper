@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, PartnerBrandType } from '@prisma/client';
 
 // Singleton Prisma instance with connection pooling
 let prismaInstance: PrismaClient | null = null;
@@ -73,6 +73,8 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
     const city = rowObj.City?.toString().trim() || '';
     // Handle both partnerBrandIds and partneraBrandIds (common typo)
     const partnerBrandIdsString = (rowObj.partnerBrandIds || rowObj.partneraBrandIds)?.toString() || '';
+    // New: accept partnerBrandTypes column to align with partnerBrandIds (comma-separated)
+    const partnerBrandTypesString = (rowObj.partnerBrandTypes || rowObj.partnerBrandType || rowObj['PartnerBrandTypes'] || rowObj['Partner Brand Types'])?.toString() || '';
     const executiveIdsString = rowObj.Executive_IDs?.toString() || '';
 
     const context = `Store: ${storeId} | ${storeName} | ${city}`;
@@ -88,11 +90,40 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
       .map(id => id.trim())
       .filter(Boolean);
 
+    // Parse partner brand types, if provided
+    const rawTypes = partnerBrandTypesString
+      .split(',')
+      .map((t: string) => t.trim())
+      .filter(Boolean);
+
+    // Helper: map string to enum value
+    const mapType = (val: string): PartnerBrandType | null => {
+      const v = val.toUpperCase().replace(/\s+/g, '');
+      if (v === 'A+' || v === 'A_PLUS') return PartnerBrandType.A_PLUS;
+      if (v === 'A') return PartnerBrandType.A;
+      if (v === 'B') return PartnerBrandType.B;
+      if (v === 'C') return PartnerBrandType.C;
+      return null;
+    };
+
     // Validate partner brand IDs using cache
     for (const brandId of partnerBrandIds) {
       if (brandId && !cache.brands.has(brandId)) {
         return `❌ Brand ID '${brandId}' not found. ${context}`;
       }
+    }
+
+    // If types were provided, ensure length matches IDs and values are valid
+    let partnerBrandTypes: PartnerBrandType[] | undefined = undefined;
+    if (rawTypes.length > 0) {
+      if (rawTypes.length !== partnerBrandIds.length) {
+        return `❌ partnerBrandTypes count (${rawTypes.length}) does not match partnerBrandIds count (${partnerBrandIds.length}). ${context}`;
+      }
+      const mapped = rawTypes.map(mapType);
+      if (mapped.some(m => m === null)) {
+        return `❌ Invalid partnerBrandTypes value(s). Allowed: A+, A, B, C. ${context}`;
+      }
+      partnerBrandTypes = mapped as PartnerBrandType[];
     }
 
     // Parse executive IDs
@@ -132,6 +163,7 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
         city,
         fullAddress: '',
         partnerBrandIds,
+        partnerBrandTypes, // may be undefined if column not provided
         executiveIds,
         executivesToAdd,
         executivesToRemove,
@@ -183,14 +215,17 @@ export async function batchProcessStoreRecords(
             storeName: storeData.storeName,
             city: storeData.city,
             fullAddress: storeData.fullAddress,
-            partnerBrandIds: storeData.partnerBrandIds
+            partnerBrandIds: storeData.partnerBrandIds,
+            // Only set types if provided; otherwise keep existing or set to empty when ids empty
+            ...(storeData.partnerBrandTypes ? { partnerBrandTypes: storeData.partnerBrandTypes } : {})
           },
           create: {
             id: storeData.storeId,
             storeName: storeData.storeName,
             city: storeData.city,
             fullAddress: storeData.fullAddress,
-            partnerBrandIds: storeData.partnerBrandIds
+            partnerBrandIds: storeData.partnerBrandIds,
+            partnerBrandTypes: storeData.partnerBrandTypes ?? []
           }
         });
 

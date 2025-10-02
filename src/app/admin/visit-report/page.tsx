@@ -184,9 +184,12 @@ const VisitReportPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Only pass dateFilter to get all data for client-side filtering
+      // Prefer dateFilter from URL if present (e.g., when navigated from Stores page)
+      const urlDateFilter = searchParams.get('dateFilter');
+      const effectiveDateFilter = urlDateFilter || selectedDateFilter;
+
       const params = new URLSearchParams();
-      params.append('dateFilter', selectedDateFilter);
+      params.append('dateFilter', effectiveDateFilter);
 
       const response = await fetch(`/api/admin/visit-report/data?${params.toString()}`, {
         method: 'GET',

@@ -980,7 +980,7 @@ const AdminStoresPage: React.FC = () => {
                             {store.storeName}
                           </span>
                         ) : (
-                          <Link href={`/admin/visit-report?storeId=${store.id}&dateFilter=${encodeURIComponent(selectedDateFilter)}`} className="admin-stores-store-name-link admin-stores-store-name-truncated" title={store.storeName} target="_blank" rel="noopener noreferrer">
+                          <Link href={`/admin/visit-report?storeId=${store.id}&dateFilter=${encodeURIComponent(selectedDateFilter)}`} className="admin-stores-store-name-link admin-stores-store-name-truncated" title={store.storeName}>
                             {store.storeName}
                           </Link>
                         )}
