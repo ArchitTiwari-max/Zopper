@@ -94,8 +94,6 @@ model Category {
   categoryName  String          @unique
   brands        CategoryBrand[]
   salesRecords  SalesRecord[]
-  
-  // Index for better performance when searching by category name
 }
 
 model CategoryBrand {
@@ -127,6 +125,10 @@ model SalesRecord {
   category   Category  @relation(fields: [categoryId], references: [id])
 
   @@unique([storeId, brandId, categoryId, year])
+  
+  // Performance indexes for sales operations
+  @@index([storeId, year]) // Fast lookups by store and year
+  @@index([brandId, categoryId]) // Fast lookups by brand-category combination
 }
 //
 // Visit & Issue

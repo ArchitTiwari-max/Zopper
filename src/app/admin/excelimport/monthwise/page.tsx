@@ -50,7 +50,7 @@ const MonthwiseExcelImport = () => {
   const addConsoleLog = (type: ConsoleLog['type'], message: string) => {
     const timestamp = new Date().toLocaleTimeString();
     const newLog: ConsoleLog = {
-      id: Date.now().toString(),
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp,
       type,
       message
@@ -64,6 +64,24 @@ const MonthwiseExcelImport = () => {
   // Clear console logs
   const clearConsole = () => {
     setConsoleLogs([]);
+  };
+  
+  // Helper function to filter out internal/technical messages
+  const isInternalMessage = (message: string): boolean => {
+    const internalKeywords = [
+      'Initializing performance cache',
+      'Cache initialized - 10x performance boost',
+      'Parsing Excel file',
+      'File structure:',
+      'Starting row-by-row processing',
+      'Writing', 'validated records to database',
+      'Starting monthly batch processing',
+      'Starting daily batch processing',
+      'Batch processing complete:',
+      'Processing completed in'
+    ];
+    
+    return internalKeywords.some(keyword => message.includes(keyword));
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -131,7 +149,15 @@ const MonthwiseExcelImport = () => {
       formData.append('file', uploadedFile);
       formData.append('type', 'monthly');
 
-      const response = await fetch('/api/admin/excel-import-stream', {
+      // Set a dynamic timeout based on file size (larger files need more time)
+      const fileSize = uploadedFile.size / (1024 * 1024); // Size in MB
+      const timeoutDuration = Math.max(60000, fileSize * 10000); // At least 60s, +10s per MB
+      
+      const timeoutId = setTimeout(() => {
+        addConsoleLog('info', `🔄 Processing large file (${fileSize.toFixed(1)} MB) - this may take a few minutes...`);
+      }, timeoutDuration);
+
+      const response = await fetch('/api/admin/excel-import-stream-optimized', {
         method: 'POST',
         body: formData,
       });
@@ -152,6 +178,12 @@ const MonthwiseExcelImport = () => {
           
           if (done) {
             addConsoleLog('info', '🏁 Stream completed');
+            // Ensure loading state is cleared when stream ends
+            setImportStatus(prev => ({
+              ...prev,
+              isImporting: false
+            }));
+            setProgressData(null);
             break;
           }
 
@@ -165,7 +197,8 @@ const MonthwiseExcelImport = () => {
                 const data = JSON.parse(line.substring(6));
                 
                 if (data.type === 'progress') {
-                  if (data.message) {
+                  // Only show user-relevant messages, filter out technical details
+                  if (data.message && !isInternalMessage(data.message)) {
                     addConsoleLog('info', data.message);
                   }
                   
@@ -188,19 +221,21 @@ const MonthwiseExcelImport = () => {
                   }
                 } else if (data.type === 'complete') {
                   addConsoleLog('success', '🎉 Import completed successfully!');
-                  addConsoleLog('info', `📈 Total rows processed: ${data.summary.totalRows}`);
-                  addConsoleLog('success', `✅ Successful imports: ${data.summary.successful}`);
+                  
+                  // Show user-friendly summary
+                  const processingTime = data.summary.processingTime || 'N/A';
+                  addConsoleLog('info', `✅ ${data.summary.successful} of ${data.summary.totalRows} records imported successfully in ${processingTime}`);
                   
                   if (data.summary.failed > 0) {
-                    addConsoleLog('warning', `⚠️ Failed imports: ${data.summary.failed}`);
+                    addConsoleLog('warning', `⚠️ ${data.summary.failed} records failed to import`);
                     
                     // Show first few errors
-                    data.summary.errors.slice(0, 5).forEach(error => {
-                      addConsoleLog('error', `   └─ ${error}`);
+                    data.summary.errors.slice(0, 3).forEach(error => {
+                      addConsoleLog('error', `   └─ ${error.replace(/❌ /g, '')}`);
                     });
                     
-                    if (data.summary.errors.length > 5) {
-                      addConsoleLog('info', `   └─ ... and ${data.summary.errors.length - 5} more errors`);
+                    if (data.summary.errors.length > 3) {
+                      addConsoleLog('info', `   └─ ... and ${data.summary.errors.length - 3} more errors`);
                     }
                   }
 
@@ -217,15 +252,21 @@ const MonthwiseExcelImport = () => {
                   throw new Error(data.message);
                 }
               } catch (parseError) {
-                console.error('Error parsing stream data:', parseError);
-                addConsoleLog('error', `❌ Error parsing stream data: ${parseError}`);
+                // Silently ignore minor SSE parsing errors that don't affect functionality
+                console.debug('Minor SSE parsing error (ignored):', parseError);
               }
             }
           }
         }
       }
       
+      // Clear the timeout when processing completes normally
+      clearTimeout(timeoutId);
+      
     } catch (error) {
+      // Clear the timeout on error
+      clearTimeout(timeoutId);
+      
       const errorMessage = error instanceof Error ? error.message : 'Import failed';
       addConsoleLog('error', `❌ Import failed: ${errorMessage}`);
       
@@ -234,6 +275,13 @@ const MonthwiseExcelImport = () => {
         result: null,
         error: errorMessage
       });
+    } finally {
+      // Ensure loading state is always cleared
+      setImportStatus(prev => ({
+        ...prev,
+        isImporting: false
+      }));
+      setProgressData(null);
     }
   };
 

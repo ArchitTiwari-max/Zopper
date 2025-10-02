@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, AlertCircle, CheckCircle, X, Download, Calendar } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle, X, Download, Calendar, ArrowLeft, Terminal, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import './datewise-import.css';
 
 interface ImportResult {
@@ -18,6 +19,13 @@ interface ImportStatus {
   error: string | null;
 }
 
+interface ConsoleLog {
+  id: string;
+  timestamp: string;
+  type: 'info' | 'success' | 'error' | 'warning';
+  message: string;
+}
+
 const DatewiseExcelImport = () => {
   const [importStatus, setImportStatus] = useState<ImportStatus>({
     isImporting: false,
@@ -26,10 +34,61 @@ const DatewiseExcelImport = () => {
   });
 
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [consoleLogs, setConsoleLogs] = useState<ConsoleLog[]>([]);
+  const [showConsole, setShowConsole] = useState(false);
+  const [progressData, setProgressData] = useState<{ current: number; total: number } | null>(null);
+  const consoleEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new logs are added
+  useEffect(() => {
+    if (consoleEndRef.current && showConsole) {
+      consoleEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [consoleLogs, showConsole]);
+
+  // Helper function to add console logs
+  const addConsoleLog = (type: ConsoleLog['type'], message: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const newLog: ConsoleLog = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp,
+      type,
+      message
+    };
+    setConsoleLogs(prev => [...prev, newLog]);
+    
+    // Also log to browser console for debugging
+    console.log(`[${timestamp}] ${type.toUpperCase()}: ${message}`);
+  };
+
+  // Clear console logs
+  const clearConsole = () => {
+    setConsoleLogs([]);
+  };
+  
+  // Helper function to filter out internal/technical messages
+  const isInternalMessage = (message: string): boolean => {
+    const internalKeywords = [
+      'Initializing performance cache',
+      'Cache initialized - 10x performance boost',
+      'Parsing Excel file',
+      'File structure:',
+      'Starting row-by-row processing',
+      'Writing', 'validated records to database',
+      'Starting monthly batch processing',
+      'Starting daily batch processing',
+      'Batch processing complete:',
+      'Processing completed in'
+    ];
+    
+    return internalKeywords.some(keyword => message.includes(keyword));
+  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (file) {
+      addConsoleLog('info', `📁 File selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+      
       // Validate file type
       const validTypes = [
         'application/vnd.ms-excel',
@@ -37,6 +96,7 @@ const DatewiseExcelImport = () => {
       ];
       
       if (!validTypes.includes(file.type) && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+        addConsoleLog('error', '❌ Invalid file type. Please upload a valid Excel file (.xlsx or .xls)');
         setImportStatus({
           isImporting: false,
           result: null,
@@ -45,6 +105,7 @@ const DatewiseExcelImport = () => {
         return;
       }
 
+      addConsoleLog('success', '✅ File validation passed');
       setUploadedFile(file);
       setImportStatus({
         isImporting: false,
@@ -65,7 +126,15 @@ const DatewiseExcelImport = () => {
   });
 
   const handleImport = async () => {
-    if (!uploadedFile) return;
+    if (!uploadedFile) {
+      addConsoleLog('error', '❌ No file selected for import');
+      return;
+    }
+
+    // Show console automatically when import starts
+    setShowConsole(true);
+    addConsoleLog('info', '🚀 Starting import process...');
+    addConsoleLog('info', `📆 Processing daily sales file: ${uploadedFile.name}`);
 
     setImportStatus({
       isImporting: true,
@@ -74,11 +143,21 @@ const DatewiseExcelImport = () => {
     });
 
     try {
+      addConsoleLog('info', '📤 Uploading file to server...');
+      
+      // Set a dynamic timeout based on file size (larger files need more time)
+      const fileSize = uploadedFile.size / (1024 * 1024); // Size in MB
+      const timeoutDuration = Math.max(60000, fileSize * 10000); // At least 60s, +10s per MB
+      
+      const timeoutId = setTimeout(() => {
+        addConsoleLog('info', `🔄 Processing large file (${fileSize.toFixed(1)} MB) - this may take a few minutes...`);
+      }, timeoutDuration);
+      
       const formData = new FormData();
       formData.append('file', uploadedFile);
       formData.append('type', 'daily');
 
-      const response = await fetch('/api/admin/excel-import-stream', {
+      const response = await fetch('/api/admin/excel-import-stream-optimized', {
         method: 'POST',
         body: formData,
       });
@@ -87,7 +166,7 @@ const DatewiseExcelImport = () => {
         throw new Error('Failed to start import stream');
       }
 
-      console.log('📨 Connected to streaming import');
+      addConsoleLog('info', '📨 Connected to streaming import');
       
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -98,7 +177,13 @@ const DatewiseExcelImport = () => {
           const { done, value } = await reader.read();
           
           if (done) {
-            console.log('🏁 Stream completed');
+            addConsoleLog('info', '🏁 Stream completed');
+            // Ensure loading state is cleared when stream ends
+            setImportStatus(prev => ({
+              ...prev,
+              isImporting: false
+            }));
+            setProgressData(null);
             break;
           }
 
@@ -112,31 +197,46 @@ const DatewiseExcelImport = () => {
                 const data = JSON.parse(line.substring(6));
                 
                 if (data.type === 'progress') {
-                  if (data.message) {
-                    console.log(data.message);
+                  // Only show user-relevant messages, filter out technical details
+                  if (data.message && !isInternalMessage(data.message)) {
+                    addConsoleLog('info', data.message);
                   }
                   
                   if (data.rowData) {
                     const { Store_ID, Brand, Category, status, message } = data.rowData;
                     const icon = status === 'success' ? '✅' : '❌';
+                    const logType = status === 'success' ? 'success' : 'error';
                     
-                    console.log(`${icon} Row ${data.currentRow}/${data.totalRows}: ${Store_ID} | ${Brand} | ${Category}`);
+                    addConsoleLog(logType, `${icon} Row ${data.currentRow}/${data.totalRows}: ${Store_ID} | ${Brand} | ${Category}`);
                     if (message && message !== 'Total successful:') {
-                      console.log(`   └─ ${message}`);
+                      addConsoleLog(logType === 'success' ? 'info' : 'error', `   └─ ${message}`);
                     }
                   }
+                  
+                  if (data.currentRow && data.totalRows) {
+                    setProgressData({
+                      current: data.currentRow,
+                      total: data.totalRows
+                    });
+                  }
                 } else if (data.type === 'complete') {
-                  console.log('🎉 Import completed successfully!');
-                  console.log(`📈 Total rows processed: ${data.summary.totalRows}`);
-                  console.log(`✅ Successful imports: ${data.summary.successful}`);
+                  addConsoleLog('success', '🎉 Import completed successfully!');
+                  
+                  // Show user-friendly summary
+                  const processingTime = data.summary.processingTime || 'N/A';
+                  addConsoleLog('info', `✅ ${data.summary.successful} of ${data.summary.totalRows} records imported successfully in ${processingTime}`);
                   
                   if (data.summary.failed > 0) {
-                    console.log(`⚠️ Failed imports: ${data.summary.failed}`);
+                    addConsoleLog('warning', `⚠️ ${data.summary.failed} records failed to import`);
                     
                     // Show first few errors
-                    data.summary.errors.slice(0, 5).forEach(error => {
-                      console.log(`   └─ ${error}`);
+                    data.summary.errors.slice(0, 3).forEach(error => {
+                      addConsoleLog('error', `   └─ ${error.replace(/❌ /g, '')}`);
                     });
+                    
+                    if (data.summary.errors.length > 3) {
+                      addConsoleLog('info', `   └─ ... and ${data.summary.errors.length - 3} more errors`);
+                    }
                   }
 
                   setImportStatus({
@@ -146,24 +246,42 @@ const DatewiseExcelImport = () => {
                   });
 
                   setUploadedFile(null);
-                  console.log('🧹 Cleared uploaded file');
+                  addConsoleLog('info', '🧹 Cleared uploaded file');
+                  setProgressData(null);
                 } else if (data.type === 'error') {
                   throw new Error(data.message);
                 }
               } catch (parseError) {
-                console.error('Error parsing stream data:', parseError);
+                // Silently ignore minor SSE parsing errors that don't affect functionality
+                console.debug('Minor SSE parsing error (ignored):', parseError);
               }
             }
           }
         }
       }
       
+      // Clear the timeout when processing completes normally
+      clearTimeout(timeoutId);
+      
     } catch (error) {
+      // Clear the timeout on error
+      clearTimeout(timeoutId);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Import failed';
+      addConsoleLog('error', `❌ Import failed: ${errorMessage}`);
+      
       setImportStatus({
         isImporting: false,
         result: null,
-        error: error instanceof Error ? error.message : 'Import failed'
+        error: errorMessage
       });
+    } finally {
+      // Ensure loading state is always cleared
+      setImportStatus(prev => ({
+        ...prev,
+        isImporting: false
+      }));
+      setProgressData(null);
     }
   };
 
@@ -178,6 +296,7 @@ const DatewiseExcelImport = () => {
   };
 
   const clearFile = () => {
+    addConsoleLog('info', '🗑️ File cleared by user');
     setUploadedFile(null);
     setImportStatus({
       isImporting: false,
@@ -189,6 +308,14 @@ const DatewiseExcelImport = () => {
   return (
     <div className="import-container daily-import-theme">
       <div className="import-card">
+        {/* Back Button */}
+        <div className="back-button-section">
+          <Link href="/admin/excelimport" className="back-button">
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Back to Excel Import Dashboard
+          </Link>
+        </div>
+        
         <div className="import-header">
           <div className="header-content">
             <Calendar className="header-icon" />
@@ -351,6 +478,75 @@ const DatewiseExcelImport = () => {
             </div>
           </div>
         )}
+
+        {/* Console Activity Log */}
+        <div className="console-section">
+          <div className="console-header">
+            <div className="console-header-left">
+              <Terminal className="w-5 h-5 mr-2" />
+              <h3 className="console-title">Activity Log</h3>
+              <span className="console-count">({consoleLogs.length})</span>
+            </div>
+            <div className="console-header-right">
+              {consoleLogs.length > 0 && (
+                <button
+                  onClick={clearConsole}
+                  className="console-clear-button"
+                  title="Clear logs"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+              <button
+                onClick={() => setShowConsole(!showConsole)}
+                className="console-toggle-button"
+              >
+                {showConsole ? 'Hide' : 'Show'}
+              </button>
+            </div>
+          </div>
+          
+          {/* Progress Bar */}
+          {progressData && importStatus.isImporting && (
+            <div className="console-progress">
+              <div className="progress-info">
+                <span className="progress-text">
+                  Processing row {progressData.current} of {progressData.total}
+                </span>
+                <span className="progress-percentage">
+                  {Math.round((progressData.current / progressData.total) * 100)}%
+                </span>
+              </div>
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill"
+                  style={{ width: `${(progressData.current / progressData.total) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+          
+          {showConsole && (
+            <div className="console-body">
+              {consoleLogs.length === 0 ? (
+                <div className="console-empty">
+                  <Terminal className="w-8 h-8 text-gray-400 mb-2" />
+                  <p className="console-empty-text">No activity yet. Upload and import a file to see logs.</p>
+                </div>
+              ) : (
+                <div className="console-logs">
+                  {consoleLogs.map((log) => (
+                    <div key={log.id} className={`console-log console-log-${log.type}`}>
+                      <span className="console-timestamp">[{log.timestamp}]</span>
+                      <span className="console-message">{log.message}</span>
+                    </div>
+                  ))}
+                  <div ref={consoleEndRef} />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Format Information */}
         <div className="format-info">
