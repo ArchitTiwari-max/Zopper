@@ -93,6 +93,9 @@ const ExecutiveFormContent: React.FC = () => {
     };
   };
   
+  // Visit type toggle state
+  const [visitType, setVisitType] = useState<'PHYSICAL' | 'DIGITAL'>('PHYSICAL');
+
   const [formData, setFormData] = useState({
     visitDate: '', // Will be set to today in IST
     peopleMet: [] as PersonMet[],
@@ -102,6 +105,16 @@ const ExecutiveFormContent: React.FC = () => {
     remarks: '',
     uploadedImages: [] as UploadedImage[]
   });
+  // Digital visit lightweight state
+  const [digitalForm, setDigitalForm] = useState({
+    connectDate: '', // IST default
+    remarks: ''
+  });
+  const [digitalPeople, setDigitalPeople] = useState<PersonMet[]>([]);
+  const [currentDigitalPerson, setCurrentDigitalPerson] = useState({ name: '', designation: '', phoneNumber: '' });
+  const [digitalIssueText, setDigitalIssueText] = useState('');
+  const [digitalIssues, setDigitalIssues] = useState<string[]>([]);
+
   const [currentBrand, setCurrentBrand] = useState('');
   const [currentPerson, setCurrentPerson] = useState({ name: '', designation: '', phoneNumber: '' });
   const [currentIssue, setCurrentIssue] = useState('');
@@ -116,7 +129,7 @@ const ExecutiveFormContent: React.FC = () => {
   // LocalStorage key for form data persistence
   const getFormStorageKey = () => `visit-form-data-${storeId}`;
 
-  // Load form data from localStorage and set default visit date
+// Load form data from localStorage and set default visit date
   useEffect(() => {
     if (!storeId) return;
     
@@ -142,6 +155,12 @@ const ExecutiveFormContent: React.FC = () => {
     } else {
       setFormData(prev => ({ ...prev, visitDate: defaultVisitDate }));
     }
+
+    // Initialize digital form defaults
+    setDigitalForm(prev => ({
+      ...prev,
+      connectDate: defaultVisitDate
+    }));
     
     // Mark as initialized after loading is complete
     setIsInitialized(true);
@@ -157,6 +176,8 @@ const ExecutiveFormContent: React.FC = () => {
   // Separate loading states for different sections
   const [storeLoading, setStoreLoading] = useState(true);
   const [visitsLoading, setVisitsLoading] = useState(true);
+  const [digitalVisitsLoading, setDigitalVisitsLoading] = useState(true);
+  const [digitalVisits, setDigitalVisits] = useState<PastVisit[]>([]);
   
   // Load store data from URL parameters and fetch past visits
   useEffect(() => {
@@ -189,21 +210,38 @@ const ExecutiveFormContent: React.FC = () => {
           const data = await response.json();
           setPastVisits(data.data || []);
         } else {
-          // Any non-200 response (including 404) - just set empty array
           console.log(`Past visits API returned ${response.status} - no visits available`);
           setPastVisits([]);
         }
       } catch (error) {
         console.log('Past visits fetch failed - this is non-critical:', error);
-        // Set empty array as fallback - past visits are not critical for form functionality
         setPastVisits([]);
       } finally {
         setVisitsLoading(false);
       }
     };
 
+    const fetchDigitalVisits = async () => {
+      try {
+        setDigitalVisitsLoading(true);
+        const res = await fetch(`/api/executive/digital-visit?storeId=${storeId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setDigitalVisits(data.data || []);
+        } else {
+          setDigitalVisits([]);
+        }
+      } catch (error) {
+        console.log('Digital visits fetch failed - non-critical:', error);
+        setDigitalVisits([]);
+      } finally {
+        setDigitalVisitsLoading(false);
+      }
+    };
+
     loadStoreData();
     fetchPastVisits();
+    fetchDigitalVisits();
   }, [storeId, searchParams]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -218,65 +256,94 @@ const ExecutiveFormContent: React.FC = () => {
     alert('Draft saved successfully!');
   };
 
-  const handleSubmitVisit = async () => {
+const handleSubmitVisit = async () => {
     if (!storeId) {
       alert('Store ID is required');
       return;
     }
 
-    // Basic validation
-    if (!formData.visitDate) {
-      alert('Please select a visit date');
-      return;
-    }
-
-    // Validate visit date (IST)
+    // Validate date ranges in IST
     const today = new Date();
     const istOffset = 5.5 * 60 * 60 * 1000;
     const istToday = new Date(today.getTime() + istOffset);
     const todayStr = istToday.toISOString().split('T')[0];
     const ninetyDaysAgo = new Date(istToday.getTime() - (90 * 24 * 60 * 60 * 1000));
     const ninetyDaysAgoStr = ninetyDaysAgo.toISOString().split('T')[0];
-    
-    if (formData.visitDate > todayStr) {
-      alert('Visit date cannot be in the future. Please select today or a past date.');
-      return;
-    }
-    
-    if (formData.visitDate < ninetyDaysAgoStr) {
-      alert('Visit date cannot be more than 90 days ago. Please select a more recent date.');
-      return;
-    }
 
-    if (formData.peopleMet.length === 0) {
-      alert('Please add at least one person met');
-      return;
-    }
-
-    if (formData.brandsVisited.length === 0) {
-      alert('Please select at least one brand visited');
-      return;
+    if (visitType === 'PHYSICAL') {
+      // Basic validation for physical visit
+      if (!formData.visitDate) {
+        alert('Please select a visit date');
+        return;
+      }
+      if (formData.visitDate > todayStr) {
+        alert('Visit date cannot be in the future. Please select today or a past date.');
+        return;
+      }
+      if (formData.visitDate < ninetyDaysAgoStr) {
+        alert('Visit date cannot be more than 90 days ago. Please select a more recent date.');
+        return;
+      }
+      if (formData.peopleMet.length === 0) {
+        alert('Please add at least one person met');
+        return;
+      }
+      if (formData.brandsVisited.length === 0) {
+        alert('Please select at least one brand visited');
+        return;
+      }
+    } else {
+      // Digital validation
+      if (!digitalForm.connectDate) {
+        alert('Please select a connect date');
+        return;
+      }
+      if (digitalForm.connectDate > todayStr) {
+        alert('Connect date cannot be in the future.');
+        return;
+      }
+      if (digitalForm.connectDate < ninetyDaysAgoStr) {
+        alert('Connect date cannot be more than 90 days ago.');
+        return;
+      }
+      if (digitalPeople.length === 0) {
+        alert('Please add at least one person spoken');
+        return;
+      }
+      if (!digitalForm.remarks.trim()) {
+        alert('Remarks are required for digital visit');
+        return;
+      }
     }
 
     setSubmitting(true);
 
     try {
-      const visitData: any = {
-        storeId,
-        visitDate: formData.visitDate,
-        personMet: formData.peopleMet,
-        POSMchecked: formData.POSMchecked,
-        imageUrls: formData.uploadedImages.map(img => img.url),
-        brandsVisited: formData.brandsVisited,
-        remarks: formData.remarks
-      };
+      const isDigital = visitType === 'DIGITAL';
+      const visitData: any = isDigital
+        ? {
+            storeId,
+            visitDate: digitalForm.connectDate,
+            personMet: digitalPeople,
+            POSMchecked: null,
+            imageUrls: [],
+            brandsVisited: [],
+            remarks: digitalForm.remarks.trim(),
+            ...(digitalIssues.length > 0 ? { issuesRaised: digitalIssues } : {})
+          }
+        : {
+            storeId,
+            visitDate: formData.visitDate,
+            personMet: formData.peopleMet,
+            POSMchecked: formData.POSMchecked,
+            imageUrls: formData.uploadedImages.map(img => img.url),
+            brandsVisited: formData.brandsVisited,
+            remarks: formData.remarks,
+            ...(formData.issuesRaised.length > 0 ? { issuesRaised: formData.issuesRaised } : {})
+          };
 
-      // Include issues if any are raised
-      if (formData.issuesRaised.length > 0) {
-        visitData.issuesRaised = formData.issuesRaised;
-      }
-
-      const response = await fetch('/api/executive/visitform', {
+      const endpoint = isDigital ? '/api/executive/digital-visit' : '/api/executive/visitform';
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -289,7 +356,7 @@ const ExecutiveFormContent: React.FC = () => {
         throw new Error(error.message || 'Failed to submit visit');
       }
 
-      const result = await response.json();
+      await response.json();
       
       // Clear localStorage after successful submission
       localStorage.removeItem(getFormStorageKey());
@@ -389,6 +456,13 @@ const ExecutiveFormContent: React.FC = () => {
     });
   };
 
+  const formatStatusLabel = (status: string) => {
+    const s = (status || '').toUpperCase();
+    if (s === 'REVIEWD' || s === 'REVIEWED') return 'REVIEWED';
+    if (s === 'PENDING_REVIEW') return 'PENDING_REVIEW';
+    return status;
+  };
+
   // Modal handlers
   const openVisitModal = (visit: PastVisit) => {
     setSelectedVisit(visit);
@@ -417,7 +491,7 @@ const ExecutiveFormContent: React.FC = () => {
     );
   }
 
-  return (
+return (
     <div className="exec-f-sub-container">
       <div className="exec-f-sub-content">
         {/* Header */}
@@ -442,7 +516,28 @@ const ExecutiveFormContent: React.FC = () => {
             </div>
           ) : storeData ? (
             <>
-              <h2 className="exec-f-sub-store-name">{storeData.storeName}</h2>
+              <div className="exec-f-sub-store-header-row">
+                <h2 className="exec-f-sub-store-name">{storeData.storeName}</h2>
+                {/* Visit type toggle */}
+                <div className="exec-f-visit-type-toggle" role="tablist" aria-label="Choose visit type">
+                  <button 
+                    type="button"
+                    className={`exec-f-visit-type-btn ${visitType === 'PHYSICAL' ? 'active' : ''}`}
+                    onClick={() => setVisitType('PHYSICAL')}
+                    aria-selected={visitType === 'PHYSICAL'}
+                  >
+                    Physical Visit
+                  </button>
+                  <button 
+                    type="button"
+                    className={`exec-f-visit-type-btn ${visitType === 'DIGITAL' ? 'active' : ''}`}
+                    onClick={() => setVisitType('DIGITAL')}
+                    aria-selected={visitType === 'DIGITAL'}
+                  >
+                    Digital Visit
+                  </button>
+                </div>
+              </div>
               <div className="exec-f-sub-partner-brands">
                 {storeData.partnerBrands.map((brand, index) => (
                   <span key={index} className="exec-f-sub-brand-tag">{brand}</span>
@@ -469,36 +564,38 @@ const ExecutiveFormContent: React.FC = () => {
 
         {/* Visit Form */}
         <div className="exec-f-sub-visit-form-card">
-          <h3 className="exec-f-sub-section-title">Log Visit Details</h3>
+          <h3 className="exec-f-sub-section-title">{visitType === 'PHYSICAL' ? 'Log Visit Details' : 'Log Digital Connect'}</h3>
           
-          {/* Visit Date Field */}
-          <div className="exec-f-sub-form-group">
-            <label className="exec-f-sub-form-label">
-              Visit Date <span className="exec-f-sub-required">*</span>
-            </label>
-            <input
-              type="date"
-              className="exec-f-sub-form-input exec-f-sub-form-date"
-              value={formData.visitDate}
-              onChange={(e) => handleInputChange('visitDate', e.target.value)}
-              max={(() => {
-                // Get today's date in IST for max validation
-                const today = new Date();
-                const istOffset = 5.5 * 60 * 60 * 1000;
-                const istDate = new Date(today.getTime() + istOffset);
-                return istDate.toISOString().split('T')[0];
-              })()}
-              min={(() => {
-                // Get date 90 days ago in IST for min validation
-                const today = new Date();
-                const istOffset = 5.5 * 60 * 60 * 1000;
-                const istDate = new Date(today.getTime() + istOffset);
-                const ninetyDaysAgo = new Date(istDate.getTime() - (90 * 24 * 60 * 60 * 1000));
-                return ninetyDaysAgo.toISOString().split('T')[0];
-              })()}
-            />
-          </div>
-          
+          {visitType === 'PHYSICAL' ? (
+            <>
+              {/* Visit Date Field */}
+              <div className="exec-f-sub-form-group">
+                <label className="exec-f-sub-form-label">
+                  Visit Date <span className="exec-f-sub-required">*</span>
+                </label>
+                <input
+                  type="date"
+                  className="exec-f-sub-form-input exec-f-sub-form-date"
+                  value={formData.visitDate}
+                  onChange={(e) => handleInputChange('visitDate', e.target.value)}
+                  max={(() => {
+                    // Get today's date in IST for max validation
+                    const today = new Date();
+                    const istOffset = 5.5 * 60 * 60 * 1000;
+                    const istDate = new Date(today.getTime() + istOffset);
+                    return istDate.toISOString().split('T')[0];
+                  })()}
+                  min={(() => {
+                    // Get date 90 days ago in IST for min validation
+                    const today = new Date();
+                    const istOffset = 5.5 * 60 * 60 * 1000;
+                    const istDate = new Date(today.getTime() + istOffset);
+                    const ninetyDaysAgo = new Date(istDate.getTime() - (90 * 24 * 60 * 60 * 1000));
+                    return ninetyDaysAgo.toISOString().split('T')[0];
+                  })()}
+                />
+              </div>
+
           <div className="exec-f-sub-form-group">
             <label className="exec-f-sub-form-label">
               Contact Person <span className="exec-f-sub-required">*</span>
@@ -735,11 +832,234 @@ const ExecutiveFormContent: React.FC = () => {
               {submitting ? 'Submitting...' : 'Submit Visit'}
             </button>
           </div>
+            </>
+          ) : (
+            <>
+              {/* Digital Visit Form */}
+              <div className="exec-f-sub-form-group">
+                <label className="exec-f-sub-form-label">
+                  Connect Date <span className="exec-f-sub-required">*</span>
+                </label>
+                <input
+                  type="date"
+                  className="exec-f-sub-form-input exec-f-sub-form-date"
+                  value={digitalForm.connectDate}
+                  onChange={(e) => setDigitalForm(prev => ({ ...prev, connectDate: e.target.value }))}
+                  max={(() => {
+                    const today = new Date();
+                    const istOffset = 5.5 * 60 * 60 * 1000;
+                    const istDate = new Date(today.getTime() + istOffset);
+                    return istDate.toISOString().split('T')[0];
+                  })()}
+                  min={(() => {
+                    const today = new Date();
+                    const istOffset = 5.5 * 60 * 60 * 1000;
+                    const istDate = new Date(today.getTime() + istOffset);
+                    const ninetyDaysAgo = new Date(istDate.getTime() - (90 * 24 * 60 * 60 * 1000));
+                    return ninetyDaysAgo.toISOString().split('T')[0];
+                  })()}
+                />
+              </div>
+
+              <div className="exec-f-sub-form-group">
+                <label className="exec-f-sub-form-label">
+                  Person Spoken <span className="exec-f-sub-required">*</span>
+                </label>
+                <div className="exec-f-sub-person-input-wrapper">
+                  <input
+                    type="text"
+                    className="exec-f-sub-form-input exec-f-sub-person-name-input"
+                    placeholder="Enter person's name"
+                    value={currentDigitalPerson.name}
+                    onChange={(e) => setCurrentDigitalPerson(prev => ({ ...prev, name: e.target.value }))}
+                  />
+                  <input
+                    type="text"
+                    className="exec-f-sub-form-input exec-f-sub-person-designation-input"
+                    placeholder="Enter designation"
+                    value={currentDigitalPerson.designation}
+                    onChange={(e) => setCurrentDigitalPerson(prev => ({ ...prev, designation: e.target.value }))}
+                  />
+                  <input
+                    type="tel"
+                    className="exec-f-sub-form-input exec-f-sub-person-phone-input"
+                    placeholder="Enter phone number"
+                    value={currentDigitalPerson.phoneNumber}
+                    onChange={(e) => setCurrentDigitalPerson(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                  />
+                  <button
+                    type="button"
+                    className="exec-f-sub-add-person-btn"
+                    onClick={() => {
+                      const { name, designation, phoneNumber } = currentDigitalPerson;
+                      if (!name.trim() || !designation.trim() || !phoneNumber.trim()) return;
+                      if (!/^\d{7,15}$/.test(phoneNumber.trim())) { alert('Please enter a valid phone number (7-15 digits)'); return; }
+                      setDigitalPeople(prev => ([...prev, { name: name.trim(), designation: designation.trim(), phoneNumber: phoneNumber.trim() }]));
+                      setCurrentDigitalPerson({ name: '', designation: '', phoneNumber: '' });
+                    }}
+                    disabled={!currentDigitalPerson.name.trim() || !currentDigitalPerson.designation.trim() || !currentDigitalPerson.phoneNumber.trim()}
+                  >
+                    Add
+                  </button>
+                </div>
+                {digitalPeople.length > 0 && (
+                  <div className="exec-f-sub-people-list">
+                    {digitalPeople.map((person, index) => (
+                      <div key={index} className="exec-f-sub-person-item">
+                        <div className="exec-f-sub-person-details">
+                          <span className="exec-f-sub-person-name">{person.name}</span>
+                          <span className="exec-f-sub-person-designation">({person.designation})</span>
+                          {person.phoneNumber && (
+                            <span className="exec-f-sub-person-phone"> - {person.phoneNumber}</span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          className="exec-f-sub-remove-person-btn"
+                          onClick={() => setDigitalPeople(prev => prev.filter((_, i) => i !== index))}
+                          title="Remove person"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="exec-f-sub-form-group">
+                <label className="exec-f-sub-form-label">Raise Issues if</label>
+                <div className="exec-f-sub-issue-input-wrapper">
+                  <input
+                    type="text"
+                    className="exec-f-sub-form-input exec-f-sub-issue-input"
+                    placeholder="Describe an issue encountered"
+                    value={digitalIssueText}
+                    onChange={(e) => setDigitalIssueText(e.target.value)}
+                    onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (digitalIssueText.trim()) { setDigitalIssues(prev => [...prev, digitalIssueText.trim()]); setDigitalIssueText(''); } } }}
+                  />
+                  <button
+                    type="button"
+                    className="exec-f-sub-add-issue-btn"
+                    onClick={() => { if (digitalIssueText.trim()) { setDigitalIssues(prev => [...prev, digitalIssueText.trim()]); setDigitalIssueText(''); } }}
+                    disabled={!digitalIssueText.trim()}
+                  >
+                    Add Issue
+                  </button>
+                </div>
+                {digitalIssues.length > 0 && (
+                  <div className="exec-f-sub-issues-list">
+                    {digitalIssues.map((issue, index) => (
+                      <div key={index} className="exec-f-sub-issue-item">
+                        <span className="exec-f-sub-issue-text">{issue}</span>
+                        <button
+                          type="button"
+                          className="exec-f-sub-remove-issue-btn"
+                          onClick={() => setDigitalIssues(prev => prev.filter((_, i) => i !== index))}
+                          title="Remove issue"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="exec-f-sub-form-group">
+                <label className="exec-f-sub-form-label">
+                  Remarks <span className="exec-f-sub-required">*</span>
+                </label>
+                <textarea
+                  className="exec-f-sub-form-textarea"
+                  placeholder="Add remarks for the digital connect (required)"
+                  value={digitalForm.remarks}
+                  onChange={(e) => setDigitalForm(prev => ({ ...prev, remarks: e.target.value }))}
+                  rows={3}
+                />
+              </div>
+
+              <div className="exec-f-sub-form-actions">
+                <button className="exec-f-sub-save-draft-btn" onClick={handleSaveDraft} disabled={submitting}>
+                  Save Draft
+                </button>
+                <button 
+                  className="exec-f-sub-submit-visit-btn" 
+                  onClick={handleSubmitVisit}
+                  disabled={submitting || digitalPeople.length === 0 || !digitalForm.remarks.trim()}
+                >
+                  {submitting ? 'Submitting...' : 'Submit Visit'}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Digital Visits */}
+        <div className="exec-f-sub-past-visits-card">
+          <h3 className="exec-f-sub-section-title">Last 5 Digital Visits</h3>
+          <div className="exec-f-sub-visits-list">
+            {digitalVisitsLoading ? (
+              <div className="loading-text">Loading digital visits...</div>
+            ) : digitalVisits.length === 0 ? (
+              <div className="exec-f-sub-no-visits">
+                <p>No previous digital visits found for this store.</p>
+              </div>
+            ) : (
+              digitalVisits.map((visit) => (
+                <div key={visit.id} className="exec-f-sub-visit-item">
+                  <div className="exec-f-sub-visit-header">
+                    <div className="exec-f-sub-visit-date-status">
+                      <span className="exec-f-sub-visit-date">{formatDate(visit.createdAt)}</span>
+                      <span 
+                        className="exec-f-sub-visit-status"
+                        style={{ backgroundColor: getStatusColor(visit.status) }}
+                      >
+                        {formatStatusLabel(visit.status as any)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="exec-f-sub-visit-representative">
+                    <span className="exec-f-sub-person-icon">👤</span>
+                    <span>{visit.representative}</span>
+                  </div>
+                  {visit.remarks && (
+                    <div className="exec-f-sub-visit-description">{visit.remarks}</div>
+                  )}
+                  {visit.issues && visit.issues.length > 0 && (
+                    <div className="exec-f-sub-visit-issues">
+                      <strong>Issues Reported:</strong>
+                      {visit.issues.map((issue: any) => (
+                        <div key={issue.id} className="exec-f-sub-issue-item">
+                          <span className="exec-f-sub-issue-details">{issue.details}</span>
+                          <span className="exec-f-sub-issue-status" style={{ color: getStatusColor(issue.status) }}>
+                            ({issue.status})
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {visit.personMet && visit.personMet.length > 0 && (
+                    <div className="exec-f-sub-visit-people">
+                      <strong>Contact Person:</strong>
+                      {visit.personMet.map((person: any, index: number) => (
+                        <span key={index} className="exec-f-sub-person-met">
+                          {person.name} ({person.designation})
+                          {person.phoneNumber && ` - ${person.phoneNumber}`}
+                          {index < visit.personMet.length - 1 && ', '}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         {/* Past Visits */}
         <div className="exec-f-sub-past-visits-card">
-          <h3 className="exec-f-sub-section-title">Past Visits</h3>
+          <h3 className="exec-f-sub-section-title">Last 5 Physical Visits</h3>
           <div className="exec-f-sub-visits-list">
             {visitsLoading ? (
               <div className="loading-text">
@@ -759,7 +1079,7 @@ const ExecutiveFormContent: React.FC = () => {
                         className="exec-f-sub-visit-status"
                         style={{ backgroundColor: getStatusColor(visit.status) }}
                       >
-                        {visit.status}
+                        {formatStatusLabel(visit.status as any)}
                       </span>
                     </div>
                     {visit.canViewDetails && (

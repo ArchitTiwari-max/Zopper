@@ -17,7 +17,7 @@ enum Role {
 
 model User {
   id        String   @id @map("_id")
-  email     String  @unique
+  email     String   @unique
   username  String   @unique
   password  String
   role      Role     @default(EXECUTIVE)
@@ -25,109 +25,113 @@ model User {
   updatedAt DateTime @updatedAt
 
   executive Executive?
-  admin Admin?
-  
+  admin     Admin?
+
   @@map("User")
 }
 
 model Admin {
-  id        String   @id @map("_id") 
-  name      String
+  id             String  @id @map("_id")
+  name           String
   contact_number String
-  region    String?
-  userId String @unique 
-  user   User   @relation(fields: [userId], references: [id])
+  region         String?
+  userId         String  @unique
+  user           User    @relation(fields: [userId], references: [id])
 
-  // Back-relation: visits reviewed by this admin
-  reviewedVisits Visit[]
+  // Back-relations: visits reviewed by this admin
+  reviewedVisits        Visit[]
+  reviewedDigitalVisits DigitalVisit[]
 }
 
 model Executive {
-  id        String   @id @map("_id") 
-  name      String
-  contact_number String
-  region    String?
-  visits    Visit[]
-  assigned  Assigned[]
-  visitPlans VisitPlan[]
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  id              String                     @id @map("_id")
+  name            String
+  contact_number  String
+  region          String?
+  visits          Visit[]
+  digitalVisits   DigitalVisit[]
+  assigned        Assigned[]
+  visitPlans      VisitPlan[]
+  userId          String                     @unique
+  user            User                       @relation(fields: [userId], references: [id])
   // Store assignments
-  executiveStores   ExecutiveStoreAssignment[]
+  executiveStores ExecutiveStoreAssignment[]
 }
 
 //
 // Store & Brand 
 //
 model Store {
-  id                String                      @id @map("_id") 
-  storeName         String
-  city              String
-  fullAddress       String?
-  visits            Visit[]
-  partnerBrandIds   String[]                    // references Brand IDs
-  executiveStores   ExecutiveStoreAssignment[]
-  salesRecords      SalesRecord[]
+  id              String                     @id @map("_id")
+  storeName       String
+  city            String
+  fullAddress     String?
+  visits          Visit[]
+  digitalVisits   DigitalVisit[]
+  partnerBrandIds String[] // references Brand IDs
+  executiveStores ExecutiveStoreAssignment[]
+  salesRecords    SalesRecord[]
 }
 
 model ExecutiveStoreAssignment {
-  id            String     @id @default(auto()) @map("_id") @db.ObjectId
-  executiveId   String
-  storeId       String
-  assignedAt    DateTime   @default(now())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  executiveId String
+  storeId     String
+  assignedAt  DateTime @default(now())
 
-  executive     Executive  @relation(fields: [executiveId], references: [id])
-  store         Store      @relation(fields: [storeId], references: [id])
+  executive Executive @relation(fields: [executiveId], references: [id])
+  store     Store     @relation(fields: [storeId], references: [id])
 
   @@unique([executiveId, storeId])
 }
 
 model Brand {
-  id            String          @id @map("_id")
-  brandName     String         @unique
-  categories    CategoryBrand[]
-  salesRecords  SalesRecord[]
+  id           String          @id @map("_id")
+  brandName    String          @unique
+  categories   CategoryBrand[]
+  salesRecords SalesRecord[]
 }
 
 model Category {
-  id            String           @id @map("_id")
-  categoryName  String          @unique
-  brands        CategoryBrand[]
-  salesRecords  SalesRecord[]
-  
+  id           String          @id @map("_id")
+  categoryName String          @unique
+  brands       CategoryBrand[]
+  salesRecords SalesRecord[]
+
   // Index for better performance when searching by category name
 }
 
 model CategoryBrand {
-  id          String   @id @map("_id")
-  brandId     String
-  categoryId  String
+  id         String @id @map("_id")
+  brandId    String
+  categoryId String
 
-  brand       Brand    @relation(fields: [brandId], references: [id])
-  category    Category @relation(fields: [categoryId], references: [id])
+  brand    Brand    @relation(fields: [brandId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
 
   @@unique([brandId, categoryId])
 }
 
 model SalesRecord {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  id         String @id @default(auto()) @map("_id") @db.ObjectId
   storeId    String
   brandId    String
   categoryId String
   year       Int
 
   // Array of past 3 months only
-  monthlySales Json   // will store [{ month: 1, deviceSales: X, planSales: Y, attachPct: Z, revenue: R }, { month: 2, ... }, { month: 3, ... }]
-  
-  // Current datewise sales for this month
-  dailySales Json     // will store [{ date: "2024-01-15", planSales: Y, revenue: R }, ...]
+  monthlySales Json // will store [{ month: 1, deviceSales: X, planSales: Y, attachPct: Z, revenue: R }, { month: 2, ... }, { month: 3, ... }]
 
-  store      Store     @relation(fields: [storeId], references: [id])
-  brand      Brand     @relation(fields: [brandId], references: [id])
-  category   Category  @relation(fields: [categoryId], references: [id])
+  // Current datewise sales for this month
+  dailySales Json // will store [{ date: "2024-01-15", planSales: Y, revenue: R }, ...]
+
+  store    Store    @relation(fields: [storeId], references: [id])
+  brand    Brand    @relation(fields: [brandId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
 
   @@unique([storeId, brandId, categoryId, year])
 }
+
 //
 // Visit & Issue
 //
@@ -136,30 +140,31 @@ enum viststatus {
   PENDING_REVIEW
   REVIEWD
 }
+
 model Visit {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  personMet      Json     // [{ name: "Rajesh", designation: "Manager", phoneNumber: "1234567890" }]
-  POSMchecked    Boolean? @map("displayChecked") // Point of Sale Material availability check (nullable for backward compatibility)
-  remarks        String?
-  imageUrls      String[]   // Array of image URLs
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  status         viststatus @default(PENDING_REVIEW)
-  adminComment   String?
-  reviewedAt     DateTime?
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  personMet         Json // [{ name: "Rajesh", designation: "Manager", phoneNumber: "1234567890" }]
+  POSMchecked       Boolean?   @map("displayChecked") // Point of Sale Material availability check (nullable for backward compatibility)
+  remarks           String?
+  imageUrls         String[] // Array of image URLs
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  status            viststatus @default(PENDING_REVIEW)
+  adminComment      String?
+  reviewedAt        DateTime?
   reviewedByAdminId String?
-  reviewedByAdmin   Admin?   @relation(fields: [reviewedByAdminId], references: [id])
+  reviewedByAdmin   Admin?     @relation(fields: [reviewedByAdminId], references: [id])
   // relations
-  executiveId String  
-  executive   Executive @relation(fields: [executiveId], references: [id])
+  executiveId       String
+  executive         Executive  @relation(fields: [executiveId], references: [id])
 
-  storeId String 
-  store   Store  @relation(fields: [storeId], references: [id])
-  brandIds String[] 
+  storeId  String
+  store    Store    @relation(fields: [storeId], references: [id])
+  brandIds String[]
 
-  issues   Issue[]   // One Visit can have multiple Issues or none
+  issues        Issue[] // One Visit can have multiple Issues or none
   notifications Notification[] // Notifications related to this visit
-  
+
   // Critical performance indexes based on actual queries
   @@index([executiveId, createdAt])
   @@index([storeId])
@@ -179,15 +184,18 @@ model Issue {
   updatedAt DateTime    @updatedAt
   status    IssueStatus @default(Pending)
 
-  // relation
-  visitId   String      @db.ObjectId
-  visit     Visit       @relation(fields: [visitId], references: [id])
+  // relations to either Physical Visit or Digital Visit
+  visitId        String?     @db.ObjectId
+  visit          Visit?      @relation(fields: [visitId], references: [id])
+  digitalVisitId String?     @db.ObjectId
+  digitalVisit   DigitalVisit? @relation(fields: [digitalVisitId], references: [id])
 
   assigned  Assigned[]  // One Issue can have multiple Assigned records
   notifications Notification[] // Notifications related to this issue
   
   // Critical performance indexes based on actual queries
   @@index([visitId])
+  @@index([digitalVisitId])
 }
 
 enum AssignedStatus {
@@ -207,30 +215,59 @@ model Assigned {
   issue   Issue  @relation(fields: [issueId], references: [id])
 
   // relation to Executive
-  executiveId String    
-  executive   Executive  @relation(fields: [executiveId], references: [id])
+  executiveId String
+  executive   Executive @relation(fields: [executiveId], references: [id])
 
   // relation to AssignReport
-  assignReport AssignReport?
+  assignReport  AssignReport?
   notifications Notification[] // Notifications related to this assignment
-  
+
   // Critical performance indexes based on actual queries
   @@index([executiveId, status])
 }
 
 model AssignReport {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  remarks         String   // Required field
-  personMetName   String?  // Optional field
-  personMetDesignation String?  // Optional field
-  photoUrls       String[] // Array of photo URLs (optional)
-  createdAt       DateTime @default(now())
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  remarks              String // Required field
+  personMetName        String? // Optional field
+  personMetDesignation String? // Optional field
+  photoUrls            String[] // Array of photo URLs (optional)
+  createdAt            DateTime @default(now())
 
   // relation to Assigned task
   assignedId String   @unique @db.ObjectId
   assigned   Assigned @relation(fields: [assignedId], references: [id], onDelete: Cascade)
 
   @@map("AssignReport")
+}
+
+//
+// Digital Visit (separate lightweight schema for remote connects)
+//
+model DigitalVisit {
+  id               String       @id @default(auto()) @map("_id") @db.ObjectId
+  connectDate      DateTime     // date of call/connect
+  personMet        Json         // [{ name, designation, phoneNumber }]
+  remarks          String       // required remarks for digital visit
+  status           viststatus   @default(PENDING_REVIEW)
+  adminComment     String?
+  reviewedAt       DateTime?
+  reviewedByAdminId String?
+  reviewedByAdmin  Admin?       @relation(fields: [reviewedByAdminId], references: [id])
+
+  executiveId String
+  executive   Executive    @relation(fields: [executiveId], references: [id])
+
+  storeId String
+  store   Store       @relation(fields: [storeId], references: [id])
+
+  issues  Issue[]
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([executiveId, connectDate])
+  @@index([storeId])
 }
 
 //
@@ -243,25 +280,25 @@ enum VisitPlanStatus {
 }
 
 model VisitPlan {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  executiveId   String
-  executive     Executive @relation(fields: [executiveId], references: [id])
-  storeIds      String[]
-  storesSnapshot Json?    // Optional snapshot of store details at submission time
-  status        VisitPlanStatus @default(SUBMITTED)
-  submittedAt   DateTime @default(now())
-  reviewedAt    DateTime?
-  reviewNote    String?
-  plannedVisitDate DateTime  // The date when visits should be conducted
-  
+  id               String          @id @default(auto()) @map("_id") @db.ObjectId
+  executiveId      String
+  executive        Executive       @relation(fields: [executiveId], references: [id])
+  storeIds         String[]
+  storesSnapshot   Json? // Optional snapshot of store details at submission time
+  status           VisitPlanStatus @default(SUBMITTED)
+  submittedAt      DateTime        @default(now())
+  reviewedAt       DateTime?
+  reviewNote       String?
+  plannedVisitDate DateTime // The date when visits should be conducted
+
   // Timestamps for better caching
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Admin creation support
-  createdByAdminId String?  // Admin ID who created this plan (null for executive-created)
-  adminComment     String?  // Comment from admin when creating the plan
-  createdByRole    Role @default(EXECUTIVE) // ADMIN or EXECUTIVE
+  createdByAdminId String? // Admin ID who created this plan (null for executive-created)
+  adminComment     String? // Comment from admin when creating the plan
+  createdByRole    Role    @default(EXECUTIVE) // ADMIN or EXECUTIVE
 
   // Notifications related to this plan
   notifications Notification[]
@@ -277,7 +314,7 @@ model OTP {
   otp       String
   expiresAt DateTime
   createdAt DateTime @default(now())
-  
+
   @@map("Otp")
 }
 
@@ -286,16 +323,16 @@ model OTP {
 //
 
 enum NotificationType {
-  VISIT_SUBMITTED         // Executive submits a visit -> Admin
-  VISIT_REVIEWED          // Admin reviews a visit -> Executive  
-  ISSUE_REPORTED          // Executive reports an issue -> Admin
-  ISSUE_ASSIGNED          // Admin assigns issue -> Executive
-  ISSUE_STATUS_UPDATED    // Executive updates issue status -> Admin
-  ISSUE_RESOLVED          // Executive resolves issue -> Admin
-  ADMIN_COMMENT_ADDED     // Admin adds comment -> Executive
-  SYSTEM_ANNOUNCEMENT     // System-wide announcements
-  VISIT_PLAN_SUBMITTED    // Executive submits a PJP/visit plan -> Admin
-  VISIT_PLAN_ASSIGNED     // Admin assigns visit plan to Executive -> Executive
+  VISIT_SUBMITTED // Executive submits a visit -> Admin
+  VISIT_REVIEWED // Admin reviews a visit -> Executive  
+  ISSUE_REPORTED // Executive reports an issue -> Admin
+  ISSUE_ASSIGNED // Admin assigns issue -> Executive
+  ISSUE_STATUS_UPDATED // Executive updates issue status -> Admin
+  ISSUE_RESOLVED // Executive resolves issue -> Admin
+  ADMIN_COMMENT_ADDED // Admin adds comment -> Executive
+  SYSTEM_ANNOUNCEMENT // System-wide announcements
+  VISIT_PLAN_SUBMITTED // Executive submits a PJP/visit plan -> Admin
+  VISIT_PLAN_ASSIGNED // Admin assigns visit plan to Executive -> Executive
 }
 
 enum NotificationStatus {
@@ -312,43 +349,43 @@ enum NotificationPriority {
 }
 
 model Notification {
-  id          String             @id @default(auto()) @map("_id") @db.ObjectId
-  title       String             // Short notification title
-  message     String             // Detailed notification message
-  type        NotificationType   // Type of notification
-  status      NotificationStatus @default(UNREAD)
-  priority    NotificationPriority @default(MEDIUM)
-  
+  id       String               @id @default(auto()) @map("_id") @db.ObjectId
+  title    String // Short notification title
+  message  String // Detailed notification message
+  type     NotificationType // Type of notification
+  status   NotificationStatus   @default(UNREAD)
+  priority NotificationPriority @default(MEDIUM)
+
   // Recipient information
-  recipientId String             // User ID who receives the notification
-  recipientRole Role            // ADMIN or EXECUTIVE
-  
+  recipientId   String // User ID who receives the notification
+  recipientRole Role // ADMIN or EXECUTIVE
+
   // Sender information (optional for system notifications)
-  senderId    String?            // User ID who triggered the notification
-  senderRole  Role?              // ADMIN or EXECUTIVE
-  
+  senderId   String? // User ID who triggered the notification
+  senderRole Role? // ADMIN or EXECUTIVE
+
   // Related entity references (for deep linking)
-  visitId     String?   @db.ObjectId  // Related visit ID
-  issueId     String?     // Related issue ID
-  assignedId  String?   @db.ObjectId  // Related assignment ID
-  visitPlanId String?   @db.ObjectId  // Related visit plan (PJP) ID
-  
+  visitId     String? @db.ObjectId // Related visit ID
+  issueId     String? // Related issue ID
+  assignedId  String? @db.ObjectId // Related assignment ID
+  visitPlanId String? @db.ObjectId // Related visit plan (PJP) ID
+
   // Metadata
-  metadata    Json?              // Additional contextual data
-  actionUrl   String?            // Deep link to related page
-  
+  metadata  Json? // Additional contextual data
+  actionUrl String? // Deep link to related page
+
   // Timestamps
-  createdAt   DateTime  @default(now())
-  readAt      DateTime?          // When notification was read
-  archivedAt  DateTime?          // When notification was archived
-  expiresAt   DateTime?          // Optional expiration for temporary notifications
-  
+  createdAt  DateTime  @default(now())
+  readAt     DateTime? // When notification was read
+  archivedAt DateTime? // When notification was archived
+  expiresAt  DateTime? // Optional expiration for temporary notifications
+
   // Relations (optional - for referential integrity)
-  visit       Visit?    @relation(fields: [visitId], references: [id])
-  issue       Issue?    @relation(fields: [issueId], references: [id])
-  assigned    Assigned? @relation(fields: [assignedId], references: [id])
-  visitPlan   VisitPlan? @relation(fields: [visitPlanId], references: [id])
-  
+  visit     Visit?     @relation(fields: [visitId], references: [id])
+  issue     Issue?     @relation(fields: [issueId], references: [id])
+  assigned  Assigned?  @relation(fields: [assignedId], references: [id])
+  visitPlan VisitPlan? @relation(fields: [visitPlanId], references: [id])
+
   // Indexes for performance
   @@index([recipientId, status, createdAt])
   @@index([type, createdAt])

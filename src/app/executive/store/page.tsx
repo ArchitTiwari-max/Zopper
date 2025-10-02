@@ -14,6 +14,7 @@ interface StoreData {
   lastVisitDate: string | null;
 }
 
+
 const Store: React.FC = () => {
   const router = useRouter();
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -36,6 +37,7 @@ const Store: React.FC = () => {
     brands: ['All Brands'],
     sortOptions: ['Recently Visited First', 'Store Name A-Z', 'Store Name Z-A', 'City A-Z']
   });
+
 
   // Initialize planned visit date to today (using local date)
   useEffect(() => {
@@ -265,6 +267,7 @@ const Store: React.FC = () => {
     }
   });
 
+
   return (
     <div className="exec-v-form-container">
       <div className="exec-v-form-content">
@@ -430,7 +433,7 @@ const Store: React.FC = () => {
                       View Sales
                     </a>
                   </div>
-                  <div className="exec-v-form-table-cell exec-v-form-visited-cell">
+                  <div className="exec-v-form-table-cell exec-v-form-visited-cell" onClick={(e) => e.stopPropagation()}>
                     <span className="exec-v-form-visited-text">{store.visited}</span>
                   </div>
                 </div>
