@@ -76,6 +76,7 @@ model Store {
   city              String
   fullAddress       String?
   visits            Visit[]
+  digitalVisits     DigitalVisit[]
   partnerBrandIds   String[]                    // references Brand IDs
   executiveStores   ExecutiveStoreAssignment[]
   salesRecords      SalesRecord[]
@@ -256,6 +257,7 @@ model AssignReport {
 //
 // Digital Visit (separate lightweight schema for remote connects)
 //
+
 model DigitalVisit {
   id               String       @id @default(auto()) @map("_id") @db.ObjectId
   connectDate      DateTime     // date of call/connect
