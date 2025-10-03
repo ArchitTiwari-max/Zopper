@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { DashboardData, TimeframeOption, BrandFilterOption } from '../types';
 import { useDateFilter } from '../contexts/DateFilterContext';
 import './page.css';
+import PartnerBrandTypeVisits from './components/PartnerBrandTypeVisits';
 
 // Default empty dashboard data structure
 const defaultDashboardData: DashboardData = {
@@ -154,6 +155,9 @@ const AdminDashboardPage: React.FC = () => {
           </div>
         </Link>
       </div>
+
+      {/* Partner Brand Type Visits (A+, A, B, C) */}
+      <PartnerBrandTypeVisits />
 
       {/* Brand-wise Visits Table */}
       <div className="admin-dashboard-brand-visits-section">
