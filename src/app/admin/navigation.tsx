@@ -13,7 +13,8 @@ const Navigation: React.FC = () => {
     { id: 'stores', label: 'Stores', icon: 'icon-stores', active: pathname.includes('/admin/stores'), href: '/admin/stores' },
     { id: 'executives', label: 'Executives', icon: 'icon-executives', active: pathname.includes('/admin/executives'), href: '/admin/executives' },
     { id: 'issues', label: 'Issues', icon: 'icon-issues', active: pathname.includes('/admin/issues'), href: '/admin/issues' },
-    { id: 'visit-report', label: 'Visit Report', icon: 'icon-visit-report', active: pathname.includes('/admin/visit-report'), href: '/admin/visit-report' }
+    { id: 'visit-report', label: 'Visit Report', icon: 'icon-visit-report', active: pathname.includes('/admin/visit-report'), href: '/admin/visit-report' },
+    { id: 'digital-report', label: 'Digital Report', icon: 'icon-call', active: pathname.includes('/admin/digital-report'), href: '/admin/digital-report' }
   ];
 
   return (

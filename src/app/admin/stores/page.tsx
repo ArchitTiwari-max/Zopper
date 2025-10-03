@@ -980,7 +980,7 @@ const AdminStoresPage: React.FC = () => {
                             {store.storeName}
                           </span>
                         ) : (
-                          <Link href={`/admin/visit-report?storeId=${store.id}&dateFilter=${encodeURIComponent(selectedDateFilter)}`} className="admin-stores-store-name-link admin-stores-store-name-truncated" title={store.storeName}>
+                          <Link href={`/admin/stores/${store.id}?storeName=${encodeURIComponent(store.storeName)}&city=${encodeURIComponent(store.city)}`} className="admin-stores-store-name-link admin-stores-store-name-truncated" title={store.storeName}>
                             {store.storeName}
                           </Link>
                         )}
@@ -1010,9 +1010,13 @@ const AdminStoresPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="admin-stores-cell">
-                    <span className="admin-stores-count-badge admin-stores-visits-badge" title={`Total visits for ${store.storeName}`}>
+                    <Link 
+                      href={`/admin/visit-report?storeId=${store.id}&dateFilter=${encodeURIComponent(selectedDateFilter)}`}
+                      className="admin-stores-count-badge admin-stores-visits-badge admin-stores-clickable-badge-issues"
+                      title={`View all visits for ${store.storeName}`}
+                    >
                       {store.totalVisits ?? 0}
-                    </span>
+                    </Link>
                   </div>
                   <div className="admin-stores-cell">
                     {store.pendingIssues > 0 ? (

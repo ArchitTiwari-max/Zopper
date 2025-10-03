@@ -29,6 +29,7 @@ interface VisitDetailsModalProps {
   visit: AdminVisitData | null;
   onMarkReviewed?: (visitId: string, requiresFollowUp?: boolean, adminComment?: string) => void;
   isMarkingReviewed?: boolean;
+  isDigital?: boolean;
 }
 
 const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
@@ -36,7 +37,8 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
   onClose,
   visit,
   onMarkReviewed,
-  isMarkingReviewed = false
+  isMarkingReviewed = false,
+  isDigital = false
 }) => {
   // All hooks must be declared unconditionally at the top to respect the Rules of Hooks
   const [showFollowUpForm, setShowFollowUpForm] = React.useState(false);
@@ -125,13 +127,15 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
   }
 
   const handleDelete = async () => {
-    if (visit.visitStatus === 'REVIEWD') return;
     const ok = window.confirm('Are you sure you want to delete this visit?');
     if (!ok) return;
 
     try {
       setIsDeleting(true);
-      const res = await fetch(`/api/executive/visits/${visit.id}`, {
+      const endpoint = isDigital 
+        ? `/api/executive/digital-visit/${visit.id}`
+        : `/api/executive/visits/${visit.id}`;
+      const res = await fetch(endpoint, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
@@ -170,7 +174,7 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
                 <div className="admin-visit-info-value">{visit.storeName}</div>
               </div>
               <div className="admin-visit-info-card">
-                <div className="admin-visit-info-label">Visit Date:</div>
+                <div className="admin-visit-info-label">{isDigital ? 'Connect Date:' : 'Visit Date:'}</div>
                 <div className="admin-visit-info-value">{formatDate(visit.visitDate)}</div>
               </div>
               <div className="admin-visit-info-card">
@@ -405,16 +409,14 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
           )}
         </div>
         <div className="admin-visit-modal-footer">
-          {visit.visitStatus !== 'REVIEWD' && (
-            <button
-              className={`admin-visit-delete-button${isDeleting ? ' disabled' : ''}`}
-              onClick={handleDelete}
-              disabled={isDeleting}
-              title={'Delete this visit'}
-            >
-              {isDeleting ? 'Deleting...' : 'Delete Visit'}
-            </button>
-          )}
+          <button
+            className={`admin-visit-delete-button${isDeleting ? ' disabled' : ''}`}
+            onClick={handleDelete}
+            disabled={isDeleting}
+            title={'Delete this visit'}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete Visit'}
+          </button>
         </div>
       </div>
     </div>

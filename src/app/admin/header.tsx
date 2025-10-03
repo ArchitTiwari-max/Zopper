@@ -123,6 +123,11 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
           title: 'Visit Reports',
           subtitle: 'Unified view of all store and executive visits across regions'
         };
+      case '/admin/digital-report':
+        return {
+          title: 'Digital Connect',
+          subtitle: 'Manage and review digital visit connects'
+        };
       case '/admin/settings':
         return {
           title: 'Settings',

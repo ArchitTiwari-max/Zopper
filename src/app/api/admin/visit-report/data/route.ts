@@ -167,7 +167,8 @@ export async function GET(request: NextRequest) {
         .filter(Boolean) as string[];
 
       // Get executive initials
-      const initials = visit.executive.name
+      const execName = visit.executive?.name || 'Unknown Executive';
+      const initials = execName
         .split(' ')
         .map(word => word.charAt(0))
         .slice(0, 2)
@@ -203,7 +204,7 @@ export async function GET(request: NextRequest) {
         '#059669', // Y - Emerald
         '#7C3AED'  // Z - Indigo
       ];
-      const firstLetter = visit.executive.name.charAt(0).toUpperCase();
+      const firstLetter = execName.charAt(0).toUpperCase();
       const colorIndex = firstLetter.charCodeAt(0) - 65; // Convert A-Z to 0-25
       const safeColorIndex = Math.max(0, Math.min(colorIndex, colors.length - 1)); // Ensure valid index
 
@@ -236,12 +237,12 @@ export async function GET(request: NextRequest) {
 
       return {
         id: visit.id, // Keep actual ObjectId for database operations
-        executiveId: visit.executive.id,
-        executiveName: visit.executive.name,
+        executiveId: visit.executive?.id || 'unknown',
+        executiveName: execName,
         executiveInitials: initials,
         avatarColor: colors[safeColorIndex],
-        storeName: visit.store.storeName,
-        storeId: visit.store.id, // Add store ID for linking
+        storeName: visit.store?.storeName || 'Unknown Store',
+        storeId: visit.store?.id || 'unknown', // Add store ID for linking
         partnerBrand: partnerBrands,
         visitDate: formattedVisitDate,
         visitStatus: visit.status as 'PENDING_REVIEW' | 'REVIEWD',

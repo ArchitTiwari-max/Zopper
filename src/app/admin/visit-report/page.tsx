@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useDateFilter } from '../contexts/DateFilterContext';
 import VisitDetailsModal from '../components/VisitDetailsModal';
 import * as XLSX from 'xlsx';
@@ -115,8 +115,11 @@ const ExpandableText: React.FC<ExpandableTextProps> = ({
 };
 
 const VisitReportPage: React.FC = () => {
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { selectedDateFilter } = useDateFilter();
+  const isDigital = pathname.includes('/admin/digital-report');
+  const baseEndpoint = isDigital ? '/api/admin/digital-report' : '/api/admin/visit-report';
   const [visitData, setVisitData] = useState<VisitReportData[]>([]);
   const [filteredVisits, setFilteredVisits] = useState<VisitReportData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -191,13 +194,19 @@ const VisitReportPage: React.FC = () => {
       const params = new URLSearchParams();
       params.append('dateFilter', effectiveDateFilter);
 
-      const response = await fetch(`/api/admin/visit-report/data?${params.toString()}`, {
+      const response = await fetch(`${baseEndpoint}/data?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
       });
+
+      // Handle 304 Not Modified gracefully (keep existing data)
+      if (response.status === 304) {
+        setIsLoading(false);
+        return;
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
@@ -603,7 +612,7 @@ const VisitReportPage: React.FC = () => {
       'Store Name',
       'City',
       'Partner Brands',
-      'Visit Date',
+      isDigital ? 'Connect Date' : 'Visit Date',
       'Persons Met',
       'POSM Available',
       'Remarks',
@@ -690,13 +699,13 @@ const VisitReportPage: React.FC = () => {
     ];
 
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'VisitReports');
+    XLSX.utils.book_append_sheet(wb, ws, isDigital ? 'DigitalVisitReports' : 'VisitReports');
 
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
-    const filename = `visit-reports-${yyyy}-${mm}-${dd}.xlsx`;
+    const filename = `${isDigital ? 'digital-visit-reports' : 'visit-reports'}-${yyyy}-${mm}-${dd}.xlsx`;
     XLSX.writeFile(wb, filename, { bookType: 'xlsx' });
   };
 
@@ -778,7 +787,7 @@ const VisitReportPage: React.FC = () => {
   const markAsReviewed = async (visitId: string, requiresFollowUp: boolean = false, adminComment?: string) => {
     setMarkingReviewedId(visitId);
     try {
-      const response = await fetch(`/api/admin/visit-report/${visitId}/mark-reviewed`, {
+      const response = await fetch(`${baseEndpoint}/${visitId}/mark-reviewed`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -1032,7 +1041,7 @@ const VisitReportPage: React.FC = () => {
               className="admin-visit-report-header-cell sortable-header" 
               onClick={() => handleSort('visitDate')}
             >
-              Visit Date <span className="sort-icon">{getSortIcon('visitDate')}</span>
+              {isDigital ? 'Connect Date' : 'Visit Date'} <span className="sort-icon">{getSortIcon('visitDate')}</span>
             </div>
             <div className="admin-visit-report-header-cell">Issues</div>
             <div className="admin-visit-report-header-cell">Status</div>
@@ -1174,6 +1183,7 @@ const VisitReportPage: React.FC = () => {
         visit={selectedVisit}
         onMarkReviewed={markAsReviewed}
         isMarkingReviewed={markingReviewedId === selectedVisit?.id}
+        isDigital={isDigital}
       />
     </div>
   );

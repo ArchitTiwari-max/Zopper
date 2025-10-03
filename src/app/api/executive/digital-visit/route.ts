@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { generateUniqueIssueId } from '@/lib/issueIdGenerator';
 
 const prisma = new PrismaClient();
 
@@ -80,6 +81,9 @@ export async function POST(request: NextRequest) {
 
     // Convert connect date
     const connectDateObj = new Date(`${dateStr}T00:00:00.000Z`);
+    if (isNaN(connectDateObj.getTime())) {
+      return NextResponse.json({ error: 'Invalid connect date' }, { status: 400 });
+    }
 
     const digitalVisit = await prisma.digitalVisit.create({
       data: {
@@ -96,8 +100,15 @@ export async function POST(request: NextRequest) {
     if (issuesRaised && Array.isArray(issuesRaised) && issuesRaised.length > 0) {
       for (const details of issuesRaised) {
         if (details && String(details).trim() !== '') {
+          // Generate a 7-character unique ID to match Issue schema expectations
+          const uniqueIssueId = await generateUniqueIssueId();
           const created = await prisma.issue.create({
-            data: { details: String(details).trim(), digitalVisitId: digitalVisit.id },
+            data: { 
+              id: uniqueIssueId,
+              details: String(details).trim(), 
+              digitalVisitId: digitalVisit.id,
+              createdAt: connectDateObj // align issue date with connect date
+            },
           });
           createdIssues.push({ id: created.id, details: created.details, status: created.status });
         }
