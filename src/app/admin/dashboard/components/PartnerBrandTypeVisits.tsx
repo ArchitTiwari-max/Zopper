@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 
 interface BrandOption { id: string; name: string }
 interface TypeStat {
-  type: "A_PLUS" | "A" | "B" | "C";
+  type: "A_PLUS" | "A" | "B" | "C" | "D";
   totalStores: number;
   visitedUniqueStores: number;
   unvisitedStores: { id: string; name: string }[];
@@ -17,6 +17,7 @@ const typeLabels: Record<TypeStat["type"], string> = {
   A: "A",
   B: "B",
   C: "C",
+  D: "D",
 };
 
 const PartnerBrandTypeVisits: React.FC = () => {
@@ -87,7 +88,7 @@ const PartnerBrandTypeVisits: React.FC = () => {
 
   const orderedStats = useMemo(() => {
     if (!stats) return [] as TypeStat[];
-    const order: TypeStat["type"][] = ["A_PLUS", "A", "B", "C"];
+    const order: TypeStat["type"][] = ["A_PLUS", "A", "B", "C", "D"];
     const map = new Map(stats.map(s => [s.type, s]));
     return order.map(t => map.get(t) || { type: t, totalStores: 0, visitedUniqueStores: 0, unvisitedStores: [] });
   }, [stats]);
@@ -153,13 +154,13 @@ const PartnerBrandTypeVisits: React.FC = () => {
                       style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", fontWeight: 600 }}
                       aria-expanded={isOpen}
                     >
-                      {isOpen ? "Hide" : "View Unvisited"}
+                      {isOpen ? "Hide" : "View Unvisited Stores"}
                     </button>
                   </div>
                   <div style={{ marginTop: 8, color: "#111827", fontSize: 14 }}>
                     <span style={{ fontWeight: 700 }}>{visited}</span>
                     <span style={{ color: "#6b7280" }}>
-                      {" / "}{total} visited
+                      {" / "}{total} Unique Store visits
                     </span>
                   </div>
                   <div style={{ marginTop: 8, height: 8, background: "#f3f4f6", borderRadius: 999 }}>

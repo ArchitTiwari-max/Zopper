@@ -69,6 +69,7 @@ enum PartnerBrandType {
   A
   B
   C
+  D
 }
 
 model Store {

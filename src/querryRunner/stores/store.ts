@@ -85,11 +85,12 @@ async function main() {
         if (v === 'A') return PartnerBrandType.A;
         if (v === 'B') return PartnerBrandType.B;
         if (v === 'C') return PartnerBrandType.C;
+        if (v === 'D') return PartnerBrandType.D;
         return null;
       };
       const mapped = rawTypes.map(mapType);
       if (mapped.some(m => m === null)) {
-        console.error(`❌ Invalid partnerBrandTypes value(s) for store ${storeId}. Allowed: A+, A, B, C. Skipping this row.`);
+        console.error(`❌ Invalid partnerBrandTypes value(s) for store ${storeId}. Allowed: A+, A, B, C, D. Skipping this row.`);
         continue;
       }
       partnerBrandTypes = mapped as PartnerBrandType[];

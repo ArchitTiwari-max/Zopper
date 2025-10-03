@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useDateFilter } from '../contexts/DateFilterContext';
 import DateFilter from '@/components/DateFilter/DateFilter';
 import './Dashboard.css';
+import PartnerBrandTypeVisitsExec from './components/PartnerBrandTypeVisitsExec';
 
 interface Brand {
   id: string;
@@ -136,6 +137,19 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="exec-dash-date-filter">
             <DateFilter />
+          </div>
+        </div>
+
+        {/* Partner Brand Type Visits (A+, A, B, C, D) - Assigned stores only */}
+        <div className="exec-dash-dashboard-card">
+          <div className="exec-dash-card-header">
+            <div className="exec-dash-card-title-section">
+              <div className="exec-dash-chart-icon">🏷️</div>
+              <h2 className="exec-dash-card-title">Partner Brand Type Coverage</h2>
+            </div>
+          </div>
+          <div style={{ padding: '0 16px 16px' }}>
+            <PartnerBrandTypeVisitsExec />
           </div>
         </div>
 

@@ -24,28 +24,36 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'ADMIN') return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Executive access required' }, { status: 403 });
 
     const { searchParams } = new URL(request.url);
     const brandId = searchParams.get('brandId');
     const range = searchParams.get('range'); // today | 7d | 30d (default)
     const { start, end } = parseRange(range);
 
-    // Fetch stores that contain the selected brand (or all brands if brandId not provided)
-    // We need partnerBrandIds and partnerBrandTypes for index-wise mapping
-    const stores = await prisma.store.findMany({
-      select: {
-        id: true,
-        storeName: true,
-        partnerBrandIds: true,
-        partnerBrandTypes: true,
-      },
+    // Resolve executive and assigned store IDs
+    const executive = await prisma.executive.findUnique({
+      where: { userId: user.userId },
+      select: { id: true, executiveStores: { select: { storeId: true } } },
     });
+    if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
 
-    // Filter stores by brand presence
-    const candidateStores = stores.filter((s) => {
-      if (!brandId) return true; // All brands
-      return s.partnerBrandIds.includes(brandId);
+    const assignedStoreIds = executive.executiveStores.map(es => es.storeId);
+    if (assignedStoreIds.length === 0) {
+      const empty: Array<{ type: PartnerBrandType; totalStores: number; visitedUniqueStores: number; unvisitedStores: any[] }> = [] as any;
+      return NextResponse.json({ data: [
+        { type: 'A_PLUS', totalStores: 0, visitedUniqueStores: 0, unvisitedStores: [] },
+        { type: 'A', totalStores: 0, visitedUniqueStores: 0, unvisitedStores: [] },
+        { type: 'B', totalStores: 0, visitedUniqueStores: 0, unvisitedStores: [] },
+        { type: 'C', totalStores: 0, visitedUniqueStores: 0, unvisitedStores: [] },
+        { type: 'D', totalStores: 0, visitedUniqueStores: 0, unvisitedStores: [] },
+      ], meta: { brandId: brandId || null, range: range || '30d', generatedAt: new Date().toISOString() } });
+    }
+
+    // Fetch only assigned stores
+    const stores = await prisma.store.findMany({
+      where: { id: { in: assignedStoreIds } },
+      select: { id: true, storeName: true, partnerBrandIds: true, partnerBrandTypes: true },
     });
 
     // Build groups by partner brand type for the selected brand
@@ -57,16 +65,13 @@ export async function GET(request: NextRequest) {
       D: { stores: [] },
     };
 
-    for (const s of candidateStores) {
-      // Determine the type for this store with respect to brandId
+    for (const s of stores) {
       if (!brandId) {
-        // If no brandId filter, include the store once per type it has, using aligned arrays
         if (Array.isArray(s.partnerBrandIds) && Array.isArray(s.partnerBrandTypes)) {
           const len = Math.min(s.partnerBrandIds.length, s.partnerBrandTypes.length);
           for (let i = 0; i < len; i++) {
             const t = s.partnerBrandTypes[i] as PartnerBrandType | undefined;
             if (t && groups[t]) {
-              // Avoid duplicates within a type
               if (!groups[t].stores.some((st) => st.id === s.id)) {
                 groups[t].stores.push({ id: s.id, name: s.storeName });
               }
@@ -74,7 +79,6 @@ export async function GET(request: NextRequest) {
           }
         }
       } else {
-        // With brand filter: find index of brandId and map to that single type
         const idx = s.partnerBrandIds.indexOf(brandId);
         if (idx >= 0 && Array.isArray(s.partnerBrandTypes) && s.partnerBrandTypes[idx]) {
           const t = s.partnerBrandTypes[idx] as PartnerBrandType;
@@ -85,10 +89,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fetch visits for these stores in the date range (both physical and digital)
-    const allStoreIds = Array.from(
-      new Set(Object.values(groups).flatMap((g) => g.stores.map((s) => s.id)))
-    );
+    // Fetch visits for these stores in the date range (both physical and digital),
+    // but only those by this executive for fairness on exec dashboard
+    const allStoreIds = Array.from(new Set(Object.values(groups).flatMap((g) => g.stores.map((s) => s.id))));
 
     let visitedStoreIds = new Set<string>();
     if (allStoreIds.length > 0) {
@@ -96,6 +99,7 @@ export async function GET(request: NextRequest) {
         prisma.visit.findMany({
           where: {
             storeId: { in: allStoreIds },
+            executiveId: executive.id,
             createdAt: { gte: start, lte: end },
           },
           select: { storeId: true },
@@ -103,6 +107,7 @@ export async function GET(request: NextRequest) {
         prisma.digitalVisit.findMany({
           where: {
             storeId: { in: allStoreIds },
+            executiveId: executive.id,
             connectDate: { gte: start, lte: end },
           },
           select: { storeId: true },
@@ -111,7 +116,6 @@ export async function GET(request: NextRequest) {
       visitedStoreIds = new Set<string>([...visits, ...dVisits].map((v: any) => v.storeId));
     }
 
-    // Build response per type
     type TypeKey = keyof typeof groups;
     const typeOrder: TypeKey[] = ['A_PLUS', 'A', 'B', 'C', 'D'];
     const result = typeOrder.map((typeKey) => {
@@ -136,7 +140,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (e) {
-    console.error('partner-brand-type-visits error', e);
+    console.error('exec partner-brand-type-visits error', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

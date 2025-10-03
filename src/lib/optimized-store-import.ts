@@ -103,6 +103,7 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
       if (v === 'A') return PartnerBrandType.A;
       if (v === 'B') return PartnerBrandType.B;
       if (v === 'C') return PartnerBrandType.C;
+      if (v === 'D') return PartnerBrandType.D;
       return null;
     };
 
@@ -121,7 +122,7 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
       }
       const mapped = rawTypes.map(mapType);
       if (mapped.some(m => m === null)) {
-        return `❌ Invalid partnerBrandTypes value(s). Allowed: A+, A, B, C. ${context}`;
+        return `❌ Invalid partnerBrandTypes value(s). Allowed: A+, A, B, C, D. ${context}`;
       }
       partnerBrandTypes = mapped as PartnerBrandType[];
     }

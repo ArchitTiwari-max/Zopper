@@ -429,48 +429,7 @@ const StorewiseExcelImport = () => {
           </button>
         </div>
 
-        {/* Console */}
-        <div className="excel-stor-sale-console-section">
-          <div className="excel-stor-sale-console-header">
-            <div className="excel-stor-sale-console-title">
-              <Terminal size={16} />
-              Activity Log
-            </div>
-            <div className="excel-stor-sale-console-controls">
-              <button 
-                onClick={() => setShowConsole(!showConsole)}
-                className="excel-stor-sale-console-control-button"
-              >
-                {showConsole ? 'Hide' : 'Show'}
-              </button>
-              <button 
-                onClick={clearConsole}
-                className="excel-stor-sale-console-control-button"
-              >
-                <Trash2 size={12} />
-                Clear
-              </button>
-            </div>
-          </div>
-          
-          {showConsole && (
-            <div className="excel-stor-sale-console-body">
-              {consoleLogs.length === 0 ? (
-                <div className="excel-stor-sale-console-empty">No activity yet. Upload a file to begin.</div>
-              ) : (
-                consoleLogs.map((log) => (
-                  <div key={log.id} className={`excel-stor-sale-console-log ${log.type}`}>
-                    <span className="excel-stor-sale-console-timestamp">[{log.timestamp}]</span>
-                    {log.message}
-                  </div>
-                ))
-              )}
-              <div ref={consoleEndRef} />
-            </div>
-          )}
-        </div>
-
-        {/* Results */}
+        {/* Results - moved above console */}
         {importStatus.result && (
           <div className="excel-stor-sale-result-section">
             <div className={importStatus.result.failed > 0 ? "excel-stor-sale-result-error" : "excel-stor-sale-result-success"}>
@@ -516,9 +475,67 @@ const StorewiseExcelImport = () => {
                   </div>
                 </div>
               </div>
+
+              {importStatus.result.failed > 0 && importStatus.result.errors && importStatus.result.errors.length > 0 && (
+                <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(254, 226, 226, 0.6)', borderRadius: 8 }}>
+                  <div style={{ fontWeight: 700, color: '#991b1b', marginBottom: 8 }}>Errors</div>
+                  <div style={{ maxHeight: 180, overflowY: 'auto', paddingRight: 8 }}>
+                    <ul style={{ margin: 0, paddingLeft: 18 }}>
+                      {importStatus.result.errors.map((err, idx) => (
+                        <li key={idx} style={{ margin: '6px 0', color: '#7f1d1d', fontSize: 13 }}>
+                          {err.replace(/^❌\s*/g, '')}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
+
+        {/* Console */}
+        <div className="excel-stor-sale-console-section">
+          <div className="excel-stor-sale-console-header">
+            <div className="excel-stor-sale-console-title">
+              <Terminal size={16} />
+              Activity Log
+            </div>
+            <div className="excel-stor-sale-console-controls">
+              <button 
+                onClick={() => setShowConsole(!showConsole)}
+                className="excel-stor-sale-console-control-button"
+              >
+                {showConsole ? 'Hide' : 'Show'}
+              </button>
+              <button 
+                onClick={clearConsole}
+                className="excel-stor-sale-console-control-button"
+              >
+                <Trash2 size={12} />
+                Clear
+              </button>
+            </div>
+          </div>
+          
+          {showConsole && (
+            <div className="excel-stor-sale-console-body">
+              {consoleLogs.length === 0 ? (
+                <div className="excel-stor-sale-console-empty">No activity yet. Upload a file to begin.</div>
+              ) : (
+                consoleLogs.map((log) => (
+                  <div key={log.id} className={`excel-stor-sale-console-log ${log.type}`}>
+                    <span className="excel-stor-sale-console-timestamp">[{log.timestamp}]</span>
+                    {log.message}
+                  </div>
+                ))
+              )}
+              <div ref={consoleEndRef} />
+            </div>
+          )}
+        </div>
+
+        {/* Results */}
 
         {/* Error Display */}
         {importStatus.error && (
