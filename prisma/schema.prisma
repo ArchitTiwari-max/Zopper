@@ -70,6 +70,7 @@ enum PartnerBrandType {
   B
   C
 }
+
 model Store {
   id                String                      @id @map("_id") 
   storeName         String
@@ -78,6 +79,7 @@ model Store {
   visits            Visit[]
   digitalVisits     DigitalVisit[]
   partnerBrandIds   String[]                    // references Brand IDs
+  partnerBrandTypes PartnerBrandType[] // parallel array corresoponding to same index in partnerBrandIds
   executiveStores   ExecutiveStoreAssignment[]
   salesRecords      SalesRecord[]
 }
