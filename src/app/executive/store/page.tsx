@@ -10,7 +10,7 @@ interface StoreData {
   city: string;
   fullAddress?: string;
   partnerBrands: string[];
-  partnerBrandTypes: ('A_PLUS' | 'A' | 'B' | 'C')[];
+  partnerBrandTypes: ('A_PLUS' | 'A' | 'B' | 'C' | 'D')[];
   visited: string;
   lastVisitDate: string | null;
 }
@@ -46,12 +46,13 @@ const Store: React.FC = () => {
       case 'A': return 'A';
       case 'B': return 'B';
       case 'C': return 'C';
+      case 'D': return 'D';
       default: return '';
     }
   };
 
   // Helper function to format brands with types
-  const formatBrandsWithTypes = (brands: string[], types: ('A_PLUS' | 'A' | 'B' | 'C')[]): string => {
+  const formatBrandsWithTypes = (brands: string[], types: ('A_PLUS' | 'A' | 'B' | 'C' | 'D')[]): string => {
     if (brands.length === 0) return 'No brands';
     
     return brands.map((brand, index) => {
