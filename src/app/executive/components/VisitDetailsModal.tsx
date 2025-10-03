@@ -47,12 +47,14 @@ interface VisitDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   visit: PastVisit | null;
+  isDigital: boolean;
 }
 
 const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
   isOpen,
   onClose,
-  visit
+  visit,
+  isDigital
 }) => {
   const getStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
@@ -136,7 +138,10 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
 
     try {
       setIsDeleting(true);
-      const res = await fetch(`/api/executive/visits/${visit.id}`, {
+      const endpoint = isDigital 
+        ? `/api/executive/digital-visit/${visit.id}`
+        : `/api/executive/visits/${visit.id}`;
+      const res = await fetch(endpoint, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'

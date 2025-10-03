@@ -58,6 +58,7 @@ const VisitHistory: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedVisit, setSelectedVisit] = useState<VisitDetail | null>(null);
+  const [selectedVisitType, setSelectedVisitType] = useState<'PHYSICAL' | 'DIGITAL'>('PHYSICAL');
   const [showModal, setShowModal] = useState(false);
   const [expandedPersonMet, setExpandedPersonMet] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState({
@@ -201,6 +202,7 @@ const VisitHistory: React.FC = () => {
 
   const openVisitModal = (visit: VisitDetail) => {
     setSelectedVisit(visit);
+    setSelectedVisitType(activeTab);
     setShowModal(true);
   };
 
@@ -644,6 +646,7 @@ const VisitHistory: React.FC = () => {
           isOpen={showModal}
           onClose={closeVisitModal}
           visit={selectedVisit}
+          isDigital={selectedVisitType === 'DIGITAL'}
         />
       </div>
     </div>
