@@ -184,6 +184,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
            pathname === '/admin/stores' ||
            pathname === '/admin/issues' || 
            pathname === '/admin/visit-report' ||
+           pathname === '/admin/digital-report' ||
            pathname === '/admin/executives' ||
            pathname.startsWith('/admin/issues/');
   };

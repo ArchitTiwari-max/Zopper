@@ -127,7 +127,11 @@ export async function GET(request: NextRequest) {
       processed = processed.filter(v => issueStatus === 'Pending' ? (v.issueStatus === 'Pending' || v.issueStatus === 'Assigned') : v.issueStatus === issueStatus);
     }
 
-    return NextResponse.json({ visits: processed, total: processed.length });
+    const res = NextResponse.json({ visits: processed, total: processed.length });
+    res.headers.set('Cache-Control', 'no-store');
+    res.headers.set('Pragma', 'no-cache');
+    res.headers.set('Expires', '0');
+    return res;
   } catch (e) {
     console.error('Digital Report Data API Error:', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
