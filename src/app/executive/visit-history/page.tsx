@@ -51,7 +51,10 @@ const VisitHistory: React.FC = () => {
   const { selectedPeriod } = useDateFilter();
   const searchParams = useSearchParams();
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [visits, setVisits] = useState<VisitDetail[]>([]);
+  // Data sets for tabs
+  const [physicalVisits, setPhysicalVisits] = useState<VisitDetail[]>([]);
+  const [digitalVisits, setDigitalVisits] = useState<VisitDetail[]>([]);
+  const [activeTab, setActiveTab] = useState<'PHYSICAL' | 'DIGITAL'>('PHYSICAL');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedVisit, setSelectedVisit] = useState<VisitDetail | null>(null);
@@ -99,43 +102,47 @@ const VisitHistory: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch visit data and filter options in parallel
-        const [visitsResponse, filterResponse] = await Promise.all([
+        // Fetch physical, digital data and filter options in parallel
+        const [physicalRes, digitalRes, filterResponse] = await Promise.all([
           fetch(`/api/executive/visits/data?period=${encodeURIComponent(selectedPeriod)}`, {
             method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+          }),
+          fetch(`/api/executive/digital-visits/data?period=${encodeURIComponent(selectedPeriod)}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
             credentials: 'include'
           }),
           fetch('/api/executive/visits/filter', {
             method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             credentials: 'include'
           })
         ]);
 
-        if (!visitsResponse.ok || !filterResponse.ok) {
+        if (!physicalRes.ok || !digitalRes.ok || !filterResponse.ok) {
           throw new Error('Failed to fetch visit or filter data');
         }
 
-        const [visitsResult, filterResult] = await Promise.all([
-          visitsResponse.json(),
+        const [physicalResult, digitalResult, filterResult] = await Promise.all([
+          physicalRes.json(),
+          digitalRes.json(),
           filterResponse.json()
         ]);
         
-        if (visitsResult.success && filterResult.success) {
-          setVisits(visitsResult.data || []);
+        if (physicalResult.success && digitalResult.success && filterResult.success) {
+          setPhysicalVisits(physicalResult.data || []);
+          setDigitalVisits(digitalResult.data || []);
           setFilterOptions(filterResult.data.filterOptions);
         } else {
-          throw new Error(visitsResult.error || filterResult.error || 'Failed to fetch data');
+          throw new Error(physicalResult.error || digitalResult.error || filterResult.error || 'Failed to fetch data');
         }
       } catch (error) {
         console.error('Error fetching visit history:', error);
         setError(error instanceof Error ? error.message : 'Failed to load visit history');
-        setVisits([]);
+        setPhysicalVisits([]);
+        setDigitalVisits([]);
       } finally {
         setLoading(false);
       }
@@ -214,7 +221,10 @@ const VisitHistory: React.FC = () => {
     });
   };
 
-  const filteredVisits = visits.filter(visit => {
+  // Pick dataset based on active tab
+  const dataset = activeTab === 'PHYSICAL' ? physicalVisits : digitalVisits;
+
+  const filteredVisits = dataset.filter(visit => {
     const matchesName = visit.storeName?.toLowerCase().includes(filters.storeName.toLowerCase());
     const matchesCity = filters.city === 'All Cities' || visit.storeName?.includes(filters.city);
     const matchesBrand = filters.partnerBrand === 'All Brands' || visit.partnerBrand === filters.partnerBrand;
@@ -385,6 +395,32 @@ const VisitHistory: React.FC = () => {
             
             <button className="exec-visits-export-btn" onClick={handleExportToExcel} disabled={loading}>
               📊 Export
+            </button>
+          </div>
+
+          {/* Tab Bar - Full width below filter header */}
+          <div className="exec-visits-tabbar">
+            <button
+              type="button"
+              className={`exec-visits-tab ${activeTab === 'PHYSICAL' ? 'active' : ''}`}
+              onClick={() => setActiveTab('PHYSICAL')}
+            >
+              <span className="exec-tab-icon">🏬</span>
+              <span className="exec-tab-text">
+                <span className="exec-tab-word">Physical</span>
+                <span className="exec-tab-visit">&nbsp;Visits</span>
+              </span>
+            </button>
+            <button
+              type="button"
+              className={`exec-visits-tab ${activeTab === 'DIGITAL' ? 'active' : ''}`}
+              onClick={() => setActiveTab('DIGITAL')}
+            >
+              <span className="exec-tab-icon">📞</span>
+              <span className="exec-tab-text">
+                <span className="exec-tab-word">Digital</span>
+                <span className="exec-tab-visit">&nbsp;Visits</span>
+              </span>
             </button>
           </div>
           

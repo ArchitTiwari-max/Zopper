@@ -101,7 +101,75 @@
 
 /* Filters Section */
 .exec-visits-filters-section {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
+}
+
+/* Tab bar below filters */
+.exec-visits-tabbar {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* default: half/half */
+  gap: 12px;
+  margin: 8px 0 20px 0;
+}
+
+ .exec-visits-tab {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-size: clamp(12px, 2.8vw, 16px);
+  font-weight: 600;
+  color: #374151;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 44px;
+  line-height: 1.2;
+  white-space: normal;
+  word-break: keep-all;
+ }
+
+ .exec-tab-icon{margin-right:8px;display:inline-block}
+ .exec-tab-text{display:inline-flex;align-items:center;justify-content:center;min-width:0}
+ .exec-tab-word{display:inline}
+ .exec-tab-visit{display:inline}
+
+.exec-visits-tab.active {
+  box-shadow: 0 8px 20px rgba(99,102,241,0.18);
+  border-color: #c7d2fe;
+  background: #f8fafc;
+  color: #4f46e5;
+}
+
+.exec-visits-tab:hover { transform: translateY(-1px); }
+
+/* Small phones: stack tabs */
+@media (max-width: 420px) {
+  /* keep two columns on most phones; only stack when extremely narrow */
+  .exec-visits-tabbar { grid-template-columns: 1fr 1fr; gap: 8px; margin: 6px 0 10px 0; }
+  .exec-visits-tab { font-size: 12px; padding: 8px 8px; min-height: 34px; border-radius: 10px; }
+  .exec-tab-visit { display: none; } /* hide the word 'Visits' to save space */
+  .exec-tab-icon{margin-right:4px}
+}
+
+/* Extremely narrow devices */
+@media (max-width: 340px) {
+  .exec-visits-tabbar { grid-template-columns: 1fr; }
+}
+
+/* Tablets */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .exec-visits-tab { font-size: 15px; padding: 14px 18px; min-height: 48px; }
+}
+
+/* Desktops */
+@media (min-width: 1200px) {
+  .exec-visits-tab { font-size: 16px; padding: 16px 20px; min-height: 52px; }
 }
 
 .exec-visits-filters-header {
