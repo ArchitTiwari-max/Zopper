@@ -241,7 +241,8 @@ export async function GET(request: NextRequest) {
         assignedTask: {
           id: assignReport.assigned.id,
           status: assignReport.assigned.status,
-          issue: assignReport.assigned.issue
+          issue: assignReport.assigned.issue,
+          adminComment: assignReport.assigned.adminComment || ''
         }
       }
     });

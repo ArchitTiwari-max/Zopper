@@ -97,6 +97,19 @@ const StoreVisitsPage: React.FC = () => {
     }
   };
 
+  const getIssueColor = (status: string | null) => {
+    switch ((status || '').toLowerCase()) {
+      case 'pending':
+        return '#ef4444';
+      case 'assigned':
+        return '#f59e0b';
+      case 'resolved':
+        return '#10b981';
+      default:
+        return '#6b7280';
+    }
+  };
+
   const openDetails = (visit: VisitCardData, isDigital: boolean) => {
     setSelectedVisit(visit);
     setIsDigitalSelected(isDigital);
@@ -136,6 +149,24 @@ const StoreVisitsPage: React.FC = () => {
                   <strong>Contact:</strong> {v.peopleMet.map((p, i) => `${p.name} (${p.designation})${p.phoneNumber ? ` - ${p.phoneNumber}` : ""}`).join(", ")}
                 </div>
               )}
+
+              {/* Issue block */}
+              {((v.issues && v.issues !== 'None') || v.issueStatus) && (
+                <div style={{ marginTop: 6, padding: 8, background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <div style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Issue</div>
+                    {v.issueStatus && (
+                      <span style={{ background: getIssueColor(v.issueStatus), color: '#fff', padding: '2px 8px', borderRadius: 999, fontSize: 11 }}>
+                        {v.issueStatus}
+                      </span>
+                    )}
+                  </div>
+                  {v.issues && v.issues !== 'None' && (
+                    <div style={{ fontSize: 12, color: '#4b5563' }}>{v.issues}</div>
+                  )}
+                </div>
+              )}
+
               {v.partnerBrand && v.partnerBrand.length > 0 && (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
                   {v.partnerBrand.map((b, i) => (

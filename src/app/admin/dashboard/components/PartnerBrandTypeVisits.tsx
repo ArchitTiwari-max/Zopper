@@ -39,10 +39,13 @@ const PartnerBrandTypeVisits: React.FC = () => {
         if (!res.ok) throw new Error("Failed to load brands");
         const data = await res.json();
         const list: BrandOption[] = (data.brands || []).map((b: any) => ({ id: b.id, name: b.name }));
-        if (!ignore) setBrands(list);
-        // Default to first brand if available
-        if (!ignore && list.length > 0 && !brandId) {
-          setBrandId(list[0].id);
+        if (!ignore) {
+          setBrands(list);
+          // Default brand: Samsung (case-insensitive). Fallback to first brand if Samsung not found.
+          if (!brandId && list.length > 0) {
+            const samsung = list.find((b) => b.name?.toLowerCase() === "samsung");
+            setBrandId(samsung?.id || list[0].id);
+          }
         }
       } catch (e: any) {
         if (!ignore) setError(e?.message || "Failed to load brands");
