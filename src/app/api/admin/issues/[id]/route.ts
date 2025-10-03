@@ -26,46 +26,26 @@ export async function GET(
     // Await params in Next.js 15
     const { id } = await params;
 
-    // Find the issue by real MongoDB ObjectId
+    // Find the issue by ID with both physical and digital visit relations
     const targetIssue = await prisma.issue.findUnique({
-      where: {
-        id: id
-      },
+      where: { id },
       include: {
         visit: {
           include: {
-            executive: {
-              select: {
-                id: true,
-                name: true
-              }
-            },
-            store: {
-              select: {
-                id: true,
-                storeName: true,
-                city: true,
-                fullAddress: true
-              }
-            }
+            executive: { select: { id: true, name: true } },
+            store: { select: { id: true, storeName: true, city: true, fullAddress: true, partnerBrandIds: true } }
+          }
+        },
+        digitalVisit: {
+          include: {
+            executive: { select: { id: true, name: true } },
+            store: { select: { id: true, storeName: true, city: true, fullAddress: true, partnerBrandIds: true } }
           }
         },
         assigned: {
           include: {
-            executive: {
-              select: {
-                name: true
-              }
-            },
-            assignReport: {
-              select: {
-                remarks: true,
-                personMetName: true,
-                personMetDesignation: true,
-                photoUrls: true,
-                createdAt: true
-              }
-            }
+            executive: { select: { name: true } },
+            assignReport: { select: { remarks: true, personMetName: true, personMetDesignation: true, photoUrls: true, createdAt: true } }
           }
         }
       }
@@ -87,13 +67,23 @@ export async function GET(
     });
     const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
 
-    // Get brand associated with the visit
-    const visitBrands = targetIssue.visit.brandIds
-      .map(brandId => brandMap.get(brandId))
-      .filter(Boolean) as string[];
-    
-    const brandAssociated = visitBrands[0] || 'Unknown Brand';
+    // Choose source (physical or digital)
+    const source: any = targetIssue.visit ?? targetIssue.digitalVisit;
 
+    // Build brand list
+    let partnerBrandNames: string[] = [];
+    if (targetIssue.visit && Array.isArray((targetIssue.visit as any).brandIds)) {
+      const visitBrands = (targetIssue.visit as any).brandIds
+        .map((brandId: string) => brandMap.get(brandId))
+        .filter(Boolean) as string[];
+      partnerBrandNames = visitBrands;
+    } else if (source?.store && Array.isArray((source.store as any).partnerBrandIds)) {
+      const pb = (source.store as any).partnerBrandIds
+        .map((id: string) => brandMap.get(id))
+        .filter(Boolean) as string[];
+      partnerBrandNames = pb;
+    }
+    const brandAssociated = partnerBrandNames[0] || 'Unknown Brand';
 
     // Process assignment history
     const assignmentHistory = targetIssue.assigned.map(assignment => {
@@ -124,13 +114,13 @@ export async function GET(
     const issueDetail = {
       id: targetIssue.id,
       issueId: `#Issue_${targetIssue.id}`,
-      storeName: targetIssue.visit.store.storeName,
-      storeId: targetIssue.visit.store.id,
-      location: targetIssue.visit.store.fullAddress || targetIssue.visit.store.city,
+      storeName: source?.store?.storeName || 'Unknown Store',
+      storeId: source?.store?.id || '',
+      location: source?.store?.fullAddress || source?.store?.city || 'N/A',
       brandAssociated: brandAssociated,
-      city: targetIssue.visit.store.city,
+      city: source?.store?.city || 'N/A',
       dateReported: new Date(targetIssue.createdAt).toISOString().split('T')[0],
-      reportedBy: targetIssue.visit.executive.name,
+      reportedBy: source?.executive?.name || 'Unknown Executive',
       reportedByRole: 'Executive',
       status: targetIssue.status,
       description: targetIssue.details,
@@ -139,19 +129,19 @@ export async function GET(
       updatedAt: targetIssue.updatedAt.toISOString(),
       // Additional details for the detail page
       executive: {
-        id: targetIssue.visit.executive.id,
-        name: targetIssue.visit.executive.name
+        id: source?.executive?.id || '',
+        name: source?.executive?.name || 'Unknown Executive'
       },
       store: {
-        id: targetIssue.visit.store.id,
-        name: targetIssue.visit.store.storeName,
-        address: targetIssue.visit.store.fullAddress,
-        city: targetIssue.visit.store.city
+        id: source?.store?.id || '',
+        name: source?.store?.storeName || 'Unknown Store',
+        address: source?.store?.fullAddress || null,
+        city: source?.store?.city || 'N/A'
       },
       visit: {
-        id: targetIssue.visit.id,
-        createdAt: targetIssue.visit.createdAt.toISOString(),
-        remarks: targetIssue.visit.remarks
+        id: source?.id || '',
+        createdAt: (source?.connectDate || source?.createdAt)?.toISOString?.() || (source?.connectDate || source?.createdAt) || '',
+        remarks: source?.remarks || ''
       }
     };
 

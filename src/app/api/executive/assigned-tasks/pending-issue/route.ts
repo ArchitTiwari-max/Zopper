@@ -56,7 +56,26 @@ export async function GET(request: NextRequest) {
                     fullAddress: true,
                     partnerBrandIds: true
                   }
-                }
+                },
+                createdAt: true,
+                status: true
+              }
+            },
+            digitalVisit: {
+              select: {
+                id: true,
+                store: {
+                  select: {
+                    id: true,
+                    storeName: true,
+                    city: true,
+                    fullAddress: true,
+                    partnerBrandIds: true
+                  }
+                },
+                connectDate: true,
+                status: true,
+                remarks: true
               }
             }
           }
@@ -92,26 +111,28 @@ export async function GET(request: NextRequest) {
     // Transform the data to match the frontend interface
     const transformedTasks = assignedTasks.map(assigned => {
       try {
+        const source = assigned.issue.visit ?? assigned.issue.digitalVisit;
+        const store = source?.store;
         return {
           id: assigned.id,
-          storeName: assigned.issue.visit.store.storeName,
+          storeName: store?.storeName || 'Unknown Store',
           storeDetails: {
-            id: assigned.issue.visit.store.id,
-            storeName: assigned.issue.visit.store.storeName,
-            city: assigned.issue.visit.store.city,
-            fullAddress: assigned.issue.visit.store.fullAddress || null,
-            partnerBrandIds: assigned.issue.visit.store.partnerBrandIds
+            id: store?.id || '',
+            storeName: store?.storeName || 'Unknown Store',
+            city: store?.city || '',
+            fullAddress: store?.fullAddress || null,
+            partnerBrandIds: store?.partnerBrandIds || []
           },
           issue: assigned.issue.details,
-          city: assigned.issue.visit.store.city,
+          city: store?.city || '',
           status: assigned.status,
           hasReport: !!assigned.assignReport,
           createdAt: assigned.createdAt,
           assignedAt: assigned.createdAt,
           adminComment: assigned.adminComment,
           issueId: assigned.issue.id,
-          visitId: assigned.issue.visit.id,
-          storeId: assigned.issue.visit.store.id
+          visitId: source?.id || '',
+          storeId: store?.id || ''
         };
       } catch (transformError) {
         console.error('Error transforming task:', transformError, 'Task ID:', assigned.id);
@@ -223,11 +244,8 @@ export async function PUT(request: NextRequest) {
       include: {
         issue: {
           include: {
-            visit: {
-              include: {
-                store: true
-              }
-            }
+            visit: { include: { store: true } },
+            digitalVisit: { include: { store: true } }
           }
         },
         assignReport: true
@@ -242,15 +260,18 @@ export async function PUT(request: NextRequest) {
     }
 
     // Transform the detailed task data
+    const source = (assignedTask as any).issue.visit ?? (assignedTask as any).issue.digitalVisit;
+    const store = source?.store;
+
     const taskDetails = {
       id: assignedTask.id,
-      storeName: assignedTask.issue.visit.store.storeName,
+      storeName: store?.storeName || 'Unknown Store',
       storeDetails: {
-        id: assignedTask.issue.visit.store.id,
-        storeName: assignedTask.issue.visit.store.storeName,
-        city: assignedTask.issue.visit.store.city,
-        fullAddress: assignedTask.issue.visit.store.fullAddress || null,
-        partnerBrandIds: assignedTask.issue.visit.store.partnerBrandIds
+        id: store?.id || '',
+        storeName: store?.storeName || 'Unknown Store',
+        city: store?.city || '',
+        fullAddress: store?.fullAddress || null,
+        partnerBrandIds: store?.partnerBrandIds || []
       },
       issue: {
         id: assignedTask.issue.id,
@@ -259,9 +280,9 @@ export async function PUT(request: NextRequest) {
         createdAt: assignedTask.issue.createdAt
       },
       visit: {
-        id: assignedTask.issue.visit.id,
-        createdAt: assignedTask.issue.visit.createdAt,
-        status: assignedTask.issue.visit.status
+        id: source?.id || '',
+        createdAt: (source?.connectDate || source?.createdAt) || null,
+        status: source?.status || null
       },
       status: assignedTask.status,
       adminComment: assignedTask.adminComment,

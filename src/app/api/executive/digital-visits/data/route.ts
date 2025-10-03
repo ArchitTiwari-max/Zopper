@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
         reviewedByAdmin: { select: { id: true, name: true } },
         executive: { select: { id: true, name: true } },
         store: { select: { id: true, storeName: true, partnerBrandIds: true } },
-        issues: { select: { id: true, details: true, status: true, createdAt: true, assigned: true } },
+        issues: { select: { id: true, details: true, status: true, createdAt: true } },
       },
       orderBy: { connectDate: 'desc' },
     });
@@ -71,10 +71,16 @@ export async function GET(request: NextRequest) {
       remarks: v.remarks || '',
       imageUrls: [],
       adminComment: v.adminComment || '',
-      date: v.connectDate.toISOString(),
-      issues: (v.issues || []).map(i => ({ id: i.id, details: i.details, status: i.status as any, createdAt: i.createdAt, assigned: [] })),
-      createdAt: v.connectDate.toISOString(),
-      updatedAt: v.updatedAt,
+      date: v.connectDate?.toISOString?.() || v.connectDate,
+      issues: (v.issues || []).map(i => ({ 
+        id: i.id, 
+        details: i.details, 
+        status: i.status as any, 
+        createdAt: (i as any)?.createdAt?.toISOString?.() || (i as any)?.createdAt,
+        assigned: []
+      })),
+      createdAt: v.connectDate?.toISOString?.() || v.connectDate,
+      updatedAt: (v as any)?.updatedAt?.toISOString?.() || v.updatedAt,
     }));
 
     const res = NextResponse.json({ success: true, data });

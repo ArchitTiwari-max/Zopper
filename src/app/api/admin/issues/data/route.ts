@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
         startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
 
-    // Build where clause for issues
+    // Build where clause for issues (support both Visit and DigitalVisit relations)
     let whereClause: any = {
       createdAt: {
         gte: startDate,
@@ -88,18 +88,15 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    // Add direct ID filters to the database query for better performance
+    const andConds: any[] = [];
     if (storeId) {
-      whereClause.visit = {
-        storeId: storeId
-      };
+      andConds.push({ OR: [ { visit: { storeId } }, { digitalVisit: { storeId } } ] });
     }
-
     if (executiveId) {
-      whereClause.visit = {
-        ...whereClause.visit,
-        executiveId: executiveId
-      };
+      andConds.push({ OR: [ { visit: { executiveId } }, { digitalVisit: { executiveId } } ] });
+    }
+    if (andConds.length) {
+      whereClause.AND = andConds;
     }
 
     // Handle status filtering with specific logic:
@@ -128,35 +125,23 @@ export async function GET(request: NextRequest) {
         include: {
           visit: {
             include: {
-              executive: {
-                select: {
-                  id: true,
-                  name: true
-                }
-              },
-              store: {
-                select: {
-                  id: true,
-                  storeName: true,
-                  city: true,
-                  fullAddress: true
-                }
-              }
+              executive: { select: { id: true, name: true } },
+              store: { select: { id: true, storeName: true, city: true, fullAddress: true, partnerBrandIds: true } }
+            }
+          },
+          digitalVisit: {
+            include: {
+              executive: { select: { id: true, name: true } },
+              store: { select: { id: true, storeName: true, city: true, fullAddress: true, partnerBrandIds: true } }
             }
           },
           assigned: {
             include: {
-              executive: {
-                select: {
-                  name: true
-                }
-              }
+              executive: { select: { name: true } }
             }
           }
         },
-        orderBy: {
-          createdAt: 'desc'
-        }
+        orderBy: { createdAt: 'desc' }
       }),
 
       // Get ALL brands for brand mapping - no limits
@@ -170,14 +155,25 @@ export async function GET(request: NextRequest) {
 
     const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
 
-    // Process issues data
+    // Process issues data (works for both physical and digital visits)
     let processedIssues = issues.map((issue) => {
-      // Get brand associated with the visit
-      const visitBrands = issue.visit.brandIds
-        .map(brandId => brandMap.get(brandId))
-        .filter(Boolean) as string[];
-      
-      const brandAssociated = visitBrands[0] || 'Unknown Brand';
+      const source = issue.visit ?? issue.digitalVisit; // prefer physical if present
+
+      // Build brand list
+      let partnerBrandNames: string[] = [];
+      if (issue.visit && Array.isArray((issue.visit as any).brandIds)) {
+        const visitBrands = (issue.visit as any).brandIds
+          .map((brandId: string) => brandMap.get(brandId))
+          .filter(Boolean) as string[];
+        partnerBrandNames = visitBrands;
+      } else if (source?.store && Array.isArray((source.store as any).partnerBrandIds)) {
+        const pb = (source.store as any).partnerBrandIds
+          .map((id: string) => brandMap.get(id))
+          .filter(Boolean) as string[];
+        partnerBrandNames = pb;
+      }
+
+      const brandAssociated = partnerBrandNames[0] || 'Unknown Brand';
 
       // Format date to dd/mm/yyyy format
       const issueDate = new Date(issue.createdAt);
@@ -185,14 +181,14 @@ export async function GET(request: NextRequest) {
 
       return {
         id: issue.id, // Use real MongoDB ObjectId
-        issueId: issue.id, // Use clean 7-character ID
-        storeName: issue.visit.store.storeName,
-        storeId: issue.visit.store.id,
-        location: issue.visit.store.fullAddress || issue.visit.store.city,
+        issueId: issue.id, // Display ID
+        storeName: source?.store?.storeName || 'Unknown Store',
+        storeId: source?.store?.id || '',
+        location: source?.store?.fullAddress || source?.store?.city || 'N/A',
         brandAssociated: brandAssociated,
-        city: issue.visit.store.city,
+        city: source?.store?.city || 'N/A',
         dateReported: formattedDateReported,
-        reportedBy: issue.visit.executive.name,
+        reportedBy: source?.executive?.name || 'Unknown Executive',
         reportedByRole: 'Executive',
         status: issue.status,
         description: issue.details,
