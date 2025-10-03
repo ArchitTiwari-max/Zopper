@@ -52,6 +52,7 @@ const AdminStoresPage: React.FC = () => {
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
   const [showVisitPlanModal, setShowVisitPlanModal] = useState<boolean>(false);
   const [isSubmittingVisitPlan, setIsSubmittingVisitPlan] = useState<boolean>(false);
+
   
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{
@@ -989,15 +990,27 @@ const AdminStoresPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="admin-stores-cell admin-stores-partner-brands-cell">
-                    {store.partnerBrands.map((brand, index) => (
-                      <span 
-                        key={index}
-                        className="admin-stores-brand-tag"
-                        style={{ backgroundColor: getBrandColor(brand) }}
-                      >
-                        {brand}
-                      </span>
-                    ))}
+                    {(store as any).partnerBrandPairs && (store as any).partnerBrandPairs.length > 0 ? (
+                      (store as any).partnerBrandPairs.map((pb: any, index: number) => (
+                        <span 
+                          key={pb.id + '_' + index}
+                          className="admin-stores-brand-tag"
+                          style={{ backgroundColor: getBrandColor(pb.name) }}
+                        >
+                          {pb.name}{pb.type ? ` (${pb.type === 'A_PLUS' ? 'A+' : pb.type})` : ''}
+                        </span>
+                      ))
+                    ) : (
+                      store.partnerBrands.map((brand, index) => (
+                        <span 
+                          key={index}
+                          className="admin-stores-brand-tag"
+                          style={{ backgroundColor: getBrandColor(brand) }}
+                        >
+                          {brand}
+                        </span>
+                      ))
+                    )}
                   </div>
                   <div className="admin-stores-cell">
                     <Link href={`/admin/executives?storeId=${store.id}`} className="admin-stores-view-all-link">
@@ -1093,7 +1106,7 @@ const AdminStoresPage: React.FC = () => {
           </button>
         </div>
       </div>
-      
+
       {/* Visit Plan Modal */}
       <VisitPlanModal
         isOpen={showVisitPlanModal}

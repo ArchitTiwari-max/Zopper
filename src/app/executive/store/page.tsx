@@ -10,6 +10,7 @@ interface StoreData {
   city: string;
   fullAddress?: string;
   partnerBrands: string[];
+  partnerBrandTypes: ('A_PLUS' | 'A' | 'B' | 'C')[];
   visited: string;
   lastVisitDate: string | null;
 }
@@ -37,6 +38,27 @@ const Store: React.FC = () => {
     brands: ['All Brands'],
     sortOptions: ['Recently Visited First', 'Store Name A-Z', 'Store Name Z-A', 'City A-Z']
   });
+
+  // Helper function to format brand type display
+  const formatBrandType = (type: string): string => {
+    switch (type) {
+      case 'A_PLUS': return 'A+';
+      case 'A': return 'A';
+      case 'B': return 'B';
+      case 'C': return 'C';
+      default: return '';
+    }
+  };
+
+  // Helper function to format brands with types
+  const formatBrandsWithTypes = (brands: string[], types: ('A_PLUS' | 'A' | 'B' | 'C')[]): string => {
+    if (brands.length === 0) return 'No brands';
+    
+    return brands.map((brand, index) => {
+      const type = types[index];
+      return type ? `${brand} (${formatBrandType(type)})` : brand;
+    }).join(', ');
+  };
 
 
   // Initialize planned visit date to today (using local date)
@@ -421,7 +443,7 @@ const Store: React.FC = () => {
                   </div>
                   <div className="exec-v-form-table-cell exec-v-form-partner-cell">
                     <span className="exec-v-form-brand-text">
-                      {store.partnerBrands.length > 0 ? store.partnerBrands.join(', ') : 'No brands'}
+                      {formatBrandsWithTypes(store.partnerBrands, store.partnerBrandTypes)}
                     </span>
                   </div>
                   <div className="exec-v-form-table-cell exec-v-form-sales-cell">
@@ -514,7 +536,7 @@ const Store: React.FC = () => {
                         {store.fullAddress && ` • ${store.fullAddress}`}
                       </p>
                       <p className="exec-v-form-store-brands">
-                        🏢 {store.partnerBrands.length > 0 ? store.partnerBrands.join(', ') : 'No brands'}
+                        🏢 {formatBrandsWithTypes(store.partnerBrands, store.partnerBrandTypes)}
                       </p>
                       <p className="exec-v-form-store-status">
                         📅 Last Visit: {store.visited}
