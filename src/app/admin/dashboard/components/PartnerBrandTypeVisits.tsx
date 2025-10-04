@@ -160,7 +160,7 @@ const PartnerBrandTypeVisits: React.FC = () => {
                   <div style={{ marginTop: 8, color: "#111827", fontSize: 14 }}>
                     <span style={{ fontWeight: 700 }}>{visited}</span>
                     <span style={{ color: "#6b7280" }}>
-                      {" / "}{total} Unique Store visits
+                      {"/"}{total} Unique Store visits
                     </span>
                   </div>
                   <div style={{ marginTop: 8, height: 8, background: "#f3f4f6", borderRadius: 999 }}>
@@ -175,7 +175,7 @@ const PartnerBrandTypeVisits: React.FC = () => {
                           {s.unvisitedStores.map(u => (
                             <li key={u.id} style={{ margin: "6px 0" }}>
                               <a
-                                href={`/admin/visit-report?storeId=${encodeURIComponent(u.id)}&dateFilter=${encodeURIComponent(range === "today" ? "Today" : range === "7d" ? "Last 7 Days" : "Last 30 Days")}`}
+                                href={`/admin/executives?storeId=${encodeURIComponent(u.id)}&dateFilter=${encodeURIComponent(range === "today" ? "Today" : range === "7d" ? "Last 7 Days" : "Last 30 Days")}`}
                                 style={{ color: "#2563eb", textDecoration: "none" }}
                                 title="Open visit report"
                               >

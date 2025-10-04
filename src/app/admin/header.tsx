@@ -133,6 +133,11 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
           title: 'Settings',
           subtitle: 'Configure system preferences and notifications'
         };
+      case '/admin/analytics-impact':
+        return {
+          title: 'Analytics & Impact',
+          subtitle: 'Compare before vs after visit impact by brand'
+        };
       case '/admin/notifications':
         return {
           title: 'Notification',
