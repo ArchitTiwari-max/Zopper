@@ -320,11 +320,15 @@ const AdminStoresPage: React.FC = () => {
       setFilters(prev => ({ ...prev, executiveName: executiveId }));
     }
 
-    if (brandId && filterData.brands.length > 0 && filters.partnerBrand !== brandId) {
-      // Convert brandId to brand name to match filter type
-      const brand = filterData.brands.find(b => b.id === brandId);
-      if (brand) {
-        setFilters(prev => ({ ...prev, partnerBrand: brand.name }));
+    if (brandId && filterData.brands.length > 0) {
+      // Only update partnerBrand when the selected brand actually changes.
+      // Map current selected brand name to its id for a correct comparison.
+      const resolved = filterData.brands.find(b => b.id === brandId);
+      if (resolved) {
+        const currentSelected = filterData.brands.find(b => b.name === filters.partnerBrand);
+        if (currentSelected?.id !== brandId) {
+          setFilters(prev => ({ ...prev, partnerBrand: resolved.name }));
+        }
       }
     }
 
@@ -528,6 +532,7 @@ const AdminStoresPage: React.FC = () => {
   // Build data for Excel export from the currently filtered rows
   const buildExportAOA = (): (string | number)[][] => {
           const headers = [
+      'Store ID',
       'Store Name',
       'City',
       'Partner Brands',
@@ -537,15 +542,23 @@ const AdminStoresPage: React.FC = () => {
       'Pending Issues'
     ];
 
-      const rows = filteredStores.map((s) => [
-      s.storeName,
-      s.city,
-      s.partnerBrands.join(', '),
-      s.assignedTo || '',
-      formatLastVisitDate(s.lastVisit ?? null),
-      s.totalVisits,
-      s.pendingIssues,
-    ]);
+      const rows = filteredStores.map((s) => {
+      const pbPairs = (s as any).partnerBrandPairs as Array<{ id: string; name: string; type?: string | null }>|undefined;
+      const partnerBrandsCombined = Array.isArray(pbPairs) && pbPairs.length > 0
+        ? pbPairs.map(pb => `${pb.name}${pb.type ? ` (${pb.type === 'A_PLUS' ? 'A+' : pb.type})` : ''}`).join(', ')
+        : s.partnerBrands.join(', ');
+
+      return [
+        s.id,
+        s.storeName,
+        s.city,
+        partnerBrandsCombined,
+        s.assignedTo || '',
+        formatLastVisitDate(s.lastVisit ?? null),
+        s.totalVisits,
+        s.pendingIssues,
+      ];
+    });
 
     return [headers, ...rows];
   };
@@ -556,9 +569,10 @@ const AdminStoresPage: React.FC = () => {
 
     // Column widths for readability
     const cols = [
+      { wch: 24 }, // Store ID
       { wch: 28 }, // Store Name
       { wch: 16 }, // City
-      { wch: 24 }, // Partner Brands
+      { wch: 28 }, // Partner Brands (with type)
       { wch: 22 }, // Assigned Executive
       { wch: 14 }, // Last Visit
       { wch: 16 }, // Total Visits
@@ -899,54 +913,24 @@ const AdminStoresPage: React.FC = () => {
         )}
       </div>
 
-      {/* Count Summary */}
-      <div style={{
-        marginTop: '12px',
-        marginBottom: '8px',
-        color: '#374151',
-        fontWeight: 600
-      }}>
-        {getCountSummary()}
-      </div>
-
-      {/* Actions - Export and Assign PJP */}
+      {/* Count + Actions Row */}
       <div style={{
         display: 'flex',
-        justifyContent: 'flex-end',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         gap: '10px',
-        marginBottom: '20px',
-        marginTop: '16px'
+        marginTop: '12px',
+        marginBottom: '20px'
       }}>
-        <button
-          onClick={handleExportXLS}
-          style={{
-            padding: '10px 16px',
-            backgroundColor: '#2563eb',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s',
-            boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#1d4ed8';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#2563eb';
-          }}
-        >
-          Export XLS
-        </button>
-        {!isCreatingVisitPlan && (
-          <button 
-            onClick={handleCreateVisitPlan}
-            className="create-visit-plan-btn"
+        <div style={{ color: '#374151', fontWeight: 600 }}>
+          {getCountSummary()}
+        </div>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            onClick={handleExportXLS}
             style={{
-              padding: '10px 20px',
-              backgroundColor: '#4f46e5',
+              padding: '10px 16px',
+              backgroundColor: '#2563eb',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
@@ -954,18 +938,44 @@ const AdminStoresPage: React.FC = () => {
               fontWeight: '600',
               cursor: 'pointer',
               transition: 'background-color 0.2s',
-              boxShadow: '0 2px 4px rgba(79, 70, 229, 0.2)'
+              boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#4338ca';
+              e.currentTarget.style.backgroundColor = '#1d4ed8';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#4f46e5';
+              e.currentTarget.style.backgroundColor = '#2563eb';
             }}
           >
-            Assign PJP
+            Export XLS
           </button>
-        )}
+          {!isCreatingVisitPlan && (
+            <button 
+              onClick={handleCreateVisitPlan}
+              className="create-visit-plan-btn"
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#4f46e5',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                boxShadow: '0 2px 4px rgba(79, 70, 229, 0.2)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#4338ca';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#4f46e5';
+              }}
+            >
+              Assign PJP
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Stores Table */}

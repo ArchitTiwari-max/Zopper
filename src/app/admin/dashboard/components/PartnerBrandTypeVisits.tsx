@@ -137,7 +137,7 @@ const PartnerBrandTypeVisits: React.FC = () => {
         <div style={{ padding: 20, color: "#6b7280" }}>Loading...</div>
       ) : (
         <div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+          <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4 }}>
             {orderedStats.map((s) => {
               const label = typeLabels[s.type];
               const key = s.type;
@@ -146,7 +146,7 @@ const PartnerBrandTypeVisits: React.FC = () => {
               const pct = total > 0 ? Math.round((visited / total) * 100) : 0;
               const isOpen = expanded.has(key);
               return (
-                <div key={key} style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
+                <div key={key} style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12, minWidth: 260, flex: "0 0 auto" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ fontWeight: 700, color: "#374151" }}>{label}</div>
                     <button

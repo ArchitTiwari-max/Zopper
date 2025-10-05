@@ -289,7 +289,6 @@ export default function AdminAnalyticsImpactPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16 }}>Analytics & Impact</h1>
 
       {/* Filters Section */}
       <div>
