@@ -298,6 +298,45 @@ export async function batchProcessDailySalesRecords(
   let failed = 0;
   const errors: string[] = [];
 
+  // Helper to merge incoming dailySales into existing per month by date
+  const mergeDailySales = (
+    existing: Record<string, any[]> | null | undefined,
+    incoming: Record<string, any[]>
+  ): Record<string, any[]> => {
+    const result: Record<string, any[]> = {};
+    // Start with a shallow clone of existing months (preserve untouched months)
+    if (existing) {
+      for (const m of Object.keys(existing)) {
+        const arr = Array.isArray(existing[m]) ? existing[m] : [];
+        // clone to avoid mutating original
+        result[m] = arr.map((e: any) => ({ ...e }));
+      }
+    }
+    // Merge incoming per month by date (override same date entries)
+    for (const m of Object.keys(incoming || {})) {
+      const existingArr = result[m] || [];
+      const mapByDate = new Map<string, any>();
+      for (const e of existingArr) {
+        if (e && e.date) mapByDate.set(String(e.date), { ...e });
+      }
+      const incomingArr = Array.isArray(incoming[m]) ? incoming[m] : [];
+      for (const e of incomingArr) {
+        if (!e || !e.date) continue;
+        const key = String(e.date);
+        const prev = mapByDate.get(key) || {};
+        mapByDate.set(key, {
+          ...prev,
+          ...e,
+        });
+      }
+      // Persist merged month back to result in stable order (by date string)
+      const merged = Array.from(mapByDate.values());
+      // Optional: keep sorted ascending by date (DD-MM-YYYY compares lexicographically by day first; but stable not required)
+      result[m] = merged;
+    }
+    return result;
+  };
+
   for (let i = 0; i < salesData.length; i += chunkSize) {
     const chunk = salesData.slice(i, i + chunkSize);
     
@@ -307,27 +346,37 @@ export async function batchProcessDailySalesRecords(
     }
     
     try {
-      const operations = chunk.map(record =>
-        prisma.salesRecord.upsert({
-          where: {
-            storeId_brandId_categoryId_year: {
-              storeId: record.storeId,
-              brandId: record.brandId,
-              categoryId: record.categoryId,
-              year: record.year,
-            }
-          },
-          update: { dailySales: record.dailySales },
+      const operations = chunk.map(async (record) => {
+        const key = {
+          storeId_brandId_categoryId_year: {
+            storeId: record.storeId,
+            brandId: record.brandId,
+            categoryId: record.categoryId,
+            year: record.year,
+          }
+        } as const;
+
+        // Read existing to merge dailySales instead of overwriting
+        const existing = await prisma.salesRecord.findUnique({
+          where: key,
+          select: { dailySales: true }
+        });
+
+        const mergedDaily = mergeDailySales(existing?.dailySales as Record<string, any[]> | null, record.dailySales);
+
+        await prisma.salesRecord.upsert({
+          where: key,
+          update: { dailySales: mergedDaily },
           create: {
             storeId: record.storeId,
             brandId: record.brandId,
             categoryId: record.categoryId,
             year: record.year,
             monthlySales: [],
-            dailySales: record.dailySales
+            dailySales: mergedDaily
           }
-        })
-      );
+        });
+      });
 
       await Promise.all(operations);
       successful += chunk.length;

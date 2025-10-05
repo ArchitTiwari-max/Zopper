@@ -356,12 +356,29 @@ export async function GET(request: NextRequest) {
 
       const brandNames = s.typeBrandIds.map(id => brandNameById.get(id)).filter(Boolean) as string[];
 
+      // Derive actual categories (PartnerBrandType) for the selected brandIds on this row
+      const idToType = new Map<string, PartnerBrandType | null>();
+      const idsArr = s.partnerBrandIds || [];
+      const typesArr = (s.partnerBrandTypes || []) as PartnerBrandType[];
+      const len = Math.min(idsArr.length, typesArr.length);
+      for (let i = 0; i < len; i++) {
+        idToType.set(idsArr[i], typesArr[i] ?? null);
+      }
+      const typeToLabel = (t: PartnerBrandType | null | undefined) => {
+        if (!t) return 'None';
+        return t === 'A_PLUS' ? 'A+' : t;
+      };
+      const categoryNames = Array.from(new Set(
+        (s.typeBrandIds || []).map(id => typeToLabel(idToType.get(id)))
+      ));
+
       rows.push({
         storeId: s.id,
         store: s.storeName,
         city: s.city || '-',
         brand: pbtParamRaw,
         brandNames: brandNames,
+        categoryNames: categoryNames.length ? categoryNames : ['None'],
         lastVisit: fmtDate(pivot),
         lastVisitedBy: pivotInfo.execName,
         salesBefore: Math.round(salesBefore),

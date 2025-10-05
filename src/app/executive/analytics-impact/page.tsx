@@ -165,7 +165,13 @@ export default function ExecutiveAnalyticsImpactPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
               <div>
                 <div style={{ fontWeight: 700 }}>{r.store}</div>
-                <div style={{ fontSize: 12, color: "#666" }}>Last Visit: {r.lastVisit} • Brand: {r.brand}</div>
+                <div style={{ fontSize: 12, color: "#666" }}>
+                  {(() => {
+                    const cat = Array.isArray(r?.categoryNames) && r.categoryNames.length ? r.categoryNames.join(', ') : 'None';
+                    const brands = Array.isArray(r?.brandNames) && r.brandNames.length ? r.brandNames.join(', ') : '';
+                    return `Last Visit: ${r.lastVisit} • Category: ${cat}${brands ? ` • Brands: ${brands}` : ''}`;
+                  })()}
+                </div>
               </div>
               <div style={{ fontWeight: 700, color: r.salesAfter - r.salesBefore >= 0 ? "#065f46" : "#b91c1c" }}>{r.salesImpact}</div>
             </div>
