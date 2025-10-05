@@ -30,13 +30,17 @@ const Store: React.FC = () => {
     storeName: '',
     city: 'All Cities',
     partnerBrand: 'All Brands',
+    category: 'All Categories',
     sortBy: 'Recently Visited First'
   });
   const [storeData, setStoreData] = useState<StoreData[]>([]);
+  const DEFAULT_CATEGORIES = ['All Categories', 'A++', 'A', 'B', 'C', 'D'];
+  const DEFAULT_SORT = ['Recently Visited First', 'Store Name A-Z', 'Store Name Z-A', 'City A-Z'];
   const [filterOptions, setFilterOptions] = useState({
     cities: ['All Cities'],
     brands: ['All Brands'],
-    sortOptions: ['Recently Visited First', 'Store Name A-Z', 'Store Name Z-A', 'City A-Z']
+    categories: DEFAULT_CATEGORIES,
+    sortOptions: DEFAULT_SORT,
   });
 
   // Helper function to format brand type display
@@ -111,7 +115,13 @@ const Store: React.FC = () => {
       
       if (storeResult.success && filterResult.success) {
         const stores: StoreData[] = storeResult.data.stores;
-        setFilterOptions(filterResult.data.filterOptions);
+        const fo = filterResult.data.filterOptions || {};
+        setFilterOptions({
+          cities: Array.isArray(fo.cities) && fo.cities.length ? fo.cities : ['All Cities'],
+          brands: Array.isArray(fo.brands) && fo.brands.length ? fo.brands : ['All Brands'],
+          categories: DEFAULT_CATEGORIES, // keep local list for exec
+          sortOptions: Array.isArray(fo.sortOptions) && fo.sortOptions.length ? fo.sortOptions : DEFAULT_SORT,
+        });
         setStoreData(stores);
       } else {
         throw new Error(storeResult.error || filterResult.error || 'Failed to fetch data');
@@ -276,7 +286,12 @@ const Store: React.FC = () => {
     const matchesName = store.storeName.toLowerCase().includes(filters.storeName.toLowerCase());
     const matchesCity = filters.city === 'All Cities' || store.city === filters.city;
     const matchesBrand = filters.partnerBrand === 'All Brands' || store.partnerBrands.some(brand => brand === filters.partnerBrand);
-    return matchesName && matchesCity && matchesBrand;
+    const matchesCategory = (() => {
+      if (filters.category === 'All Categories') return true;
+      const want = filters.category === 'A++' ? 'A_PLUS' : filters.category;
+      return (store.partnerBrandTypes || []).some(t => t === (want as any));
+    })();
+    return matchesName && matchesCity && matchesBrand && matchesCategory;
   }).sort((a, b) => {
     switch (filters.sortBy) {
       case 'Store Name A-Z':
@@ -366,6 +381,20 @@ const Store: React.FC = () => {
                 >
                   {filterOptions.brands.map(brand => (
                     <option key={brand} value={brand}>{brand}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="exec-v-form-filter-group">
+                <label className="exec-v-form-filter-label">Category</label>
+                <select
+                  className="exec-v-form-filter-select"
+                  value={filters.category}
+                  onChange={(e) => handleFilterChange('category', e.target.value)}
+                  disabled={loading}
+                >
+                  {filterOptions.categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
               </div>

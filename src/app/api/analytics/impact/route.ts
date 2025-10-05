@@ -33,6 +33,14 @@ function addDays(d: Date, days: number): Date {
   return x;
 }
 
+// Day boundary helpers
+function startOfDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+}
+function endOfDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+}
+
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request);
@@ -200,8 +208,17 @@ export async function GET(request: NextRequest) {
     if (pivotDates.length === 0) {
       return NextResponse.json({ data: [], summary: { avgSalesLiftPct: 0, storesImproved: 0, storesNotImproved: 0, avgRevenue: 0 } });
     }
-    const globalBefore = pivotDates.reduce((min, d) => addDays(d, -fixedWindow.before) < min ? addDays(d, -fixedWindow.before) : min, addDays(pivotDates[0], -fixedWindow.before));
-    const globalAfter = pivotDates.reduce((max, d) => addDays(d, fixedWindow.after) > max ? addDays(d, fixedWindow.after) : max, addDays(pivotDates[0], fixedWindow.after));
+    // Use calendar-day windows: Before = [startOfDay(pivot-7), endOfDay(pivot-1)], After = [startOfDay(pivot), endOfDay(pivot+6)]
+    const firstBefore = startOfDay(addDays(pivotDates[0], -fixedWindow.before));
+    const firstAfter = endOfDay(addDays(pivotDates[0], fixedWindow.after - 1));
+    const globalBefore = pivotDates.reduce((min, d) => {
+      const b = startOfDay(addDays(d, -fixedWindow.before));
+      return b < min ? b : min;
+    }, firstBefore);
+    const globalAfter = pivotDates.reduce((max, d) => {
+      const a = endOfDay(addDays(d, fixedWindow.after - 1));
+      return a > max ? a : max;
+    }, firstAfter);
 
     // Superset fetches for visits/digitalVisits and issues within the global window
     const supVisitWhere: any = { ...visitWhere, createdAt: { gte: globalBefore, lte: globalAfter } };
@@ -292,10 +309,12 @@ export async function GET(request: NextRequest) {
       if (!pivotInfo) continue; // no visits -> skip
 
       const pivot = pivotInfo.date;
-      const beforeStart = addDays(pivot, -windowCfg.before);
-      const beforeEnd = new Date(pivot.getTime());
-      const afterStart = new Date(pivot.getTime());
-      const afterEnd = addDays(pivot, windowCfg.after);
+      // Before: 7 calendar days strictly before pivot (exclude pivot day)
+      const beforeStart = startOfDay(addDays(pivot, -windowCfg.before)); // pivot-7 at 00:00:00
+      const beforeEnd = endOfDay(addDays(pivot, -1));                    // day before pivot at 23:59:59
+      // After: include pivot day through next 6 days
+      const afterStart = startOfDay(pivot);                              // pivot day 00:00:00
+      const afterEnd = endOfDay(addDays(pivot, windowCfg.after - 1));    // pivot+6 at 23:59:59
 
       // Sales
       const sr = salesByStore.get(s.id) || [];
@@ -325,7 +344,8 @@ export async function GET(request: NextRequest) {
       const resolvedAfter = issuesForStore.filter(ix => ix.status === IssueStatus.Resolved && ix.updatedAt && ix.updatedAt >= afterStart && ix.updatedAt <= afterEnd).length;
       const pendingAfter = issuesForStore.filter(ix => (ix.status === IssueStatus.Pending || ix.status === IssueStatus.Assigned) && ix.createdAt >= afterStart && ix.createdAt <= afterEnd).length;
 
-      // 4) For each store, compute metrics around the pivot (±7 days inclusive -> 15 points)
+      // 4) For each store, compute metrics around the pivot
+      // 14-point series: -7..-1 (before) and 0..+6 (after, including pivot day)
       const points: Array<{ date: string; displayDate: string; revenue: number; dayOffset: number }> = [];
       const sumRevenueOnDate = (dateStrDDMMYYYY: string): number => {
         let rev = 0;
@@ -341,7 +361,7 @@ export async function GET(request: NextRequest) {
         }
         return rev;
       };
-      for (let i = -7; i <= 7; i++) {
+      for (let i = -7; i <= 6; i++) {
         const dt = addDays(pivot, i);
         const ddmmyyyy = fmtDate(dt);
         const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
