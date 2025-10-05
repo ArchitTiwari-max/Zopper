@@ -55,6 +55,7 @@ export interface StoreData {
 
 export interface StoreFilters {
   partnerBrand: string;
+  partnerBrandType?: string; // 'All Cat' | 'A+' | 'A' | 'B' | 'C' | 'D'
   city: string;
   storeName: string;
   executiveName: string;

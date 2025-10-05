@@ -159,23 +159,30 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
       return `❌ Category is not mapped to this brand. ${context}`;
     }
 
-    // Build dailySales array
-    const dailySales: any[] = [];
+    // Build dailySales grouped by month ("1".."12"). Dates stored as DD-MM-YYYY
+    const dailySalesByMonth: Record<string, any[]> = {};
+    let detectedYear: number | null = null;
     for (const key in dateMetrics) {
       const match = key.match(/^([0-9]{2})-([0-9]{2})-([0-9]{4}) (Count of Sales|Revenue)$/);
       if (!match) continue;
       const [_, dd, mm, yyyy, metric] = match;
-      const date = `${yyyy}-${mm}-${dd}`; // ISO format
-      let entry = dailySales.find(e => e.date === date);
+      const monthNum = parseInt(mm, 10);
+      const monthKey = String(monthNum); // "1".."12"
+      const date = `${dd}-${mm}-${yyyy}`; // DD-MM-YYYY per schema note
+      detectedYear = detectedYear ?? parseInt(yyyy, 10);
+
+      if (!dailySalesByMonth[monthKey]) dailySalesByMonth[monthKey] = [];
+      let entry = dailySalesByMonth[monthKey].find(e => e.date === date);
       if (!entry) {
         entry = { date };
-        dailySales.push(entry);
+        dailySalesByMonth[monthKey].push(entry);
       }
+
       if (/count of sales/i.test(metric)) entry.countOfSales = dateMetrics[key] || 0;
       if (/revenue/i.test(metric)) entry.revenue = dateMetrics[key] || 0;
     }
 
-    const year = dailySales.length > 0 ? parseInt(dailySales[0].date.slice(0, 4)) : new Date().getFullYear();
+    const year = detectedYear ?? new Date().getFullYear();
     
     // Return prepared data for batch processing
     return JSON.stringify({
@@ -185,7 +192,7 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
         brandId: brand.id,
         categoryId: category.id,
         year,
-        dailySales,
+        dailySales: dailySalesByMonth,
         context,
         successCount
       }
@@ -281,7 +288,7 @@ export async function batchProcessDailySalesRecords(
     brandId: string;
     categoryId: string;
     year: number;
-    dailySales: any[];
+    dailySales: Record<string, any[]>; // grouped by month { "1": [...], ... }
     context: string;
   }>,
   chunkSize = 50

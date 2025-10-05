@@ -33,6 +33,7 @@ const AdminStoresPage: React.FC = () => {
 
   const [filters, setFilters] = useState<StoreFilters>({
     partnerBrand: 'All Brands',
+    partnerBrandType: 'All Cat',
     city: 'All City',
     storeName: 'All Store',
     executiveName: 'All Executive',
@@ -151,6 +152,17 @@ const AdminStoresPage: React.FC = () => {
         }
       }
 
+      // Filter by category (partner brand type)
+      if (filters.partnerBrandType && filters.partnerBrandType !== 'All Cat') {
+        const desired = filters.partnerBrandType;
+        const hasType = Array.isArray((store as any).partnerBrandPairs) && (store as any).partnerBrandPairs.some((pb: any) => {
+          const t = pb.type;
+          const mapped = t === 'A_PLUS' ? 'A+' : t; // map enum to display
+          return mapped === desired;
+        });
+        if (!hasType) return false;
+      }
+
       // Filter by city
       if (filters.city !== 'All City') {
         if (store.city !== filters.city) {
@@ -233,6 +245,7 @@ const AdminStoresPage: React.FC = () => {
     newUrl.searchParams.delete('storeId');
     newUrl.searchParams.delete('executiveId');
     newUrl.searchParams.delete('brandId');
+    newUrl.searchParams.delete('cat');
     newUrl.searchParams.delete('city');
     newUrl.searchParams.delete('storeName');
     newUrl.searchParams.delete('executiveName');
@@ -259,6 +272,11 @@ const AdminStoresPage: React.FC = () => {
       if (brand) {
         newUrl.searchParams.set('brandId', brand.id);
       }
+    }
+
+    // Add category (partner brand type)
+    if (currentFilters.partnerBrandType && currentFilters.partnerBrandType !== 'All Cat') {
+      newUrl.searchParams.set('cat', currentFilters.partnerBrandType);
     }
     
     // Use city name in URL
@@ -288,6 +306,7 @@ const AdminStoresPage: React.FC = () => {
     const executiveId = searchParams.get('executiveId');
     const brandId = searchParams.get('brandId');
     const city = searchParams.get('city');
+    const cat = searchParams.get('cat');
     const pageParam = parseInt(searchParams.get('page') || '1', 10);
     const showUnresolvedIssues = searchParams.get('showUnresolvedIssues') === 'true';
     const showUnreviewedVisits = searchParams.get('showUnreviewedVisits') === 'true';
@@ -311,6 +330,10 @@ const AdminStoresPage: React.FC = () => {
 
     if (city && filters.city !== city) {
       setFilters(prev => ({ ...prev, city: city }));
+    }
+
+    if (cat && filters.partnerBrandType !== cat) {
+      setFilters(prev => ({ ...prev, partnerBrandType: cat }));
     }
 
     // Sync page from URL
@@ -622,9 +645,14 @@ const AdminStoresPage: React.FC = () => {
     const count = filteredStores.length;
     const brand = filters.partnerBrand !== 'All Brands' ? filters.partnerBrand : null;
     const city = filters.city !== 'All City' ? filters.city : null;
-    if (brand && city) return `${count} stores found for ${brand} in ${city}`;
-    if (brand) return `${count} stores found for ${brand}`;
-    if (city) return `${count} stores found in ${city}`;
+    const cat = filters.partnerBrandType && filters.partnerBrandType !== 'All Cat' ? filters.partnerBrandType : null;
+    if (brand && city && cat) return `${count} stores for ${brand} (${cat}) in ${city}`;
+    if (brand && cat) return `${count} stores for ${brand} (${cat})`;
+    if (cat && city) return `${count} stores in ${city} for Cat ${cat}`;
+    if (brand && city) return `${count} stores for ${brand} in ${city}`;
+    if (brand) return `${count} stores for ${brand}`;
+    if (cat) return `${count} stores for Cat ${cat}`;
+    if (city) return `${count} stores in ${city}`;
     return `${count} stores found`;
   };
 
@@ -696,6 +724,21 @@ const AdminStoresPage: React.FC = () => {
               className="filter-input"
               placeholder="Type to search store name..."
             />
+          </div>
+
+          {/* Cat (Partner Brand Type) */}
+          <div className="admin-stores-filter-group">
+            <label>Cat</label>
+            <select 
+              value={filters.partnerBrandType}
+              onChange={(e) => handleFilterChange('partnerBrandType', e.target.value)}
+              className="admin-stores-filter-select"
+            >
+              <option value="All Cat">All Cat</option>
+              {['A+','A','B','C','D'].map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
           </div>
 
           {/* Then Partner Brand */}

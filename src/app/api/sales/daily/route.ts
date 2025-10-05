@@ -48,35 +48,44 @@ export async function GET(request: NextRequest) {
       ]
     });
 
-    // Transform the data to extract daily sales
+    // Transform the data to extract daily sales from grouped monthly object
     const transformedData = salesRecords.flatMap(record => {
-      const dailySales = Array.isArray(record.dailySales) ? record.dailySales : [];
-      
-      return dailySales
-        .filter((dailyData: any) => {
-          // Filter by month if specified
-          if (month) {
-            const date = new Date(dailyData.date);
-            return date.getMonth() + 1 === parseInt(month);
-          }
-          return true;
-        })
-        .map((dailyData: any) => ({
-          id: `${record.id}-${dailyData.date}`,
-          storeId: record.storeId,
-          storeName: record.store.storeName,
-          brandName: record.brand.brandName,
-          categoryName: record.category.categoryName,
-          year: record.year,
-          date: dailyData.date,
-          countOfSales: dailyData.countOfSales || 0,
-          revenue: dailyData.revenue || 0,
-          // Format date for display
-          displayDate: formatDate(dailyData.date)
-        }));
+      const dailyByMonth = (record.dailySales || {}) as Record<string, any[]>; // { "1": [...], ... }
+
+      const out: any[] = [];
+      const targetMonth = month ? parseInt(month) : null;
+
+      for (const [monthKey, entries] of Object.entries(dailyByMonth)) {
+        const m = parseInt(monthKey, 10);
+        if (targetMonth && m !== targetMonth) continue;
+        if (!Array.isArray(entries)) continue;
+
+        for (const d of entries) {
+          const ds = String(d.date || "");
+          if (!ds) continue;
+          // ds is DD-MM-YYYY -> convert to ISO YYYY-MM-DD for stable sorting
+          const [dd, mm, yyyy] = ds.split('-');
+          const iso = `${yyyy}-${mm}-${dd}`;
+
+          out.push({
+            id: `${record.id}-${iso}`,
+            storeId: record.storeId,
+            storeName: record.store.storeName,
+            brandName: record.brand.brandName,
+            categoryName: record.category.categoryName,
+            year: record.year,
+            date: iso,
+            countOfSales: Number(d.countOfSales || 0),
+            revenue: Number(d.revenue || 0),
+            displayDate: `${dd}-${mm}-${yyyy}`
+          });
+        }
+      }
+
+      return out;
     });
 
-    // Sort by date descending
+    // Sort by date descending (ISO dates)
     transformedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return NextResponse.json({
@@ -93,7 +102,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Helper function to format date
+// Helper retained for backward compatibility but not used for DD-MM-YYYY input
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
   const dd = String(date.getDate()).padStart(2, '0');

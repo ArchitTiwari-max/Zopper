@@ -124,28 +124,42 @@ model CategoryBrand {
   @@unique([brandId, categoryId])
 }
 
+
 model SalesRecord {
-  id         String @id @default(auto()) @map("_id") @db.ObjectId
-  storeId    String
-  brandId    String
-  categoryId String
-  year       Int
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  storeId     String
+  brandId     String
+  categoryId  String
+  year        Int
 
-  // Array of past 3 months only
-  monthlySales Json // will store [{ month: 1, deviceSales: X, planSales: Y, attachPct: Z, revenue: R }, { month: 2, ... }, { month: 3, ... }]
+  // Store summary of all 12 months
+  // Each month contains deviceSales, planSales, attachPct, revenue etc.
+  monthlySales Json // [{ month: 1, deviceSales: X, planSales: Y, attachPct: Z, revenue: R }, ..., { month: 12, ... }]
 
-  // Current datewise sales for this month
-  dailySales Json // will store [{ date: "2024-01-15", planSales: Y, revenue: R }, ...]
+  // Store all daily sales grouped by month
+  // ⚠️ Daily sales only tracks planSales and revenue for each day
+  // Example:
+  // {
+  //   "1": [
+  //     { "date": "01-01-2025", "planSales": 1, "revenue": 1200 },
+  //     { "date": "02-01-2025", "planSales": 2, "revenue": 2100 }
+  //   ],
+  //   "2": [
+  //     { "date": "01-02-2025", "planSales": 1, "revenue": 900 }
+  //   ],
+  //   ...
+  // }
+  dailySales   Json 
 
-  store    Store    @relation(fields: [storeId], references: [id])
-  brand    Brand    @relation(fields: [brandId], references: [id])
-  category Category @relation(fields: [categoryId], references: [id])
+  store     Store     @relation(fields: [storeId], references: [id])
+  brand     Brand     @relation(fields: [brandId], references: [id])
+  category  Category  @relation(fields: [categoryId], references: [id])
 
   @@unique([storeId, brandId, categoryId, year])
-  
-  // Performance indexes for sales operations
-  @@index([storeId, year]) // Fast lookups by store and year
-  @@index([brandId, categoryId]) // Fast lookups by brand-category combination
+
+  // Indexes for faster analytics queries
+  @@index([storeId, year])
+  @@index([brandId, categoryId, year])
 }
 
 //

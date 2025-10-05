@@ -3,27 +3,21 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { PartnerBrandType, IssueStatus, Role } from '@prisma/client';
 
-type BrandKey = 'A' | 'A+' | 'B' | 'C' | 'D';
+type WeekKey = 'current' | 'previous';
 
-const brandToEnum = (b: BrandKey): PartnerBrandType | null => {
-  if (b === 'A+') return PartnerBrandType.A_PLUS;
-  if (b === 'A') return PartnerBrandType.A;
-  if (b === 'B') return PartnerBrandType.B;
-  if (b === 'C') return PartnerBrandType.C;
-  if (b === 'D') return PartnerBrandType.D;
+// Map query string to Prisma enum
+function parseBrandType(input: string | null | undefined): PartnerBrandType | null {
+  const s = (input || '').trim();
+  if (s === 'A+') return PartnerBrandType.A_PLUS;
+  if (s === 'A') return PartnerBrandType.A;
+  if (s === 'B') return PartnerBrandType.B;
+  if (s === 'C') return PartnerBrandType.C;
+  if (s === 'D') return PartnerBrandType.D;
   return null;
-};
+}
 
-// Windows in days for before/after, per requirement
-const brandWindows: Record<BrandKey, { before: number; after: number }> = {
-  'A': { before: 7, after: 7 },
-  'A+': { before: 3, after: 3 },
-  // Per prompt: B is only past 15 days; we set after=0
-  'B': { before: 15, after: 0 },
-  // UI also uses C; we provide a symmetric 15-day window
-  'C': { before: 15, after: 15 },
-  'D': { before: 30, after: 30 },
-};
+// Fixed window per requirements
+const fixedWindow = { before: 7, after: 7 } as const;
 
 function fmtDate(d: Date): string {
   // DD-MM-YYYY
@@ -45,12 +39,15 @@ export async function GET(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { searchParams } = new URL(request.url);
-    const brandParam = (searchParams.get('brand') || 'A') as BrandKey;
-    const brandEnum = brandToEnum(brandParam) as PartnerBrandType | null;
-    if (!brandEnum) return NextResponse.json({ error: 'Invalid brand' }, { status: 400 });
+    const weekParam = (searchParams.get('week') || 'current') as WeekKey;
+  const pbtParamRaw = searchParams.get('pbt') || 'All'; // default All
+  const pbtEnum = parseBrandType(pbtParamRaw);
+  // When pbtEnum is null, treat as 'All categories' (no filter)
 
-    // Optional: admin can scope by executiveId
+    // Optional: admin can scope by executiveId or name
     const scopeExecutiveId = searchParams.get('executiveId');
+    const executiveName = searchParams.get('executiveName');
+    const brandIdFilter = searchParams.get('brandId');
 
     // 1) Determine candidate stores based on role and brand type
     //    - Admin: stores that include the brand type (optionally restricted to an executive's assigned stores)
@@ -64,13 +61,20 @@ export async function GET(request: NextRequest) {
       });
       if (!exec) return NextResponse.json({ data: [], summary: null });
       allowedStoreIds = exec.executiveStores.map(es => es.storeId);
-    } else if (user.role === 'ADMIN' && scopeExecutiveId) {
-      // Restrict to a specific executive's assigned stores if provided
-      const exec = await prisma.executive.findUnique({
-        where: { id: scopeExecutiveId },
-        select: { executiveStores: { select: { storeId: true } } },
-      });
-      allowedStoreIds = exec?.executiveStores.map(es => es.storeId) || [];
+    } else if (user.role === 'ADMIN') {
+      if (scopeExecutiveId) {
+        const exec = await prisma.executive.findUnique({
+          where: { id: scopeExecutiveId },
+          select: { executiveStores: { select: { storeId: true } } },
+        });
+        allowedStoreIds = exec?.executiveStores.map(es => es.storeId) || [];
+      } else if (executiveName) {
+        const exec = await prisma.executive.findFirst({
+          where: { name: { contains: executiveName, mode: 'insensitive' } },
+          select: { executiveStores: { select: { storeId: true } } },
+        });
+        allowedStoreIds = exec?.executiveStores.map(es => es.storeId) || [];
+      }
     }
 
     const storeWhere: any = {
@@ -88,17 +92,28 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Filter stores by the chosen brand type and map brandIds relevant for that type per store
+    // Candidate stores filtered by selected partner brand type and optional brandId
     const candidate = stores
       .map(s => {
         const ids = s.partnerBrandIds || [];
         const types = (s.partnerBrandTypes || []) as PartnerBrandType[];
-        const typeBrandIds: string[] = [];
-        const len = Math.min(ids.length, types.length);
-        for (let i = 0; i < len; i++) {
-          if (types[i] === brandEnum) typeBrandIds.push(ids[i]);
+        let selectedIds: string[];
+        if (!pbtEnum) {
+          // No category filter -> include all brand IDs
+          selectedIds = ids.slice();
+        } else {
+          const tmp: string[] = [];
+          const len = Math.min(ids.length, types.length);
+          for (let i = 0; i < len; i++) {
+            if (types[i] === pbtEnum) tmp.push(ids[i]);
+          }
+          selectedIds = tmp;
         }
-        return typeBrandIds.length > 0 ? { ...s, typeBrandIds } : null;
+        // Optional brand filter
+        if (brandIdFilter && brandIdFilter !== 'All') {
+          selectedIds = selectedIds.filter(id => id === brandIdFilter);
+        }
+        return selectedIds.length > 0 ? { ...s, typeBrandIds: selectedIds } : null;
       })
       .filter(Boolean) as Array<{
         id: string;
@@ -115,10 +130,27 @@ export async function GET(request: NextRequest) {
 
     const storeIds = candidate.map(s => s.id);
 
-    // 2) For pivot: last visit date per store (role-aware)
+    // 2) Compute selected week range
+    const now = new Date();
+    const startOfWeek = (d: Date) => {
+      const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const day = (x.getDay() + 6) % 7; // Monday=0
+      x.setDate(x.getDate() - day);
+      x.setHours(0, 0, 0, 0);
+      return x;
+    };
+    const endOfWeek = (s: Date) => new Date(s.getFullYear(), s.getMonth(), s.getDate() + 6, 23, 59, 59, 999);
+
+    const curStart = startOfWeek(now);
+    const curEnd = endOfWeek(curStart);
+    const selStart = weekParam === 'current' ? curStart : new Date(curStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const selEnd = weekParam === 'current' ? curEnd : new Date(curEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    // 3) For pivot: last visit date per store within selected week (role-aware)
     // Physical visits
     const visitWhere: any = {
       storeId: { in: storeIds },
+      createdAt: { gte: selStart, lte: selEnd },
     };
     if (user.role === 'EXECUTIVE') {
       // Filter to this executive's visits only
@@ -130,13 +162,14 @@ export async function GET(request: NextRequest) {
 
     const visits = await prisma.visit.findMany({
       where: visitWhere,
-      select: { storeId: true, createdAt: true },
+      select: { storeId: true, createdAt: true, executive: { select: { name: true } } },
       orderBy: { createdAt: 'desc' },
     });
 
     // Digital visits
     const dVisitWhere: any = {
       storeId: { in: storeIds },
+      connectDate: { gte: selStart, lte: selEnd },
     };
     if (user.role === 'EXECUTIVE') {
       const exec = await prisma.executive.findUnique({ where: { userId: user.userId }, select: { id: true } });
@@ -147,22 +180,68 @@ export async function GET(request: NextRequest) {
 
     const dVisits = await prisma.digitalVisit.findMany({
       where: dVisitWhere,
-      select: { storeId: true, connectDate: true },
+      select: { storeId: true, connectDate: true, executive: { select: { name: true } } },
       orderBy: { connectDate: 'desc' },
     });
 
-    const lastVisitMap = new Map<string, Date>();
+    type LastVisitInfo = { date: Date; execName: string };
+    const lastVisitMap = new Map<string, LastVisitInfo>();
     for (const v of visits) {
       const cur = lastVisitMap.get(v.storeId);
-      if (!cur || v.createdAt > cur) lastVisitMap.set(v.storeId, v.createdAt);
+      if (!cur || v.createdAt > cur.date) lastVisitMap.set(v.storeId, { date: v.createdAt, execName: v.executive?.name || '-' });
     }
     for (const dv of dVisits) {
       const cur = lastVisitMap.get(dv.storeId);
-      if (!cur || dv.connectDate > cur) lastVisitMap.set(dv.storeId, dv.connectDate);
+      if (!cur || dv.connectDate > cur.date) lastVisitMap.set(dv.storeId, { date: dv.connectDate, execName: dv.executive?.name || '-' });
     }
 
-    // 3) Sales records for candidate stores and relevant brandIds
+    // Compute global window across all stores' pivots to avoid N+1
+    const pivotDates = Array.from(lastVisitMap.values()).map(v => v.date);
+    if (pivotDates.length === 0) {
+      return NextResponse.json({ data: [], summary: { avgSalesLiftPct: 0, storesImproved: 0, storesNotImproved: 0, avgRevenue: 0 } });
+    }
+    const globalBefore = pivotDates.reduce((min, d) => addDays(d, -fixedWindow.before) < min ? addDays(d, -fixedWindow.before) : min, addDays(pivotDates[0], -fixedWindow.before));
+    const globalAfter = pivotDates.reduce((max, d) => addDays(d, fixedWindow.after) > max ? addDays(d, fixedWindow.after) : max, addDays(pivotDates[0], fixedWindow.after));
+
+    // Superset fetches for visits/digitalVisits and issues within the global window
+    const supVisitWhere: any = { ...visitWhere, createdAt: { gte: globalBefore, lte: globalAfter } };
+    const supDVisitWhere: any = { ...dVisitWhere, connectDate: { gte: globalBefore, lte: globalAfter } };
+
+    const supVisits = await prisma.visit.findMany({
+      where: supVisitWhere,
+      select: { storeId: true, createdAt: true },
+      orderBy: undefined,
+    });
+    const supDigitalVisits = await prisma.digitalVisit.findMany({
+      where: supDVisitWhere,
+      select: { storeId: true, connectDate: true },
+      orderBy: undefined,
+    });
+
+    const supIssues = await prisma.issue.findMany({
+      where: {
+        AND: [
+          { OR: [ { createdAt: { gte: globalBefore, lte: globalAfter } }, { updatedAt: { gte: globalBefore, lte: globalAfter } } ] },
+          { OR: [ { visit: { storeId: { in: storeIds } } }, { digitalVisit: { storeId: { in: storeIds } } } ] },
+        ],
+      },
+      select: {
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        visit: { select: { storeId: true } },
+        digitalVisit: { select: { storeId: true } },
+      },
+      orderBy: undefined,
+    });
+
+    // 4) Sales records for candidate stores and all their brandIds
     const allBrandIds = Array.from(new Set(candidate.flatMap(c => c.typeBrandIds)));
+
+    // Fetch brand names for all brand IDs
+    const brandRows = await prisma.brand.findMany({ where: { id: { in: allBrandIds } }, select: { id: true, brandName: true } });
+    const brandNameById = new Map<string, string>(brandRows.map(b => [b.id, b.brandName]));
+
     const salesRecords = await prisma.salesRecord.findMany({
       where: {
         storeId: { in: storeIds },
@@ -171,31 +250,35 @@ export async function GET(request: NextRequest) {
       select: {
         storeId: true,
         brandId: true,
-        dailySales: true, // [{ date: 'YYYY-MM-DD', planSales: number, revenue: number }]
+        dailySales: true, // grouped by month { "1": [ { date: 'DD-MM-YYYY', countOfSales, revenue } ], ... }
       },
     });
 
     // Group sales by store
-    const salesByStore = new Map<string, Array<{ brandId: string; dailySales: any[] }>>();
+    const salesByStore = new Map<string, Array<{ brandId: string; dailySales: Record<string, any[]> }>>();
     for (const r of salesRecords) {
       const list = salesByStore.get(r.storeId) || [];
-      list.push({ brandId: r.brandId, dailySales: (r.dailySales as any[]) || [] });
+      list.push({ brandId: r.brandId, dailySales: (r.dailySales as Record<string, any[]>) || {} });
       salesByStore.set(r.storeId, list);
     }
 
-    const windowCfg = brandWindows[brandParam];
+    const windowCfg = fixedWindow; // always ±7 days
 
-    // Helper to sum sales and plans in a window
-    const sumWindow = (daily: any[], start: Date, end: Date) => {
+    // Helper to sum revenue and countOfSales in a window from grouped dailySales
+    const sumWindow = (dailyByMonth: Record<string, any[]>, start: Date, end: Date) => {
       let revenue = 0;
       let plans = 0;
-      for (const d of daily) {
-        const ds = String(d.date || '');
-        if (!ds) continue;
-        const dt = new Date(ds);
-        if (dt >= start && dt <= end) {
-          revenue += Number(d.revenue || 0);
-          plans += Number(d.planSales || 0);
+      for (const entries of Object.values(dailyByMonth || {})) {
+        if (!Array.isArray(entries)) continue;
+        for (const d of entries) {
+          const ds = String(d.date || '');
+          if (!ds) continue;
+          const [dd, mm, yyyy] = ds.split('-');
+          const dt = new Date(`${yyyy}-${mm}-${dd}`);
+          if (dt >= start && dt <= end) {
+            revenue += Number(d.revenue || 0);
+            plans += Number(d.countOfSales || 0);
+          }
         }
       }
       return { revenue, plans };
@@ -205,9 +288,10 @@ export async function GET(request: NextRequest) {
 
     // 4) For each store, compute metrics around the pivot
     for (const s of candidate) {
-      const pivot = lastVisitMap.get(s.id);
-      if (!pivot) continue; // no visits -> skip
+      const pivotInfo = lastVisitMap.get(s.id);
+      if (!pivotInfo) continue; // no visits -> skip
 
+      const pivot = pivotInfo.date;
       const beforeStart = addDays(pivot, -windowCfg.before);
       const beforeEnd = new Date(pivot.getTime());
       const afterStart = new Date(pivot.getTime());
@@ -229,66 +313,57 @@ export async function GET(request: NextRequest) {
         plansAfter += plA;
       }
 
-      // Visits after (completed)
-      const completedAfter = await prisma.visit.count({
-        where: {
-          storeId: s.id,
-          ...(user.role === 'EXECUTIVE' ? { executive: { userId: user.userId } } : {}),
-          createdAt: { gte: afterStart, lte: afterEnd },
-        },
-      }) + await prisma.digitalVisit.count({
-        where: {
-          storeId: s.id,
-          ...(user.role === 'EXECUTIVE' ? { executive: { userId: user.userId } } : {}),
-          connectDate: { gte: afterStart, lte: afterEnd },
-        },
-      });
+      // Aggregate visits/digitalVisits (no per-store queries)
+      const vForStore = supVisits.filter(v => v.storeId === s.id);
+      const dvForStore = supDigitalVisits.filter(dv => dv.storeId === s.id);
+      const completedAfter = vForStore.filter(v => v.createdAt >= afterStart && v.createdAt <= afterEnd).length +
+        dvForStore.filter(dv => dv.connectDate >= afterStart && dv.connectDate <= afterEnd).length;
+
+      // Aggregate issues (no per-store queries)
+      const issuesForStore = supIssues.filter(ix => (ix.visit?.storeId === s.id) || (ix.digitalVisit?.storeId === s.id));
+      const raisedBefore = issuesForStore.filter(ix => ix.createdAt >= beforeStart && ix.createdAt <= beforeEnd).length;
+      const resolvedAfter = issuesForStore.filter(ix => ix.status === IssueStatus.Resolved && ix.updatedAt && ix.updatedAt >= afterStart && ix.updatedAt <= afterEnd).length;
+      const pendingAfter = issuesForStore.filter(ix => (ix.status === IssueStatus.Pending || ix.status === IssueStatus.Assigned) && ix.createdAt >= afterStart && ix.createdAt <= afterEnd).length;
+
+      // 4) For each store, compute metrics around the pivot (±7 days inclusive -> 15 points)
+      const points: Array<{ date: string; displayDate: string; revenue: number; dayOffset: number }> = [];
+      const sumRevenueOnDate = (dateStrDDMMYYYY: string): number => {
+        let rev = 0;
+        for (const r of sr) {
+          if (!s.typeBrandIds.includes(r.brandId)) continue;
+          const dailyByMonth = r.dailySales || {};
+          for (const entries of Object.values(dailyByMonth)) {
+            if (!Array.isArray(entries)) continue;
+            for (const d of entries as any[]) {
+              if (String(d.date) === dateStrDDMMYYYY) rev += Number(d.revenue || 0);
+            }
+          }
+        }
+        return rev;
+      };
+      for (let i = -7; i <= 7; i++) {
+        const dt = addDays(pivot, i);
+        const ddmmyyyy = fmtDate(dt);
+        const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+        points.push({ date: iso, displayDate: ddmmyyyy, revenue: sumRevenueOnDate(ddmmyyyy), dayOffset: i });
+      }
 
       // Missed after: requires planned vs actual; set 0 for now (extendable)
       const missedAfter = 0;
 
-      // Issues
-      const raisedBefore = await prisma.issue.count({
-        where: {
-          createdAt: { gte: beforeStart, lte: beforeEnd },
-          OR: [
-            { visit: { storeId: s.id } },
-            { digitalVisit: { storeId: s.id } },
-          ],
-        },
-      });
-
-      const resolvedAfter = await prisma.issue.count({
-        where: {
-          status: IssueStatus.Resolved,
-          updatedAt: { gte: afterStart, lte: afterEnd },
-          OR: [
-            { visit: { storeId: s.id } },
-            { digitalVisit: { storeId: s.id } },
-          ],
-        },
-      });
-
-      const pendingAfter = await prisma.issue.count({
-        where: {
-          status: { in: [IssueStatus.Pending, IssueStatus.Assigned] },
-          createdAt: { gte: afterStart, lte: afterEnd },
-          OR: [
-            { visit: { storeId: s.id } },
-            { digitalVisit: { storeId: s.id } },
-          ],
-        },
-      });
-
       const lift = salesBefore > 0 ? ((salesAfter - salesBefore) / salesBefore) * 100 : (salesAfter > 0 ? 100 : 0);
       const incChange = plansBefore > 0 ? ((plansAfter - plansBefore) / plansBefore) * 100 : (plansAfter > 0 ? 100 : 0);
+
+      const brandNames = s.typeBrandIds.map(id => brandNameById.get(id)).filter(Boolean) as string[];
 
       rows.push({
         storeId: s.id,
         store: s.storeName,
         city: s.city || '-',
-        brand: brandParam,
+        brand: pbtParamRaw,
+        brandNames: brandNames,
         lastVisit: fmtDate(pivot),
+        lastVisitedBy: pivotInfo.execName,
         salesBefore: Math.round(salesBefore),
         salesAfter: Math.round(salesAfter),
         salesImpact: `${lift >= 0 ? '+' : ''}${Math.round(lift)}%`,
@@ -305,6 +380,7 @@ export async function GET(request: NextRequest) {
           completedAfter,
           missedAfter,
         },
+        trend: { points },
       });
     }
 
@@ -318,20 +394,18 @@ export async function GET(request: NextRequest) {
     const storesImproved = rows.filter(r => r.salesAfter > r.salesBefore).length;
     const storesNotImproved = rows.length - storesImproved;
 
-    const incChanges = rows.map(r => {
-      const b = Number(r.incentives.before);
-      const a = Number(r.incentives.after);
-      return b > 0 ? ((a - b) / b) * 100 : (a > 0 ? 100 : 0);
-    });
-    const incentiveChangeAvgPct = incChanges.length ? Math.round(incChanges.reduce((s, v) => s + v, 0) / incChanges.length) : 0;
+    // Average of (After - Before) revenue across stores (absolute number, can be negative)
+    const avgRevenue = rows.length
+      ? Math.round(rows.reduce((s, r) => s + (Number(r.salesAfter || 0) - Number(r.salesBefore || 0)), 0) / rows.length)
+      : 0;
 
     // Role-based disclosure: same endpoint supports both roles
     // Admin sees all (or scoped by executiveId). Executive sees only assigned stores.
 
     return NextResponse.json({
       data: rows,
-      summary: { avgSalesLiftPct, storesImproved, storesNotImproved, incentiveChangeAvgPct },
-      meta: { brand: brandParam, role: user.role as Role },
+      summary: { avgSalesLiftPct, storesImproved, storesNotImproved, avgRevenue },
+      meta: { week: weekParam, partnerBrandType: pbtParamRaw, role: user.role as Role },
     });
   } catch (e) {
     console.error('analytics/impact error', e);
