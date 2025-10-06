@@ -384,7 +384,7 @@ export default function ExecutiveAnalyticsImpactPage() {
 
                 {/* Revenue trend sparkline (±7 days) */}
                 <div>
-                  <div style={{ fontWeight: 600, marginBottom: 6, textAlign: isCompact ? 'left' : 'center' }}>Revenue (±7 days)</div>
+                  <div style={{ fontWeight: 600, marginBottom: 6, textAlign: isCompact ? 'left' : 'center' }}>Revenue (±7 Days Last Visit)</div>
                   <div className="exec-revenue-row">
                     <div className="exec-sales-box">
                       Sales Before<br/>

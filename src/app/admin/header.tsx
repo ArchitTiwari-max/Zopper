@@ -128,6 +128,11 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
           title: 'Digital Connect',
           subtitle: 'Manage and review digital visit connects'
         };
+      case '/admin/attendance':
+        return {
+          title: 'Attendance Tracker',
+          subtitle: 'Daily submission status by executive'
+        };
       case '/admin/settings':
         return {
           title: 'Settings',
@@ -191,6 +196,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
            pathname === '/admin/visit-report' ||
            pathname === '/admin/digital-report' ||
            pathname === '/admin/executives' ||
+           pathname === '/admin/attendance' ||
            pathname.startsWith('/admin/issues/');
   };
   
