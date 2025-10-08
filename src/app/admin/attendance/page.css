@@ -48,8 +48,21 @@
 .attendance-filters {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   padding: 12px 12px 0 12px;
+}
+
+.filter-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.filter-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .attendance-filters label {
@@ -58,6 +71,7 @@
   font-weight: 500;
 }
 
+.date-filter-select,
 .exec-filter-select {
   padding: 10px 12px;
   border: 1px solid #d1d5db;
@@ -65,7 +79,118 @@
   background: #fff;
   color: #111827;
   font-size: 1rem;
+  min-width: 200px;
+}
+
+.exec-filter-select {
   min-width: 280px;
+}
+
+/* Holiday and Export Buttons */
+.holiday-btn,
+.export-btn {
+  padding: 8px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.holiday-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.export-btn:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.holiday-btn:active,
+.export-btn:active {
+  transform: translateY(1px);
+}
+
+/* Holiday Picker */
+.holiday-picker {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 12px 0;
+}
+
+.holiday-picker-header {
+  margin-bottom: 12px;
+}
+
+.holiday-picker-header h4 {
+  margin: 0 0 4px 0;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.holiday-picker-info {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.holiday-list {
+  margin-top: 8px;
+}
+
+.holiday-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.holiday-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.remove-holiday {
+  background: none;
+  border: none;
+  color: #92400e;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.remove-holiday:hover {
+  background: #f59e0b;
+  color: white;
+}
+
+.no-holidays {
+  color: #6b7280;
+  font-style: italic;
+  font-size: 0.875rem;
 }
 
 .attendance-legend {
@@ -109,7 +234,7 @@
   white-space: nowrap;
 }
 
-/* Sticky Date Column */
+/* Sticky Executive Column (now on the left) */
 .sticky-col {
   position: sticky;
   left: 0;
@@ -118,35 +243,126 @@
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
 }
 
-.date-col {
-  width: 120px;
+.exec-col {
+  width: 150px;
   padding: 12px 8px;
   font-weight: 600;
   color: #374151;
+  background: #ffffff;
 }
 
-.date-cell {
+.exec-cell {
+  width: 150px;
   padding: 10px 8px;
   font-size: 0.85rem;
   font-weight: 500;
   color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Executive Columns */
-.exec-col {
+.exec-cell:hover {
+  background: #f3f4f6;
+}
+
+/* Date Columns (now header columns) */
+.date-col {
   width: 100px;
   padding: 12px 8px;
   font-weight: 600;
   color: #374151;
   background: #ffffff;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   overflow: hidden;
   text-overflow: ellipsis;
   position: relative;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
 }
 
-.exec-col:hover {
+.date-col:hover {
+  background: #f9fafb;
+}
+
+.date-col.holiday-header {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.date-col.holiday-header:hover {
+  background: #fde68a;
+}
+
+.date-col.weekend-header {
   background: #f3f4f6;
+  color: #6b7280;
+}
+
+.date-col.weekend-header:hover {
+  background: #e5e7eb;
+}
+
+.date-header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.date-text {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.holiday-indicator,
+.weekend-indicator {
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+/* Total Column */
+.total-col {
+  width: 120px;
+  padding: 12px 8px;
+  font-weight: 700;
+  color: #1f2937;
+  background: #f9fafb;
+  font-size: 0.875rem;
+  text-align: center;
+  border-left: 2px solid #e5e7eb;
+  border-right: 2px solid #e5e7eb;
+}
+
+.total-cell {
+  width: 120px;
+  padding: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: #f9fafb;
+  text-align: center;
+  border-left: 2px solid #e5e7eb;
+  border-right: 2px solid #e5e7eb;
+}
+
+.total-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.total-fraction {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.total-percentage {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  line-height: 1;
 }
 
 /* Status Cells */
@@ -173,6 +389,26 @@
   color: #dc2626;
 }
 
+.status-cell.weekend {
+  background: #f3f4f6;
+}
+
+.status-cell.weekend .dash {
+  color: #6b7280;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.status-cell.holiday {
+  background: #fef3c7;
+}
+
+.status-cell.holiday .holiday-symbol {
+  color: #92400e;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
 .status-cell:hover {
   opacity: 0.8;
 }
@@ -187,7 +423,7 @@
   font-weight: 600;
 }
 
-.sticky-col.date-col {
+.sticky-col.exec-col {
   z-index: 15; /* Higher than other sticky headers */
 }
 
@@ -197,19 +433,82 @@
     padding: 10px;
   }
   
-  .exec-col,
-  .status-cell {
-    width: 80px;
+  .attendance-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
   }
   
-  .date-col {
+  .filter-left,
+  .filter-right {
+    justify-content: center;
+  }
+  
+  .filter-right {
+    gap: 12px;
+  }
+  
+  .holiday-btn,
+  .export-btn {
+    flex: 1;
+    justify-content: center;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+  
+  .date-col,
+  .status-cell {
+    width: 70px;
+  }
+  
+  .exec-col,
+  .exec-cell {
+    width: 120px;
+  }
+  
+  .total-col,
+  .total-cell {
     width: 100px;
   }
   
   .attendance-table th,
   .attendance-table td {
     padding: 6px 4px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+  }
+  
+  .date-col {
+    font-size: 0.65rem;
+  }
+  
+  .date-text {
+    font-size: 0.6rem;
+  }
+  
+  .holiday-indicator,
+  .weekend-indicator {
+    font-size: 0.7rem;
+  }
+  
+  .holiday-picker {
+    padding: 12px;
+  }
+  
+  .holiday-tags {
+    gap: 4px;
+  }
+  
+  .holiday-tag {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
+  
+  .total-fraction {
+    font-size: 0.8rem;
+  }
+  
+  .total-percentage {
+    font-size: 0.65rem;
   }
 }
 
