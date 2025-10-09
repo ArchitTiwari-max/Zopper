@@ -206,7 +206,38 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
 }
 
 /**
+ * Helper function to merge incoming monthly sales data with existing data
+ * Preserves existing months that aren't in the new import while updating overlapping ones
+ */
+const mergeMonthlySales = (
+  existing: any[] | null | undefined,
+  incoming: any[]
+): any[] => {
+  const result = new Map<number, any>();
+  
+  // First, preserve all existing months
+  if (existing && Array.isArray(existing)) {
+    for (const monthData of existing) {
+      if (monthData && typeof monthData.month === 'number') {
+        result.set(monthData.month, { ...monthData });
+      }
+    }
+  }
+  
+  // Then, merge in the new data (overwrites same months, adds new months)
+  for (const monthData of incoming) {
+    if (monthData && typeof monthData.month === 'number') {
+      result.set(monthData.month, { ...monthData });
+    }
+  }
+  
+  // Convert back to array and sort by month
+  return Array.from(result.values()).sort((a, b) => a.month - b.month);
+};
+
+/**
  * Batch process sales records in chunks for maximum performance
+ * Fixed to preserve existing monthly data when importing partial month updates
  */
 export async function batchProcessSalesRecords(
   salesData: Array<{
@@ -233,36 +264,46 @@ export async function batchProcessSalesRecords(
     }
     
     try {
-      const operations = [];
-      
-      for (const record of chunk) {
+      const operations = chunk.map(async (record) => {
         for (const yearStr in record.salesByYear) {
           const year = parseInt(yearStr, 10);
-          const monthlySales = record.salesByYear[year];
+          const incomingMonthlySales = record.salesByYear[year];
           
-          operations.push(
-            prisma.salesRecord.upsert({
-              where: {
-                storeId_brandId_categoryId_year: {
-                  storeId: record.storeId,
-                  brandId: record.brandId,
-                  categoryId: record.categoryId,
-                  year,
-                }
-              },
-              update: { monthlySales },
-              create: {
-                storeId: record.storeId,
-                brandId: record.brandId,
-                categoryId: record.categoryId,
-                year,
-                monthlySales,
-                dailySales: []
-              }
-            })
+          const key = {
+            storeId_brandId_categoryId_year: {
+              storeId: record.storeId,
+              brandId: record.brandId,
+              categoryId: record.categoryId,
+              year,
+            }
+          } as const;
+
+          // Read existing record to merge monthly sales instead of overwriting
+          const existing = await prisma.salesRecord.findUnique({
+            where: key,
+            select: { monthlySales: true }
+          });
+
+          // Merge existing monthly sales with incoming data
+          const mergedMonthlySales = mergeMonthlySales(
+            existing?.monthlySales as any[] | null,
+            incomingMonthlySales
           );
+
+          await prisma.salesRecord.upsert({
+            where: key,
+            update: { monthlySales: mergedMonthlySales },
+            create: {
+              storeId: record.storeId,
+              brandId: record.brandId,
+              categoryId: record.categoryId,
+              year,
+              monthlySales: mergedMonthlySales,
+              dailySales: []
+            }
+          });
         }
-      }
+      });
 
       // Execute all operations in this chunk concurrently
       await Promise.all(operations);
