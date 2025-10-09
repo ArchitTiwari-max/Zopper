@@ -3,10 +3,6 @@ import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { PartnerBrandType } from '@prisma/client';
 
-// In-memory cache for performance (in production, use Redis)
-const cache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
 function parseRange(range: string | null): { start: Date; end: Date } {
   const now = new Date();
   const end = now;
@@ -24,25 +20,6 @@ function parseRange(range: string | null): { start: Date; end: Date } {
   return { start, end };
 }
 
-// Helper function to get cached data
-function getCachedData(cacheKey: string) {
-  const cached = cache.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data;
-  }
-  return null;
-}
-
-// Helper function to set cached data
-function setCachedData(cacheKey: string, data: any) {
-  cache.set(cacheKey, { data, timestamp: Date.now() });
-  
-  // Clean up old cache entries (prevent memory leaks)
-  if (cache.size > 100) {
-    const oldestKeys = Array.from(cache.keys()).slice(0, 50);
-    oldestKeys.forEach(key => cache.delete(key));
-  }
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,22 +31,6 @@ export async function GET(request: NextRequest) {
     const brandId = searchParams.get('brandId');
     const range = searchParams.get('range'); // today | 7d | 30d (default)
     const { start, end } = parseRange(range);
-
-    // Create cache key for this specific request
-    const cacheKey = `partner-brand-visits:${brandId || 'all'}:${range}:${start.getTime()}-${end.getTime()}`;
-    
-    // Check cache first
-    const cachedResult = getCachedData(cacheKey);
-    if (cachedResult) {
-      console.log('🚀 Cache hit for partner-brand-type-visits');
-      return NextResponse.json({
-        ...cachedResult,
-        meta: {
-          ...cachedResult.meta,
-          fromCache: true,
-        }
-      });
-    }
 
     console.log('🔄 Processing partner-brand-type-visits query...');
     const startTime = Date.now();
@@ -230,7 +191,7 @@ export async function GET(request: NextRequest) {
     const processingTime = Date.now() - startTime;
     console.log(`⚡ Partner-brand-type-visits processed in ${processingTime}ms`);
 
-    const response = {
+    const responseData = {
       data: result,
       meta: {
         brandId: brandId || null,
@@ -242,10 +203,14 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    // Cache the result for future requests
-    setCachedData(cacheKey, response);
-
-    return NextResponse.json(response);
+    // Add HTTP caching headers like dashboard - PRIVATE cache for admin data security
+    return NextResponse.json(responseData, {
+      headers: {
+        'Cache-Control': 'private, max-age=300, stale-while-revalidate=600', // 5min private cache
+        'Vary': 'Authorization', // Ensure different admins get separate cache
+        'X-Processing-Time': `${processingTime}ms`, // Performance monitoring
+      }
+    });
     
   } catch (e) {
     console.error('❌ partner-brand-type-visits error', e);
