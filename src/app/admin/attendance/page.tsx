@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useAttendanceDateFilter } from '../contexts/AttendanceDateFilterContext';
 import { useSearchParams } from 'next/navigation';
 import * as XLSX from 'xlsx';
 import './page.css';
@@ -20,16 +19,22 @@ interface VisitItem {
   storeName: string;
 }
 
+type DateFilterOption = 'Today' | 'Yesterday' | 'Custom';
+
 const AttendancePage: React.FC = () => {
-  const { selectedDateFilter, setSelectedDateFilter } = useAttendanceDateFilter();
   const searchParams = useSearchParams();
+  const [selectedDateFilter, setSelectedDateFilter] = useState<DateFilterOption>('Today');
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [executives, setExecutives] = useState<Executive[]>([]);
   const [visits, setVisits] = useState<VisitItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedExecId, setSelectedExecId] = useState<string>('ALL');
   const [holidays, setHolidays] = useState<Set<string>>(new Set()); // Set of date strings (YYYY-MM-DD)
+  const [holidaysLoaded, setHolidaysLoaded] = useState<boolean>(false);
   const [showHolidayPicker, setShowHolidayPicker] = useState<boolean>(false);
+  const [isFiltersVisible, setIsFiltersVisible] = useState<boolean>(true);
 
   // Helpers
   const parseDDMMYYYY = (d: string): Date | null => {
@@ -69,8 +74,34 @@ const AttendancePage: React.FC = () => {
     return holidays.has(dateKey);
   };
 
-  // Toggle holiday status for a date
-  const toggleHoliday = (dateKey: string): void => {
+  // Load holidays from database
+  const loadHolidays = async (): Promise<void> => {
+    try {
+      const res = await fetch('/api/admin/holidays', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        const holidayDates = new Set(data.holidays.map((h: any) => h.date));
+        setHolidays(holidayDates);
+      } else {
+        console.warn('Failed to load holidays:', await res.text());
+      }
+    } catch (error) {
+      console.error('Error loading holidays:', error);
+    } finally {
+      setHolidaysLoaded(true);
+    }
+  };
+
+  // Toggle holiday status for a date (with database persistence)
+  const toggleHoliday = async (dateKey: string): Promise<void> => {
+    const isCurrentlyHoliday = holidays.has(dateKey);
+    
+    // Optimistically update UI
     setHolidays(prev => {
       const newHolidays = new Set(prev);
       if (newHolidays.has(dateKey)) {
@@ -80,6 +111,68 @@ const AttendancePage: React.FC = () => {
       }
       return newHolidays;
     });
+
+    try {
+      if (isCurrentlyHoliday) {
+        // Remove holiday from database
+        const existingHolidays = await fetch('/api/admin/holidays');
+        if (existingHolidays.ok) {
+          const data = await existingHolidays.json();
+          const holidayToDelete = data.holidays.find((h: any) => h.date === dateKey);
+          
+          if (holidayToDelete) {
+            const deleteRes = await fetch(`/api/admin/holidays/${holidayToDelete.id}`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include'
+            });
+            
+            if (!deleteRes.ok) {
+              console.error('Failed to delete holiday:', await deleteRes.text());
+              // Revert optimistic update on error
+              setHolidays(prev => {
+                const newHolidays = new Set(prev);
+                newHolidays.add(dateKey);
+                return newHolidays;
+              });
+            }
+          }
+        }
+      } else {
+        // Add holiday to database
+        const res = await fetch('/api/admin/holidays', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            date: dateKey,
+            name: `Holiday - ${formatYMDToDDMMYYYY(dateKey)}`
+          })
+        });
+        
+        if (!res.ok) {
+          console.error('Failed to create holiday:', await res.text());
+          // Revert optimistic update on error
+          setHolidays(prev => {
+            const newHolidays = new Set(prev);
+            newHolidays.delete(dateKey);
+            return newHolidays;
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling holiday:', error);
+      // Revert optimistic update on error
+      setHolidays(prev => {
+        const newHolidays = new Set(prev);
+        if (isCurrentlyHoliday) {
+          newHolidays.add(dateKey);
+        } else {
+          newHolidays.delete(dateKey);
+        }
+        return newHolidays;
+      });
+    }
   };
 
   // Calculate attendance statistics for an executive
@@ -141,9 +234,9 @@ const AttendancePage: React.FC = () => {
           } else if (isWeekend) {
             cellValue = 'SUNDAY';
           } else if (has) {
-            cellValue = stores.length > 0 ? `VISITED (${stores.join(', ')})` : 'VISITED';
+            cellValue = stores.length > 0 ? `✅ (${stores.join(', ')})` : 'VISITED';
           } else {
-            cellValue = 'NOT VISITED';
+            cellValue = '❌';
           }
           
           row.push(cellValue);
@@ -161,7 +254,8 @@ const AttendancePage: React.FC = () => {
       // Generate filename with current date and filter
       const today = new Date();
       const dateStr = today.toISOString().split('T')[0];
-      const filename = `Attendance_Report_${selectedDateFilter.replace(/ /g, '_')}_${dateStr}.xlsx`;
+      const filterName = selectedDateFilter.replace(/ /g, '_').replace(/\s/g, '_');
+      const filename = `Attendance_Report_${filterName}_${dateStr}.xlsx`;
       
       // Save file
       XLSX.writeFile(workbook, filename);
@@ -172,7 +266,7 @@ const AttendancePage: React.FC = () => {
     }
   };
 
-  const getRangeForFilter = (filter: string): { start: Date; end: Date } => {
+  const getRangeForFilter = (filter: DateFilterOption): { start: Date; end: Date } => {
     const now = new Date();
     let start: Date;
     let end: Date;
@@ -189,24 +283,15 @@ const AttendancePage: React.FC = () => {
         end = y;
         break;
       }
-      case 'Last 7 Days': {
-        start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
-        end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      case 'Custom': {
+        // Get all days of the selected month/year
+        start = new Date(selectedYear, selectedMonth, 1);
+        end = new Date(selectedYear, selectedMonth + 1, 0); // Last day of the month
         break;
       }
-      case 'Last 90 Days': {
-        start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 89);
-        end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        break;
-      }
-      case 'Last Year': {
-        start = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-        end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        break;
-      }
-      case 'Last 30 Days':
       default: {
-        start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
+        // Default to today
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       }
     }
@@ -221,9 +306,11 @@ const AttendancePage: React.FC = () => {
       keys.push(formatYMD(cursor));
       cursor.setDate(cursor.getDate() + 1);
     }
-    // Show most recent first (descending)
-    return keys.reverse();
-  }, [selectedDateFilter]);
+    // Show most recent first (descending) for Today/Yesterday, chronological for Custom
+    return selectedDateFilter === 'Custom' ? keys : keys.reverse();
+  }, [selectedDateFilter, selectedMonth, selectedYear]);
+
+  // Attendance data is now calculated from visits data only (no API sync)
 
   // Fetch executives (from visit-report filters) and visits
   useEffect(() => {
@@ -250,11 +337,31 @@ const AttendancePage: React.FC = () => {
 
         // Fetch visits for period
         const params = new URLSearchParams();
-        params.append('dateFilter', selectedDateFilter);
-        params.append('_ts', String(Date.now())); // avoid cache
+        // Convert our filter to the format expected by the API
+        let apiDateFilter: string;
+        switch (selectedDateFilter) {
+          case 'Today':
+            apiDateFilter = 'Today';
+            break;
+          case 'Yesterday':
+            apiDateFilter = 'Yesterday';
+            break;
+          case 'Custom':
+            // For custom, we'll use a month range that the API can understand
+            apiDateFilter = 'Last 30 Days'; // API fallback, we handle the actual range in getRangeForFilter
+            break;
+          default:
+            apiDateFilter = 'Today';
+        }
+        params.append('dateFilter', apiDateFilter);
         const dataRes = await fetch(`/api/admin/visit-report/data?${params.toString()}`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
+          headers: { 
+            'Content-Type': 'application/json', 
+            'Cache-Control': 'no-cache, no-store, must-revalidate', 
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
           credentials: 'include',
           cache: 'no-store'
         });
@@ -275,6 +382,8 @@ const AttendancePage: React.FC = () => {
         if (!isCancelled) {
           setExecutives(normalizedExecs.sort((a, b) => a.name.localeCompare(b.name)));
           setVisits(normalizedVisits);
+          
+          // Note: Attendance is now calculated from visits data only, no database sync
         }
       } catch (e) {
         if (!isCancelled) setError(e instanceof Error ? e.message : 'Failed to load attendance');
@@ -287,7 +396,7 @@ const AttendancePage: React.FC = () => {
     return () => {
       isCancelled = true;
     };
-  }, [selectedDateFilter]);
+  }, [selectedDateFilter, selectedMonth, selectedYear]);
 
   // Build a Set of submissions by (dateKey, execId)
   const submissionSet = useMemo(() => {
@@ -324,6 +433,13 @@ const AttendancePage: React.FC = () => {
     return executives.filter(e => e.id === selectedExecId);
   }, [executives, selectedExecId]);
 
+  // Load holidays from database on component mount
+  useEffect(() => {
+    if (!holidaysLoaded) {
+      loadHolidays();
+    }
+  }, [holidaysLoaded]);
+
   // Initialize selection from URL param when executives are available
   useEffect(() => {
     const urlExecId = searchParams.get('executiveId');
@@ -347,72 +463,163 @@ const AttendancePage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="attendance-wrapper">
-        <div className="attendance-error">
-          <div>Error loading attendance</div>
-          <div>{error}</div>
-          <button onClick={() => { /* trigger re-fetch */ window.location.reload(); }}>Retry</button>
-        </div>
+      <div style={{ padding: 24 }}>
+        <div style={{ color: "#b91c1c", marginBottom: 12 }}>Error: {error}</div>
+        <button 
+          onClick={() => window.location.reload()}
+          style={{
+            padding: '8px 16px',
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: 6,
+            cursor: 'pointer'
+          }}
+        >
+          Retry
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="attendance-wrapper">
+    <div style={{ padding: 24 }}>
       {isLoading ? (
-        <div className="attendance-loading">Loading attendance…</div>
+        <div className="table-loading" role="status" aria-live="polite">
+          <div className="loading-spinner-large" />
+          <span className="loading-text">Loading attendance data…</span>
+        </div>
       ) : (
-        <div className="attendance-table-container">
-          <div className="attendance-filters">
-            <div className="filter-left">
-              <label htmlFor="date-filter">Date Range:</label>
-              <select
-                id="date-filter"
-                className="date-filter-select"
-                value={selectedDateFilter}
-                onChange={(e) => setSelectedDateFilter(e.target.value as any)}
+        <div>
+          {/* Filters Section - Analytics Style */}
+          <div>
+            <div style={{ marginBottom: 8 }}>
+              <h3
+                onClick={() => setIsFiltersVisible(v => !v)}
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, margin: 0, fontSize: 18, fontWeight: 600 }}
               >
-                <option value="Today">Today</option>
-                <option value="Yesterday">Yesterday</option>
-                <option value="Last 7 Days">Last 7 Days</option>
-                <option value="Last 30 Days">Last 30 Days</option>
-                <option value="Last 90 Days">Last 90 Days</option>
-                <option value="Last Year">Last Year</option>
-              </select>
-              
-              <label htmlFor="exec-filter">Executive:</label>
-              <select
-                id="exec-filter"
-                className="exec-filter-select"
-                value={selectedExecId}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setSelectedExecId(val);
-                  updateUrlWithExec(val);
-                }}
-              >
-                <option value="ALL">All Executives</option>
-                {executives.map(exec => (
-                  <option key={exec.id} value={exec.id}>{exec.name}</option>
-                ))}
-              </select>
+                Filters
+                <span style={{ transform: isFiltersVisible ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
+              </h3>
             </div>
-            <div className="filter-right">
-              <button
-                className="holiday-btn"
-                onClick={() => setShowHolidayPicker(!showHolidayPicker)}
-                title="Mark days as holidays"
-              >
-                🏖️ Manage Holidays
-              </button>
-              <button
-                className="export-btn"
-                onClick={exportToExcel}
-                title="Export attendance data to Excel"
-              >
-                📊 Export XLS
-              </button>
-            </div>
+            {isFiltersVisible && (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: 12,
+                padding: 12,
+                border: '1px solid #e2e8f0',
+                borderRadius: 8,
+                background: '#f8fafc',
+                marginBottom: 16,
+              }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontWeight: 600, fontSize: 13, color: '#374151' }}>Date Range</label>
+                  <select
+                    value={selectedDateFilter}
+                    onChange={(e) => setSelectedDateFilter(e.target.value as DateFilterOption)}
+                    style={{ padding: 8, border: '1px solid #ddd', borderRadius: 6 }}
+                  >
+                    <option value="Today">Today</option>
+                    <option value="Yesterday">Yesterday</option>
+                    <option value="Custom">Custom Month/Year</option>
+                  </select>
+                </div>
+                
+                {selectedDateFilter === 'Custom' && (
+                  <>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontWeight: 600, fontSize: 13, color: '#374151' }}>Month</label>
+                      <select
+                        value={selectedMonth}
+                        onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                        style={{ padding: 8, border: '1px solid #ddd', borderRadius: 6 }}
+                      >
+                        {Array.from({ length: 12 }, (_, i) => {
+                          const monthName = new Date(2000, i, 1).toLocaleDateString('en', { month: 'long' });
+                          return (
+                            <option key={i} value={i}>{monthName}</option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontWeight: 600, fontSize: 13, color: '#374151' }}>Year</label>
+                      <select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                        style={{ padding: 8, border: '1px solid #ddd', borderRadius: 6 }}
+                      >
+                        {Array.from({ length: 5 }, (_, i) => {
+                          const year = new Date().getFullYear() - i;
+                          return (
+                            <option key={year} value={year}>{year}</option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  </>
+                )}
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontWeight: 600, fontSize: 13, color: '#374151' }}>Executive</label>
+                  <select
+                    value={selectedExecId}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedExecId(val);
+                      updateUrlWithExec(val);
+                    }}
+                    style={{ padding: 8, border: '1px solid #ddd', borderRadius: 6 }}
+                  >
+                    <option value="ALL">All Executives</option>
+                    {executives.map(exec => (
+                      <option key={exec.id} value={exec.id}>{exec.name}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontWeight: 600, fontSize: 13, color: '#374151' }}>Actions</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={() => setShowHolidayPicker(!showHolidayPicker)}
+                      style={{
+                        padding: '8px 12px',
+                        border: '1px solid #ddd',
+                        borderRadius: 6,
+                        background: showHolidayPicker ? '#e0f2fe' : 'white',
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4
+                      }}
+                      title="Manage holidays"
+                    >
+                      🏖️ Holidays
+                    </button>
+                    <button
+                      onClick={exportToExcel}
+                      style={{
+                        padding: '8px 12px',
+                        border: '1px solid #ddd',
+                        borderRadius: 6,
+                        background: 'white',
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4
+                      }}
+                      title="Export to Excel"
+                    >
+                      📊 Export
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           {showHolidayPicker && (
             <div className="holiday-picker">

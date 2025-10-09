@@ -423,3 +423,22 @@ model Notification {
   @@index([recipientId, recipientRole])
   @@map("Notification")
 }
+
+//
+// Holiday Management
+//
+
+model Holiday {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  date        DateTime // Holiday date (stored as UTC date)
+  name        String?  // Optional holiday name (e.g., "Christmas", "New Year")
+  description String?  // Optional description
+  isRecurring Boolean  @default(false) // Whether this holiday repeats yearly
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?  // Admin ID who created this holiday
+  
+  // Index for efficient date lookups
+  @@index([date])
+  @@map("Holiday")
+}

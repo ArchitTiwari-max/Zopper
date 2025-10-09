@@ -2,6 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import "./page.css";
+import { WeekFilter } from "@/components/WeekFilter";
+import { getCurrentWeekValue } from "@/lib/weekUtils";
 
 // Same sparkline as admin (axes, labels, tooltip, centered chart)
 function Sparkline({ points, width = 360, height = 140, color = '#4f46e5', highlightDate, compact = false }: { points: Array<{ date: string; revenue: number; displayDate?: string }>; width?: number; height?: number; color?: string; highlightDate?: string; compact?: boolean }) {
@@ -181,13 +183,8 @@ function Sparkline({ points, width = 360, height = 140, color = '#4f46e5', highl
   );
 }
 
-const weekOptions = [
-  { value: "current", label: "Current Week" },
-  { value: "previous", label: "Previous Week" },
-];
-
 export default function ExecutiveAnalyticsImpactPage() {
-  const [week, setWeek] = useState<string>("current");
+  const [week, setWeek] = useState<string>(getCurrentWeekValue());
   const [isFiltersVisible, setIsFiltersVisible] = useState<boolean>(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -280,12 +277,12 @@ export default function ExecutiveAnalyticsImpactPage() {
             marginBottom: 16,
           }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontWeight: 600, fontSize: 13, color: '#374151' }}>Week</label>
-              <select value={week} onChange={(e) => setWeek(e.target.value)} style={{ padding: 8, border: '1px solid #ddd', borderRadius: 6 }}>
-                {weekOptions.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
+              <WeekFilter
+                value={week}
+                onChange={setWeek}
+                weeksCount={8}
+                label="Week"
+              />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <label style={{ fontWeight: 600, fontSize: 13, color: '#374151' }}>Category (Cat)</label>

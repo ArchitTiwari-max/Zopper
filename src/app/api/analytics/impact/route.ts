@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { PartnerBrandType, IssueStatus, Role } from '@prisma/client';
-
-type WeekKey = 'current' | 'previous';
+import { parseWeekValue, getCurrentWeekValue } from '@/lib/weekUtils';
 
 // Map query string to Prisma enum
 function parseBrandType(input: string | null | undefined): PartnerBrandType | null {
@@ -47,10 +46,10 @@ export async function GET(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { searchParams } = new URL(request.url);
-    const weekParam = (searchParams.get('week') || 'current') as WeekKey;
-  const pbtParamRaw = searchParams.get('pbt') || 'All'; // default All
-  const pbtEnum = parseBrandType(pbtParamRaw);
-  // When pbtEnum is null, treat as 'All categories' (no filter)
+    const weekParam = searchParams.get('week') || getCurrentWeekValue();
+    const pbtParamRaw = searchParams.get('pbt') || 'All'; // default All
+    const pbtEnum = parseBrandType(pbtParamRaw);
+    // When pbtEnum is null, treat as 'All categories' (no filter)
 
     // Optional: admin can scope by executiveId or name
     const scopeExecutiveId = searchParams.get('executiveId');
@@ -138,21 +137,13 @@ export async function GET(request: NextRequest) {
 
     const storeIds = candidate.map(s => s.id);
 
-    // 2) Compute selected week range
-    const now = new Date();
-    const startOfWeek = (d: Date) => {
-      const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      const day = (x.getDay() + 6) % 7; // Monday=0
-      x.setDate(x.getDate() - day);
-      x.setHours(0, 0, 0, 0);
-      return x;
-    };
-    const endOfWeek = (s: Date) => new Date(s.getFullYear(), s.getMonth(), s.getDate() + 6, 23, 59, 59, 999);
-
-    const curStart = startOfWeek(now);
-    const curEnd = endOfWeek(curStart);
-    const selStart = weekParam === 'current' ? curStart : new Date(curStart.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const selEnd = weekParam === 'current' ? curEnd : new Date(curEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
+    // 2) Parse selected week range from the new format (YYYY-MM-DD)
+    const weekRange = parseWeekValue(weekParam);
+    if (!weekRange) {
+      return NextResponse.json({ error: 'Invalid week format' }, { status: 400 });
+    }
+    const selStart = weekRange.startDate;
+    const selEnd = weekRange.endDate;
 
     // 3) For pivot: last visit date per store within selected week (role-aware)
     // Physical visits
@@ -442,7 +433,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       data: rows,
       summary: { avgSalesLiftPct, storesImproved, storesNotImproved, avgRevenue },
-      meta: { week: weekParam, partnerBrandType: pbtParamRaw, role: user.role as Role },
+      meta: { 
+        week: weekParam, 
+        weekStart: selStart.toISOString().split('T')[0], 
+        weekEnd: selEnd.toISOString().split('T')[0], 
+        partnerBrandType: pbtParamRaw, 
+        role: user.role as Role 
+      },
     });
   } catch (e) {
     console.error('analytics/impact error', e);
