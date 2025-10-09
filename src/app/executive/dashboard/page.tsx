@@ -71,6 +71,7 @@ const Dashboard: React.FC = () => {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
         },
       });
 

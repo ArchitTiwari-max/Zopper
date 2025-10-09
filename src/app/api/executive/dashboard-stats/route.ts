@@ -97,27 +97,8 @@ export async function GET(request: NextRequest) {
     const completedTasks = completedTasksCount;
     const totalVisits = visits.length;
 
-    // ETag for cache validation (same pattern as store/data)
-    const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
-    const apiVersion = 'v1-dashboard-stats';
-    const etag = `"${currentTime}-${executive.id}-${user.userId}-${apiVersion}"`;
-
     // -----------------------------
-    // 2️⃣ Conditional request check
-    // -----------------------------
-    const ifNoneMatch = request.headers.get('if-none-match');
-    if (ifNoneMatch === etag) {
-      return new NextResponse(null, {
-        status: 304,
-        headers: {
-          'Cache-Control': 'private, max-age=120, stale-while-revalidate=60',
-          'ETag': etag
-        }
-      });
-    }
-
-    // -----------------------------
-    // 3️⃣ Send response with safe headers
+    // Send response with no caching for real-time data
     // -----------------------------
     const response = NextResponse.json({
       success: true,
@@ -129,10 +110,11 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Browser-only caching with user isolation
-    response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=60');
-    response.headers.set('ETag', etag);
-    response.headers.set('Vary', 'Cookie'); // Cache varies by cookies (user session)
+    // Disable caching completely for real-time dashboard updates
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    response.headers.set('Vary', 'Cookie');
 
     return response;
 
