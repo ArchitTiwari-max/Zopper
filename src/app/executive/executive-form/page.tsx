@@ -116,7 +116,8 @@ const ExecutiveFormContent: React.FC = () => {
   const [digitalIssues, setDigitalIssues] = useState<string[]>([]);
 
   const [currentBrand, setCurrentBrand] = useState('');
-  const [currentPerson, setCurrentPerson] = useState({ name: '', designation: '', phoneNumber: '' });
+  const [currentPerson, setCurrentPerson] = useState({ name: 'SEC', designation: '', phoneNumber: '' });
+  const [contactNameType, setContactNameType] = useState<'SEC' | 'OTHER'>('SEC');
   const [currentIssue, setCurrentIssue] = useState('');
   const [storeData, setStoreData] = useState<StoreData | null>(null);
   const [pastVisits, setPastVisits] = useState<PastVisit[]>([]);
@@ -380,13 +381,18 @@ const handleSubmitVisit = async () => {
 
   // Person management functions
   const addPerson = () => {
-    if (currentPerson.name.trim() && currentPerson.designation.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        peopleMet: [...prev.peopleMet, { ...currentPerson }]
-      }));
-      setCurrentPerson({ name: '', designation: '', phoneNumber: '' });
+    const { name, designation, phoneNumber } = currentPerson;
+    if (!name.trim() || !designation.trim() || !phoneNumber.trim()) return;
+    // Simple phone validation: 7-15 digits
+    if (!/^\d{7,15}$/.test(phoneNumber.trim())) {
+      alert('Please enter a valid phone number (7-15 digits)');
+      return;
     }
+    setFormData(prev => ({
+      ...prev,
+      peopleMet: [...prev.peopleMet, { name: name.trim(), designation: designation.trim(), phoneNumber: phoneNumber.trim() }]
+    }));
+    setCurrentPerson({ name: contactNameType === 'SEC' ? 'SEC' : '', designation: '', phoneNumber: '' });
   };
 
   const removePerson = (indexToRemove: number) => {
@@ -602,13 +608,33 @@ return (
             </label>
             <div className="exec-f-sub-people-input-container">
               <div className="exec-f-sub-person-input-wrapper">
-                <input
-                  type="text"
-                  className="exec-f-sub-form-input exec-f-sub-person-name-input"
-                  placeholder="Enter person's name"
-                  value={currentPerson.name}
-                  onChange={(e) => handlePersonInputChange('name', e.target.value)}
-                />
+                <div className="exec-f-sub-person-name-select">
+                  <select
+                    className="exec-f-sub-form-select exec-f-sub-person-name-select-input"
+                    value={contactNameType}
+                    onChange={(e) => {
+                      const v = e.target.value as 'SEC' | 'OTHER';
+                      setContactNameType(v);
+                      if (v === 'SEC') {
+                        handlePersonInputChange('name', 'SEC');
+                      } else {
+                        handlePersonInputChange('name', '');
+                      }
+                    }}
+                  >
+                    <option value="SEC">SEC</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                  {contactNameType === 'OTHER' && (
+                    <input
+                      type="text"
+                      className="exec-f-sub-form-input exec-f-sub-person-name-input"
+                      placeholder="Enter person's name"
+                      value={currentPerson.name}
+                      onChange={(e) => handlePersonInputChange('name', e.target.value)}
+                    />
+                  )}
+                </div>
                 <input
                   type="text"
                   className="exec-f-sub-form-input exec-f-sub-person-designation-input"
@@ -619,15 +645,17 @@ return (
                 <input
                   type="tel"
                   className="exec-f-sub-form-input exec-f-sub-person-phone-input"
-                  placeholder="Enter phone number (optional)"
+                  placeholder="Enter phone number"
                   value={currentPerson.phoneNumber}
                   onChange={(e) => handlePersonInputChange('phoneNumber', e.target.value)}
+                  inputMode="numeric"
+                  pattern="\d{7,15}"
                 />
                 <button
                   type="button"
                   className="exec-f-sub-add-person-btn"
                   onClick={addPerson}
-                  disabled={!currentPerson.name.trim() || !currentPerson.designation.trim()}
+                  disabled={!currentPerson.name.trim() || !currentPerson.designation.trim() || !currentPerson.phoneNumber.trim()}
                 >
                   Add
                 </button>
