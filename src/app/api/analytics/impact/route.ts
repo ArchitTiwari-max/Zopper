@@ -413,19 +413,17 @@ export async function GET(request: NextRequest) {
     }
 
     // 5) Summary
-    const lifts = rows.map(r => {
-      const b = r.salesBefore;
-      const a = r.salesAfter;
-      return b > 0 ? ((a - b) / b) * 100 : (a > 0 ? 100 : 0);
-    });
-    const avgSalesLiftPct = lifts.length ? Math.round(lifts.reduce((s, v) => s + v, 0) / lifts.length) : 0;
+    // Calculate total sales before and after across all stores for accurate percentage
+    const totalSalesBefore = rows.reduce((sum, r) => sum + (Number(r.salesBefore) || 0), 0);
+    const totalSalesAfter = rows.reduce((sum, r) => sum + (Number(r.salesAfter) || 0), 0);
+    const avgSalesLiftPct = totalSalesBefore > 0 
+      ? Math.round(((totalSalesAfter - totalSalesBefore) / totalSalesBefore) * 100) 
+      : (totalSalesAfter > 0 ? 100 : 0);
     const storesImproved = rows.filter(r => r.salesAfter > r.salesBefore).length;
     const storesNotImproved = rows.length - storesImproved;
 
-    // Average of (After - Before) revenue across stores (absolute number, can be negative)
-    const avgRevenue = rows.length
-      ? Math.round(rows.reduce((s, r) => s + (Number(r.salesAfter || 0) - Number(r.salesBefore || 0)), 0) / rows.length)
-      : 0;
+    // Total revenue change across all stores (not averaged per store)
+    const avgRevenue = Math.round(totalSalesAfter - totalSalesBefore);
 
     // Role-based disclosure: same endpoint supports both roles
     // Admin sees all (or scoped by executiveId). Executive sees only assigned stores.
