@@ -1,0 +1,1391 @@
+/*!*******************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/app/executive/store/Store.css ***!
+  \*******************************************************************************************************************************************************************************************************************************************************************************/
+/* Store Styles */
+.exec-v-form-container {
+  padding: 24px 20px;
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 140px); /* Account for header and footer */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.exec-v-form-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Header Section */
+.exec-v-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.exec-v-form-title-section {
+  flex: 1;
+}
+
+.exec-v-form-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #212529;
+  margin: 0 0 8px 0;
+}
+
+.exec-v-form-subtitle {
+  color: #6c757d;
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Create Visit Button */
+.exec-v-form-create-visit-btn {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.exec-v-form-create-visit-btn:hover {
+  background-color: #4338ca;
+}
+
+.exec-v-form-create-visit-btn:active {
+  background-color: #3730a3;
+}
+
+.exec-v-form-plus-icon {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Action Buttons */
+.exec-v-form-action-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.exec-v-form-preview-send-btn {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.exec-v-form-preview-send-btn:hover {
+  background-color: #4338ca;
+}
+
+.exec-v-form-preview-send-btn:active {
+  background-color: #3730a3;
+}
+
+.exec-v-form-cancel-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.exec-v-form-cancel-btn:hover {
+  background-color: #c82333;
+}
+
+.exec-v-form-cancel-btn:active {
+  background-color: #bd2130;
+}
+
+/* Filters Section */
+.exec-v-form-filters-section {
+  margin-bottom: 20px;
+}
+
+.exec-v-form-filters-toggle {
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  transition: color 0.2s;
+}
+
+.exec-v-form-filters-toggle:hover {
+  color: #495057;
+}
+
+.exec-v-form-filter-arrow {
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.exec-v-form-filters-toggle.active .exec-v-form-filter-arrow {
+  transform: rotate(180deg);
+}
+
+/* Filter Panel */
+.exec-v-form-filters-panel {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Store page uses global loading styles from base.css */
+
+/* Date Picker Section */
+.exec-v-form-date-section {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.exec-v-form-date-label {
+  display: block;
+  font-size: 14px;
+  color: #495057;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.exec-v-form-required {
+  color: #dc3545;
+  margin-left: 4px;
+}
+
+.exec-v-form-date-input {
+  width: 100%;
+  max-width: 300px;
+  padding: 12px 16px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #495057;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.exec-v-form-date-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.exec-v-form-date-input:disabled {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.exec-v-form-date-preview {
+  margin-top: 12px;
+  padding: 12px;
+  background: #e8f5e8;
+  border: 1px solid #c3e6c3;
+  border-radius: 6px;
+  color: #155724;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.exec-v-form-date-preview strong {
+  color: #0f4419;
+}
+
+/* Error State */
+.exec-v-form-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.exec-v-form-error-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.exec-v-form-error-text {
+  color: #dc3545;
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 20px 0;
+}
+
+.exec-v-form-retry-btn {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.exec-v-form-retry-btn:hover {
+  background-color: #4338ca;
+}
+
+/* No Stores State */
+.exec-v-form-no-stores-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.exec-v-form-no-stores-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.exec-v-form-no-stores-text {
+  color: #6c757d;
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.exec-v-form-filter-group {
+  margin-bottom: 20px;
+}
+
+.exec-v-form-filter-group:last-child {
+  margin-bottom: 0;
+}
+
+.exec-v-form-filter-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.exec-v-form-filter-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: white;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.exec-v-form-filter-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.exec-v-form-filter-input::placeholder {
+  color: #9ca3af;
+}
+
+.exec-v-form-filter-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #f8f9fa;
+  color: #495057;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.exec-v-form-filter-select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.exec-v-form-date-filter-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.exec-v-form-filter-date {
+  width: 100%;
+  padding: 12px 40px 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: white;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.exec-v-form-filter-date:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.exec-v-form-date-icon {
+  position: absolute;
+  right: 12px;
+  font-size: 16px;
+  pointer-events: none;
+  color: #6c757d;
+}
+
+/* Table Container */
+.exec-v-form-table-container {
+  background-color: white;
+  border-radius: 12px;
+  overflow: visible;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  width: 100%;
+}
+
+/* Table Header */
+.exec-v-form-table-header {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr 1fr;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  padding: 0;
+  width: 100%;
+}
+
+.exec-v-form-table-header.create-mode {
+  grid-template-columns: 60px 2fr 1.5fr 1fr 1fr;
+}
+
+.exec-v-form-header-cell {
+  padding: 16px 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-right: 1px solid #e9ecef;
+}
+
+.exec-v-form-header-cell:last-child {
+  border-right: none;
+}
+
+/* Table Body */
+.exec-v-form-table-body {
+  background-color: white;
+  overflow: visible;
+}
+
+.exec-v-form-table-row {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr 1fr;
+  border-bottom: 1px solid #f1f3f4;
+  transition: background-color 0.2s;
+  width: 100%;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+}
+
+.exec-v-form-table-row.create-mode {
+  grid-template-columns: 60px 2fr 1.5fr 1fr 1fr;
+}
+
+.exec-v-form-table-row.selected {
+  background-color: #e3f2fd;
+}
+
+.exec-v-form-table-row.selected:hover {
+  background-color: #bbdefb;
+}
+
+.exec-v-form-table-row.clickable:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+.exec-v-form-table-row.clickable {
+  cursor: pointer;
+}
+
+.exec-v-form-table-row.clickable:hover {
+  background-color: #e3f2fd;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.exec-v-form-table-row:last-child {
+  border-bottom: none;
+}
+
+/* Row with open dropdown should be above all other rows */
+.exec-v-form-table-row.dropdown-open {
+  z-index: 50;
+}
+
+.exec-v-form-table-cell {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid #f1f3f4;
+  min-height: 60px;
+  position: relative;
+}
+
+/* Only apply overflow hidden to non-partner cells */
+.exec-v-form-table-cell:not(.exec-v-form-partner-cell) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.exec-v-form-partner-cell {
+  overflow: visible;
+  z-index: 5;
+}
+
+.exec-v-form-table-cell:last-child {
+  border-right: none;
+}
+
+/* Store Name Cell */
+.exec-v-form-store-name-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+}
+
+.exec-v-form-store-name-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #212529;
+  white-space: normal;
+  word-wrap: break-word;
+  width: 100%;
+  line-height: 1.3;
+}
+
+.exec-v-form-store-subtext {
+  font-size: 12px;
+  color: #6c757d;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Partner Brand Cell */
+.exec-v-form-partner-brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  z-index: 7;
+}
+
+.exec-v-form-partner-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.exec-v-form-partner-dropdown:hover {
+  background-color: #f8f9fa;
+}
+
+.exec-v-form-brand-text {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.exec-v-form-dropdown-arrow {
+  font-size: 10px;
+  color: #6c757d;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.exec-v-form-partner-dropdown:hover .exec-v-form-dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.exec-v-form-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  z-index: 100;
+  max-height: 200px;
+  overflow-y: auto;
+  min-width: 120px;
+}
+
+.exec-v-form-dropdown-item {
+  padding: 10px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.exec-v-form-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.exec-v-form-dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.exec-v-form-dropdown-item.selected {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.exec-v-form-dropdown-item.selected:hover {
+  background-color: #bbdefb;
+}
+
+/* Sales Cell */
+.exec-v-form-sales-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.exec-v-form-sales-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #212529;
+}
+
+.exec-v-form-sales-link {
+  font-size: 12px;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.exec-v-form-sales-link:hover {
+  text-decoration: underline;
+}
+
+/* Visited Cell */
+.exec-v-form-visited-text {
+  font-size: 14px;
+  color: #6c757d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+/* Checkbox Cell */
+.exec-v-form-checkbox-cell {
+  justify-content: center;
+}
+
+.exec-v-form-store-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #4f46e5;
+}
+
+.exec-v-form-checkbox-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Desktop and Large Screen Styles */
+@media (min-width: 1024px) {
+  .exec-v-form-container {
+    padding: 32px 40px;
+  }
+  
+  .exec-v-form-header {
+    margin-bottom: 32px;
+  }
+  
+  .exec-v-form-title {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+  
+  .exec-v-form-subtitle {
+    font-size: 16px;
+  }
+  
+  .exec-v-form-create-visit-btn {
+    padding: 14px 24px;
+    font-size: 16px;
+  }
+  
+  .exec-v-form-preview-send-btn,
+  .exec-v-form-cancel-btn {
+    padding: 14px 24px;
+    font-size: 16px;
+  }
+  
+  .exec-v-form-store-checkbox {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .exec-v-form-filters-toggle {
+    font-size: 16px;
+    padding: 10px 0;
+  }
+  
+  .exec-v-form-filters-panel {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 24px;
+  }
+  
+  .exec-v-form-filter-group:nth-child(5) {
+    grid-column: 1 / -1;
+  }
+  
+  .exec-v-form-filter-label {
+    font-size: 16px;
+  }
+  
+  .exec-v-form-filter-input,
+  .exec-v-form-filter-select,
+  .exec-v-form-filter-date {
+    padding: 14px 18px;
+    font-size: 16px;
+  }
+  
+  .exec-v-form-header-cell {
+    padding: 20px 24px;
+    font-size: 12px;
+  }
+  
+  .exec-v-form-table-cell {
+    padding: 20px 24px;
+    min-height: 70px;
+  }
+  
+.exec-v-form-store-name-text,
+  .exec-v-form-store-subtext,
+  .exec-v-form-brand-text,
+  .exec-v-form-visited-text {
+    font-size: 16px;
+  }
+}
+
+/* Tablet Styles */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .exec-v-form-container {
+    padding: 24px 32px;
+  }
+  
+  .exec-v-form-content {
+    max-width: 800px;
+  }
+  
+  .exec-v-form-title {
+    font-size: 28px;
+  }
+  
+  .exec-v-form-subtitle {
+    font-size: 15px;
+  }
+  
+  .exec-v-form-create-visit-btn {
+    padding: 13px 22px;
+    font-size: 15px;
+  }
+  
+  .exec-v-form-preview-send-btn,
+  .exec-v-form-cancel-btn {
+    padding: 13px 22px;
+    font-size: 15px;
+  }
+  
+  .exec-v-form-filters-panel {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 20px;
+  }
+  
+  .exec-v-form-filter-group:nth-child(5) {
+    grid-column: 1 / -1;
+  }
+  
+  .exec-v-form-filter-label {
+    font-size: 15px;
+  }
+  
+  .exec-v-form-filter-input,
+  .exec-v-form-filter-select,
+  .exec-v-form-filter-date {
+    padding: 13px 16px;
+    font-size: 15px;
+  }
+  
+  .exec-v-form-header-cell {
+    padding: 18px 22px;
+  }
+  
+  .exec-v-form-table-cell {
+    padding: 18px 22px;
+    min-height: 65px;
+  }
+  
+.exec-v-form-store-name-text,
+  .exec-v-form-store-subtext,
+  .exec-v-form-brand-text,
+  .exec-v-form-visited-text {
+    font-size: 15px;
+  }
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .exec-v-form-container {
+    padding: 16px;
+  }
+  
+  .exec-v-form-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+    margin-bottom: 20px;
+  }
+  
+  .exec-v-form-title {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+  
+  .exec-v-form-subtitle {
+    font-size: 13px;
+  }
+  
+  .exec-v-form-create-visit-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+    align-self: flex-start;
+  }
+  
+  .exec-v-form-action-buttons {
+    gap: 8px;
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .exec-v-form-preview-send-btn,
+  .exec-v-form-cancel-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+    width: 100%;
+  }
+  
+  .exec-v-form-filters-section {
+    margin-bottom: 16px;
+  }
+  
+  .exec-v-form-filters-toggle {
+    font-size: 13px;
+  }
+  
+  .exec-v-form-filters-panel {
+    padding: 16px;
+    margin-top: 8px;
+  }
+  
+  .exec-v-form-filter-group {
+    margin-bottom: 16px;
+  }
+  
+  .exec-v-form-filter-label {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  
+  .exec-v-form-filter-input,
+  .exec-v-form-filter-select,
+  .exec-v-form-filter-date {
+    padding: 10px 12px;
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 44px; /* Touch-friendly */
+  }
+  
+  .exec-v-form-filter-select {
+    background-size: 14px;
+  }
+  
+  .exec-v-form-date-icon {
+    font-size: 14px;
+    right: 10px;
+  }
+  
+  /* Keep table view on mobile - responsive grid */
+  .exec-v-form-table-header {
+    grid-template-columns: 2fr 1.5fr 1fr 1fr;
+    width: 100%;
+  }
+  
+  .exec-v-form-table-header.create-mode {
+    grid-template-columns: 50px 2fr 1.5fr 1fr 1fr;
+  }
+  
+  .exec-v-form-table-row {
+    grid-template-columns: 2fr 1.5fr 1fr 1fr;
+    width: 100%;
+  }
+  
+  .exec-v-form-table-row.create-mode {
+    grid-template-columns: 50px 2fr 1.5fr 1fr 1fr;
+  }
+  
+  .exec-v-form-header-cell {
+    padding: 12px 4px;
+    font-size: 9px;
+  }
+  
+  .exec-v-form-table-cell {
+    padding: 12px 4px;
+    min-height: 50px;
+  }
+  
+  .exec-v-form-store-name-text {
+    font-size: 11px;
+    line-height: 1.2;
+    word-break: break-word;
+  }
+  
+  .exec-v-form-brand-text {
+    font-size: 11px;
+    word-break: break-word;
+  }
+  
+  .exec-v-form-dropdown-arrow {
+    font-size: 8px;
+  }
+  
+.exec-v-form-store-subtext,
+  .exec-v-form-visited-text {
+    font-size: 10px;
+    word-break: break-word;
+  }
+  
+  /* Mobile dropdown styles */
+  .exec-v-form-partner-dropdown {
+    padding: 2px 4px;
+  }
+  
+  .exec-v-form-dropdown-menu {
+    font-size: 11px;
+    max-height: 150px;
+  }
+  
+  .exec-v-form-dropdown-item {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .exec-v-form-container {
+    padding: 12px;
+  }
+  
+  .exec-v-form-title {
+    font-size: 18px;
+  }
+  
+  .exec-v-form-subtitle {
+    font-size: 12px;
+  }
+  
+  .exec-v-form-create-visit-btn {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+  
+  .exec-v-form-preview-send-btn,
+  .exec-v-form-cancel-btn {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+  
+  .exec-v-form-store-checkbox {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .exec-v-form-filters-panel {
+    padding: 14px;
+  }
+  
+  .exec-v-form-filter-group {
+    margin-bottom: 14px;
+  }
+  
+  .exec-v-form-filter-label {
+    font-size: 12px;
+    margin-bottom: 5px;
+  }
+  
+  .exec-v-form-filter-input,
+  .exec-v-form-filter-select,
+  .exec-v-form-filter-date {
+    padding: 8px 10px;
+    font-size: 14px;
+    min-height: 40px;
+  }
+  
+  .exec-v-form-date-icon {
+    font-size: 12px;
+  }
+  
+  .exec-v-form-header-cell {
+    padding: 10px 2px;
+    font-size: 8px;
+  }
+  
+  .exec-v-form-table-cell {
+    padding: 10px 2px;
+    min-height: 45px;
+  }
+  
+  .exec-v-form-store-name-text {
+    font-size: 10px;
+    line-height: 1.2;
+    word-break: break-word;
+  }
+  
+  .exec-v-form-brand-text {
+    font-size: 10px;
+    word-break: break-word;
+  }
+  
+.exec-v-form-store-subtext,
+  .exec-v-form-visited-text {
+    font-size: 9px;
+    word-break: break-word;
+  }
+  
+  /* Very small mobile dropdown styles */
+  .exec-v-form-partner-dropdown {
+    padding: 1px 2px;
+  }
+  
+  .exec-v-form-dropdown-menu {
+    font-size: 10px;
+    max-height: 120px;
+  }
+  
+  .exec-v-form-dropdown-item {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+}
+
+/* Preview Modal Styles */
+.exec-v-form-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.exec-v-form-preview-modal {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.exec-v-form-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.exec-v-form-modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #212529;
+  margin: 0;
+}
+
+.exec-v-form-modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.exec-v-form-modal-close-btn:hover {
+  color: #495057;
+  background-color: #f8f9fa;
+}
+
+.exec-v-form-modal-close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.exec-v-form-modal-body {
+  padding: 24px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.exec-v-form-preview-summary {
+  margin-bottom: 20px;
+}
+
+.exec-v-form-summary-text {
+  font-size: 16px;
+  color: #495057;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.exec-v-form-preview-stores-list {
+  margin-bottom: 24px;
+}
+
+.exec-v-form-preview-store-item {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.exec-v-form-preview-store-item:last-child {
+  margin-bottom: 0;
+}
+
+.exec-v-form-store-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: #4f46e5;
+  color: white;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.exec-v-form-store-info {
+  flex: 1;
+}
+
+.exec-v-form-store-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #212529;
+  margin: 0 0 8px 0;
+}
+
+.exec-v-form-store-details,
+.exec-v-form-store-brands,
+.exec-v-form-store-status {
+  font-size: 14px;
+  color: #6c757d;
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.exec-v-form-preview-note {
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.exec-v-form-note-text {
+  font-size: 14px;
+  color: #1976d2;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.exec-v-form-modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 24px;
+  border-top: 1px solid #e9ecef;
+  justify-content: flex-end;
+}
+
+.exec-v-form-cancel-modal-btn {
+  background: none;
+  border: 1px solid #dee2e6;
+  color: #6c757d;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.exec-v-form-cancel-modal-btn:hover {
+  border-color: #adb5bd;
+  color: #495057;
+}
+
+.exec-v-form-cancel-modal-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.exec-v-form-send-plan-btn {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.exec-v-form-send-plan-btn:hover:not(:disabled) {
+  background-color: #4338ca;
+}
+
+.exec-v-form-send-plan-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile Modal Styles */
+@media (max-width: 768px) {
+  .exec-v-form-preview-modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .exec-v-form-modal-header {
+    padding: 20px;
+  }
+  
+  .exec-v-form-modal-title {
+    font-size: 18px;
+  }
+  
+  .exec-v-form-modal-body {
+    padding: 20px;
+    max-height: 60vh;
+  }
+  
+  .exec-v-form-summary-text {
+    font-size: 14px;
+  }
+  
+  .exec-v-form-preview-store-item {
+    gap: 12px;
+    padding: 14px;
+  }
+  
+  .exec-v-form-store-number {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  
+  .exec-v-form-store-name {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  
+  .exec-v-form-store-details,
+  .exec-v-form-store-brands,
+  .exec-v-form-store-status {
+    font-size: 12px;
+  }
+  
+  .exec-v-form-note-text {
+    font-size: 12px;
+  }
+  
+  .exec-v-form-modal-footer {
+    padding: 20px;
+    flex-direction: column;
+  }
+  
+  .exec-v-form-cancel-modal-btn,
+  .exec-v-form-send-plan-btn {
+    width: 100%;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .exec-v-form-preview-modal {
+    width: 98%;
+  }
+  
+  .exec-v-form-modal-header {
+    padding: 16px;
+  }
+  
+  .exec-v-form-modal-title {
+    font-size: 16px;
+  }
+  
+  .exec-v-form-modal-body {
+    padding: 16px;
+  }
+  
+  .exec-v-form-preview-store-item {
+    gap: 10px;
+    padding: 12px;
+  }
+  
+  .exec-v-form-store-number {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
+  
+  .exec-v-form-store-name {
+    font-size: 13px;
+  }
+  
+  .exec-v-form-modal-footer {
+    padding: 16px;
+  }
+}
+

@@ -1,0 +1,574 @@
+/*!*****************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/app/admin/settings/page.css ***!
+  \*****************************************************************************************************************************************************************************************************************************************************************************/
+/* Settings Page Specific Styles */
+
+/* Settings Overview */
+.settings-overview {
+  padding: 2rem;
+  background-color: #f8fafc;
+  min-height: calc(100vh - 80px);
+}
+
+.settings-header {
+  margin-bottom: 2rem;
+}
+
+.settings-header-content h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.settings-header-content p {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Settings Content */
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.settings-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+/* Section Header with Icon */
+.section-icon-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.section-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.section-icon.auto-approval {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.section-icon.notifications {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.section-icon.regional {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.section-icon.account {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+}
+
+.section-icon.profile {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 0;
+}
+
+.section-icon.excel-import {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.section-content h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.section-content p {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Setting Controls */
+.setting-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.setting-control label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.settings-select {
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #f9fafb;
+  font-size: 0.875rem;
+  color: #374151;
+  outline: none;
+  transition: border-color 0.15s ease-in-out;
+  max-width: 300px;
+}
+
+.settings-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: white;
+}
+
+/* Notification Controls */
+.notification-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.notification-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.notification-info h4 {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.notification-info p {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Toggle Switch */
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #d1d5db;
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.toggle input:checked + .toggle-slider {
+  background-color: #3b82f6;
+}
+
+.toggle input:focus + .toggle-slider {
+  box-shadow: 0 0 1px #3b82f6;
+}
+
+.toggle input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+/* Regional Controls */
+.regional-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* Data Management Controls */
+.data-management-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.data-management-info {
+  flex: 1;
+}
+
+.data-management-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.data-management-info p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.data-management-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 180px;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.data-management-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.data-management-btn:active {
+  transform: translateY(0);
+}
+
+.data-management-btn svg {
+  flex-shrink: 0;
+}
+
+/* Account Management Section Styles */
+.account-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.logout-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.logout-section:last-child {
+  border-bottom: none;
+}
+
+.logout-info {
+  flex: 1;
+}
+
+.logout-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.logout-info p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.logout-btn:hover:not(:disabled) {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+}
+
+.logout-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.logout-btn .spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Action Buttons */
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem 0;
+}
+
+.cancel-btn {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.cancel-btn:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.save-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  background: #3b82f6;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.save-btn:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.save-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Responsive Design for Settings */
+@media (max-width: 768px) {
+  .settings-overview {
+    padding: 1rem;
+  }
+  
+  .section-icon-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .notification-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .toggle-container {
+    align-self: flex-end;
+  }
+  
+  .regional-controls {
+    grid-template-columns: 1fr;
+  }
+  
+  .settings-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .cancel-btn,
+  .save-btn {
+    width: 100%;
+  }
+
+  .logout-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .logout-btn {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .excel-import-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .excel-import-btn {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+/* Profile Section Styles */
+.profile-details {
+  margin-top: 1rem;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profile-field-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.profile-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #f9fafb;
+  font-size: 0.875rem;
+  color: #6b7280;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.profile-input:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+  border-color: #e5e7eb;
+}
+
+.profile-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.profile-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Profile Section */
+@media (max-width: 768px) {
+  .profile-form {
+    gap: 1rem;
+    max-width: 100%;
+  }
+  
+  .profile-field {
+    gap: 0.375rem;
+  }
+  
+  .profile-input {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+}
+

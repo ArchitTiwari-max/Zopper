@@ -1,0 +1,562 @@
+/*!************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/app/executive/base.css ***!
+  \************************************************************************************************************************************************************************************************************************************************************************/
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Essential Base Styles for Executive App */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Universal Loading Components */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-size: 18px;
+  color: #64748b;
+}
+
+/* Loading States */
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 100px;
+}
+
+.loading-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 60px;
+}
+
+.loading-small {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  color: #64748b;
+  font-size: 12px;
+  min-height: 40px;
+}
+
+/* Loading Spinners */
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #f1f1f1;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  display: inline-block;
+  animation: universal-spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+.loading-spinner-large {
+  width: 32px;
+  height: 32px;
+  border: 4px solid #f1f1f1;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  display: inline-block;
+  animation: universal-spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+.loading-spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f1f1f1;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  display: inline-block;
+  animation: universal-spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+/* Loading Animation */
+@keyframes universal-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Loading Text */
+.loading-text {
+  margin-left: 8px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Error States */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 20px;
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.error-state-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  color: #dc2626;
+  font-size: 13px;
+  text-align: center;
+}
+
+.retry-btn {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.retry-btn:hover {
+  background-color: #b91c1c;
+}
+
+/* No Data States */
+.no-data-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #64748b;
+  font-size: 14px;
+  font-style: italic;
+  text-align: center;
+}
+
+.no-data-state-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #64748b;
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+}
+
+/* Common button disabled states used across multiple components */
+button:disabled {
+  background-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+button:disabled:hover {
+  transform: none;
+  background-color: #d1d5db;
+}
+
+/* Common input disabled states */
+input:disabled {
+  background-color: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Layout Styles - Fix footer overlap issue */
+.executive-todo-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.executive-todo-container main {
+  flex: 1;
+  padding-bottom: 80px; /* Space for fixed footer */
+  min-height: calc(100vh - 80px);
+}
+
+/* Responsive footer spacing */
+@media (min-width: 1024px) {
+  .executive-todo-container main {
+    padding-bottom: 90px; /* Larger space for desktop footer */
+    min-height: calc(100vh - 90px);
+  }
+}
+
+@media (max-width: 480px) {
+  .executive-todo-container main {
+    padding-bottom: 70px; /* Smaller space for mobile footer */
+    min-height: calc(100vh - 70px);
+  }
+}
+
+/* Common focus states for accessibility */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/*!**************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/app/executive/header.css ***!
+  \**************************************************************************************************************************************************************************************************************************************************************************/
+/* Header Component Styles */
+
+.header {
+  background-color: white;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e9ecef;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.logo-text-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 600;
+  color: #212529;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.logo-tagline {
+  font-size: 10px;
+  font-weight: 500;
+  color: #64748b;
+  font-style: italic;
+  line-height: 1;
+  margin-top: -1px;
+}
+
+/* Clickable logo link styles */
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  padding: 0.5rem;
+  margin: -0.5rem;
+}
+
+.logo-link:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  text-decoration: none;
+  color: inherit;
+  transform: translateY(-1px);
+}
+
+.logo-link:visited {
+  color: inherit;
+  text-decoration: none;
+}
+
+.logo-link:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  text-decoration: none;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.notification-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.notifications {
+  position: relative;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  text-decoration: none;
+}
+
+.notifications:hover {
+  background-color: #f8f9fa;
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.notifications:active {
+  transform: scale(0.95);
+}
+
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #6c5ce7;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.profile-avatar:hover {
+  background-color: #5a4fcf;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+  color: white;
+  text-decoration: none;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .header {
+    padding: 12px 16px;
+  }
+  
+  .logo-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+  
+  .logo-text {
+    font-size: 18px;
+  }
+  
+  .logo-tagline {
+    font-size: 9px;
+  }
+  
+  .header-right {
+    gap: 12px;
+  }
+  
+  .profile-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 10px 12px;
+  }
+  
+  .logo-container {
+    gap: 6px;
+  }
+  
+  .logo-icon {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+  }
+  
+  .logo-text {
+    font-size: 16px;
+  }
+  
+  .logo-tagline {
+    font-size: 8px;
+  }
+  
+  .profile-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+}
+
+/*!**************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/app/executive/footer.css ***!
+  \**************************************************************************************************************************************************************************************************************************************************************************/
+/* Footer Component Styles - Bottom Navigation */
+
+.bottom-navigation {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #2d3436;
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10000;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  color: #636e72;
+  transition: color 0.2s;
+  flex: 1;
+  text-decoration: none;
+}
+
+.nav-item.active {
+  color: #74b9ff;
+}
+
+.nav-item:not(.active) {
+  color: #636e72;
+}
+
+.nav-item:hover {
+  color: #74b9ff;
+}
+
+.nav-icon {
+  font-size: 20px;
+}
+
+.nav-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Desktop responsiveness */
+@media (min-width: 1024px) {
+  .bottom-navigation {
+    padding: 16px 0;
+  }
+  
+  .nav-item {
+    gap: 6px;
+  }
+  
+  .nav-icon {
+    font-size: 22px;
+  }
+  
+  .nav-label {
+    font-size: 14px;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .bottom-navigation {
+    padding: 8px 0;
+  }
+  
+  .nav-item {
+    gap: 2px;
+    padding: 4px 2px;
+  }
+  
+  .nav-icon {
+    font-size: 18px;
+  }
+  
+  .nav-label {
+    font-size: 10px;
+  }
+}
+
