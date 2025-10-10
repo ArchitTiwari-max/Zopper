@@ -1,0 +1,28 @@
+.dost-bubble{position:fixed;right:16px;bottom:84px;z-index:50}
+.dost-bubble-button{width:56px;height:56px;border-radius:9999px;border:1px solid #e5e7eb;background:#fff;box-shadow:0 6px 12px rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
+.dost-bubble-emoji{font-size:24px}
+.dost-bubble-dot{position:absolute;top:6px;right:6px;width:10px;height:10px;border-radius:9999px;background:#ef4444;border:2px solid #fff}
+
+.dost-panel{position:fixed;right:16px;bottom:140px;width:360px;max-width:calc(100vw - 24px);background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 12px 24px rgba(0,0,0,.14);overflow:hidden;z-index:60}
+.dost-header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#f9fafb;border-bottom:1px solid #eef2f7;font-weight:600}
+.dost-close{border:none;background:transparent;cursor:pointer;font-size:16px}
+.dost-body{padding:12px;max-height:340px;overflow-y:auto;display:grid;gap:10px}
+.dost-loading{display:flex;align-items:center;gap:8px}
+.dost-error{color:#ef4444}
+.dost-muted{color:#6b7280}
+.dost-section-title{font-weight:600;margin-bottom:6px}
+.dost-list{display:grid;gap:8px}
+.dost-card{border:1px solid #f3f4f6;border-radius:10px;padding:8px}
+.dost-card-head{display:flex;align-items:center;justify-content:space-between}
+.dost-card-left{display:flex;align-items:center;gap:8px}
+.dost-avatar{width:28px;height:28px;border-radius:9999px;background:#2ed573;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+.dost-pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:9999px;background:#eef2f7;color:#374151}
+.dost-reason{margin-top:6px;color:#4b5563;font-size:13px}
+.dost-subtle{color:#9ca3af;font-size:12px}
+.dost-strong{font-weight:600}
+.dost-ul{display:grid;gap:6px;padding-left:18px}
+.dost-timestamp{color:#9ca3af;font-size:12px}
+.dost-inputbar{padding:10px;border-top:1px solid #eef2f7;display:flex;gap:8px}
+.dost-input{flex:1;padding:10px;border:1px solid #e5e7eb;border-radius:8px}
+.dost-ask-btn{padding:10px 14px}
+.dost-link{background:transparent;border:none;color:#3b82f6;cursor:pointer;padding:0;text-decoration:underline}

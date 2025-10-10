@@ -26,6 +26,7 @@ model User {
 
   executive Executive?
   admin Admin?
+  dostChats DostChat[]
   
   @@map("User")
 }
@@ -54,6 +55,8 @@ model Executive {
   user   User   @relation(fields: [userId], references: [id])
   // Store assignments
   executiveStores   ExecutiveStoreAssignment[]
+  // Dost chat back-relation
+  dostChats DostChat[]
 }
 
 //
@@ -354,4 +357,23 @@ model Notification {
   @@index([type, createdAt])
   @@index([recipientId, recipientRole])
   @@map("Notification")
+}
+
+//
+// Dost chat memory
+//
+model DostChat {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  question     String
+  answerText   String?
+  payload      Json?
+  executiveId  String
+  userId       String
+  createdAt    DateTime @default(now())
+
+  executive    Executive @relation(fields: [executiveId], references: [id])
+  user         User      @relation(fields: [userId], references: [id])
+
+  @@index([executiveId, createdAt])
+  @@map("DostChat")
 }
