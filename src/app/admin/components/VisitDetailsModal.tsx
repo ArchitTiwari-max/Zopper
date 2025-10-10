@@ -29,6 +29,7 @@ interface VisitDetailsModalProps {
   visit: AdminVisitData | null;
   onMarkReviewed?: (visitId: string, requiresFollowUp?: boolean, adminComment?: string) => void;
   isMarkingReviewed?: boolean;
+  isDigital?: boolean;
 }
 
 const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
@@ -36,10 +37,13 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
   onClose,
   visit,
   onMarkReviewed,
-  isMarkingReviewed = false
+  isMarkingReviewed = false,
+  isDigital = false
 }) => {
+  // All hooks must be declared unconditionally at the top to respect the Rules of Hooks
   const [showFollowUpForm, setShowFollowUpForm] = React.useState(false);
   const [adminComment, setAdminComment] = React.useState('');
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
   const handleMarkReviewWithFollow = () => {
     setShowFollowUpForm(true);
@@ -122,6 +126,31 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
     return null;
   }
 
+  const handleDelete = async () => {
+    const ok = window.confirm('Are you sure you want to delete this visit?');
+    if (!ok) return;
+
+    try {
+      setIsDeleting(true);
+      const endpoint = isDigital 
+        ? `/api/executive/digital-visit/${visit.id}`
+        : `/api/executive/visits/${visit.id}`;
+      const res = await fetch(endpoint, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || 'Failed to delete visit');
+      onClose();
+      setTimeout(() => { if (typeof window !== 'undefined') window.location.reload(); }, 50);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to delete visit');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div 
       className="admin-visit-modal-overlay" 
@@ -145,7 +174,7 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
                 <div className="admin-visit-info-value">{visit.storeName}</div>
               </div>
               <div className="admin-visit-info-card">
-                <div className="admin-visit-info-label">Visit Date:</div>
+                <div className="admin-visit-info-label">{isDigital ? 'Connect Date:' : 'Visit Date:'}</div>
                 <div className="admin-visit-info-value">{formatDate(visit.visitDate)}</div>
               </div>
               <div className="admin-visit-info-card">
@@ -378,6 +407,16 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
               )}
             </div>
           )}
+        </div>
+        <div className="admin-visit-modal-footer">
+          <button
+            className={`admin-visit-delete-button${isDeleting ? ' disabled' : ''}`}
+            onClick={handleDelete}
+            disabled={isDeleting}
+            title={'Delete this visit'}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete Visit'}
+          </button>
         </div>
       </div>
     </div>

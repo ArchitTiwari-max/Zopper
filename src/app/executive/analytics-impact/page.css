@@ -1,0 +1,226 @@
+/* Executive Analytics & Impact (mobile-responsive) */
+
+.exec-analytics-container {
+  padding: 24px;
+}
+
+.exec-filters-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.exec-filters-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+
+.exec-filters-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.exec-filters-header .chev {
+  transition: transform 0.2s ease;
+}
+.exec-filters-header .chev.open {
+  transform: rotate(180deg);
+}
+
+.exec-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.exec-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.exec-filter-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.exec-filter-field select {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  font-size: 13px;
+  color: #374151;
+}
+
+/* KPI grid */
+.exec-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.exec-kpi-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.exec-kpi-label {
+  font-size: 12px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.exec-kpi-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Store list */
+.exec-store-list {
+  display: grid;
+  gap: 12px;
+}
+
+.exec-store-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  background: #ffffff;
+}
+
+.exec-store-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+/* Center cell: default left, larger screens center it */
+.exec-card-center { text-align: left; }
+@media (min-width: 1025px) {
+  .exec-card-center { text-align: center; }
+}
+
+.exec-store-name {
+  font-weight: 700;
+  color: #111827;
+  font-size: 14px;
+}
+
+.exec-store-sub {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.exec-impact {
+  font-weight: 700;
+}
+.exec-impact.pos { color: #065f46; }
+.exec-impact.neg { color: #b91c1c; }
+
+.exec-section-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.exec-sparkline-wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x; /* allow horizontal swipes to scroll the chart */
+  max-width: 100%;
+}
+
+/* Inner element takes intrinsic width so wrapper can scroll */
+.exec-sparkline-inner { display: inline-block; vertical-align: top; }
+
+.exec-stats-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.exec-error {
+  color: #b91c1c;
+  margin: 8px 0;
+}
+
+.exec-loading {
+  color: #374151;
+  margin: 8px 0;
+}
+
+/* Responsive */
+/* Revenue row (chart flanked by before/after) */
+.exec-revenue-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.exec-sales-box {
+  min-width: 90px;
+  text-align: center;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.exec-sales-value.pos { color: #065f46; }
+.exec-sales-value.neg { color: #b91c1c; }
+
+@media (max-width: 1024px) {
+  .exec-analytics-container { padding: 16px; }
+  .exec-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
+
+@media (max-width: 768px) {
+  .exec-analytics-container { padding: 8px; }
+  .exec-kpi-grid { grid-template-columns: 1fr; gap: 8px; }
+  .exec-kpi-card { padding: 10px; }
+  .exec-kpi-value { font-size: 16px; }
+  .exec-store-card { padding: 10px; }
+  .exec-store-name { font-size: 13px; }
+  .exec-store-sub { font-size: 11px; }
+  .exec-section-title { font-size: 12px; }
+  .exec-store-card-header { flex-direction: column; align-items: flex-start; }
+  .exec-stats-row { flex-direction: column; gap: 6px; }
+  /* Stack before/chart/after vertically on small screens */
+  .exec-revenue-row { flex-direction: column; align-items: center; justify-content: center; }
+  .exec-sales-box { min-width: 0; width: 100%; text-align: center; }
+}
+
+/* iPhone narrow widths */
+@media (max-width: 420px) {
+  .exec-analytics-container { padding-left: 8px; padding-right: 8px; overflow-x: hidden; }
+  .exec-store-card { padding: 16px; overflow-x: hidden; }
+  .exec-kpi-card { padding: 8px; }
+  .exec-kpi-value { font-size: 15px; }
+  .exec-store-name { font-size: 12.5px; word-break: break-word; }
+  .exec-store-sub { font-size: 10.5px; word-break: break-word; white-space: normal; }
+  /* Keep chart inside card and scroll horizontally */
+  .exec-sparkline-wrap { margin-left: 0; margin-right: 0; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; touch-action: pan-x; }
+  .exec-sparkline-inner { display: inline-block; }
+  /* Ensure stacked boxes and content don't cause horizontal scroll */
+  .exec-sales-box { min-width: 0; width: 100%; }
+}

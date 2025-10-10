@@ -1,0 +1,58 @@
+/* Partner Brand Type Visits (Executive) - Mobile responsive */
+.pbtype-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.pbtype-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.pbtype-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.pbtype-controls { display: flex; gap: 8px; }
+.pbtype-select { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; }
+
+.pbtype-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .pbtype-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .pbtype-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.pbtype-tile {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.pbtype-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pbtype-label { font-weight: 700; color: #374151; }
+.pbtype-meter { height: 8px; background: #f3f4f6; border-radius: 999px; margin-top: 8px; }
+.pbtype-meter > div { height: 8px; background: #10b981; border-radius: 999px; }
+
+.pbtype-unvisited { margin-top: 10px; max-height: 220px; overflow-y: auto; border-top: 1px solid #e5e7eb; padding-top: 8px; }
+.pbtype-unvisited ul { margin: 0; padding-left: 16px; }
+.pbtype-unvisited li { margin: 6px 0; }

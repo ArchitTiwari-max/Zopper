@@ -320,10 +320,18 @@ export async function GET(request: NextRequest) {
         lastVisitDate = new Date(recentVisit.createdAt);
       }
 
+      // Build {name,type} pairs aligned by index
+      const partnerBrandPairs = (store.partnerBrandIds || []).map((id, idx) => ({
+        id,
+        name: brandMap.get(id) || 'Unknown Brand',
+        type: (store as any).partnerBrandTypes?.[idx] || null
+      }));
+
       return {
         id: store.id,
         storeName: store.storeName,
         partnerBrands: partnerBrands,
+        partnerBrandPairs: partnerBrandPairs,
         address: store.fullAddress || `${store.city}`,
         contactPerson: 'Store Manager', // This info is not in schema, using placeholder
         assignedTo: assignedExecutive,

@@ -31,24 +31,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
-    // Generate ETag for cache validation (longer cache for filter data - 10 minutes)
-    const currentTime = Math.floor(Date.now() / (10 * 60 * 1000)) * (10 * 60 * 1000);
-    const apiVersion = 'v1-comprehensive'; // Comprehensive filter data version
-    const etag = `"${currentTime}-${executive.id}-${user.userId}-${apiVersion}"`; // CRITICAL: Include executive ID
-    
-    // Check if client has cached version (conditional request)
-    const ifNoneMatch = request.headers.get('if-none-match');
-    if (ifNoneMatch === etag) {
-      // Return 304 Not Modified if ETag matches
-      return new NextResponse(null, { 
-        status: 304,
-        headers: {
-          'Cache-Control': 'private, max-age=600, stale-while-revalidate=300',
-          'ETag': etag,
-          'X-Cache-Status': 'HIT'
-        }
-      });
-    }
+    // Disable caching for My Visits filters to always get the latest options
 
     // Get comprehensive filter data in parallel
     const [assignedStores, allBrands] = await Promise.all([
@@ -161,18 +144,15 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Add caching headers - PRIVATE cache to prevent data leakage between executives
-    response.headers.set('Cache-Control', 'private, max-age=600, stale-while-revalidate=300');
-    response.headers.set('Vary', 'Cookie'); // Cache varies by cookies (user session)
-    response.headers.set('ETag', etag);
-    
-    // Add performance headers
+    // Disable caching completely so changes reflect instantly
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    response.headers.set('Vary', 'Cookie');
+
+    // Minimal security header
     response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('X-Cache-Status', 'MISS');
-    
-    // Add immutability hint for longer caching
-    response.headers.set('Cache-Tag', 'visit-filters');
-    
+
     return response;
 
   } catch (error) {

@@ -22,6 +22,7 @@ interface AssignmentReport {
       id: string;
       details: string;
     };
+    adminComment?: string;
   };
 }
 
@@ -222,6 +223,19 @@ const ViewReportModal: React.FC<ViewReportModalProps> = ({
                   <p>{report.assignedTask.issue.details}</p>
                 </div>
               </div>
+
+              {/* Admin Comment */}
+              {report.assignedTask.adminComment && (
+                <div className="report-section">
+                  <h3 className="section-title">
+                    <FileText size={18} />
+                    Admin Comment
+                  </h3>
+                  <div className="remarks-content">
+                    <p>{report.assignedTask.adminComment}</p>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="no-data-state">

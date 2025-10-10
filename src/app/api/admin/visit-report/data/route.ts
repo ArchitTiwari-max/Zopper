@@ -32,27 +32,7 @@ export async function GET(request: NextRequest) {
     const visitStatus = searchParams.get('visitStatus');
     const issueStatus = searchParams.get('issueStatus');
 
-    // Generate ETag for cache validation (2-minute intervals)
-    const currentTime = Math.floor(Date.now() / (2 * 60 * 1000)) * (2 * 60 * 1000);
-    const cacheKey = JSON.stringify({ 
-      dateFilter, partnerBrand, city, storeName, storeId, 
-      executiveName, executiveId, visitStatus, issueStatus 
-    });
-    const crypto = await import('crypto');
-    const paramsHash = crypto.createHash('md5').update(cacheKey).digest('hex');
-    const etag = `"${currentTime}-admin-visit-reports-${paramsHash}"`;
-    
-    // Check if client has cached version (conditional request)
-    const ifNoneMatch = request.headers.get('if-none-match');
-    if (ifNoneMatch === etag) {
-      return new NextResponse(null, { 
-        status: 304,
-        headers: {
-          'Cache-Control': 'private, max-age=120, stale-while-revalidate=60',
-          'ETag': etag
-        }
-      });
-    }
+    // Caching disabled for fresh data
 
     // Calculate date range based on filter
     const now = new Date();
@@ -167,7 +147,8 @@ export async function GET(request: NextRequest) {
         .filter(Boolean) as string[];
 
       // Get executive initials
-      const initials = visit.executive.name
+      const execName = visit.executive?.name || 'Unknown Executive';
+      const initials = execName
         .split(' ')
         .map(word => word.charAt(0))
         .slice(0, 2)
@@ -203,7 +184,7 @@ export async function GET(request: NextRequest) {
         '#059669', // Y - Emerald
         '#7C3AED'  // Z - Indigo
       ];
-      const firstLetter = visit.executive.name.charAt(0).toUpperCase();
+      const firstLetter = execName.charAt(0).toUpperCase();
       const colorIndex = firstLetter.charCodeAt(0) - 65; // Convert A-Z to 0-25
       const safeColorIndex = Math.max(0, Math.min(colorIndex, colors.length - 1)); // Ensure valid index
 
@@ -236,12 +217,12 @@ export async function GET(request: NextRequest) {
 
       return {
         id: visit.id, // Keep actual ObjectId for database operations
-        executiveId: visit.executive.id,
-        executiveName: visit.executive.name,
+        executiveId: visit.executive?.id || 'unknown',
+        executiveName: execName,
         executiveInitials: initials,
         avatarColor: colors[safeColorIndex],
-        storeName: visit.store.storeName,
-        storeId: visit.store.id, // Add store ID for linking
+        storeName: visit.store?.storeName || 'Unknown Store',
+        storeId: visit.store?.id || 'unknown', // Add store ID for linking
         partnerBrand: partnerBrands,
         visitDate: formattedVisitDate,
         visitStatus: visit.status as 'PENDING_REVIEW' | 'REVIEWD',
@@ -307,10 +288,10 @@ export async function GET(request: NextRequest) {
       total: processedVisits.length
     });
     
-    // Add secure caching headers
-    response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=60');
-    response.headers.set('Vary', 'Authorization');
-    response.headers.set('ETag', etag);
+    // Disable caching for this endpoint
+    response.headers.set('Cache-Control', 'no-store');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
     
     return response;
 

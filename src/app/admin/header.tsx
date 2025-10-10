@@ -123,10 +123,25 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
           title: 'Visit Reports',
           subtitle: 'Unified view of all store and executive visits across regions'
         };
+      case '/admin/digital-report':
+        return {
+          title: 'Digital Connect',
+          subtitle: 'Manage and review digital visit connects'
+        };
+      case '/admin/attendance':
+        return {
+          title: 'Attendance Tracker',
+          subtitle: 'Daily submission status by executive'
+        };
       case '/admin/settings':
         return {
           title: 'Settings',
           subtitle: 'Configure system preferences and notifications'
+        };
+      case '/admin/analytics-impact':
+        return {
+          title: 'Analytics & Impact',
+          subtitle: 'Compare before vs after visit impact by brand'
         };
       case '/admin/notifications':
         return {
@@ -137,6 +152,31 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
         return {
           title: 'Sales',
           subtitle: 'Sales monitor of stores'
+        };
+      case '/admin/datamanagement':
+        return {
+          title: 'Data Management Dashboard',
+          subtitle: 'Comprehensive data import and management for sales, stores, executives, and user administration'
+        };
+      case '/admin/datamanagement/monthwise':
+        return {
+          title: 'Monthly Sales Import',
+          subtitle: 'Import monthly sales data with device sales, plan sales, and revenue metrics'
+        };
+      case '/admin/datamanagement/datewise':
+        return {
+          title: 'Daily Sales Import',
+          subtitle: 'Import daily sales data with count of sales and revenue by specific dates'
+        };
+      case '/admin/datamanagement/storewise':
+        return {
+          title: 'Store & Executive Import',
+          subtitle: 'Import store information and manage executive assignments efficiently'
+        };
+      case '/admin/datamanagement/usermanagement':
+        return {
+          title: 'User Management',
+          subtitle: 'Create, manage, and export user accounts with comprehensive administrative controls'
         };
       default:
         return {
@@ -154,6 +194,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
            pathname === '/admin/stores' ||
            pathname === '/admin/issues' || 
            pathname === '/admin/visit-report' ||
+           pathname === '/admin/digital-report' ||
            pathname === '/admin/executives' ||
            pathname.startsWith('/admin/issues/');
   };

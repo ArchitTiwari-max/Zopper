@@ -18,6 +18,7 @@
     max-width: 700px;
     padding: 32px 32px 120px 32px; /* Added bottom padding for navigation */
   }
+  .exec-f-visit-type-btn { font-size: 13px; }
 }
 
 
@@ -106,11 +107,45 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+/* Store header row with toggle */
+.exec-f-sub-store-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
 .exec-f-sub-store-name {
   font-size: 18px;
   font-weight: 600;
   color: #212529;
   margin: 0 0 12px 0;
+}
+
+/* Visit type toggle */
+.exec-f-visit-type-toggle {
+  background: #f1f3f5;
+  border: 1px solid #e9ecef;
+  border-radius: 999px;
+  padding: 4px;
+  display: inline-flex;
+  gap: 6px;
+}
+
+.exec-f-visit-type-btn {
+  border: none;
+  background: transparent;
+  color: #495057;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.exec-f-visit-type-btn.active {
+  background: #4f46e5;
+  color: #fff;
 }
 
 .exec-f-sub-partner-brands {
@@ -872,8 +907,22 @@
   min-width: 140px;
 }
 
+/* Contact person select wrapper to avoid overlap with arrow */
+.exec-f-sub-visit-form-card .exec-f-sub-person-name-select {
+  flex: 2;
+  min-width: 200px;
+  position: relative;
+}
+
+/* Increase right padding so text doesn't collide with dropdown arrow */
+.exec-f-sub-visit-form-card .exec-f-sub-person-name-select-input {
+  padding-right: 40px;
+}
 
 @media (max-width: 480px) {
+  .exec-f-sub-visit-form-card .exec-f-sub-person-name-select-input {
+    padding-right: 46px; /* extra room for iOS/Android arrow */
+  }
   .exec-f-sub-visit-form-card .exec-f-sub-issues-list {
     max-height: 250px;
     padding: 8px;

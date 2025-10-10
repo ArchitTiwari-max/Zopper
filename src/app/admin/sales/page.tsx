@@ -763,20 +763,20 @@ const AdminSalesPage: React.FC = () => {
             tableLayout: 'fixed'
           }}>
             <colgroup>
-              <col style={{ width: '12%' }} /> {/* Brand */}
-              <col style={{ width: '15%' }} /> {/* Category */}
-              <col style={{ width: '8%' }} />  {/* Device Sales */}
-              <col style={{ width: '8%' }} />  {/* Plan Sales */}
-              <col style={{ width: '8%' }} />  {/* Attach % */}
-              <col style={{ width: '10%' }} /> {/* Revenue */}
-              <col style={{ width: '8%' }} />  {/* Device Sales */}
-              <col style={{ width: '8%' }} />  {/* Plan Sales */}
-              <col style={{ width: '8%' }} />  {/* Attach % */}
-              <col style={{ width: '10%' }} /> {/* Revenue */}
-              <col style={{ width: '8%' }} />  {/* Device Sales */}
-              <col style={{ width: '8%' }} />  {/* Plan Sales */}
-              <col style={{ width: '8%' }} />  {/* Attach % */}
-              <col style={{ width: '10%' }} /> {/* Revenue */}
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '10%' }} />
             </colgroup>
             <thead>
               <tr style={{ backgroundColor: '#f8f9fa' }}>
@@ -906,7 +906,6 @@ const AdminSalesPage: React.FC = () => {
                       }}>
                         {row.categoryName}
                       </td>
-                      {/* Dynamic Month Data */}
                       {recentMonths.map((month) => {
                         const monthData = row.months[month];
                         return (

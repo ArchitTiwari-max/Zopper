@@ -71,6 +71,11 @@ export async function GET(request: NextRequest) {
         .map(brandId => brandMap.get(brandId))
         .filter(Boolean)
         .map(b => b!.brandName);
+      
+      // Get partner brand types - ensure we have the same length as brand IDs
+      const partnerBrandTypes = Array.isArray((store as any).partnerBrandTypes) 
+        ? (store as any).partnerBrandTypes 
+        : [];
 
       let visitStatus = 'No visit';
       let lastVisitDate: Date | null = null;
@@ -93,6 +98,7 @@ export async function GET(request: NextRequest) {
         city: store.city,
         fullAddress: store.fullAddress,
         partnerBrands,
+        partnerBrandTypes,
         visited: visitStatus,
         lastVisitDate,
         sortOrder: lastVisitDate ? new Date(lastVisitDate).getTime() : 0

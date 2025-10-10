@@ -18,10 +18,9 @@
 jest.config.js
 
 # next.js
-/.next
 /.next-backup
 /out/
-.next
+# .next
 
 # production
 /build

@@ -1,0 +1,531 @@
+.attendance-wrapper {
+  padding: 20px;
+  background: #ffffff;
+  min-height: 100vh;
+}
+
+.attendance-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  gap: 16px;
+  color: #ef4444;
+  font-size: 1.1rem;
+}
+
+.attendance-error button {
+  padding: 8px 16px;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.attendance-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  font-size: 1.2rem;
+  color: #64748b;
+}
+
+.attendance-table-container {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 80vh;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+/* Filter Bar */
+.attendance-filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 12px 0 12px;
+}
+
+.filter-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.filter-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attendance-filters label {
+  font-size: 1rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.date-filter-select,
+.exec-filter-select {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  font-size: 1rem;
+  min-width: 200px;
+}
+
+.exec-filter-select {
+  min-width: 280px;
+}
+
+/* Holiday and Export Buttons */
+.holiday-btn,
+.export-btn {
+  padding: 8px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.holiday-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.export-btn:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.holiday-btn:active,
+.export-btn:active {
+  transform: translateY(1px);
+}
+
+/* Holiday Picker */
+.holiday-picker {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 12px 0;
+}
+
+.holiday-picker-header {
+  margin-bottom: 12px;
+}
+
+.holiday-picker-header h4 {
+  margin: 0 0 4px 0;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.holiday-picker-info {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.holiday-list {
+  margin-top: 8px;
+}
+
+.holiday-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.holiday-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.remove-holiday {
+  background: none;
+  border: none;
+  color: #92400e;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.remove-holiday:hover {
+  background: #f59e0b;
+  color: white;
+}
+
+.no-holidays {
+  color: #6b7280;
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+.attendance-legend {
+  margin-bottom: 16px;
+  display: flex;
+  gap: 20px;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-item .tick {
+  color: #059669;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.legend-item .cross {
+  color: #dc2626;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: #ffffff;
+}
+
+.attendance-table th,
+.attendance-table td {
+  border: 1px solid #e5e7eb;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Sticky Executive Column (now on the left) */
+.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background: #f9fafb;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.exec-col {
+  width: 150px;
+  padding: 12px 8px;
+  font-weight: 600;
+  color: #374151;
+  background: #ffffff;
+}
+
+.exec-cell {
+  width: 150px;
+  padding: 10px 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.exec-cell:hover {
+  background: #f3f4f6;
+}
+
+/* Date Columns (now header columns) */
+.date-col {
+  width: 100px;
+  padding: 12px 8px;
+  font-weight: 600;
+  color: #374151;
+  background: #ffffff;
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+}
+
+.date-col:hover {
+  background: #f9fafb;
+}
+
+.date-col.holiday-header {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.date-col.holiday-header:hover {
+  background: #fde68a;
+}
+
+.date-col.weekend-header {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.date-col.weekend-header:hover {
+  background: #e5e7eb;
+}
+
+.date-header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.date-text {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.holiday-indicator,
+.weekend-indicator {
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+/* Total Column */
+.total-col {
+  width: 120px;
+  padding: 12px 8px;
+  font-weight: 700;
+  color: #1f2937;
+  background: #f9fafb;
+  font-size: 0.875rem;
+  text-align: center;
+  border-left: 2px solid #e5e7eb;
+  border-right: 2px solid #e5e7eb;
+}
+
+.total-cell {
+  width: 120px;
+  padding: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: #f9fafb;
+  text-align: center;
+  border-left: 2px solid #e5e7eb;
+  border-right: 2px solid #e5e7eb;
+}
+
+.total-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.total-fraction {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.total-percentage {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  line-height: 1;
+}
+
+/* Status Cells */
+.status-cell {
+  width: 100px;
+  padding: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.status-cell.yes {
+  background: #d1fae5;
+}
+
+.status-cell.yes .tick {
+  color: #059669;
+}
+
+.status-cell.no {
+  background: #fee2e2;
+}
+
+.status-cell.no .cross {
+  color: #dc2626;
+}
+
+.status-cell.weekend {
+  background: #f3f4f6;
+}
+
+.status-cell.weekend .dash {
+  color: #6b7280;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.status-cell.holiday {
+  background: #fef3c7;
+}
+
+.status-cell.holiday .holiday-symbol {
+  color: #92400e;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.status-cell:hover {
+  opacity: 0.8;
+}
+
+/* Table Header */
+.attendance-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #ffffff;
+  border-bottom: 2px solid #d1d5db;
+  font-weight: 600;
+}
+
+.sticky-col.exec-col {
+  z-index: 15; /* Higher than other sticky headers */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .attendance-wrapper {
+    padding: 10px;
+  }
+  
+  .attendance-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .filter-left,
+  .filter-right {
+    justify-content: center;
+  }
+  
+  .filter-right {
+    gap: 12px;
+  }
+  
+  .holiday-btn,
+  .export-btn {
+    flex: 1;
+    justify-content: center;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+  
+  .date-col,
+  .status-cell {
+    width: 70px;
+  }
+  
+  .exec-col,
+  .exec-cell {
+    width: 120px;
+  }
+  
+  .total-col,
+  .total-cell {
+    width: 100px;
+  }
+  
+  .attendance-table th,
+  .attendance-table td {
+    padding: 6px 4px;
+    font-size: 0.7rem;
+  }
+  
+  .date-col {
+    font-size: 0.65rem;
+  }
+  
+  .date-text {
+    font-size: 0.6rem;
+  }
+  
+  .holiday-indicator,
+  .weekend-indicator {
+    font-size: 0.7rem;
+  }
+  
+  .holiday-picker {
+    padding: 12px;
+  }
+  
+  .holiday-tags {
+    gap: 4px;
+  }
+  
+  .holiday-tag {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
+  
+  .total-fraction {
+    font-size: 0.8rem;
+  }
+  
+  .total-percentage {
+    font-size: 0.65rem;
+  }
+}
+
+/* Loading and Error States */
+.attendance-loading,
+.attendance-error {
+  text-align: center;
+  padding: 40px;
+}
+
+.attendance-error div:first-child {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.attendance-error div:nth-child(2) {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}

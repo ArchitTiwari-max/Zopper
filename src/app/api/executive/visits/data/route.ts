@@ -26,23 +26,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
-    // ETag for cache validation (same pattern as store/data)
-    const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
-    const apiVersion = 'v2-visits-data';
-    const etag = `"${currentTime}-${executive.id}-${user.userId}-${apiVersion}"`;
-    
-    // Check if client has cached version (conditional request)
-    const ifNoneMatch = request.headers.get('if-none-match');
-    if (ifNoneMatch === etag) {
-      // Return 304 Not Modified if ETag matches
-      return new NextResponse(null, { 
-        status: 304,
-        headers: {
-          'Cache-Control': 'private, max-age=60',
-          'ETag': etag
-        }
-      });
-    }
+    // Disable caching for My Visits data to always return the latest state
 
     // Add pagination support
     const url = new URL(request.url);
@@ -221,16 +205,17 @@ export async function GET(request: NextRequest) {
       updatedAt: visit.updatedAt
     }));
 
-    // Create response with cache headers
+    // Create response with NO caching so UI updates immediately
     const response = NextResponse.json({
       success: true,
       data: transformedVisits
     });
 
-    // Add caching headers - PRIVATE cache to prevent data leakage between executives
-    response.headers.set('Cache-Control', 'private, max-age=60');
-    response.headers.set('Vary', 'Cookie'); // Cache varies by cookies (user session)
-    response.headers.set('ETag', etag);
+    // Disable caching completely
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    response.headers.set('Vary', 'Cookie');
     
     return response;
 

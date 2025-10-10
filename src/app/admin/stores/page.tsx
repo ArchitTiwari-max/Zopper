@@ -33,6 +33,7 @@ const AdminStoresPage: React.FC = () => {
 
   const [filters, setFilters] = useState<StoreFilters>({
     partnerBrand: 'All Brands',
+    partnerBrandType: 'All Category',
     city: 'All City',
     storeName: 'All Store',
     executiveName: 'All Executive',
@@ -52,6 +53,7 @@ const AdminStoresPage: React.FC = () => {
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
   const [showVisitPlanModal, setShowVisitPlanModal] = useState<boolean>(false);
   const [isSubmittingVisitPlan, setIsSubmittingVisitPlan] = useState<boolean>(false);
+
   
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{
@@ -150,6 +152,17 @@ const AdminStoresPage: React.FC = () => {
         }
       }
 
+      // Filter by category (partner brand type)
+      if (filters.partnerBrandType && filters.partnerBrandType !== 'All Category') {
+        const desired = filters.partnerBrandType;
+        const hasType = Array.isArray((store as any).partnerBrandPairs) && (store as any).partnerBrandPairs.some((pb: any) => {
+          const t = pb.type;
+          const mapped = t === 'A_PLUS' ? 'A+' : t; // map enum to display
+          return mapped === desired;
+        });
+        if (!hasType) return false;
+      }
+
       // Filter by city
       if (filters.city !== 'All City') {
         if (store.city !== filters.city) {
@@ -232,6 +245,7 @@ const AdminStoresPage: React.FC = () => {
     newUrl.searchParams.delete('storeId');
     newUrl.searchParams.delete('executiveId');
     newUrl.searchParams.delete('brandId');
+    newUrl.searchParams.delete('category');
     newUrl.searchParams.delete('city');
     newUrl.searchParams.delete('storeName');
     newUrl.searchParams.delete('executiveName');
@@ -258,6 +272,11 @@ const AdminStoresPage: React.FC = () => {
       if (brand) {
         newUrl.searchParams.set('brandId', brand.id);
       }
+    }
+
+    // Add category (partner brand type)
+    if (currentFilters.partnerBrandType && currentFilters.partnerBrandType !== 'All Category') {
+      newUrl.searchParams.set('category', currentFilters.partnerBrandType);
     }
     
     // Use city name in URL
@@ -287,6 +306,7 @@ const AdminStoresPage: React.FC = () => {
     const executiveId = searchParams.get('executiveId');
     const brandId = searchParams.get('brandId');
     const city = searchParams.get('city');
+    const category = searchParams.get('category');
     const pageParam = parseInt(searchParams.get('page') || '1', 10);
     const showUnresolvedIssues = searchParams.get('showUnresolvedIssues') === 'true';
     const showUnreviewedVisits = searchParams.get('showUnreviewedVisits') === 'true';
@@ -300,16 +320,24 @@ const AdminStoresPage: React.FC = () => {
       setFilters(prev => ({ ...prev, executiveName: executiveId }));
     }
 
-    if (brandId && filterData.brands.length > 0 && filters.partnerBrand !== brandId) {
-      // Convert brandId to brand name to match filter type
-      const brand = filterData.brands.find(b => b.id === brandId);
-      if (brand) {
-        setFilters(prev => ({ ...prev, partnerBrand: brand.name }));
+    if (brandId && filterData.brands.length > 0) {
+      // Only update partnerBrand when the selected brand actually changes.
+      // Map current selected brand name to its id for a correct comparison.
+      const resolved = filterData.brands.find(b => b.id === brandId);
+      if (resolved) {
+        const currentSelected = filterData.brands.find(b => b.name === filters.partnerBrand);
+        if (currentSelected?.id !== brandId) {
+          setFilters(prev => ({ ...prev, partnerBrand: resolved.name }));
+        }
       }
     }
 
     if (city && filters.city !== city) {
       setFilters(prev => ({ ...prev, city: city }));
+    }
+
+    if (category && filters.partnerBrandType !== category) {
+      setFilters(prev => ({ ...prev, partnerBrandType: category }));
     }
 
     // Sync page from URL
@@ -504,6 +532,7 @@ const AdminStoresPage: React.FC = () => {
   // Build data for Excel export from the currently filtered rows
   const buildExportAOA = (): (string | number)[][] => {
           const headers = [
+      'Store ID',
       'Store Name',
       'City',
       'Partner Brands',
@@ -513,15 +542,23 @@ const AdminStoresPage: React.FC = () => {
       'Pending Issues'
     ];
 
-      const rows = filteredStores.map((s) => [
-      s.storeName,
-      s.city,
-      s.partnerBrands.join(', '),
-      s.assignedTo || '',
-      formatLastVisitDate(s.lastVisit ?? null),
-      s.totalVisits,
-      s.pendingIssues,
-    ]);
+      const rows = filteredStores.map((s) => {
+      const pbPairs = (s as any).partnerBrandPairs as Array<{ id: string; name: string; type?: string | null }>|undefined;
+      const partnerBrandsCombined = Array.isArray(pbPairs) && pbPairs.length > 0
+        ? pbPairs.map(pb => `${pb.name}${pb.type ? ` (${pb.type === 'A_PLUS' ? 'A+' : pb.type})` : ''}`).join(', ')
+        : s.partnerBrands.join(', ');
+
+      return [
+        s.id,
+        s.storeName,
+        s.city,
+        partnerBrandsCombined,
+        s.assignedTo || '',
+        formatLastVisitDate(s.lastVisit ?? null),
+        s.totalVisits,
+        s.pendingIssues,
+      ];
+    });
 
     return [headers, ...rows];
   };
@@ -532,9 +569,10 @@ const AdminStoresPage: React.FC = () => {
 
     // Column widths for readability
     const cols = [
+      { wch: 24 }, // Store ID
       { wch: 28 }, // Store Name
       { wch: 16 }, // City
-      { wch: 24 }, // Partner Brands
+      { wch: 28 }, // Partner Brands (with type)
       { wch: 22 }, // Assigned Executive
       { wch: 14 }, // Last Visit
       { wch: 16 }, // Total Visits
@@ -621,9 +659,14 @@ const AdminStoresPage: React.FC = () => {
     const count = filteredStores.length;
     const brand = filters.partnerBrand !== 'All Brands' ? filters.partnerBrand : null;
     const city = filters.city !== 'All City' ? filters.city : null;
-    if (brand && city) return `${count} stores found for ${brand} in ${city}`;
-    if (brand) return `${count} stores found for ${brand}`;
-    if (city) return `${count} stores found in ${city}`;
+    const cat = filters.partnerBrandType && filters.partnerBrandType !== 'All Category' ? filters.partnerBrandType : null;
+    if (brand && city && cat) return `${count} stores for ${brand} (${cat}) in ${city}`;
+    if (brand && cat) return `${count} stores for ${brand} (${cat})`;
+    if (cat && city) return `${count} stores in ${city} for Category ${cat}`;
+    if (brand && city) return `${count} stores for ${brand} in ${city}`;
+    if (brand) return `${count} stores for ${brand}`;
+    if (cat) return `${count} stores for Category ${cat}`;
+    if (city) return `${count} stores in ${city}`;
     return `${count} stores found`;
   };
 
@@ -695,6 +738,21 @@ const AdminStoresPage: React.FC = () => {
               className="filter-input"
               placeholder="Type to search store name..."
             />
+          </div>
+
+          {/* Category (Partner Brand Type) */}
+          <div className="admin-stores-filter-group">
+            <label>Category</label>
+            <select 
+              value={filters.partnerBrandType}
+              onChange={(e) => handleFilterChange('partnerBrandType', e.target.value)}
+              className="admin-stores-filter-select"
+            >
+              <option value="All Category">All Category</option>
+              {['A+','A','B','C','D'].map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
           </div>
 
           {/* Then Partner Brand */}
@@ -855,54 +913,24 @@ const AdminStoresPage: React.FC = () => {
         )}
       </div>
 
-      {/* Count Summary */}
-      <div style={{
-        marginTop: '12px',
-        marginBottom: '8px',
-        color: '#374151',
-        fontWeight: 600
-      }}>
-        {getCountSummary()}
-      </div>
-
-      {/* Actions - Export and Assign PJP */}
+      {/* Count + Actions Row */}
       <div style={{
         display: 'flex',
-        justifyContent: 'flex-end',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         gap: '10px',
-        marginBottom: '20px',
-        marginTop: '16px'
+        marginTop: '12px',
+        marginBottom: '20px'
       }}>
-        <button
-          onClick={handleExportXLS}
-          style={{
-            padding: '10px 16px',
-            backgroundColor: '#2563eb',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s',
-            boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#1d4ed8';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#2563eb';
-          }}
-        >
-          Export XLS
-        </button>
-        {!isCreatingVisitPlan && (
-          <button 
-            onClick={handleCreateVisitPlan}
-            className="create-visit-plan-btn"
+        <div style={{ color: '#374151', fontWeight: 600 }}>
+          {getCountSummary()}
+        </div>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            onClick={handleExportXLS}
             style={{
-              padding: '10px 20px',
-              backgroundColor: '#4f46e5',
+              padding: '10px 16px',
+              backgroundColor: '#2563eb',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
@@ -910,18 +938,44 @@ const AdminStoresPage: React.FC = () => {
               fontWeight: '600',
               cursor: 'pointer',
               transition: 'background-color 0.2s',
-              boxShadow: '0 2px 4px rgba(79, 70, 229, 0.2)'
+              boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#4338ca';
+              e.currentTarget.style.backgroundColor = '#1d4ed8';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#4f46e5';
+              e.currentTarget.style.backgroundColor = '#2563eb';
             }}
           >
-            Assign PJP
+            Export XLS
           </button>
-        )}
+          {!isCreatingVisitPlan && (
+            <button 
+              onClick={handleCreateVisitPlan}
+              className="create-visit-plan-btn"
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#4f46e5',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                boxShadow: '0 2px 4px rgba(79, 70, 229, 0.2)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#4338ca';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#4f46e5';
+              }}
+            >
+              Assign PJP
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Stores Table */}
@@ -980,7 +1034,7 @@ const AdminStoresPage: React.FC = () => {
                             {store.storeName}
                           </span>
                         ) : (
-                          <Link href={`/admin/visit-report?storeId=${store.id}&dateFilter=${encodeURIComponent(selectedDateFilter)}`} className="admin-stores-store-name-link admin-stores-store-name-truncated" title={store.storeName} target="_blank" rel="noopener noreferrer">
+                          <Link href={`/admin/stores/${store.id}?storeName=${encodeURIComponent(store.storeName)}&city=${encodeURIComponent(store.city)}`} className="admin-stores-store-name-link admin-stores-store-name-truncated" title={store.storeName}>
                             {store.storeName}
                           </Link>
                         )}
@@ -989,15 +1043,27 @@ const AdminStoresPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="admin-stores-cell admin-stores-partner-brands-cell">
-                    {store.partnerBrands.map((brand, index) => (
-                      <span 
-                        key={index}
-                        className="admin-stores-brand-tag"
-                        style={{ backgroundColor: getBrandColor(brand) }}
-                      >
-                        {brand}
-                      </span>
-                    ))}
+                    {(store as any).partnerBrandPairs && (store as any).partnerBrandPairs.length > 0 ? (
+                      (store as any).partnerBrandPairs.map((pb: any, index: number) => (
+                        <span 
+                          key={pb.id + '_' + index}
+                          className="admin-stores-brand-tag"
+                          style={{ backgroundColor: getBrandColor(pb.name) }}
+                        >
+                          {pb.name}{pb.type ? ` (${pb.type === 'A_PLUS' ? 'A+' : pb.type})` : ''}
+                        </span>
+                      ))
+                    ) : (
+                      store.partnerBrands.map((brand, index) => (
+                        <span 
+                          key={index}
+                          className="admin-stores-brand-tag"
+                          style={{ backgroundColor: getBrandColor(brand) }}
+                        >
+                          {brand}
+                        </span>
+                      ))
+                    )}
                   </div>
                   <div className="admin-stores-cell">
                     <Link href={`/admin/executives?storeId=${store.id}`} className="admin-stores-view-all-link">
@@ -1010,9 +1076,13 @@ const AdminStoresPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="admin-stores-cell">
-                    <span className="admin-stores-count-badge admin-stores-visits-badge" title={`Total visits for ${store.storeName}`}>
+                    <Link 
+                      href={`/admin/visit-report?storeId=${store.id}&dateFilter=${encodeURIComponent(selectedDateFilter)}`}
+                      className="admin-stores-count-badge admin-stores-visits-badge admin-stores-clickable-badge-issues"
+                      title={`View all visits for ${store.storeName}`}
+                    >
                       {store.totalVisits ?? 0}
-                    </span>
+                    </Link>
                   </div>
                   <div className="admin-stores-cell">
                     {store.pendingIssues > 0 ? (
@@ -1089,7 +1159,7 @@ const AdminStoresPage: React.FC = () => {
           </button>
         </div>
       </div>
-      
+
       {/* Visit Plan Modal */}
       <VisitPlanModal
         isOpen={showVisitPlanModal}

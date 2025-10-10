@@ -200,7 +200,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   onClose();
                 }}
               >
-                Submit Task
+                Submit Response
               </button>
             )}
             
