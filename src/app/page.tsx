@@ -109,7 +109,7 @@ function HomeContent() {
       if (response.ok) {
         setUserEmail(result.email); // Store the email from response
         setShowOtpVerification(true);
-        alert('OTP sent to your registered email!');
+        // alert('OTP sent to your registered email!');
       } else {
         alert(result.error || 'Failed to send OTP');
       }
@@ -144,7 +144,6 @@ function HomeContent() {
       const result = await response.json();
 
       if (response.ok) {
-        alert('Login successful! Welcome ' + result.user.username);
         setShowOtpVerification(false);
         setOtp('');
         

@@ -322,7 +322,7 @@ export default function ExecutiveAnalyticsImpactPage() {
               {(() => {
                 const v = Number(summary?.avgSalesLiftPct ?? 0);
                 const up = v >= 0;
-                const label = 'Avg. % Sales Change';
+                const label = 'Total % Sales Change';
                 const color = up ? '#065f46' : '#b91c1c';
                 return (
                   <>
@@ -345,7 +345,7 @@ export default function ExecutiveAnalyticsImpactPage() {
               {(() => {
                 const v = Number(summary?.avgRevenue ?? 0);
                 const up = v >= 0;
-                const label = 'Avg. Revenue Change';
+                const label = 'Total Revenue Change';
                 const color = up ? '#065f46' : '#b91c1c';
                 return (
                   <>
