@@ -907,8 +907,22 @@
   min-width: 140px;
 }
 
+/* Contact person select wrapper to avoid overlap with arrow */
+.exec-f-sub-visit-form-card .exec-f-sub-person-name-select {
+  flex: 2;
+  min-width: 200px;
+  position: relative;
+}
+
+/* Increase right padding so text doesn't collide with dropdown arrow */
+.exec-f-sub-visit-form-card .exec-f-sub-person-name-select-input {
+  padding-right: 40px;
+}
 
 @media (max-width: 480px) {
+  .exec-f-sub-visit-form-card .exec-f-sub-person-name-select-input {
+    padding-right: 46px; /* extra room for iOS/Android arrow */
+  }
   .exec-f-sub-visit-form-card .exec-f-sub-issues-list {
     max-height: 250px;
     padding: 8px;
