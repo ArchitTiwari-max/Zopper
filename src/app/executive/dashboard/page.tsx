@@ -6,6 +6,8 @@ import { useDateFilter } from '../contexts/DateFilterContext';
 import DateFilter from '@/components/DateFilter/DateFilter';
 import './Dashboard.css';
 import PartnerBrandTypeVisitsExec from './components/PartnerBrandTypeVisitsExec';
+import ExecutiveRAGDashboard from '../components/ExecutiveRAGDashboard';
+import '../components/ExecutiveRAGDashboard.css';
 
 interface Brand {
   id: string;
@@ -139,6 +141,11 @@ const Dashboard: React.FC = () => {
           <div className="exec-dash-date-filter">
             <DateFilter />
           </div>
+        </div>
+
+        {/* RAG Store Performance Analytics */}
+        <div className="exec-dash-dashboard-card">
+          <ExecutiveRAGDashboard />
         </div>
 
         {/* Partner Brand Type Visits (A+, A, B, C, D) - Assigned stores only */}

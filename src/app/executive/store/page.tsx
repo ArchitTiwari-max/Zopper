@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getRAGEmoji, RAGStorePerformance } from '@/lib/ragUtils';
 import './Store.css';
 
 interface StoreData {
@@ -26,6 +27,10 @@ const Store: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  
+  // RAG data state
+  const [ragData, setRagData] = useState<Map<string, string>>(new Map()); // Map of storeId -> RAG status
+  
   const [filters, setFilters] = useState({
     storeName: '',
     city: 'All Cities',
@@ -76,9 +81,36 @@ const Store: React.FC = () => {
     setPlannedVisitDate(todayLocal);
   }, []);
 
+  // Fetch RAG data from executive RAG analytics API
+  const fetchRAGData = async () => {
+    try {
+      const response = await fetch('/api/executive/rag-analytics?dateRange=7days&ragFilter=all', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data.performances) {
+          const ragMap = new Map<string, string>();
+          data.data.performances.forEach((perf: RAGStorePerformance) => {
+            ragMap.set(perf.storeId, perf.attachRAG);
+          });
+          setRagData(ragMap);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch RAG data:', error);
+    }
+  };
+
   // Fetch stores data from API
   useEffect(() => {
     fetchStores();
+    fetchRAGData();
   }, []);
 
   const fetchStores = async () => {
@@ -467,7 +499,7 @@ const Store: React.FC = () => {
                   )}
                   <div className="exec-v-form-table-cell exec-v-form-store-name-cell">
                     <div className="exec-v-form-store-name-wrapper">
-                      <span className="exec-v-form-store-name-text">{store.storeName}</span>
+                      <span className="exec-v-form-store-name-text">{store.storeName} {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}</span>
                       <span className="exec-v-form-store-subtext">{store.city}</span>
                     </div>
                   </div>
@@ -560,7 +592,7 @@ const Store: React.FC = () => {
                   <div key={store.id} className="exec-v-form-preview-store-item">
                     <div className="exec-v-form-store-number">{index + 1}</div>
                     <div className="exec-v-form-store-info">
-                      <h4 className="exec-v-form-store-name">{store.storeName}</h4>
+                      <h4 className="exec-v-form-store-name">{store.storeName} {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}</h4>
                       <p className="exec-v-form-store-details">
                         📍 {store.city}
                         {store.fullAddress && ` • ${store.fullAddress}`}

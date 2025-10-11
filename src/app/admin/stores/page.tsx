@@ -7,6 +7,7 @@ import { StoreData, StoreFilters } from '../types';
 import { useDateFilter } from '../contexts/DateFilterContext';
 import VisitPlanModal from './components/VisitPlanModal';
 import * as XLSX from 'xlsx';
+import { getRAGEmoji, RAGStorePerformance } from '@/lib/ragUtils';
 import './page.css';
 
 
@@ -54,6 +55,8 @@ const AdminStoresPage: React.FC = () => {
   const [showVisitPlanModal, setShowVisitPlanModal] = useState<boolean>(false);
   const [isSubmittingVisitPlan, setIsSubmittingVisitPlan] = useState<boolean>(false);
 
+  // RAG data state
+  const [ragData, setRagData] = useState<Map<string, string>>(new Map()); // Map of storeId -> RAG status
   
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{
@@ -86,6 +89,32 @@ const AdminStoresPage: React.FC = () => {
       setFilterError(error instanceof Error ? error.message : 'Failed to load filter data');
     } finally {
       setIsLoadingFilters(false);
+    }
+  };
+
+  // Fetch RAG data from RAG analytics API
+  const fetchRAGData = async () => {
+    try {
+      const response = await fetch('/api/admin/rag-analytics?dateRange=7days&storeType=all&ragFilter=all', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data.performances) {
+          const ragMap = new Map<string, string>();
+          data.data.performances.forEach((perf: RAGStorePerformance) => {
+            ragMap.set(perf.storeId, perf.attachRAG);
+          });
+          setRagData(ragMap);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch RAG data:', error);
     }
   };
 
@@ -355,18 +384,22 @@ const AdminStoresPage: React.FC = () => {
     }
   }, [searchParams, filterData]);
 
-  // OPTIMIZED LOADING: Load both table and filter data concurrently, but prioritize table UI
+  // OPTIMIZED LOADING: Load table, filter, and RAG data concurrently
   useEffect(() => {
     // Load table data first (higher priority for user experience)
     fetchStoreData();
     
-    // Load filter data concurrently (no delay needed since no loading state shown)
+    // Load filter data concurrently
     fetchFilterData();
+    
+    // Load RAG data concurrently
+    fetchRAGData();
   }, []);
 
   // Refetch data when date filter changes
   useEffect(() => {
     fetchStoreData();
+    fetchRAGData();
   }, [selectedDateFilter]);
 
 
@@ -1031,11 +1064,11 @@ const AdminStoresPage: React.FC = () => {
                       <div className="admin-stores-name-wrap">
                         {isCreatingVisitPlan ? (
                           <span className="admin-stores-store-name-truncated" title={store.storeName}>
-                            {store.storeName}
+                            {store.storeName} {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}
                           </span>
                         ) : (
                           <Link href={`/admin/stores/${store.id}?storeName=${encodeURIComponent(store.storeName)}&city=${encodeURIComponent(store.city)}`} className="admin-stores-store-name-link admin-stores-store-name-truncated" title={store.storeName}>
-                            {store.storeName}
+                            {store.storeName} {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}
                           </Link>
                         )}
                         <div className="admin-stores-store-subtext">{store.city}</div>

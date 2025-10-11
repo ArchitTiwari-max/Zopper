@@ -6,6 +6,8 @@ import { DashboardData, TimeframeOption, BrandFilterOption } from '../types';
 import { useDateFilter } from '../contexts/DateFilterContext';
 import './page.css';
 import PartnerBrandTypeVisits from './components/PartnerBrandTypeVisits';
+import AdminRAGDashboard from '../components/RAGDashboard';
+import '../components/RAGDashboard.css';
 
 // Default empty dashboard data structure
 const defaultDashboardData: DashboardData = {
@@ -155,6 +157,9 @@ const AdminDashboardPage: React.FC = () => {
           </div>
         </Link>
       </div>
+
+      {/* RAG Store Performance Analytics */}
+      <AdminRAGDashboard />
 
       {/* Partner Brand Type Visits (A+, A, B, C) */}
       <PartnerBrandTypeVisits />
