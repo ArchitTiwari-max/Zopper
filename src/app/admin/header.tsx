@@ -143,6 +143,11 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
           title: 'Analytics & Impact',
           subtitle: 'Compare before vs after visit impact by brand'
         };
+      case '/admin/rag-performance':
+        return {
+          title: 'RAG Performance',
+          subtitle: 'Red–Amber–Green status based on attach rate and month‑on‑month trend'
+        };
       case '/admin/notifications':
         return {
           title: 'Notification',

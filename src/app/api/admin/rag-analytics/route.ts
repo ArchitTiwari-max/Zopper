@@ -3,7 +3,6 @@ import { PrismaClient } from '@prisma/client';
 import { 
   calculateAttachRate, 
   getRAGStatus, 
-  getRAGStatusWithTrend,
   getMonthlyTrend,
   calculateRAGSummary,
   sortStoresByPriority,
@@ -139,17 +138,43 @@ export async function GET(request: NextRequest) {
       currentMonthAttachRate = attachRateCount > 0 ? currentMonthAttachRate / attachRateCount : 0;
       previousMonthAttachRate = prevAttachRateCount > 0 ? previousMonthAttachRate / prevAttachRateCount : 0;
       
-      // For the current period (last 7 days), use current month's attach rate as approximation
-      // or calculate it if we have device/plan sales data
-      if (currentPeriodPlanSales === 0 && currentPeriodDeviceSales === 0) {
-        // Use 7/30 of monthly data as approximation
+      // Criteria 1: Compute attach using last 7 days plan sales and normalized 7-day device average from last 3 months
+      if (currentPeriodPlanSales === 0) {
+        // Fallback: approximate last 7 days plan sales from current month
         currentPeriodPlanSales = Math.round((currentMonthPlanSales * 7) / 30);
-        currentPeriodDeviceSales = Math.round((currentMonthDeviceSales * 7) / 30);
-        currentPeriodAttachRate = currentMonthAttachRate;
-      } else {
-        // Calculate attach rate for the current period
-        currentPeriodAttachRate = calculateAttachRate(currentPeriodPlanSales, currentPeriodDeviceSales);
       }
+
+      // Determine last three complete months (excluding current month)
+      const prev2Month = previousMonth === 1 ? 12 : previousMonth - 1;
+      const prev2Year = previousMonth === 1 ? previousYear - 1 : previousYear;
+      const prev3Month = prev2Month === 1 ? 12 : prev2Month - 1;
+      const prev3Year = prev2Month === 1 ? prev2Year - 1 : prev2Year;
+
+      const monthYearPairs = [
+        { month: previousMonth, year: previousMonth === 12 ? previousYear : currentYear },
+        { month: prev2Month, year: prev2Year },
+        { month: prev3Month, year: prev3Year },
+      ];
+
+      let deviceSum3M = 0;
+      let deviceMonthsCount = 0;
+      for (const salesRecord of store.salesRecords) {
+        for (const { month, year } of monthYearPairs) {
+          if (salesRecord.year === year) {
+            const mData = (salesRecord.monthlySales as any[]).find((m: any) => m.month === month);
+            if (mData && typeof mData.deviceSales === 'number') {
+              deviceSum3M += mData.deviceSales;
+              deviceMonthsCount++;
+            }
+          }
+        }
+      }
+      const avgDevice3M = deviceMonthsCount > 0 ? deviceSum3M / deviceMonthsCount : 0;
+      const normalizedDevice7 = avgDevice3M > 0 ? (avgDevice3M / 30) * 7 : 0;
+
+      currentPeriodAttachRate = normalizedDevice7 > 0
+        ? calculateAttachRate(currentPeriodPlanSales, normalizedDevice7)
+        : 0;
 
       // Use current period attach rate as the primary metric, fallback to current month if needed
       const currentAttachRate = currentPeriodAttachRate > 0 ? currentPeriodAttachRate : currentMonthAttachRate;
@@ -165,15 +190,14 @@ export async function GET(request: NextRequest) {
         console.log(`  Attach Rate Counts: current=${attachRateCount}, prev=${prevAttachRateCount}`);
       }
 
-      // Determine RAG status with performance degradation penalty
-      const baseRAG = getRAGStatus(storeType, currentAttachRate);
-      const attachRAG = getRAGStatusWithTrend(storeType, currentAttachRate, previousAttachRate);
-      const monthlyTrendRAG = getMonthlyTrend(currentAttachRate, previousAttachRate);
+      // Determine RAG status (no degradation penalty) and monthly trend per Criteria 2
+      const attachRAG = getRAGStatus(storeType, currentAttachRate);
+      const monthlyTrendRAG = getMonthlyTrend(currentMonthAttachRate, previousMonthAttachRate);
 
       // Debug logging for RAG results
       if (store.storeName.includes('Samsung') || store.storeName.includes('sample')) {
-        console.log(`  Base RAG: ${baseRAG} → Final RAG: ${attachRAG} ${baseRAG !== attachRAG ? '(⬇️ downgraded due to decline)' : ''}`);
-        console.log(`  Trend Status: ${monthlyTrendRAG}`);
+        console.log(`  Attach RAG: ${attachRAG}`);
+        console.log(`  Trend Status (MoM): ${monthlyTrendRAG}`);
         console.log('---');
       }
 
@@ -186,7 +210,10 @@ export async function GET(request: NextRequest) {
         previousMonthAttach: previousAttachRate,
         monthlyTrendRAG: monthlyTrendRAG,
         planSales: currentPeriodPlanSales,
-        deviceSales: currentPeriodDeviceSales,
+        deviceSales: Math.round(((() => { 
+          // reuse normalizedDevice7 if available, else 0
+          try { return (avgDevice3M > 0 ? (avgDevice3M / 30) * 7 : 0); } catch { return 0; }
+        })()) as number),
         city: store.city,
         totalRevenue: totalRevenue,
       };
