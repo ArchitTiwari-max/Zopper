@@ -38,11 +38,14 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Validate file size (5MB max)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    // Validate file size (7MB max)
+    const maxSize = 7 * 1024 * 1024; // 7MB
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    console.log(`Server validation - File: ${file.name}, Size: ${file.size} bytes (${fileSizeMB} MB), Max: ${maxSize} bytes`);
+    
     if (file.size > maxSize) {
       return NextResponse.json({ 
-        error: 'File too large. Maximum size is 5MB.' 
+        error: `File too large. File size: ${fileSizeMB}MB. Maximum size is 7MB.`
       }, { status: 400 });
     }
 

@@ -48,12 +48,17 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       return;
     }
 
-    // Check file sizes before uploading (5MB = 5 * 1024 * 1024 bytes)
-    const maxSize = 5 * 1024 * 1024;
-    const oversizedFiles = fileArray.filter(file => file.size > maxSize);
+    // Check file sizes before uploading (7MB = 7 * 1024 * 1024 bytes)
+    const maxSize = 7 * 1024 * 1024;
+    const oversizedFiles = fileArray.filter(file => {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      console.log(`File: ${file.name}, Size: ${file.size} bytes (${fileSizeMB} MB)`);
+      return file.size > maxSize;
+    });
     
     if (oversizedFiles.length > 0) {
-      const errorMsg = `File too large. Maximum size is 5MB. ${oversizedFiles.length} file(s) exceed the limit.`;
+      const fileDetails = oversizedFiles.map(f => `${f.name}: ${(f.size / (1024 * 1024)).toFixed(2)}MB`).join(', ');
+      const errorMsg = `File too large. Maximum size is 7MB. Files: ${fileDetails}`;
       setError(errorMsg);
       return;
     }
@@ -92,7 +97,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           const text = await response.text();
           throw new Error(
             response.status === 413 || response.status === 400 
-              ? 'File too large. Maximum size is 5MB.' 
+              ? 'File too large. Maximum size is 7MB.' 
               : `Server error: ${response.status}`
           );
         }
@@ -212,7 +217,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             {uploading ? 'Uploading...' : 'Click to upload photos or drag and drop'}
           </div>
           <div className="upload-formats">
-            All image formats up to 5MB • {images.length}/{maxFiles} uploaded
+            All image formats up to 7MB • {images.length}/{maxFiles} uploaded
           </div>
         </div>
       </div>

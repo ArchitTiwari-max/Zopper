@@ -7,6 +7,7 @@ import { StoreData, StoreFilters } from '../types';
 import { useDateFilter } from '../contexts/DateFilterContext';
 import VisitPlanModal from './components/VisitPlanModal';
 import * as XLSX from 'xlsx';
+import { getRAGEmoji, RAGStorePerformance } from '@/lib/ragUtils';
 import './page.css';
 
 
@@ -54,6 +55,8 @@ const AdminStoresPage: React.FC = () => {
   const [showVisitPlanModal, setShowVisitPlanModal] = useState<boolean>(false);
   const [isSubmittingVisitPlan, setIsSubmittingVisitPlan] = useState<boolean>(false);
 
+  // RAG data state
+  const [ragData, setRagData] = useState<Map<string, string>>(new Map()); // Map of storeId -> RAG status
   
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{
@@ -86,6 +89,51 @@ const AdminStoresPage: React.FC = () => {
       setFilterError(error instanceof Error ? error.message : 'Failed to load filter data');
     } finally {
       setIsLoadingFilters(false);
+    }
+  };
+
+  // Fetch RAG data using rag-summary API for better performance
+  const fetchRAGData = async (storeIds?: string[]) => {
+    try {
+      // If no store IDs provided, wait for store data to be available
+      if (!storeIds && storeData.length === 0) {
+        return;
+      }
+      
+      const idsToFetch = storeIds || storeData.map(s => s.id);
+      if (idsToFetch.length === 0) return;
+      
+      const response = await fetch(`/api/admin/stores/rag-summary?storeIds=${idsToFetch.join(',')}&year=${new Date().getFullYear()}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('RAG API Response:', data); // DEBUG
+        if (data.ragSummary) {
+          const ragMap = new Map<string, string>();
+          Object.entries(data.ragSummary).forEach(([storeId, ragInfo]: [string, any]) => {
+            // Map our RAG status to match existing frontend expectations
+            const ragStatus = ragInfo.ragStatus;
+            const mappedStatus = ragStatus === 'green' ? 'Green' : 
+                               ragStatus === 'amber' ? 'Amber' : 'Red';
+            console.log(`Store ${storeId}: RAG ${ragStatus} -> ${mappedStatus}`); // DEBUG
+            ragMap.set(storeId, mappedStatus);
+          });
+          console.log('Final RAG Map:', ragMap); // DEBUG
+          setRagData(ragMap);
+        } else {
+          console.log('No ragSummary in response'); // DEBUG
+        }
+      } else {
+        console.log('RAG API failed:', response.status, await response.text()); // DEBUG
+      }
+    } catch (error) {
+      console.error('Failed to fetch RAG data:', error);
     }
   };
 
@@ -355,18 +403,26 @@ const AdminStoresPage: React.FC = () => {
     }
   }, [searchParams, filterData]);
 
-  // OPTIMIZED LOADING: Load both table and filter data concurrently, but prioritize table UI
+  // OPTIMIZED LOADING: Load table, filter, and RAG data concurrently
   useEffect(() => {
     // Load table data first (higher priority for user experience)
     fetchStoreData();
     
-    // Load filter data concurrently (no delay needed since no loading state shown)
+    // Load filter data concurrently
     fetchFilterData();
   }, []);
+
+  // Fetch RAG data after store data is loaded
+  useEffect(() => {
+    if (storeData.length > 0) {
+      fetchRAGData();
+    }
+  }, [storeData]);
 
   // Refetch data when date filter changes
   useEffect(() => {
     fetchStoreData();
+    // RAG data will be refetched automatically when storeData updates
   }, [selectedDateFilter]);
 
 
@@ -1031,11 +1087,11 @@ const AdminStoresPage: React.FC = () => {
                       <div className="admin-stores-name-wrap">
                         {isCreatingVisitPlan ? (
                           <span className="admin-stores-store-name-truncated" title={store.storeName}>
-                            {store.storeName}
+                            {store.storeName} {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}
                           </span>
                         ) : (
                           <Link href={`/admin/stores/${store.id}?storeName=${encodeURIComponent(store.storeName)}&city=${encodeURIComponent(store.city)}`} className="admin-stores-store-name-link admin-stores-store-name-truncated" title={store.storeName}>
-                            {store.storeName}
+                            {store.storeName} {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}
                           </Link>
                         )}
                         <div className="admin-stores-store-subtext">{store.city}</div>

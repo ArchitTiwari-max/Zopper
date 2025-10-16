@@ -1,0 +1,411 @@
+/* Executive RAG Performance Page Styles */
+.rag-performance-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background: #f8fafc;
+  min-height: calc(100vh - 100px);
+}
+
+/* Page Header */
+.rag-page-header {
+  margin-bottom: 32px;
+}
+
+.rag-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.breadcrumb-link {
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.breadcrumb-separator {
+  color: #64748b;
+}
+
+.rag-page-title-section {
+  margin-bottom: 24px;
+}
+
+.rag-page-title-section h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+}
+
+.rag-page-title-section p {
+  font-size: 16px;
+  color: #64748b;
+  margin: 0;
+}
+
+.rag-page-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Page Summary Stats */
+.rag-page-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.summary-stat {
+  text-align: center;
+  padding: 16px 8px;
+  border-radius: 8px;
+  background: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.summary-stat:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.summary-green {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border-left: 3px solid #10b981;
+}
+
+.summary-amber {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-left: 3px solid #f59e0b;
+}
+
+.summary-red {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  border-left: 3px solid #ef4444;
+}
+
+.stat-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* Page Insights */
+.rag-page-insights {
+  margin-bottom: 32px;
+}
+
+.rag-page-insights h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+}
+
+/* Performance Section - Reuse styles from RAGDashboard.css */
+.rag-performance-section {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.rag-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.rag-section-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.performance-count {
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* Performance Table */
+.rag-performance-table {
+  overflow-x: auto;
+}
+
+.rag-table-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr 2fr 1.5fr 1.5fr 1fr;
+  gap: 16px;
+  padding: 16px 24px;
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.rag-header-cell {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rag-table-body {
+  max-height: 800px;
+  overflow-y: auto;
+}
+
+.rag-table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr 2fr 1.5fr 1.5fr 1fr;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.2s ease;
+  align-items: center;
+}
+
+.rag-table-row:hover {
+  background-color: #f8fafc;
+}
+
+.rag-cell {
+  font-size: 14px;
+  color: #374151;
+}
+
+.rag-store-info .store-name {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.rag-store-info .store-city {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.store-type-badge {
+  background: #e2e8f0;
+  color: #374151;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.attach-rate-display {
+  text-align: left;
+}
+
+.attach-rate-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  display: block;
+}
+
+.attach-rate-comparison {
+  font-size: 12px;
+  color: #64748b;
+  display: block;
+  margin-top: 2px;
+}
+
+.rag-status-badge,
+.rag-trend-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.performance-message {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.rag-sales-info {
+  font-size: 12px;
+}
+
+.sales-line {
+  margin-bottom: 2px;
+}
+
+.sales-revenue {
+  color: #059669;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.priority-badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.priority-critical {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.priority-high {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.priority-medium {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.priority-low {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* Loading and Error States */
+.rag-loading,
+.rag-error,
+.rag-no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #64748b;
+}
+
+.loading-spinner-large {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.retry-button {
+  margin-top: 16px;
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.retry-button:hover {
+  background: #2563eb;
+}
+
+.rag-no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+  font-style: italic;
+  grid-column: 1 / -1;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .rag-performance-page {
+    padding: 16px;
+  }
+  
+  .rag-page-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .rag-filter-select {
+    width: 100%;
+  }
+  
+  .rag-page-summary {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .rag-table-header,
+  .rag-table-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .rag-header-cell {
+    display: none;
+  }
+  
+  .rag-cell {
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  .rag-cell:before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #64748b;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  
+  .rag-page-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .stat-value {
+    font-size: 20px;
+  }
+}
