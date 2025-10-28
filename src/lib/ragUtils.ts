@@ -6,6 +6,7 @@ export interface AttachRateData {
   planSales: number;
   deviceSales: number;
   attachRate: number;
+  averageDeviceSales3Months?: number; // For new formula
 }
 
 export interface RAGStorePerformance {
@@ -42,11 +43,47 @@ const RAG_THRESHOLDS = {
 } as const;
 
 /**
- * Calculate attach rate from plan sales and device sales
+ * Calculate attach rate from plan sales and device sales (legacy method)
  */
 export function calculateAttachRate(planSales: number, deviceSales: number): number {
   if (deviceSales === 0) return 0;
   return Math.round((planSales / deviceSales) * 100 * 100) / 100; // Round to 2 decimal places
+}
+
+/**
+ * Calculate attach rate using new formula:
+ * Attach Rate = (Last 7 Days Plan Sale) / ((Average Device Sold in last 3 months / 30) * 7)
+ * 
+ * @param last7DaysPlanSale - Plan sales from the last 7 days
+ * @param averageDeviceSales3Months - Average device sales over the last 3 months
+ * @returns Attach rate as percentage (0-100+)
+ */
+export function calculateAttachRateNew(last7DaysPlanSale: number, averageDeviceSales3Months: number): number {
+  if (averageDeviceSales3Months === 0) return 0;
+  
+  // Calculate daily average device sales from 3-month average
+  const dailyAverageDeviceSales = averageDeviceSales3Months / 30;
+  
+  // Calculate expected device sales for 7 days
+  const expected7DaysDeviceSales = dailyAverageDeviceSales * 7;
+  
+  if (expected7DaysDeviceSales === 0) return 0;
+  
+  // Calculate attach rate percentage
+  const attachRate = (last7DaysPlanSale / expected7DaysDeviceSales) * 100;
+  
+  return Math.round(attachRate * 100) / 100; // Round to 2 decimal places
+}
+
+/**
+ * Helper function to calculate expected device sales for any period based on 3-month average
+ * @param averageDeviceSales3Months - Average device sales over 3 months
+ * @param days - Number of days to calculate for (default: 7)
+ * @returns Expected device sales for the specified period
+ */
+export function getExpectedDeviceSales(averageDeviceSales3Months: number, days: number = 7): number {
+  if (averageDeviceSales3Months === 0) return 0;
+  return (averageDeviceSales3Months / 30) * days;
 }
 
 /**

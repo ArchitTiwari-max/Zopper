@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { 
   calculateAttachRate, 
+  calculateAttachRateNew,
   getRAGStatus, 
   getMonthlyTrend,
   calculateRAGSummary,
@@ -172,8 +173,8 @@ export async function GET(request: NextRequest) {
       const avgDevice3M = deviceMonthsCount > 0 ? deviceSum3M / deviceMonthsCount : 0;
       const normalizedDevice7 = avgDevice3M > 0 ? (avgDevice3M / 30) * 7 : 0;
 
-      currentPeriodAttachRate = normalizedDevice7 > 0
-        ? calculateAttachRate(currentPeriodPlanSales, normalizedDevice7)
+      currentPeriodAttachRate = avgDevice3M > 0
+        ? calculateAttachRateNew(currentPeriodPlanSales, avgDevice3M)
         : 0;
 
       // Use current period attach rate as the primary metric, fallback to current month if needed
