@@ -255,7 +255,13 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    return NextResponse.json(response);
+    // Add caching headers - PRIVATE cache for admin data security (same as dashboard API)
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'private, max-age=300, stale-while-revalidate=600', // 5min private cache
+        'Vary': 'Authorization', // Ensure different admins get separate cache
+      }
+    });
 
   } catch (error) {
     console.error('Error in RAG analytics API:', error);

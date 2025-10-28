@@ -127,17 +127,24 @@ export async function GET(request: NextRequest) {
     // Get current and previous months
     const { current: currentMonth, previous: previousMonth } = getCurrentAndPreviousMonth();
 
-    // Get stores with their sales records
+    // Get stores with their sales records and build brand map from included data
     const stores = await prisma.store.findMany({
       where: {
         id: { in: authorizedStoreIds }
       },
-      include: {
+      select: {
+        id: true,
+        storeName: true,
+        partnerBrandIds: true,
+        partnerBrandTypes: true,
         salesRecords: {
           where: {
             year: year
           },
-          include: {
+          select: {
+            brandId: true,
+            categoryId: true,
+            monthlySales: true,
             brand: {
               select: {
                 id: true,
@@ -149,14 +156,15 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Get brand lookup
-    const brands = await prisma.brand.findMany({
-      select: {
-        id: true,
-        brandName: true
-      }
+    // Build brand map from already-loaded sales records (no extra query)
+    const brandMap = new Map<string, string>();
+    stores.forEach(store => {
+      store.salesRecords.forEach(record => {
+        if (!brandMap.has(record.brand.id)) {
+          brandMap.set(record.brand.id, record.brand.brandName);
+        }
+      });
     });
-    const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
 
     // Calculate RAG status for each store
     const storeRAGMap = new Map<string, {

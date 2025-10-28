@@ -26,14 +26,9 @@ model User {
   updatedAt DateTime @updatedAt
 
   executive Executive?
-<<<<<<< HEAD
-  admin Admin?
-  dostChats DostChat[]
-  
-=======
   admin     Admin?
+  dostChats DostChat[]
 
->>>>>>> e626c1b83d9cdb61d7ec524c2adb7e0c5165d364
   @@map("User")
 }
 
@@ -62,13 +57,9 @@ model Executive {
   userId          String                     @unique
   user            User                       @relation(fields: [userId], references: [id])
   // Store assignments
-<<<<<<< HEAD
-  executiveStores   ExecutiveStoreAssignment[]
-  // Dost chat back-relation
-  dostChats DostChat[]
-=======
   executiveStores ExecutiveStoreAssignment[]
->>>>>>> e626c1b83d9cdb61d7ec524c2adb7e0c5165d364
+  // Dost chat back-relation
+  dostChats       DostChat[]
 }
 
 //
@@ -436,8 +427,6 @@ model Notification {
   @@map("Notification")
 }
 
-//
-<<<<<<< HEAD
 // Dost chat memory
 //
 model DostChat {
@@ -454,10 +443,10 @@ model DostChat {
 
   @@index([executiveId, createdAt])
   @@map("DostChat")
-=======
+}
+
 // Holiday Management
 //
-
 model Holiday {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   date        DateTime // Holiday date (stored as UTC date)
@@ -471,5 +460,4 @@ model Holiday {
   // Index for efficient date lookups
   @@index([date])
   @@map("Holiday")
->>>>>>> e626c1b83d9cdb61d7ec524c2adb7e0c5165d364
 }

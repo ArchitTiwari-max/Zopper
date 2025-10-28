@@ -288,7 +288,15 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    return NextResponse.json(response);
+    // Add caching headers (same as executive dashboard API)
+    // Disable caching completely for real-time dashboard updates
+    const jsonResponse = NextResponse.json(response);
+    jsonResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    jsonResponse.headers.set('Pragma', 'no-cache');
+    jsonResponse.headers.set('Expires', '0');
+    jsonResponse.headers.set('Vary', 'Cookie');
+
+    return jsonResponse;
 
   } catch (error) {
     console.error('Error in executive RAG analytics API:', error);
@@ -300,7 +308,5 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

@@ -1,4 +1,5 @@
-import { prisma } from '@/lib/prisma';
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 import { NotificationType, NotificationPriority, NotificationStatus, Role } from '@prisma/client';
 
 // TypeScript interfaces for better type safety
