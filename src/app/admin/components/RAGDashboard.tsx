@@ -233,25 +233,6 @@ const AdminRAGDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Insights Section */}
-      {insights.length > 0 && (
-        <div className="rag-insights-section">
-          <h3>Key Insights</h3>
-          <div className="rag-insights-grid">
-            {insights.map((insight, index) => (
-              <div key={index} className={`rag-insight rag-insight-${insight.type}`}>
-                <div className="insight-header">
-                  <span className="insight-title">{insight.title}</span>
-                  {insight.storeCount && (
-                    <span className="insight-count">{insight.storeCount}</span>
-                  )}
-                </div>
-                <p className="insight-message">{insight.message}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
     </div>
   );
