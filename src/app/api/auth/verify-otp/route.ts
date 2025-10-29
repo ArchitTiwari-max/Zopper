@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { generateAccessToken, generateRefreshToken, getTokenExpiry } from '@/lib/jwt';
 import { storeUserInfo } from '@/lib/auth';
 
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     const { email, otp } = await request.json();

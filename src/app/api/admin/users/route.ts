@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
+export const runtime = 'nodejs';
+
 const prisma = new PrismaClient();
 
 // Helper function to generate next ID based on role

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+export const runtime = 'nodejs';
 import { 
   calculateAttachRate, 
   calculateAttachRateNew,

@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { generateUniqueIssueId } from '@/lib/issueIdGenerator';
 
+export const runtime = 'nodejs';
+
 const prisma = new PrismaClient();
 
 // GET: last 5 digital visits for a store

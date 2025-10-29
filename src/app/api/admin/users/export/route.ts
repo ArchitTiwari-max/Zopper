@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import * as XLSX from 'xlsx';
 
+export const runtime = 'nodejs';
+
 const prisma = new PrismaClient();
 
 // GET: Export all users to Excel

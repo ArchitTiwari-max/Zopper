@@ -4,6 +4,8 @@ import { getAuthenticatedUser } from '@/lib/auth';
 import { PartnerBrandType, IssueStatus, Role } from '@prisma/client';
 import { parseWeekValue, getCurrentWeekValue } from '@/lib/weekUtils';
 
+export const runtime = 'nodejs';
+
 // Map query string to Prisma enum
 function parseBrandType(input: string | null | undefined): PartnerBrandType | null {
   const s = (input || '').trim();

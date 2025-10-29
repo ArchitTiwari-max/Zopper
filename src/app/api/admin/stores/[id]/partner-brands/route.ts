@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+export const runtime = 'nodejs';
+
 // Map display values to enum stored in DB
 const typeToEnum = (t: string): 'A_PLUS' | 'A' | 'B' | 'C' | null => {
   const v = (t || '').toUpperCase();

@@ -3,6 +3,8 @@ import { validateAndRefreshToken } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { Role } from '@prisma/client';
 
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     const authResult = await validateAndRefreshToken(request);

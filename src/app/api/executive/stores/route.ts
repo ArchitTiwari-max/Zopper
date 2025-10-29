@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'nodejs';
+
 // DEPRECATED: This endpoint has been moved to /api/executive/store/data
 // This route now redirects to the new location for backward compatibility
 export async function GET(request: NextRequest) {

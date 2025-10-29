@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function DELETE(request: NextRequest, ctx?: { params?: { id?: string } }) {
+export const runtime = 'nodejs';
+
+export async function DELETE(request: NextRequest, ctx?: { params?: Promise<{ id?: string }> }) {
   try {
     const user = await getAuthenticatedUser(request);
 
@@ -15,7 +17,8 @@ export async function DELETE(request: NextRequest, ctx?: { params?: { id?: strin
     }
 
     // Resolve visitId robustly: prefer route params, else derive from URL
-    let visitId = ctx?.params?.id;
+    const params = ctx?.params ? await ctx.params : null;
+    let visitId = params?.id;
     if (!visitId) {
       const url = new URL(request.url);
       const parts = url.pathname.split('/').filter(Boolean);

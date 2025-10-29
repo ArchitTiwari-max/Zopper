@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'nodejs';
+
 // This endpoint is currently disabled
 export async function POST(request: NextRequest) {
   return NextResponse.json(

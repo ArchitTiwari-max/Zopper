@@ -3,6 +3,8 @@ import { getAuthenticatedUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getDostSuggestions } from '@/lib/dost'
 
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request)

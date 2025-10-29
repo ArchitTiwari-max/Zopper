@@ -3,6 +3,8 @@ import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { PartnerBrandType } from '@prisma/client';
 
+export const runtime = 'nodejs';
+
 function parseRange(range: string | null): { start: Date; end: Date } {
   const now = new Date();
   const end = now;

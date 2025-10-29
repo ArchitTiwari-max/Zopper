@@ -217,7 +217,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             {uploading ? 'Uploading...' : 'Click to upload photos or drag and drop'}
           </div>
           <div className="upload-formats">
-            All image formats up to 7MB • {images.length}/{maxFiles} uploaded
+            All image formats up to 5MB • {images.length}/{maxFiles} uploaded
           </div>
         </div>
       </div>

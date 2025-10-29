@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getAuthenticatedUser } from '@/lib/auth';
 
+export const runtime = 'nodejs';
+
 const prisma = new PrismaClient();
 
 export async function GET(

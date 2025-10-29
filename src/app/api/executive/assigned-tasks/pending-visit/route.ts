@@ -3,6 +3,8 @@ import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { Role } from '@prisma/client';
 
+export const runtime = 'nodejs';
+
 // GET method for executive to retrieve their visit plans
 export async function GET(request: NextRequest) {
   try {

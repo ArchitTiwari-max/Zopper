@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+export const runtime = 'nodejs';
+
 // GET endpoint to fetch all visits of the authenticated executive (for visit history page)
 // API Version: v2 - Added partnerBrand field to response structure
 export async function GET(request: NextRequest) {

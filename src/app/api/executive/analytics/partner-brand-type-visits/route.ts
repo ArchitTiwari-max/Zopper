@@ -4,6 +4,8 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 import { PartnerBrandType } from '@prisma/client';
 
+export const runtime = 'nodejs';
+
 function parseRange(range: string | null): { start: Date; end: Date } {
   const now = new Date();
   const end = now;

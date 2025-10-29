@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { clearAuthCookies } from '@/lib/auth';
 
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     // Create response with cache-busting headers

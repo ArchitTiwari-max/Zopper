@@ -4,6 +4,8 @@ import { NotificationService, NotificationFilters } from '@/lib/notification';
 import { prisma } from '@/lib/prisma';
 import { Role } from '@prisma/client';
 
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
     // Authenticate user

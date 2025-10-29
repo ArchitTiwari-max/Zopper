@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+export const runtime = 'nodejs';
+
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const user = await getAuthenticatedUser(request);

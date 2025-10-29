@@ -3,6 +3,8 @@ import { getAuthenticatedUser } from '@/lib/auth';
 import { NotificationService } from '@/lib/notification';
 import { Role } from '@prisma/client';
 
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
     // Authenticate user

@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import * as XLSX from 'xlsx';
+export const runtime = 'nodejs';
 import { 
   getPrismaInstance,
   initializeCache,

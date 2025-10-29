@@ -3,6 +3,8 @@ import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { PartnerBrandType } from '@prisma/client';
 
+export const runtime = 'nodejs';
+
 // RAG criteria based on your table
 const RAG_CRITERIA = {
   A_PLUS: { green: 25, amber: 12 },

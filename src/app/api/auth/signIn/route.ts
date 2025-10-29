@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { generateOTP, sendOTPEmail } from '@/lib/email';
 import bcrypt from 'bcryptjs';
 
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   
   try {
