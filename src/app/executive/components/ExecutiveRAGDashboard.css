@@ -2,10 +2,12 @@
 .exec-rag-dashboard {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 24px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  background: #f8fafc;
-  min-height: calc(100vh - 80px);
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border: 1px solid #f1f5f9;
 }
 
 /* Header Section */
@@ -13,15 +15,16 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   gap: 20px;
 }
 
 .exec-rag-title-section h2 {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 600;
   color: #1e293b;
   margin: 0 0 6px 0;
+  letter-spacing: -0.025em;
 }
 
 .exec-rag-title-section p {
@@ -59,24 +62,50 @@
 }
 
 /* Summary Cards - Clickable */
+.exec-rag-summary-scroll-container {
+  overflow-x: auto;
+  margin-bottom: 0;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.exec-rag-summary-scroll-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.exec-rag-summary-scroll-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.exec-rag-summary-scroll-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.exec-rag-summary-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 .exec-rag-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  display: flex;
   gap: 16px;
-  margin-bottom: 32px;
+  width: max-content;
 }
 
 .exec-summary-card {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   transition: all 0.2s ease;
-  border: 2px solid transparent;
+  border: 1px solid #f1f5f9;
   display: flex;
   align-items: center;
   gap: 16px;
   position: relative;
+  min-width: 220px;
+  flex-shrink: 0;
 }
 
 .exec-summary-clickable {
@@ -84,8 +113,8 @@
 }
 
 .exec-summary-clickable:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border-color: #e2e8f0;
 }
 
@@ -127,7 +156,7 @@
 }
 
 .summary-content h3 {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #1e293b;
   margin: 0 0 4px 0;
@@ -135,10 +164,12 @@
 
 .summary-value {
   display: block;
-  font-size: 24px;
+  font-size: 32px;
   font-weight: 700;
   color: #1e293b;
   margin-bottom: 2px;
+  line-height: 1;
+  letter-spacing: -0.025em;
 }
 
 .summary-description {
@@ -618,5 +649,47 @@
   
   .priority-indicator {
     align-self: flex-end;
+  }
+}
+
+@media (max-width: 420px) {
+  .exec-rag-dashboard {
+    padding: 12px;
+  }
+  
+  .exec-rag-header {
+    margin-bottom: 12px;
+  }
+  
+  .exec-rag-title-section h2 {
+    font-size: 16px;
+  }
+  
+  .exec-rag-title-section p {
+    font-size: 12px;
+  }
+  
+  .exec-summary-card {
+    min-width: 160px;
+    padding: 14px;
+    gap: 12px;
+  }
+  
+  .summary-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+  
+  .summary-content h3 {
+    font-size: 12px;
+  }
+  
+  .summary-value {
+    font-size: 24px;
+  }
+  
+  .summary-description {
+    font-size: 10px;
   }
 }

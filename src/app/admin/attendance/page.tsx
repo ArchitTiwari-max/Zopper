@@ -338,20 +338,21 @@ const AttendancePage: React.FC = () => {
         // Fetch visits for period
         const params = new URLSearchParams();
         // Convert our filter to the format expected by the API
+        // For Today/Yesterday, fetch a wider range to ensure we get all visits
+        // since createdAt (when submitted) might differ from visitDate (actual visit date)
         let apiDateFilter: string;
         switch (selectedDateFilter) {
           case 'Today':
-            apiDateFilter = 'Today';
-            break;
           case 'Yesterday':
-            apiDateFilter = 'Yesterday';
+            // Fetch last 7 days to ensure we capture visits submitted today but dated yesterday, etc.
+            apiDateFilter = 'Last 7 Days';
             break;
           case 'Custom':
             // For custom, we'll use a month range that the API can understand
             apiDateFilter = 'Last 30 Days'; // API fallback, we handle the actual range in getRangeForFilter
             break;
           default:
-            apiDateFilter = 'Today';
+            apiDateFilter = 'Last 7 Days';
         }
         params.append('dateFilter', apiDateFilter);
         const dataRes = await fetch(`/api/admin/visit-report/data?${params.toString()}`, {

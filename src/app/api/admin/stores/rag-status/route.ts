@@ -92,7 +92,8 @@ export async function GET(request: NextRequest) {
     // Build where clause for stores
     let whereClause: any = {};
     
-    if (city && city !== 'All City') {
+    // Only filter by city if it's specified and not 'All'
+    if (city && city !== 'All City' && city !== 'All') {
       whereClause.city = city;
     }
 
@@ -118,6 +119,31 @@ export async function GET(request: NextRequest) {
         }
       }
     });
+    
+    console.log('🔍 RAG Status API Debug:');
+    console.log(`  Total stores found: ${stores.length}`);
+    console.log(`  Current month: ${currentMonth}, Previous month: ${previousMonth}`);
+    console.log(`  Year filter: ${year}`);
+    console.log(`  Where clause:`, whereClause);
+    
+    if (stores.length > 0) {
+      const sampleStore = stores[0];
+      console.log(`  Sample store: ${sampleStore.storeName}`);
+      console.log(`    Sales records: ${sampleStore.salesRecords.length}`);
+      console.log(`    Partner brand types: ${sampleStore.partnerBrandTypes.join(', ')}`);
+      console.log(`    Partner brand IDs: ${sampleStore.partnerBrandIds.join(', ')}`);
+      
+      if (sampleStore.salesRecords.length > 0) {
+        const sampleRecord = sampleStore.salesRecords[0];
+        console.log(`    Sample sales record:`);
+        console.log(`      Brand: ${sampleRecord.brand.brandName}`);
+        console.log(`      Year: ${sampleRecord.year}`);
+        const monthlySales = sampleRecord.monthlySales as any[];
+        console.log(`      Monthly sales data available for months:`, monthlySales.map((m: any) => m.month));
+      }
+    } else {
+      console.log('  ❌ No stores found in database!');
+    }
 
     // Get brand lookup for partner brand filtering
     const brands = await prisma.brand.findMany({
@@ -136,7 +162,7 @@ export async function GET(request: NextRequest) {
         .filter(Boolean) as string[];
 
       // Apply brand filter if specified
-      if (partnerBrand && partnerBrand !== 'All Brands') {
+      if (partnerBrand && partnerBrand !== 'All Brands' && partnerBrand !== 'All') {
         if (!partnerBrands.includes(partnerBrand)) {
           return null; // Filter out this store
         }
@@ -256,6 +282,18 @@ export async function GET(request: NextRequest) {
         const statusPriority = { red: 3, amber: 2, green: 1 };
         return statusPriority[b.ragStatus] - statusPriority[a.ragStatus];
       });
+    
+    console.log(`  Processed stores: ${processedStores.length}`);
+    console.log(`  Stores after filtering nulls: ${filteredStores.length}`);
+    console.log(`  Null stores (filtered out): ${processedStores.filter(s => s === null).length}`);
+    
+    if (filteredStores.length > 0) {
+      console.log(`  Sample processed store:`, {
+        name: filteredStores[0].storeName,
+        ragStatus: filteredStores[0].ragStatus,
+        brandRAGDetails: filteredStores[0].brandRAGDetails.length
+      });
+    }
 
     // Calculate summary statistics
     const summary = {

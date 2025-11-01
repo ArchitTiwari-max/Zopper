@@ -146,7 +146,8 @@ const ExecutiveRAGDashboard: React.FC = () => {
       </div>
 
       {/* Summary Cards - All Clickable */}
-      <div className="exec-rag-summary-grid">
+      <div className="exec-rag-summary-scroll-container">
+        <div className="exec-rag-summary-grid">
         <div 
           className="exec-summary-card exec-summary-clickable" 
           onClick={() => navigateToPerformancePage()}
@@ -230,27 +231,8 @@ const ExecutiveRAGDashboard: React.FC = () => {
             <div className="summary-description">Trending upward</div>
           </div>
         </div>
-      </div>
-
-      {/* Insights Cards */}
-      {insights.length > 0 && (
-        <div className="exec-rag-insights">
-          <h3>Key Insights for Your Stores</h3>
-          <div className="exec-insights-list">
-            {insights.map((insight, index) => (
-              <div key={index} className={`exec-insight-card exec-insight-${insight.type}`}>
-                <div className="insight-content">
-                  <h4>{insight.title}</h4>
-                  <p>{insight.message}</p>
-                  {insight.storeCount && (
-                    <span className="insight-badge">{insight.storeCount} store{insight.storeCount !== 1 ? 's' : ''}</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

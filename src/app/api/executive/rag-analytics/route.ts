@@ -20,18 +20,30 @@ export async function GET(request: NextRequest) {
     const ragFilter = searchParams.get('ragFilter') || 'all';
     const brandFilter = searchParams.get('brandFilter') || 'all';
 
-    // For now, get the first executive ID from database (temporary solution)
-    // TODO: Implement proper authentication to get real executive ID
-    const executives = await prisma.executive.findMany({ take: 1 });
+    // Get authenticated executive from token
+    const authenticatedUser = await getAuthenticatedUser(request);
     
-    if (!executives.length) {
+    if (!authenticatedUser || authenticatedUser.role !== 'EXECUTIVE') {
       return NextResponse.json(
-        { success: false, error: 'No executives found in database' },
+        { success: false, error: 'Unauthorized: Executive access required' },
+        { status: 401 }
+      );
+    }
+
+    // Get executive profile from userId
+    const executive = await prisma.executive.findUnique({
+      where: { userId: authenticatedUser.userId },
+      select: { id: true }
+    });
+    
+    if (!executive) {
+      return NextResponse.json(
+        { success: false, error: 'Executive profile not found' },
         { status: 404 }
       );
     }
 
-    const executiveId = executives[0].id;
+    const executiveId = executive.id;
 
     // Calculate date ranges - handle 2025 data
     const now = new Date();
