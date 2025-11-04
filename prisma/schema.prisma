@@ -28,7 +28,7 @@ model User {
   executive Executive?
   admin     Admin?
   dostChats DostChat[]
-
+  
   @@map("User")
 }
 
@@ -427,26 +427,31 @@ model Notification {
   @@map("Notification")
 }
 
+//
+// Dost chat memory
+//
 // Dost chat memory
 //
 model DostChat {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  question     String
-  answerText   String?
-  payload      Json?
-  executiveId  String
-  userId       String
-  createdAt    DateTime @default(now())
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  question    String
+  answerText  String?
+  payload     Json?
+  executiveId String
+  userId      String
+  createdAt   DateTime  @default(now())
 
-  executive    Executive @relation(fields: [executiveId], references: [id])
-  user         User      @relation(fields: [userId], references: [id])
+  executive Executive @relation(fields: [executiveId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
 
   @@index([executiveId, createdAt])
   @@map("DostChat")
 }
 
+//
 // Holiday Management
 //
+
 model Holiday {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   date        DateTime // Holiday date (stored as UTC date)

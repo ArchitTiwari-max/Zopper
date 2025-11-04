@@ -6,7 +6,8 @@ const nextConfig: NextConfig = {
   
   // Build optimizations
   compiler: {
-    removeConsole: process.env.NODE_ENV === "production",
+    // Keep console logs for middleware logging
+    removeConsole: false,
   },
   
   // Reduce bundle size

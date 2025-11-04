@@ -7,6 +7,7 @@
     "dev:turbo": "next dev --turbopack",
     "build": "prisma generate && next build",
     "start": "next start",
+    "prestart": "npm run build",
     "postinstall": "prisma generate",
     "lint": "biome check",
     "format": "biome format --write",
@@ -43,12 +44,11 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.18",
+    "tailwindcss": "^4",
     "tsx": "^4.20.5",
     "typescript": "^5"
   }
