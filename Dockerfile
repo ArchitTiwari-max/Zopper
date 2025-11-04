@@ -4,8 +4,9 @@ FROM node:20-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Copy package files and install deps
+# Copy package files and install deps (and Prisma schema for postinstall)
 COPY package*.json ./
+COPY prisma ./prisma
 RUN npm ci
 
 # Copy the rest of the app
