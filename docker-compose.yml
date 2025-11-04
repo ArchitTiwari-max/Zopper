@@ -7,19 +7,5 @@ services:
     env_file: .env.production
     ports:
       - "3000:3000"
-    depends_on:
-      - mongo
-
-  mongo:
-    image: mongo:6
-    container_name: mongodb
-    restart: always
-    volumes:
-      - mongo_data:/data/db
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_DATABASE: mydb
-
-volumes:
-  mongo_data:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
