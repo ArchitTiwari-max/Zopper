@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import MaintenancePage from "@/components/MaintenancePage";
+import DomainChangePage from "@/components/DomainChangePage";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,11 +50,19 @@ export default function RootLayout({
 }>) {
   // Check maintenance mode - can be controlled via environment variable
   const isMaintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true';
+  // Check domain change mode - can be controlled via environment variable
+  const isDomainChangeMode = process.env.NEXT_PUBLIC_DOMAIN_CHANGE_MODE === 'true';
   
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {isMaintenanceMode ? <MaintenancePage /> : children}
+        {isDomainChangeMode ? (
+          <DomainChangePage />
+        ) : isMaintenanceMode ? (
+          <MaintenancePage />
+        ) : (
+          children
+        )}
       </body>
     </html>
   );
