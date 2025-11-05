@@ -665,8 +665,8 @@ return (
                   {formData.peopleMet.map((person, index) => (
                     <div key={index} className="exec-f-sub-person-item">
                       <div className="exec-f-sub-person-details">
-                        <span className="exec-f-sub-person-name">{person.name}</span>
-                        <span className="exec-f-sub-person-designation">({person.designation})</span>
+                        <span className="exec-f-sub-person-name">{person.name === 'SEC' ? person.designation : person.name}</span>
+                        <span className="exec-f-sub-person-designation">({person.name === 'SEC' ? 'SEC' : person.designation})</span>
                         {person.phoneNumber && (
                           <span className="exec-f-sub-person-phone"> - {person.phoneNumber}</span>
                         )}
@@ -1072,7 +1072,7 @@ return (
                       <strong>Contact Person:</strong>
                       {visit.personMet.map((person: any, index: number) => (
                         <span key={index} className="exec-f-sub-person-met">
-                          {person.name} ({person.designation})
+                          {person.name === 'SEC' ? person.designation : person.name} ({person.name === 'SEC' ? 'SEC' : person.designation})
                           {person.phoneNumber && ` - ${person.phoneNumber}`}
                           {index < visit.personMet.length - 1 && ', '}
                         </span>
@@ -1151,7 +1151,7 @@ return (
                       <strong>Contact Person:</strong>
                       {visit.personMet.map((person, index) => (
                         <span key={index} className="exec-f-sub-person-met">
-                          {person.name} ({person.designation})
+                          {person.name === 'SEC' ? person.designation : person.name} ({person.name === 'SEC' ? 'SEC' : person.designation})
                           {person.phoneNumber && ` - ${person.phoneNumber}`}
                           {index < visit.personMet.length - 1 && ', '}
                         </span>
