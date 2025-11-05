@@ -30,7 +30,8 @@ const ExecutiveRAGDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     dateRange: '7days',
-    ragFilter: 'all'
+    ragFilter: 'all',
+    brandFilter: 'Samsung' // Filter to show only Samsung brand stores
   });
 
   const fetchRAGData = async () => {
@@ -38,7 +39,8 @@ const ExecutiveRAGDashboard: React.FC = () => {
       setLoading(true);
       const params = new URLSearchParams({
         dateRange: filters.dateRange,
-        ragFilter: filters.ragFilter
+        ragFilter: filters.ragFilter,
+        brandFilter: filters.brandFilter
       });
 
       const response = await fetch(`/api/executive/rag-analytics?${params}`, {
@@ -83,7 +85,8 @@ const ExecutiveRAGDashboard: React.FC = () => {
   const navigateToPerformancePage = (ragFilter?: string) => {
     const params = new URLSearchParams({
       dateRange: filters.dateRange,
-      ragFilter: ragFilter || filters.ragFilter
+      ragFilter: ragFilter || filters.ragFilter,
+      brandFilter: filters.brandFilter // Pass Samsung brand filter
     });
     router.push(`/executive/rag-performance?${params.toString()}`);
   };

@@ -46,7 +46,8 @@ const RAGPerformancePage: React.FC = () => {
   const [filters, setFilters] = useState({
     dateRange: searchParams.get('dateRange') || '7days',
     storeType: searchParams.get('storeType') || 'all',
-    ragFilter: searchParams.get('ragFilter') || 'all'
+    ragFilter: searchParams.get('ragFilter') || 'all',
+    brandFilter: 'Samsung' // Filter to show only Samsung brand stores
   });
 
   const fetchRAGData = async () => {
@@ -54,7 +55,7 @@ const RAGPerformancePage: React.FC = () => {
       setLoading(true);
       const params = new URLSearchParams({
         city: 'All',
-        partnerBrand: 'All',
+        partnerBrand: filters.brandFilter, // Use Samsung filter instead of 'All'
         ragStatus: filters.ragFilter,
         year: new Date().getFullYear().toString()
       });
@@ -134,7 +135,8 @@ const RAGPerformancePage: React.FC = () => {
     const params = new URLSearchParams({
       dateRange: filters.dateRange,
       storeType: filters.storeType,
-      ragFilter: filters.ragFilter
+      ragFilter: filters.ragFilter,
+      brandFilter: filters.brandFilter
     });
     
     // Update URL without triggering a page reload

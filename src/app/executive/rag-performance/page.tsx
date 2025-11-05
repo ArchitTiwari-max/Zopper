@@ -46,7 +46,7 @@ const ExecutiveRAGPerformancePage: React.FC = () => {
   const [filters, setFilters] = useState({
     dateRange: searchParams.get('dateRange') || '7days',
     ragFilter: searchParams.get('ragFilter') || 'all',
-    brandFilter: searchParams.get('brandFilter') || 'all'
+    brandFilter: searchParams.get('brandFilter') || 'Samsung' // Default to Samsung brand
   });
 
   const fetchRAGData = async () => {

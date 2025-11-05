@@ -31,7 +31,8 @@ const AdminRAGDashboard: React.FC = () => {
   const [filters, setFilters] = useState({
     dateRange: '7days',
     storeType: 'all',
-    ragFilter: 'all'
+    ragFilter: 'all',
+    brandFilter: 'Samsung' // Filter to show only Samsung brand stores
   });
 
   const fetchRAGData = async () => {
@@ -40,7 +41,8 @@ const AdminRAGDashboard: React.FC = () => {
       const params = new URLSearchParams({
         dateRange: filters.dateRange,
         storeType: filters.storeType,
-        ragFilter: filters.ragFilter
+        ragFilter: filters.ragFilter,
+        brandFilter: filters.brandFilter
       });
 
       const response = await fetch(`/api/admin/rag-analytics?${params}`, {
@@ -84,7 +86,8 @@ const AdminRAGDashboard: React.FC = () => {
     const params = new URLSearchParams({
       dateRange: filters.dateRange,
       storeType: storeType || filters.storeType,
-      ragFilter: ragFilter || filters.ragFilter
+      ragFilter: ragFilter || filters.ragFilter,
+      brandFilter: filters.brandFilter // Pass Samsung brand filter
     });
     router.push(`/admin/rag-performance?${params.toString()}`);
   };

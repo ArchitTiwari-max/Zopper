@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     const dateRange = searchParams.get('dateRange') || '7days';
     const storeTypeFilter = searchParams.get('storeType') || 'all';
     const ragFilter = searchParams.get('ragFilter') || 'all'; // 'all', 'green', 'amber', 'red'
+    const brandFilter = searchParams.get('brandFilter') || 'all'; // Brand filter for Samsung, etc.
 
     // Calculate date ranges - handle 2025 data
     const now = new Date();
@@ -36,13 +37,33 @@ export async function GET(request: NextRequest) {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(now.getDate() - 7);
 
+    // Get brand ID if brand filter is specified
+    let brandIdFilter: string | null = null;
+    if (brandFilter !== 'all') {
+      const brand = await prisma.brand.findFirst({
+        where: { 
+          brandName: { 
+            contains: brandFilter, 
+            mode: 'insensitive' 
+          } 
+        }
+      });
+      brandIdFilter = brand?.id || null;
+    }
+
     // Fetch stores with their partner brand types and sales data
     const stores = await prisma.store.findMany({
+      where: brandIdFilter ? {
+        partnerBrandIds: {
+          has: brandIdFilter
+        }
+      } : undefined,
       select: {
         id: true,
         storeName: true,
         city: true,
         partnerBrandTypes: true,
+        partnerBrandIds: true,
         salesRecords: {
           where: {
             year: {
@@ -250,6 +271,7 @@ export async function GET(request: NextRequest) {
           dateRange: dateRange,
           storeTypeFilter: storeTypeFilter,
           ragFilter: ragFilter,
+          brandFilter: brandFilter,
           totalStoresAnalyzed: ragPerformances.length,
           filteredCount: filteredPerformances.length
         }
