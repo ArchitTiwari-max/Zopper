@@ -44,15 +44,22 @@ export function formatDay(date: Date): string {
 }
 
 /**
- * Get week number within the month (1-based)
+ * Get week number within the year (1-based)
+ * Week 1 is the first Monday of the year
  */
-export function getWeekNumberInMonth(monday: Date): number {
-  const firstOfMonth = new Date(monday.getFullYear(), monday.getMonth(), 1);
-  const firstMonday = getMondayOfWeek(firstOfMonth);
+export function getWeekNumberInYear(monday: Date): number {
+  const firstOfYear = new Date(monday.getFullYear(), 0, 1);
+  const firstMonday = getMondayOfWeek(firstOfYear);
   
-  // If first Monday is in previous month, start counting from next Monday
-  if (firstMonday.getMonth() !== monday.getMonth()) {
-    firstMonday.setDate(firstMonday.getDate() + 7);
+  // If first Monday is in next year (Jan 1 is late in week), skip to next Monday
+  if (firstMonday.getFullYear() < monday.getFullYear()) {
+    firstMonday.setFullYear(monday.getFullYear());
+    firstMonday.setMonth(0);
+    firstMonday.setDate(1);
+    const tempMonday = getMondayOfWeek(firstMonday);
+    if (tempMonday.getFullYear() < monday.getFullYear()) {
+      firstMonday.setDate(firstMonday.getDate() + 7);
+    }
   }
   
   const daysDiff = (monday.getTime() - firstMonday.getTime()) / (24 * 60 * 60 * 1000);
@@ -67,9 +74,10 @@ export function getMonthName(date: Date): string {
 }
 
 /**
- * Generate week options for the current month and previous month
+ * Generate week options from week 1 of the year to current week
+ * All weeks start on Monday and are numbered from the first Monday of the year
  * @param referenceDate - Reference date (default: today)
- * @param weeksCount - Number of weeks to generate (default: 8)
+ * @param weeksCount - Ignored, generates all weeks from year start
  */
 export function generateWeekOptions(
   referenceDate: Date = new Date(),
@@ -77,15 +85,28 @@ export function generateWeekOptions(
 ): WeekOption[] {
   const options: WeekOption[] = [];
   
-  // Start from current week and go backwards
+  // Find first Monday of the year
+  const firstOfYear = new Date(referenceDate.getFullYear(), 0, 1);
+  let firstMonday = getMondayOfWeek(firstOfYear);
+  
+  // If first Monday is in previous year, move to first Monday of current year
+  if (firstMonday.getFullYear() < referenceDate.getFullYear()) {
+    firstMonday = new Date(referenceDate.getFullYear(), 0, 1);
+    // Find the first Monday
+    while (firstMonday.getDay() !== 1) {
+      firstMonday.setDate(firstMonday.getDate() + 1);
+    }
+  }
+  
+  // Current week
   const currentWeekMonday = getMondayOfWeek(referenceDate);
   
-  for (let i = 0; i < weeksCount; i++) {
-    const weekMonday = new Date(currentWeekMonday);
-    weekMonday.setDate(weekMonday.getDate() - (i * 7));
-    
+  // Generate all weeks from first Monday to current week
+  let weekMonday = new Date(firstMonday);
+  let weekNum = 1;
+  
+  while (weekMonday <= currentWeekMonday) {
     const weekSunday = getSundayOfWeek(weekMonday);
-    const weekNumber = getWeekNumberInMonth(weekMonday);
     const monthName = getMonthName(weekMonday);
     const year = weekMonday.getFullYear();
     
@@ -93,30 +114,29 @@ export function generateWeekOptions(
     const startDay = formatDay(weekMonday);
     const endDay = formatDay(weekSunday);
     
-    // Handle cross-month weeks
-    let label: string;
-    if (weekMonday.getMonth() === weekSunday.getMonth()) {
-      // Same month: "Week 2 (8 - 14)"
-      label = `Week ${weekNumber} (${startDay} - ${endDay})`;
-    } else {
-      // Cross month: "Week 1 (29 Oct - 4 Nov)" 
-      const startMonth = weekMonday.toLocaleDateString('en-US', { month: 'short' });
-      const endMonth = weekSunday.toLocaleDateString('en-US', { month: 'short' });
-      label = `Week ${weekNumber} (${startDay} ${startMonth} - ${endDay} ${endMonth})`;
-    }
+    // Always use format: "Week X (DD Mon - DD Mon)"
+    const startMonth = weekMonday.toLocaleDateString('en-US', { month: 'short' });
+    const endMonth = weekSunday.toLocaleDateString('en-US', { month: 'short' });
+    const label = `Week ${weekNum} (${startDay} ${startMonth} - ${endDay} ${endMonth})`;
     
     options.push({
       value: weekMonday.toISOString().split('T')[0], // YYYY-MM-DD format
       label,
-      startDate: weekMonday,
+      startDate: new Date(weekMonday),
       endDate: weekSunday,
-      weekNumber,
+      weekNumber: weekNum,
       monthName,
       year
     });
+    
+    // Move to next Monday
+    weekMonday = new Date(weekMonday);
+    weekMonday.setDate(weekMonday.getDate() + 7);
+    weekNum++;
   }
   
-  return options;
+  // Reverse so current week is first
+  return options.reverse();
 }
 
 /**
