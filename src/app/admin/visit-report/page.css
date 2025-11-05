@@ -152,9 +152,6 @@
   letter-spacing: 0.05em;
   display: flex;
   align-items: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* Sortable header styling */
@@ -230,11 +227,10 @@
 .admin-visit-report-executive-name {
   font-weight: 500;
   color: #1e293b;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   min-width: 0;
   flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Store Name Cell */
@@ -248,11 +244,10 @@
   text-decoration: none;
   font-weight: 500;
   transition: color 0.15s ease-in-out;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   width: 100%;
   display: block;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .admin-visit-report-store-name-link:hover {
