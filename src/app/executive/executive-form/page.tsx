@@ -617,31 +617,43 @@ return (
                       setContactNameType(v);
                       if (v === 'SEC') {
                         handlePersonInputChange('name', 'SEC');
+                        handlePersonInputChange('designation', '');
                       } else {
                         handlePersonInputChange('name', '');
+                        handlePersonInputChange('designation', '');
                       }
                     }}
                   >
                     <option value="SEC">SEC</option>
                     <option value="OTHER">Other</option>
                   </select>
-                  {contactNameType === 'OTHER' && (
+                  {contactNameType === 'SEC' ? (
                     <input
                       type="text"
                       className="exec-f-sub-form-input exec-f-sub-person-name-input"
                       placeholder="Enter person's name"
-                      value={currentPerson.name}
-                      onChange={(e) => handlePersonInputChange('name', e.target.value)}
+                      value={currentPerson.designation}
+                      onChange={(e) => handlePersonInputChange('designation', e.target.value)}
                     />
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        className="exec-f-sub-form-input exec-f-sub-person-name-input"
+                        placeholder="Enter person's name"
+                        value={currentPerson.name}
+                        onChange={(e) => handlePersonInputChange('name', e.target.value)}
+                      />
+                      <input
+                        type="text"
+                        className="exec-f-sub-form-input exec-f-sub-person-designation-input"
+                        placeholder="Enter designation"
+                        value={currentPerson.designation}
+                        onChange={(e) => handlePersonInputChange('designation', e.target.value)}
+                      />
+                    </>
                   )}
                 </div>
-                <input
-                  type="text"
-                  className="exec-f-sub-form-input exec-f-sub-person-designation-input"
-                  placeholder="Enter designation"
-                  value={currentPerson.designation}
-                  onChange={(e) => handlePersonInputChange('designation', e.target.value)}
-                />
                 <input
                   type="tel"
                   className="exec-f-sub-form-input exec-f-sub-person-phone-input"
@@ -655,7 +667,11 @@ return (
                   type="button"
                   className="exec-f-sub-add-person-btn"
                   onClick={addPerson}
-                  disabled={!currentPerson.name.trim() || !currentPerson.designation.trim() || !currentPerson.phoneNumber.trim()}
+                  disabled={
+                    contactNameType === 'SEC' 
+                      ? !currentPerson.designation.trim() || !currentPerson.phoneNumber.trim()
+                      : !currentPerson.name.trim() || !currentPerson.designation.trim() || !currentPerson.phoneNumber.trim()
+                  }
                 >
                   Add
                 </button>
