@@ -4,8 +4,9 @@ FROM node:20-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Copy package files and install deps
+# Copy package files and install deps (and Prisma schema for postinstall)
 COPY package*.json ./
+COPY prisma ./prisma
 RUN npm ci
 
 # Copy the rest of the app
@@ -27,6 +28,7 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/next.config.* ./
+COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/src ./src
 
 # Expose port

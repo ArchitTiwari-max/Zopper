@@ -617,31 +617,43 @@ return (
                       setContactNameType(v);
                       if (v === 'SEC') {
                         handlePersonInputChange('name', 'SEC');
+                        handlePersonInputChange('designation', '');
                       } else {
                         handlePersonInputChange('name', '');
+                        handlePersonInputChange('designation', '');
                       }
                     }}
                   >
                     <option value="SEC">SEC</option>
                     <option value="OTHER">Other</option>
                   </select>
-                  {contactNameType === 'OTHER' && (
+                  {contactNameType === 'SEC' ? (
                     <input
                       type="text"
                       className="exec-f-sub-form-input exec-f-sub-person-name-input"
                       placeholder="Enter person's name"
-                      value={currentPerson.name}
-                      onChange={(e) => handlePersonInputChange('name', e.target.value)}
+                      value={currentPerson.designation}
+                      onChange={(e) => handlePersonInputChange('designation', e.target.value)}
                     />
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        className="exec-f-sub-form-input exec-f-sub-person-name-input"
+                        placeholder="Enter person's name"
+                        value={currentPerson.name}
+                        onChange={(e) => handlePersonInputChange('name', e.target.value)}
+                      />
+                      <input
+                        type="text"
+                        className="exec-f-sub-form-input exec-f-sub-person-designation-input"
+                        placeholder="Enter designation"
+                        value={currentPerson.designation}
+                        onChange={(e) => handlePersonInputChange('designation', e.target.value)}
+                      />
+                    </>
                   )}
                 </div>
-                <input
-                  type="text"
-                  className="exec-f-sub-form-input exec-f-sub-person-designation-input"
-                  placeholder="Enter designation"
-                  value={currentPerson.designation}
-                  onChange={(e) => handlePersonInputChange('designation', e.target.value)}
-                />
                 <input
                   type="tel"
                   className="exec-f-sub-form-input exec-f-sub-person-phone-input"
@@ -655,7 +667,11 @@ return (
                   type="button"
                   className="exec-f-sub-add-person-btn"
                   onClick={addPerson}
-                  disabled={!currentPerson.name.trim() || !currentPerson.designation.trim() || !currentPerson.phoneNumber.trim()}
+                  disabled={
+                    contactNameType === 'SEC' 
+                      ? !currentPerson.designation.trim() || !currentPerson.phoneNumber.trim()
+                      : !currentPerson.name.trim() || !currentPerson.designation.trim() || !currentPerson.phoneNumber.trim()
+                  }
                 >
                   Add
                 </button>
@@ -665,8 +681,8 @@ return (
                   {formData.peopleMet.map((person, index) => (
                     <div key={index} className="exec-f-sub-person-item">
                       <div className="exec-f-sub-person-details">
-                        <span className="exec-f-sub-person-name">{person.name}</span>
-                        <span className="exec-f-sub-person-designation">({person.designation})</span>
+                        <span className="exec-f-sub-person-name">{person.name === 'SEC' ? person.designation : person.name}</span>
+                        <span className="exec-f-sub-person-designation">({person.name === 'SEC' ? 'SEC' : person.designation})</span>
                         {person.phoneNumber && (
                           <span className="exec-f-sub-person-phone"> - {person.phoneNumber}</span>
                         )}
@@ -1072,7 +1088,7 @@ return (
                       <strong>Contact Person:</strong>
                       {visit.personMet.map((person: any, index: number) => (
                         <span key={index} className="exec-f-sub-person-met">
-                          {person.name} ({person.designation})
+                          {person.name === 'SEC' ? person.designation : person.name} ({person.name === 'SEC' ? 'SEC' : person.designation})
                           {person.phoneNumber && ` - ${person.phoneNumber}`}
                           {index < visit.personMet.length - 1 && ', '}
                         </span>
@@ -1151,7 +1167,7 @@ return (
                       <strong>Contact Person:</strong>
                       {visit.personMet.map((person, index) => (
                         <span key={index} className="exec-f-sub-person-met">
-                          {person.name} ({person.designation})
+                          {person.name === 'SEC' ? person.designation : person.name} ({person.name === 'SEC' ? 'SEC' : person.designation})
                           {person.phoneNumber && ` - ${person.phoneNumber}`}
                           {index < visit.personMet.length - 1 && ', '}
                         </span>
