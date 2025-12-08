@@ -3,6 +3,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { getAuthenticatedUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
+export const maxDuration = 60; // 60 seconds timeout
 
 // Configure Cloudinary
 cloudinary.config({

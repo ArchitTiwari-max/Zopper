@@ -58,7 +58,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     
     if (oversizedFiles.length > 0) {
       const fileDetails = oversizedFiles.map(f => `${f.name}: ${(f.size / (1024 * 1024)).toFixed(2)}MB`).join(', ');
-      const errorMsg = `File too large. Maximum size is 7MB. Files: ${fileDetails}`;
+      const errorMsg = `File too large. Maximum size is 5MB. Files: ${fileDetails}`;
       setError(errorMsg);
       return;
     }
@@ -97,7 +97,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           const text = await response.text();
           throw new Error(
             response.status === 413 || response.status === 400 
-              ? 'File too large. Maximum size is 7MB.' 
+              ? 'File too large. Maximum size is 5MB.'
               : `Server error: ${response.status}`
           );
         }
