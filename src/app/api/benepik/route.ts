@@ -39,9 +39,20 @@ export async function POST(req: NextRequest) {
       'X-SIGNATURE': requestHeaders['X-SIGNATURE'],
       'Content-Type': 'application/json'
     };
+     
+    // Get server's outgoing IP
+    const axios2 = require('axios');
+    let serverIP = 'unknown';
+    try {
+      const ipResponse = await axios2.get('https://api.ipify.org?format=json');
+      serverIP = ipResponse.data.ip;
+    } catch (e) {
+      console.log('Could not fetch server IP');
+    }
 
     // Log request details
     console.log('=== Benepik Request Details ===');
+    console.log('Server IP:', serverIP);
     console.log('URL:', benepikUrl);
     console.log('Checksum:', checksum);
     console.log('Headers:', JSON.stringify(headers, null, 2));
