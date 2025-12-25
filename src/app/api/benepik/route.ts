@@ -31,19 +31,28 @@ export async function POST(req: NextRequest) {
       throw new Error('BENEPIK_API_URL not configured');
     }
 
+    const headers = {
+      'Authorization': requestHeaders.Authorization,
+      'REQUESTID': requestHeaders.REQUESTID,
+      'X-TIMESTAMP': requestHeaders['X-TIMESTAMP'],
+      'X-NONCE': requestHeaders['X-NONCE'],
+      'X-SIGNATURE': requestHeaders['X-SIGNATURE'],
+      'Content-Type': 'application/json'
+    };
+
+    // Log request details
+    console.log('=== Benepik Request Details ===');
+    console.log('URL:', benepikUrl);
+    console.log('Checksum:', checksum);
+    console.log('Headers:', JSON.stringify(headers, null, 2));
+    console.log('==============================');
+
     // Forward request to Benepik
     const response = await axios.post(
       benepikUrl,
       { checksum },
       {
-        headers: {
-          'Authorization': requestHeaders.Authorization,
-          'REQUESTID': requestHeaders.REQUESTID,
-          'X-TIMESTAMP': requestHeaders['X-TIMESTAMP'],
-          'X-NONCE': requestHeaders['X-NONCE'],
-          'X-SIGNATURE': requestHeaders['X-SIGNATURE'],
-          'Content-Type': 'application/json'
-        },
+        headers,
         timeout: 30000 // 30 second timeout
       }
     );
