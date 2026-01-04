@@ -51,7 +51,7 @@ const rewardPayload = {
       getOutgoingIP(),
       benepikUrl ? resolveHostIPs(benepikUrl) : Promise.resolve('no-url')
     ]);
-    console.log('Outgoing IP:', outgoingIP, 'Resolved Benepik IPs:', resolvedIPs);
+    console.log('Outgoing IP:', outgoingIP);
 
     const res = await sendRewards(rewardPayload);
     // Log response data and the remote/local addresses used for the request
