@@ -1,4 +1,6 @@
 import "dotenv/config";
+import axios from "axios";
+import dns from "dns/promises";
 import { sendRewards } from "./benepik.js";
 
 const rewardPayload = {
@@ -23,6 +25,33 @@ const rewardPayload = {
 
 (async () => {
   try {
+    // Log outgoing IP (what external services see) and resolved Benepik host IP(s)
+    const benepikUrl = process.env.BENEPIK_BASE_URL;
+    async function getOutgoingIP() {
+      try {
+        const r = await axios.get("https://api.ipify.org?format=json", { timeout: 5000 });
+        return r?.data?.ip || "unknown";
+      } catch (e) {
+        return "unknown";
+      }
+    }
+
+    async function resolveHostIPs(url) {
+      try {
+        const hostname = new URL(url).hostname;
+        const addrs = await dns.lookup(hostname, { all: true });
+        return addrs.map(a => a.address).join(',');
+      } catch (e) {
+        return "unknown";
+      }
+    }
+
+    const [outgoingIP, resolvedIPs] = await Promise.all([
+      getOutgoingIP(),
+      benepikUrl ? resolveHostIPs(benepikUrl) : Promise.resolve('no-url')
+    ]);
+    console.log('Outgoing IP:', outgoingIP, 'Resolved Benepik IPs:', resolvedIPs);
+
     const res = await sendRewards(rewardPayload);
     // Log response data and the remote/local addresses used for the request
     console.log("✅ Success:", JSON.stringify(res.data, null, 2));
