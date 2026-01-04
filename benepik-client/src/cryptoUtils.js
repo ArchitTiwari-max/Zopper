@@ -8,7 +8,7 @@ export function generateJWT({ authKey, clientId, adminId }) {
     iat: now,
     exp: now + 900,
     iss: "benepik-tech",
-    aud: "client-app",
+    aud: "maytech-corp",
     jti: crypto.randomBytes(16).toString("base64"),
     clientId,
     adminId,
