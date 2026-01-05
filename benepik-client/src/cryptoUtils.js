@@ -39,7 +39,7 @@ export function generateSignature({
   return crypto
     .createHmac("sha256", secretKey)
     .update(signatureString)
-    .digest("base64");
+    .digest("hex");
 }
 
 /* ---------- Helpers ---------- */
