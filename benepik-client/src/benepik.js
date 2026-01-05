@@ -13,7 +13,8 @@ export async function sendRewards(payload) {
     AUTH_KEY,
     SECRET_KEY,
     CLIENT_ID,
-    ADMIN_ID
+    ADMIN_ID,
+    CLIENT_CODE
   } = process.env;
 
   console.log("benepik base url:", BENEPIK_BASE_URL);
