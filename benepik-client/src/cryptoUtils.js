@@ -39,10 +39,10 @@ export function generateSignature({
   return crypto
     .createHmac("sha256", secretKey)
     .update(signatureString)
-    .digest("hex");
+    .digest("base64");
 }
 
 /* ---------- Helpers ---------- */
 export function generateNonce() {
-  return crypto.randomBytes(16).toString("hex");
+  return crypto.randomBytes(16).toString("base64");
 }
