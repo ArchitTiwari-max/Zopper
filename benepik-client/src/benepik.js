@@ -22,7 +22,8 @@ export async function sendRewards(payload) {
   console.log("auth key:", AUTH_KEY);
   console.log("secret key:", SECRET_KEY);
   
-  const requestId = uuidv4();
+  const requestId = CLIENT_ID;
+  console.log("requestId:", requestId);
   const timestamp = Math.floor(Date.now() / 1000);
   const nonce = generateNonce();
 
