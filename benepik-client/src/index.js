@@ -17,7 +17,7 @@ const rewardPayload = {
       mobileNumber: "7408108617",
       rewardAmount: "1",
       transactionId: "TXN-" + Date.now(),
-      entityId: "1064",
+      entityId: "1063",
       personalMessage: "Great job!",
       messageFrom: "Team"
     }

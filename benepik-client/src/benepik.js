@@ -15,12 +15,13 @@ export async function sendRewards(payload) {
     CLIENT_ID,
     ADMIN_ID
   } = process.env;
-  // console.log("benepik base url:", BENEPIK_BASE_URL);
-  // console.log("auth key:", AUTH_KEY);
-  // console.log("client id:", CLIENT_ID);
-  // console.log("admin id:", ADMIN_ID);
-  // console.log("secret key:", SECRET_KEY);
 
+  console.log("benepik base url:", BENEPIK_BASE_URL);
+  console.log("client id:", CLIENT_ID);
+  console.log("admin id:", ADMIN_ID);
+  console.log("auth key:", AUTH_KEY);
+  console.log("secret key:", SECRET_KEY);
+  
   const requestId = uuidv4();
   const timestamp = Math.floor(Date.now() / 1000);
   const nonce = generateNonce();
