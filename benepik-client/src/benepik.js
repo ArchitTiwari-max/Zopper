@@ -14,7 +14,8 @@ export async function sendRewards(payload) {
     SECRET_KEY,
     CLIENT_ID,
     ADMIN_ID,
-    CLIENT_CODE
+    CLIENT_CODE,
+    SIGNATURE_KEY
   } = process.env;
 
   console.log("benepik base url:", BENEPIK_BASE_URL);
@@ -41,7 +42,7 @@ export async function sendRewards(payload) {
     timestamp,
     nonce,
     checksum,
-    secretKey: SECRET_KEY
+    secretKey: SIGNATURE_KEY
   });
 
   const headers = {

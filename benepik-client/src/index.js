@@ -15,7 +15,7 @@ const rewardPayload = {
       emailAddress: "rahul.singh@gmail.com",
       countryCode: "+91",
       mobileNumber: "7408108617",
-      rewardAmount: "1",
+      rewardAmount: "300",
       transactionId: "TXN-" + Date.now(),
       entityId: "1063",
       personalMessage: "Great job!",

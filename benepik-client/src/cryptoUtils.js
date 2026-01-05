@@ -44,5 +44,5 @@ export function generateSignature({
 
 /* ---------- Helpers ---------- */
 export function generateNonce() {
-  return crypto.randomBytes(16).toString("base64");
+  return crypto.randomBytes(16).toString("hex");
 }
