@@ -44,6 +44,7 @@ export async function sendRewards(payload) {
     checksum,
     secretKey: SIGNATURE_KEY
   });
+  console.log("signatureKey:", SIGNATURE_KEY);
 
   const headers = {
     Authorization: `Bearer ${jwtToken}`,
