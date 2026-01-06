@@ -47,12 +47,13 @@ export async function sendRewards(payload) {
   });
   
   console.log("=== Signature Debug ===");
-  console.log("requestId:", requestId);
+  console.log("requestId (for header):", requestId);
+  console.log("requestId (for signature):", CLIENT_ID);
   console.log("timestamp:", timestamp);
   console.log("nonce:", nonce);
   console.log("checksum:", checksum);
   console.log("signature:", signature);
-  console.log("signatureString:", `${requestId}|${timestamp}|${nonce}|${checksum}`);
+  console.log("signatureString:", `${CLIENT_ID}|${timestamp}|${nonce}|${checksum}`);
   console.log("======================");
   console.log("signatureKey:", SIGNATURE_KEY);
 
