@@ -41,7 +41,7 @@ export async function sendRewards(payload) {
   // Use new HMAC signature format
   const signature = generateSignature({
     method: "POST",
-    path: "/api/sendRewards",
+    path: "/api/v1/redeem",
     timestamp,
     nonce,
     body: requestBody,
@@ -54,7 +54,7 @@ export async function sendRewards(payload) {
   console.log("nonce:", nonce);
   console.log("body:", requestBody);
   console.log("signature:", signature);
-  console.log("canonicalString:", `POST\n/api/sendRewards\n${timestamp}\n${nonce}\n${requestBody}`);
+  console.log("canonicalString:", `POST\n/bpcp-client-reward-micro/api/sendRewards\n${timestamp}\n${nonce}\n${requestBody}`);
   console.log("======================");
 
   const headers = {
