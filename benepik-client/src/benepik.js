@@ -24,7 +24,7 @@ export async function sendRewards(payload) {
   console.log("auth key:", AUTH_KEY);
   console.log("secret key:", SECRET_KEY);
   
-  const requestId = CLIENT_CODE;
+  const requestId = CLIENT_ID;
   console.log("requestId:", requestId);
   const timestamp = Math.floor(Date.now() / 1000);
   const nonce = generateNonce();
@@ -42,8 +42,17 @@ export async function sendRewards(payload) {
     timestamp,
     nonce,
     checksum,
-    secretKey: SIGNATURE_KEY
+    secretKey: SECRET_KEY
   });
+  
+  console.log("=== Signature Debug ===");
+  console.log("requestId:", requestId);
+  console.log("timestamp:", timestamp);
+  console.log("nonce:", nonce);
+  console.log("checksum:", checksum);
+  console.log("signature:", signature);
+  console.log("signatureString:", `${requestId}|${timestamp}|${nonce}|${checksum}`);
+  console.log("======================");
   console.log("signatureKey:", SIGNATURE_KEY);
 
   const headers = {
