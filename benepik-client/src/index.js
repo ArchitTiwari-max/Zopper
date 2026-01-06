@@ -64,3 +64,4 @@ const rewardPayload = {
     // If request was made but failed, the socket may be present on err.request
   }
 })();
+

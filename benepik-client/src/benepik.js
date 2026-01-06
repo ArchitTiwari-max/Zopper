@@ -36,26 +36,24 @@ export async function sendRewards(payload) {
   });
 
   const checksum = generateChecksum(payload, SECRET_KEY);
-  const requestBody = JSON.stringify({ checksum });
 
-  // Use new HMAC signature format
+  // Use CLIENT_ID for signature calculation, but CLIENT_CODE for header
   const signature = generateSignature({
-    method: "POST",
-    path: "/api/v1/redeem",
+    requestId,
     timestamp,
     nonce,
-    body: requestBody,
+    checksum,
     secretKey: SECRET_KEY
   });
   
   console.log("=== Signature Debug ===");
-  console.log("requestId (for header):", requestId);
   console.log("timestamp:", timestamp);
   console.log("nonce:", nonce);
-  console.log("body:", requestBody);
+  console.log("checksum:", checksum);
   console.log("signature:", signature);
-  console.log("canonicalString:", `POST\n/bpcp-client-reward-micro/api/sendRewards\n${timestamp}\n${nonce}\n${requestBody}`);
+  console.log("signatureString:", `${CLIENT_ID}|${timestamp}|${nonce}|${checksum}`);
   console.log("======================");
+  console.log("signatureKey:", SIGNATURE_KEY);
 
   const headers = {
     Authorization: `Bearer ${jwtToken}`,

@@ -29,28 +29,21 @@ export function generateChecksum(payload, secretKey) {
 
 /* ---------- HMAC Signature ---------- */
 export function generateSignature({
-  method,
-  path,
+  requestId,
   timestamp,
   nonce,
-  body,
+  checksum,
   secretKey
 }) {
-  const canonicalString = [
-    method.toUpperCase(),
-    path,
-    timestamp,
-    nonce,
-    body
-  ].join("\n");
-  
+  const signatureString = `${requestId}|${timestamp}|${nonce}|${checksum}`;
   return crypto
     .createHmac("sha256", secretKey)
-    .update(canonicalString)
-    .digest("hex");
+    .update(signatureString)
+    .digest("base64");
 }
 
 /* ---------- Helpers ---------- */
 export function generateNonce() {
   return crypto.randomBytes(16).toString("hex");
 }
+
