@@ -24,7 +24,7 @@ export async function sendRewards(payload) {
   console.log("auth key:", AUTH_KEY);
   console.log("secret key:", SECRET_KEY);
   
-  const requestId = CLIENT_CODE;
+  const requestId=uuidv4();
   console.log("requestId:", requestId);
   const timestamp = Math.floor(Date.now() / 1000);
   const nonce = generateNonce();
@@ -39,7 +39,7 @@ export async function sendRewards(payload) {
 
   // Use CLIENT_ID for signature calculation, but CLIENT_CODE for header
   const signature = generateSignature({
-    requestId: CLIENT_ID,
+    requestId,
     timestamp,
     nonce,
     checksum,
@@ -59,7 +59,7 @@ export async function sendRewards(payload) {
 
   const headers = {
     Authorization: `Bearer ${jwtToken}`,
-    REQUESTID: requestId,
+    REQUESTID: CLIENT_CODE,
     "X-TIMESTAMP": timestamp.toString(),
     "X-NONCE": nonce,
     "X-SIGNATURE": signature,
