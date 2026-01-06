@@ -42,7 +42,7 @@ export async function sendRewards(payload) {
     timestamp,
     nonce,
     checksum,
-    secretKey: SECRET_KEY
+    secretKey: SIGNATURE_KEY
   });
   
   console.log("=== Signature Debug ===");
