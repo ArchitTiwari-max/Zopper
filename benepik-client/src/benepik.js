@@ -24,7 +24,7 @@ export async function sendRewards(payload) {
   console.log("auth key:", AUTH_KEY);
   console.log("secret key:", SECRET_KEY);
   
-  const requestId=uuidv4();
+  const requestId=CLIENT_CODE;
   console.log("requestId:", requestId);
   const timestamp = Math.floor(Date.now() / 1000);
   const nonce = generateNonce();
@@ -36,30 +36,30 @@ export async function sendRewards(payload) {
   });
 
   const checksum = generateChecksum(payload, SECRET_KEY);
+  const requestBody = JSON.stringify({ checksum });
 
-  // Use CLIENT_ID for signature calculation, but CLIENT_CODE for header
+  // Use new HMAC signature format
   const signature = generateSignature({
-    requestId,
+    method: "POST",
+    path: "/api/sendRewards",
     timestamp,
     nonce,
-    checksum,
+    body: requestBody,
     secretKey: SECRET_KEY
   });
   
   console.log("=== Signature Debug ===");
   console.log("requestId (for header):", requestId);
-  console.log("requestId (for signature):", CLIENT_ID);
   console.log("timestamp:", timestamp);
   console.log("nonce:", nonce);
-  console.log("checksum:", checksum);
+  console.log("body:", requestBody);
   console.log("signature:", signature);
-  console.log("signatureString:", `${CLIENT_ID}|${timestamp}|${nonce}|${checksum}`);
+  console.log("canonicalString:", `POST\n/api/sendRewards\n${timestamp}\n${nonce}\n${requestBody}`);
   console.log("======================");
-  console.log("signatureKey:", SIGNATURE_KEY);
 
   const headers = {
     Authorization: `Bearer ${jwtToken}`,
-    REQUESTID: CLIENT_CODE,
+    REQUESTID: requestId,
     "X-TIMESTAMP": timestamp.toString(),
     "X-NONCE": nonce,
     "X-SIGNATURE": signature,
