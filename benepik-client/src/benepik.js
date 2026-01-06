@@ -37,12 +37,13 @@ export async function sendRewards(payload) {
 
   const checksum = generateChecksum(payload, SECRET_KEY);
 
+  // Use CLIENT_ID for signature calculation, but CLIENT_CODE for header
   const signature = generateSignature({
-    requestId,
+    requestId: CLIENT_ID,
     timestamp,
     nonce,
     checksum,
-    secretKey: SIGNATURE_KEY
+    secretKey: SECRET_KEY
   });
   
   console.log("=== Signature Debug ===");
