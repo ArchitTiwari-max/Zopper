@@ -16,10 +16,20 @@ const rewardPayload = {
       countryCode: "+91",
       mobileNumber: "7408108617",
       rewardAmount: "20",
+      personalMessage: "",
+      messageFrom: "",
+      ccEmailAddress: "",
+      bccEmailAddress: "",
+      reference: "",
+      mailer: "",
+      certificateId: "",
       transactionId: "TXN-" + Date.now(),
       entityId: "1063",
-      personalMessage: "Great job!",
-      messageFrom: "Team"
+      column1: "",
+      column2: "",
+      column3: "",
+      column4: "",
+      column5: ""
     }
   ]
 };
