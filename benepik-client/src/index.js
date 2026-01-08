@@ -15,13 +15,13 @@ const rewardPayload = {
       emailAddress: "vishalshukla1029@gmail.com",
       countryCode: "+91",
       mobileNumber: "7408108617",
-      rewardAmount: "20",
+      rewardAmount: "300",
       personalMessage: "",
       messageFrom: "",
       ccEmailAddress: "",
       bccEmailAddress: "",
       reference: "",
-      mailer: "",
+      mailer: process.env.MAILER || "",
       certificateId: "",
       transactionId: "TXN-" + Date.now(),
       entityId: "1063",
@@ -36,6 +36,8 @@ const rewardPayload = {
 
 (async () => {
   try {
+    console.log("Mailer ID:", process.env.MAILER);
+    
     // Log outgoing IP (what external services see) and resolved Benepik host IP(s)
     const benepikUrl = process.env.BENEPIK_BASE_URL;
     async function getOutgoingIP() {
