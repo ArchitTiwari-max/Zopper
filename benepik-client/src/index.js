@@ -12,10 +12,10 @@ const rewardPayload = {
     {
       sno: "1",
       userName: "Rahul",
-      emailAddress: "rahul.singh@gmail.com",
+      emailAddress: "vishalshukla1029@gmail.com",
       countryCode: "+91",
       mobileNumber: "7408108617",
-      rewardAmount: "300",
+      rewardAmount: "20",
       transactionId: "TXN-" + Date.now(),
       entityId: "1063",
       personalMessage: "Great job!",
