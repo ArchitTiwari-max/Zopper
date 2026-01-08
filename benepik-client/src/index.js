@@ -11,10 +11,10 @@ const rewardPayload = {
   data: [
     {
       sno: "1",
-      userName: "Harshdeep",
-      emailAddress: "harsh999deep@gmail.com",
+      userName: "Archit",
+      emailAddress: "nt9936628446@gmail.com",
       countryCode: "+91",
-      mobileNumber: "9956644505",
+      mobileNumber: "9569310917",
       rewardAmount: "20",
       personalMessage: "",
       messageFrom: "",
