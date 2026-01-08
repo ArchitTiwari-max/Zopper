@@ -15,7 +15,7 @@ const rewardPayload = {
       emailAddress: "vishalshukla1029@gmail.com",
       countryCode: "+91",
       mobileNumber: "7408108617",
-      rewardAmount: "30",
+      rewardAmount: "70",
       personalMessage: "",
       messageFrom: "",
       ccEmailAddress: "",
