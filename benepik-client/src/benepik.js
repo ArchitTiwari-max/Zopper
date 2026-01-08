@@ -36,7 +36,9 @@ export async function sendRewards(payload) {
   });
 
   const checksum = generateChecksum(payload, SECRET_KEY);
-  const requestBody = JSON.stringify({ checksum });
+  
+  // Sign the original payload, not the checksum
+  const requestBodyForSignature = JSON.stringify(payload);
 
   // Use new HMAC signature format per API Security Handbook
   const signature = generateSignature({
@@ -44,7 +46,7 @@ export async function sendRewards(payload) {
     path: "/api/sendRewards",
     timestamp,
     nonce,
-    body: requestBody,
+    body: requestBodyForSignature,
     secretKey: SECRET_KEY
   });
   
@@ -52,9 +54,9 @@ export async function sendRewards(payload) {
   console.log("requestId (for header):", requestId);
   console.log("timestamp:", timestamp);
   console.log("nonce:", nonce);
-  console.log("body:", requestBody);
+  console.log("body (for signature):", requestBodyForSignature);
+  console.log("checksum (for request):", checksum);
   console.log("signature:", signature);
-  console.log("canonicalString:", `POST\n/api/sendRewards\n${timestamp}\n${nonce}\n${requestBody}`);
   console.log("======================");
 
   const headers = {
