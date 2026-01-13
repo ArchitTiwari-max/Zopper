@@ -11,11 +11,11 @@ const rewardPayload = {
   data: [
     {
       sno: "1",
-      userName: "Archit",
-      emailAddress: "nt9936628446@gmail.com",
+      userName: "Vishal Shukla",
+      emailAddress: "vishalshukla1029@gmail.com",
       countryCode: "+91",
-      mobileNumber: "9569310917",
-      rewardAmount: "20",
+      mobileNumber: "7408108617",
+      rewardAmount: "5",
       personalMessage: "",
       messageFrom: "",
       ccEmailAddress: "",
