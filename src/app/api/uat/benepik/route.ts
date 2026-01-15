@@ -58,7 +58,8 @@ export async function POST(req: NextRequest) {
 
         // 3. Call Benepik API using existing logic
         const response = await sendRewards(payload);
-
+// const response={data:{success:true,message:"Reward sent successfully"}}
+        console.log('✅ Benepik API Success:', response.data);
         return NextResponse.json({
             success: true,
             data: response.data
