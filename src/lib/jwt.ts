@@ -9,6 +9,7 @@ export interface TokenPayload {
   email: string;
   username: string;
   role: string;
+  clientId?: string;
 }
 
 export function generateAccessToken(payload: TokenPayload): string {
@@ -33,13 +34,31 @@ export function generateRefreshToken(payload: TokenPayload): string {
   return (jwt as any).sign(cleanPayload, JWT_SECRET, { expiresIn: JWT_REFRESH_EXPIRY });
 }
 
+/**
+ * Specifically for UAT/External testing to avoid sharing the main JWT_SECRET
+ */
+export function generateUatToken(payload: Partial<TokenPayload>): string {
+  const secret = process.env.UAT_JWT_SECRET;
+  if (!secret) throw new Error('UAT_JWT_SECRET is not defined');
+  return (jwt as any).sign(payload, secret, { expiresIn: '1h' });
+}
+
 export function verifyToken(token: string): TokenPayload {
   return jwt.verify(token, JWT_SECRET) as TokenPayload;
 }
 
+/**
+ * Specifically for UAT/External testing to avoid sharing the main JWT_SECRET
+ */
+export function verifyUatToken(token: string): any {
+  const secret = process.env.UAT_JWT_SECRET;
+  if (!secret) throw new Error('UAT_JWT_SECRET is not defined');
+  return jwt.verify(token, secret);
+}
+
 export function getTokenExpiry(expiry: string): Date {
   const now = new Date();
-  
+
   if (expiry.includes('m')) {
     const minutes = parseInt(expiry.replace('m', ''));
     return new Date(now.getTime() + minutes * 60 * 1000);
@@ -50,7 +69,7 @@ export function getTokenExpiry(expiry: string): Date {
     const hours = parseInt(expiry.replace('h', ''));
     return new Date(now.getTime() + hours * 60 * 60 * 1000);
   }
-  
+
   // Default to 15 minutes
   return new Date(now.getTime() + 15 * 60 * 1000);
 }
