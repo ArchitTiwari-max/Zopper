@@ -404,9 +404,10 @@ const AdminSalesPage: React.FC = () => {
 
   // Build AOA (array of arrays) for Excel export
   const buildAOA = (): (string | number)[][] => {
-      const currentYear = new Date().getFullYear();
       const monthHeaders = recentMonths.flatMap((month) => {
-        const label = `${getMonthName(month)} ${currentYear.toString().slice(-2)}`;
+        // Get the actual year from the data, not current year
+        const dataYear = filteredData.length > 0 ? filteredData[0].year : new Date().getFullYear();
+        const label = `${getMonthName(month)} ${dataYear.toString().slice(-2)}`;
         return [
           `${label} Device Sales`,
           `${label} Plan Sales`, 
