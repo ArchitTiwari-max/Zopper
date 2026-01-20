@@ -797,15 +797,19 @@ const AdminSalesPage: React.FC = () => {
                   fontWeight: 'bold',
                   wordWrap: 'break-word'
                 }} rowSpan={2}>CATEGORY</th>
-                {recentMonths.map((month) => (
-                  <th key={month} style={{ 
-                    border: '1px solid #ccc', 
-                    padding: '12px 8px', 
-                    textAlign: 'center',
-                    fontSize: '12px',
-                    fontWeight: 'bold'
-                  }} colSpan={4}>{getMonthName(month).toUpperCase()} {currentYear.toString().slice(-2)}</th>
-                ))}
+                {recentMonths.map((month) => {
+                  // Get the actual year from the data, not current year
+                  const dataYear = filteredData.length > 0 ? filteredData[0].year : new Date().getFullYear();
+                  return (
+                    <th key={month} style={{ 
+                      border: '1px solid #ccc', 
+                      padding: '12px 8px', 
+                      textAlign: 'center',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }} colSpan={4}>{getMonthName(month).toUpperCase()} {dataYear.toString().slice(-2)}</th>
+                  );
+                })}
               </tr>
               <tr style={{ backgroundColor: '#f9f9f9' }}>
                 {recentMonths.map((month) => (
