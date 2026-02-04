@@ -80,24 +80,37 @@ export async function GET(request: NextRequest) {
 
         const storeMap = new Map(stores.map(s => [s.id, s.storeName]));
 
-        const formattedRequests = requests.map((req: any) => ({
-            id: req.id,
-            secDetails: req.executiveName, // This contains "Name (Phone)"
-            submittedBy: req.user.executive?.name || req.user.username || 'Unknown',
-            reason: req.reason,
-            startDate: req.startDate,
-            endDate: req.endDate,
-            storeName: req.storeId ? storeMap.get(req.storeId) || 'Unknown Store' : 'N/A',
-            storeId: req.storeId,
-            submittedAt: req.submittedAt,
-            type: req.type || 'VACATION'
-        }));
+        console.log(`Processing ${requests.length} requests for formatting`);
+
+        const formattedRequests = requests.map((req: any) => {
+            try {
+                return {
+                    id: req.id,
+                    secDetails: req.executiveName, // This contains "Name (Phone)"
+                    submittedBy: req.user?.executive?.name || req.user?.username || 'Unknown',
+                    reason: req.reason,
+                    startDate: req.startDate,
+                    endDate: req.endDate,
+                    storeName: req.storeId ? storeMap.get(req.storeId) || 'Unknown Store' : 'N/A',
+                    storeId: req.storeId,
+                    submittedAt: req.submittedAt,
+                    type: req.type || 'VACATION',
+                    replacementAvailable: req.replacementAvailable ?? null
+                };
+            } catch (err) {
+                console.error('Error formatting request:', req.id, err);
+                return null;
+            }
+        }).filter(Boolean); // Remote failed mappings
 
         return NextResponse.json({ data: formattedRequests });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error fetching holiday requests:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({
+            error: 'Internal Server Error',
+            details: error instanceof Error ? error.message : String(error)
+        }, { status: 500 });
     } finally {
         await prisma.$disconnect();
     }

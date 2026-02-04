@@ -16,6 +16,7 @@ interface HolidayRequest {
     reviewedAt?: string;
     reviewedBy?: string;
     type?: 'VACATION' | 'WEEK_OFF';
+    replacementAvailable?: boolean | null;
 }
 
 interface HolidayDetailsModalProps {
@@ -141,6 +142,19 @@ const HolidayDetailsModal: React.FC<HolidayDetailsModalProps> = ({
                             {holiday.reason}
                         </div>
                     </div>
+
+                    {/* Replacement Info Section (Vacation Only) */}
+                    {holiday.type !== 'WEEK_OFF' && (
+                        <div className="holiday-detail-section">
+                            <h3 className="holiday-detail-section-title">Replacement Staff</h3>
+                            <div className="holiday-detail-item">
+                                <span className="holiday-detail-label">Availability</span>
+                                <span className="holiday-detail-value">
+                                    {holiday.replacementAvailable === true ? 'Yes' : holiday.replacementAvailable === false ? 'No' : 'N/A'}
+                                </span>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Admin Comment Section (if available) */}
                     {(holiday.adminComment || holiday.reviewedBy) && (

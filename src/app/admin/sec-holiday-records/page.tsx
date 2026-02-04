@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import './page.css';
 
 interface HolidayRequest {
@@ -14,6 +15,7 @@ interface HolidayRequest {
     storeId: string | null;
     submittedAt: string;
     type?: 'VACATION' | 'WEEK_OFF';
+    replacementAvailable?: boolean | null;
 }
 
 interface Executive {
@@ -30,7 +32,7 @@ const SecHolidayRecordsPage: React.FC = () => {
     const [secNameFilter, setSecNameFilter] = useState('');
     const [executiveFilter, setExecutiveFilter] = useState('ALL');
     const [storeNameFilter, setStoreNameFilter] = useState('');
-    const [recordTypeFilter, setRecordTypeFilter] = useState('VACATION');
+    const [recordTypeFilter, setRecordTypeFilter] = useState('ALL');
 
     const [executives, setExecutives] = useState<Executive[]>([]);
     const [isFiltersVisible, setIsFiltersVisible] = useState(true);
@@ -85,7 +87,19 @@ const SecHolidayRecordsPage: React.FC = () => {
                 // Let's filter storeName on client side after fetching.
 
                 const res = await fetch(`/api/admin/holiday-requests?${params.toString()}`);
-                if (!res.ok) throw new Error('Failed to fetch holiday requests');
+                if (!res.ok) {
+                    console.error('API Error Status:', res.status, res.statusText);
+                    let errorData;
+                    try {
+                        errorData = await res.json();
+                    } catch (e) {
+                        const text = await res.text().catch(() => 'No response body');
+                        console.error('API Error Raw Text:', text);
+                        errorData = { details: `Server Error (${res.status}): ${text}` };
+                    }
+                    console.error('API Error JSON:', errorData);
+                    throw new Error(errorData.details || errorData.error || 'Failed to fetch holiday requests');
+                }
 
                 const json = await res.json();
                 let data: HolidayRequest[] = json.data || [];
@@ -122,13 +136,57 @@ const SecHolidayRecordsPage: React.FC = () => {
         });
     };
 
+    const handleExportExcel = () => {
+        if (!requests || requests.length === 0) {
+            alert('No data to export');
+            return;
+        }
+
+        const dataToExport = requests.map(req => ({
+            'SEC Details': req.secDetails,
+            'Request Type': req.type === 'WEEK_OFF' ? 'Week Off' : 'Vacation',
+            'Start Date': formatDate(req.startDate),
+            'End Date': formatDate(req.endDate),
+            'Reason': req.reason,
+            'Replacement Available': req.type === 'WEEK_OFF' ? 'N/A' : (req.replacementAvailable ? 'Available' : 'Not Available'),
+            'Store Name': req.storeName,
+            'Submitted By': req.submittedBy,
+            'Submitted On': formatDate(req.submittedAt)
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Holiday Requests");
+        XLSX.writeFile(wb, `Holiday_Requests_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
     return (
         <div className="sec-holiday-container">
-            <div className="filters-header" onClick={() => setIsFiltersVisible(!isFiltersVisible)}>
-                <h3>
-                    Filters
-                    <span style={{ transform: isFiltersVisible ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', fontSize: '12px' }}>▼</span>
-                </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div className="filters-header" onClick={() => setIsFiltersVisible(!isFiltersVisible)} style={{ marginBottom: 0 }}>
+                    <h3>
+                        Filters
+                        <span style={{ transform: isFiltersVisible ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', fontSize: '12px', marginLeft: '5px' }}>▼</span>
+                    </h3>
+                </div>
+                <button
+                    onClick={handleExportExcel}
+                    style={{
+                        padding: '8px 16px',
+                        backgroundColor: '#28a745',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                    }}
+                >
+                    <span>📊</span> Download Excel
+                </button>
             </div>
 
             {isFiltersVisible && (
@@ -144,8 +202,9 @@ const SecHolidayRecordsPage: React.FC = () => {
                                 setRequests([]);
                                 setIsLoading(true);
                             }}
-                            style={{ borderColor: recordTypeFilter === 'WEEK_OFF' ? '#17a2b8' : '#6f42c1' }}
+                            style={{ borderColor: recordTypeFilter === 'WEEK_OFF' ? '#17a2b8' : recordTypeFilter === 'ALL' ? '#28a745' : '#6f42c1' }}
                         >
+                            <option value="ALL">All Records</option>
                             <option value="VACATION">Vacation Records</option>
                             <option value="WEEK_OFF">Week Off Records</option>
                         </select>
@@ -203,9 +262,10 @@ const SecHolidayRecordsPage: React.FC = () => {
                     <thead>
                         <tr>
                             <th>SEC Details</th>
-                            <th>{recordTypeFilter === 'WEEK_OFF' ? 'Week Off Date' : 'Vacation Period'}</th>
+                            <th>{recordTypeFilter === 'WEEK_OFF' ? 'Week Off Date' : recordTypeFilter === 'ALL' ? 'Period / Date' : 'Vacation Period'}</th>
                             <th>Reason</th>
                             <th>Store</th>
+                            <th>Replacement</th>
                             <th>Submitted By</th>
                             <th>Submitted On</th>
                             <th>Action</th>
@@ -214,7 +274,7 @@ const SecHolidayRecordsPage: React.FC = () => {
                     <tbody>
                         {isLoading ? (
                             <tr>
-                                <td colSpan={7}>
+                                <td colSpan={8}>
                                     <div className="loading-container">
                                         <div className="spinner"></div>
                                         <span>Loading records...</span>
@@ -223,9 +283,9 @@ const SecHolidayRecordsPage: React.FC = () => {
                             </tr>
                         ) : requests.length === 0 ? (
                             <tr>
-                                <td colSpan={7}>
+                                <td colSpan={8}>
                                     <div className="no-data">
-                                        No {recordTypeFilter === 'WEEK_OFF' ? 'week off' : 'vacation'} records found matching your filters.
+                                        No metrics found matching your filters.
                                     </div>
                                 </td>
                             </tr>
@@ -240,13 +300,16 @@ const SecHolidayRecordsPage: React.FC = () => {
                                         ))}
                                     </td>
                                     <td>
-                                        {recordTypeFilter === 'WEEK_OFF'
-                                            ? formatDate(req.startDate)
-                                            : `${formatDate(req.startDate)} - ${formatDate(req.endDate)}`
+                                        {req.type === 'WEEK_OFF'
+                                            ? <span className="badge badge-weekoff">{formatDate(req.startDate)} (Week Off)</span>
+                                            : <span>{formatDate(req.startDate)} - {formatDate(req.endDate)}</span>
                                         }
                                     </td>
                                     <td>{req.reason}</td>
                                     <td>{req.storeName}</td>
+                                    <td>
+                                        {req.type === 'WEEK_OFF' ? '-' : (req.replacementAvailable === true ? 'Available' : (req.replacementAvailable === false ? 'Not Available' : 'N/A'))}
+                                    </td>
                                     <td>
                                         <strong>{req.submittedBy}</strong>
                                     </td>
@@ -299,6 +362,14 @@ const SecHolidayRecordsPage: React.FC = () => {
                                 <span className="detail-label">Reason</span>
                                 <span className="detail-value reason-text">{selectedRequest.reason}</span>
                             </div>
+                            {selectedRequest.type !== 'WEEK_OFF' && (
+                                <div className="detail-row">
+                                    <span className="detail-label">Replacement Available</span>
+                                    <span className="detail-value">
+                                        {selectedRequest.replacementAvailable === true ? 'Available' : selectedRequest.replacementAvailable === false ? 'Not Available' : 'N/A'}
+                                    </span>
+                                </div>
+                            )}
                             <div className="detail-row">
                                 <span className="detail-label">Store</span>
                                 <span className="detail-value">{selectedRequest.storeName}</span>

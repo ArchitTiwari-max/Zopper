@@ -497,6 +497,8 @@ model HolidayRequest {
   user    User   @relation(fields: [userId], references: [id])
   storeId String? // Optional store context
   
+  replacementAvailable Boolean? // Is a replacement available?
+  
   // Indexes for performance
   @@index([userId, submittedAt])
   @@index([status, submittedAt])
