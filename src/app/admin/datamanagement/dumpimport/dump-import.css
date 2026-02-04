@@ -1,0 +1,355 @@
+/* Dump Import Page Styles */
+
+.dump-import-container {
+    min-height: 100vh;
+    background-color: #f9fafb;
+    padding: 1.5rem;
+}
+
+/* Header */
+.dump-import-header {
+    margin-bottom: 2rem;
+}
+
+.dump-import-title-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.dump-import-header-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    color: #ea580c;
+}
+
+.dump-import-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.dump-import-subtitle {
+    font-size: 1rem;
+    color: #6b7280;
+    margin: 0.25rem 0 0 0;
+}
+
+/* Card */
+.dump-import-card {
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.dump-import-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 1rem 0;
+}
+
+/* Brand Selection */
+.dump-import-brand-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.dump-import-brand-btn {
+    padding: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background: white;
+    color: #374151;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dump-import-brand-btn:hover {
+    border-color: #fb923c;
+    background-color: #fff7ed;
+    color: #ea580c;
+}
+
+.dump-import-brand-btn.active {
+    border-color: #ea580c;
+    background-color: #ffedd5;
+    color: #ea580c;
+    font-weight: 600;
+}
+
+/* Dropzone */
+.dump-import-dropzone {
+    border: 2px dashed #d1d5db;
+    border-radius: 0.75rem;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background-color: #fafafa;
+}
+
+.dump-import-dropzone:hover {
+    border-color: #fb923c;
+    background-color: #fff7ed;
+}
+
+.dump-import-dropzone.active {
+    border-color: #ea580c;
+    background-color: #ffedd5;
+}
+
+.dump-import-dropzone.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.dump-import-upload-icon {
+    width: 3rem;
+    height: 3rem;
+    color: #9ca3af;
+    margin: 0 auto 1rem;
+}
+
+.dump-import-dropzone:hover .dump-import-upload-icon {
+    color: #ea580c;
+}
+
+.dump-import-dropzone-text {
+    font-size: 1rem;
+    color: #374151;
+    margin: 0 0 0.5rem 0;
+}
+
+.dump-import-dropzone-subtext {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+.dump-import-upload-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dump-import-spinner {
+    width: 3rem;
+    height: 3rem;
+    color: #ea580c;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Status Message */
+.dump-import-status-message {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.dump-import-status-message.success {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #10b981;
+}
+
+.dump-import-status-message.error {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #ef4444;
+}
+
+/* Filter Section */
+.dump-import-filter-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.dump-import-filter-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #ea580c;
+}
+
+.dump-import-filter-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+/* Date Filter Controls */
+.dump-import-filter-controls {
+    width: 100%;
+    max-width: 400px;
+}
+
+.dump-import-date-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background: white;
+    color: #374151;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ea580c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.25rem;
+    padding-right: 2.5rem;
+}
+
+.dump-import-date-select:hover {
+    border-color: #fb923c;
+    background-color: #fff7ed;
+}
+
+.dump-import-date-select:focus {
+    border-color: #ea580c;
+    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+}
+
+.dump-import-date-select option {
+    padding: 0.5rem;
+    background: white;
+    color: #374151;
+}
+
+/* Table */
+.dump-import-table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.dump-import-table-wrapper {
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+.dump-import-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.dump-import-table-th {
+    background-color: #f9fafb;
+    color: #374151;
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid #e5e7eb;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.dump-import-table-tr:hover {
+    background-color: #f9fafb;
+}
+
+.dump-import-table-td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    color: #4b5563;
+    white-space: nowrap;
+}
+
+.dump-import-table-tr:last-child .dump-import-table-td {
+    border-bottom: none;
+}
+
+/* Empty State */
+.dump-import-empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dump-import-empty-icon {
+    width: 4rem;
+    height: 4rem;
+    color: #d1d5db;
+    margin: 0 auto 1rem;
+}
+
+.dump-import-empty-text {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: #374151;
+    margin: 0 0 0.5rem 0;
+}
+
+.dump-import-empty-subtext {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dump-import-container {
+        padding: 1rem;
+    }
+
+    .dump-import-title {
+        font-size: 1.5rem;
+    }
+
+    .dump-import-header-icon {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    .dump-import-card {
+        padding: 1rem;
+    }
+
+    .dump-import-brand-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dump-import-dropzone {
+        padding: 2rem 1rem;
+    }
+
+    .dump-import-filter-controls {
+        max-width: 100%;
+    }
+
+    .dump-import-table-wrapper {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+}

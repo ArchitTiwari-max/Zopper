@@ -86,6 +86,23 @@
   border-color: #a855f7;
 }
 
+.adm-excel-import-import-card.dump {
+  border: 1px solid #fdba74;
+}
+
+.adm-excel-import-import-card.dump:hover {
+  border-color: #fb923c;
+}
+
+.adm-excel-import-import-card.partner {
+  border: 1px solid #c7d2fe;
+}
+
+.adm-excel-import-import-card.partner:hover {
+  border-color: #818cf8;
+}
+
+
 /* Card Header */
 .adm-excel-import-card-header {
   display: flex;
@@ -114,6 +131,15 @@
 .adm-excel-import-card-icon.user-mgmt {
   background-color: #f3e8ff;
 }
+
+.adm-excel-import-card-icon.dump {
+  background-color: #fed7aa;
+}
+
+.adm-excel-import-card-icon.partner {
+  background-color: #e0e7ff;
+}
+
 
 .adm-excel-import-card-title-section {
   flex: 1;
@@ -179,6 +205,15 @@
   color: #9333ea;
 }
 
+.adm-excel-import-feature-icon.dump {
+  color: #ea580c;
+}
+
+.adm-excel-import-feature-icon.partner {
+  color: #6366f1;
+}
+
+
 /* Expected Columns Section */
 .adm-excel-import-columns-section {
   margin-top: 1rem;
@@ -202,6 +237,15 @@
   background-color: #f3e8ff;
 }
 
+.adm-excel-import-columns-section.dump {
+  background-color: #ffedd5;
+}
+
+.adm-excel-import-columns-section.partner {
+  background-color: #eef2ff;
+}
+
+
 .adm-excel-import-columns-title {
   font-size: 0.875rem;
   font-weight: 500;
@@ -224,6 +268,15 @@
   color: #6b21a8;
 }
 
+.adm-excel-import-columns-title.dump {
+  color: #9a3412;
+}
+
+.adm-excel-import-columns-title.partner {
+  color: #3730a3;
+}
+
+
 .adm-excel-import-columns-list {
   font-size: 0.75rem;
 }
@@ -244,6 +297,15 @@
   color: #7c3aed;
 }
 
+.adm-excel-import-columns-list.dump {
+  color: #c2410c;
+}
+
+.adm-excel-import-columns-list.partner {
+  color: #4f46e5;
+}
+
+
 .adm-excel-import-columns-list p {
   margin-bottom: 0.25rem;
 }
@@ -253,25 +315,25 @@
   .adm-excel-import-dashboard-container {
     padding: 1rem;
   }
-  
+
   .adm-excel-import-dashboard-title {
     font-size: 1.5rem;
   }
-  
+
   .adm-excel-import-import-options-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .adm-excel-import-import-card {
     padding: 1rem;
   }
-  
+
   .adm-excel-import-card-header {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .adm-excel-import-card-icon {
     margin-right: 0;
     margin-bottom: 0.5rem;
@@ -284,12 +346,20 @@
     color: #4b5563;
     transform: translateX(2px);
   }
-  
+
   .adm-excel-import-import-card.monthly:hover .adm-excel-import-card-title {
     color: #1d4ed8;
   }
-  
+
   .adm-excel-import-import-card.daily:hover .adm-excel-import-card-title {
     color: #047857;
+  }
+
+  .adm-excel-import-import-card.dump:hover .adm-excel-import-card-title {
+    color: #c2410c;
+  }
+
+  .adm-excel-import-import-card.partner:hover .adm-excel-import-card-title {
+    color: #4f46e5;
   }
 }

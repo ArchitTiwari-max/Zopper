@@ -16,7 +16,8 @@ const Navigation: React.FC = () => {
     { id: 'visit-report', label: 'Physical Visit Report', icon: 'icon-visit-report', active: pathname.includes('/admin/visit-report'), href: '/admin/visit-report' },
     { id: 'digital-report', label: 'Digital Connect Report', icon: 'icon-call', active: pathname.includes('/admin/digital-report'), href: '/admin/digital-report' },
     { id: 'analytics-impact', label: 'Analytics & Impact', icon: 'icon-analytics', active: pathname.includes('/admin/analytics-impact'), href: '/admin/analytics-impact' },
-    { id: 'attendance', label: 'Attendance Tracker', icon: 'icon-attendance', active: pathname.includes('/admin/attendance'), href: '/admin/attendance' }
+    { id: 'attendance', label: 'Attendance Tracker', icon: 'icon-attendance', active: pathname.includes('/admin/attendance'), href: '/admin/attendance' },
+    { id: 'alignment-index', label: 'Alignment Index', icon: 'icon-alignment', active: pathname.includes('/admin/alignment-index'), href: '/admin/alignment-index' }
   ];
 
   return (
@@ -36,8 +37,8 @@ const Navigation: React.FC = () => {
         <ul>
           {navigationItems.map(item => (
             <li key={item.id}>
-              <Link 
-                href={item.href} 
+              <Link
+                href={item.href}
                 className={`nav-item ${item.active ? 'active' : ''}`}
               >
                 <i className={item.icon}></i>

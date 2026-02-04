@@ -449,6 +449,47 @@ model DostChat {
 }
 
 //
+// Brand Dump Import
+//
+
+model BrandDump {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  brandName String   // Godrej, Samsung, Havells, etc.
+  uploadedAt DateTime @default(now())
+  
+  // Godrej specific columns (22 fields)
+  warrantyActivationCode String?
+  customerPremium        String?
+  zopperPlanDuration     String?
+  warrantyPurchaseDate   String?
+  warrantyStartDate      String?
+  technicianUserId       String?
+  technicianName         String?
+  serviceCentreName      String?
+  businessName           String?
+  pinCode                String?
+  customerCity           String?
+  customerState          String?
+  productPurchasedDate   String?
+  applianceModelName     String?
+  productCategoryId      String?
+  modelCode              String?
+  productCategory        String?
+  productCoverage        String?
+  productSerialNumber    String?
+  branch                 String?
+  pocName                String?
+  channel                String?
+  
+  // For future brands (Samsung, Havells), we can add their specific columns
+  // or use a JSON field for flexibility
+  additionalData Json? // For any extra brand-specific data
+  
+  @@index([brandName, uploadedAt])
+  @@map("BrandDump")
+}
+
+//
 // Holiday Management
 //
 
