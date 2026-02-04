@@ -1,0 +1,231 @@
+/* Holiday Details Modal Styles - Matches VisitDetailsModal.css structure */
+.holiday-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    padding: 20px;
+    animation: holidayModalFadeIn 0.2s ease-out;
+    pointer-events: auto;
+    isolation: isolate;
+}
+
+@keyframes holidayModalFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.holiday-modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 600px;
+    /* Slightly narrower than visit modal */
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    animation: holidayModalSlideIn 0.3s ease-out;
+}
+
+@keyframes holidayModalSlideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.holiday-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+    border-radius: 12px 12px 0 0;
+}
+
+.holiday-modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #212529;
+    margin: 0;
+}
+
+.holiday-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 4px;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.holiday-modal-close:hover {
+    background-color: #e5e7eb;
+    color: #374151;
+    transform: scale(1.1);
+}
+
+.holiday-modal-body {
+    padding: 24px;
+}
+
+.holiday-detail-section {
+    margin-bottom: 24px;
+}
+
+.holiday-detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.holiday-detail-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #212529;
+    margin: 0 0 12px 0;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 8px;
+    position: relative;
+}
+
+.holiday-detail-section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background-color: #4f46e5;
+}
+
+.holiday-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.holiday-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.holiday-detail-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.holiday-detail-value {
+    font-size: 14px;
+    color: #212529;
+    font-weight: 500;
+}
+
+.holiday-status-badge {
+    display: inline-block;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 12px !important;
+    border-radius: 12px !important;
+    white-space: nowrap;
+}
+
+.holiday-detail-text {
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.5;
+    margin: 0;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #e9ecef;
+}
+
+.holiday-detail-text.holiday-admin-comment {
+    background-color: #f0f9ff;
+    border-left-color: #10b981;
+    color: #065f46;
+}
+
+.holiday-modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: flex-end;
+    border-radius: 0 0 12px 12px;
+}
+
+.btn-secondary {
+    padding: 8px 16px;
+    background-color: #e2e8f0;
+    color: #1e293b;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+    background-color: #cbd5e1;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .holiday-modal-overlay {
+        padding: 10px;
+    }
+
+    .holiday-modal-content {
+        max-height: 95vh;
+        border-radius: 8px;
+    }
+
+    .holiday-modal-header {
+        padding: 16px 20px;
+    }
+
+    .holiday-modal-body {
+        padding: 20px;
+    }
+
+    .holiday-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}

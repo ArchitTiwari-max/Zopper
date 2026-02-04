@@ -25,9 +25,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  executive Executive?
-  admin     Admin?
-  dostChats DostChat[]
+  executive       Executive?
+  admin           Admin?
+  dostChats       DostChat[]
+  holidayRequests HolidayRequest[]
   
   @@map("User")
 }
@@ -506,4 +507,39 @@ model Holiday {
   // Index for efficient date lookups
   @@index([date])
   @@map("Holiday")
+}
+
+enum HolidayRequestType {
+  VACATION
+  WEEK_OFF
+}
+
+enum HolidayRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model HolidayRequest {
+  id            String               @id @default(auto()) @map("_id") @db.ObjectId
+  executiveName String               // Name of the executive requesting holiday
+  reason        String               // Reason for the holiday
+  startDate     DateTime             // Start date of holiday
+  endDate       DateTime             // End date of holiday
+  type          HolidayRequestType?  @default(VACATION)
+  status        HolidayRequestStatus @default(PENDING)
+  submittedAt   DateTime             @default(now())
+  reviewedAt    DateTime?            // When admin reviewed the request
+  reviewedBy    String?              // Admin ID who reviewed
+  adminComment  String?              // Admin's comment on the request
+  
+  // Relations
+  userId  String // Executive user who submitted the request
+  user    User   @relation(fields: [userId], references: [id])
+  storeId String? // Optional store context
+  
+  // Indexes for performance
+  @@index([userId, submittedAt])
+  @@index([status, submittedAt])
+  @@map("HolidayRequest")
 }

@@ -1396,3 +1396,190 @@
     padding: 5px;
   }
 }
+
+/* Holiday Form Specific Styles */
+.exec-f-sub-date-range-container {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.exec-f-sub-date-input-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.exec-f-sub-date-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6c757d;
+  margin: 0;
+}
+
+/* Mobile responsive for date range */
+@media (max-width: 480px) {
+  .exec-f-sub-date-range-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .exec-f-sub-date-input-group {
+    gap: 4px;
+  }
+  
+  .exec-f-sub-date-label {
+    font-size: 11px;
+  }
+}
+
+/* Holiday form input styling */
+.exec-f-sub-visit-form-card .exec-f-sub-form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  background-color: white;
+  box-sizing: border-box;
+}
+
+.exec-f-sub-visit-form-card .exec-f-sub-form-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.exec-f-sub-visit-form-card .exec-f-sub-form-input::placeholder {
+  color: #9ca3af;
+}
+
+/* SEC Names Input - scoped to visit form */
+.exec-f-sub-visit-form-card .exec-f-sub-sec-names-input-container {
+  width: 100%;
+}
+
+.exec-f-sub-visit-form-card .exec-f-sub-sec-name-input-wrapper {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.exec-f-sub-visit-form-card .exec-f-sub-sec-name-input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.exec-f-sub-visit-form-card .exec-f-sub-add-sec-name-btn {
+  padding: 12px 20px;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.exec-f-sub-visit-form-card .exec-f-sub-add-sec-name-btn:hover:not(:disabled) {
+  background-color: #4338ca;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.exec-f-sub-visit-form-card .exec-f-sub-add-sec-name-btn:disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.exec-f-sub-visit-form-card .exec-f-sub-sec-names-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  min-height: 50px;
+}
+
+.exec-f-sub-visit-form-card .exec-f-sub-sec-name-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 6px 12px;
+  border: 1px solid #bbdefb;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  animation: secNameFadeIn 0.2s ease-out;
+  transition: all 0.2s ease;
+}
+
+.exec-f-sub-visit-form-card .exec-f-sub-sec-name-text {
+  margin-right: 2px;
+}
+
+.exec-f-sub-visit-form-card .exec-f-sub-remove-sec-name-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.exec-f-sub-visit-form-card .exec-f-sub-remove-sec-name-btn:hover {
+  background-color: #dc3545;
+  color: white;
+  transform: scale(1.1);
+}
+
+@keyframes secNameFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Mobile responsive for SEC names */
+@media (max-width: 480px) {
+  .exec-f-sub-visit-form-card .exec-f-sub-sec-name-input-wrapper {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .exec-f-sub-visit-form-card .exec-f-sub-sec-name-input {
+    min-width: unset;
+  }
+  
+  .exec-f-sub-visit-form-card .exec-f-sub-sec-names-list {
+    padding: 8px;
+  }
+  
+  .exec-f-sub-visit-form-card .exec-f-sub-sec-name-item {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+}

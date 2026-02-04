@@ -31,7 +31,7 @@ const Footer: React.FC = () => {
         </Link>
         <Link href="/executive/visit-history" className={`nav-item ${pathname === '/executive/visit-history' ? 'active' : ''}`}>
           <span className="nav-icon">📋</span>
-          <span className="nav-label">My Visits</span>
+          <span className="nav-label">My Submissions</span>
         </Link>
       </div>
 

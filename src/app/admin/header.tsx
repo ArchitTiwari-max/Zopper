@@ -138,6 +138,11 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
           title: 'Settings',
           subtitle: 'Configure system preferences and notifications'
         };
+      case '/admin/sec-holiday-records':
+        return {
+          title: '🏖️ Vacation Records',
+          subtitle: 'Manage and track executive vacation requests'
+        };
       case '/admin/analytics-impact':
         return {
           title: 'Analytics & Impact',

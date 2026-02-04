@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import VisitDetailsModal from '../components/VisitDetailsModal';
+import HolidayDetailsModal from '../components/HolidayDetailsModal';
 import { useDateFilter } from '../contexts/DateFilterContext';
 import DateFilter from '@/components/DateFilter/DateFilter';
 import * as XLSX from 'xlsx';
@@ -24,6 +25,7 @@ interface VisitDetail {
   createdAt: string;
   updatedAt: string;
   representative: string;
+  canViewDetails?: boolean;
 }
 
 interface PersonMet {
@@ -47,6 +49,21 @@ interface IssueAssignment {
   executiveName: string;
 }
 
+interface HolidayRequest {
+  id: string;
+  secNames: string[];
+  reason: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  submittedAt: string;
+  storeName?: string;
+  adminComment?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  type?: 'VACATION' | 'WEEK_OFF';
+}
+
 const VisitHistory: React.FC = () => {
   const { selectedPeriod } = useDateFilter();
   const searchParams = useSearchParams();
@@ -54,12 +71,15 @@ const VisitHistory: React.FC = () => {
   // Data sets for tabs
   const [physicalVisits, setPhysicalVisits] = useState<VisitDetail[]>([]);
   const [digitalVisits, setDigitalVisits] = useState<VisitDetail[]>([]);
-  const [activeTab, setActiveTab] = useState<'PHYSICAL' | 'DIGITAL'>('PHYSICAL');
+  const [holidayRequests, setHolidayRequests] = useState<HolidayRequest[]>([]);
+  const [activeTab, setActiveTab] = useState<'PHYSICAL' | 'DIGITAL' | 'HOLIDAY'>('PHYSICAL');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedVisit, setSelectedVisit] = useState<VisitDetail | null>(null);
   const [selectedVisitType, setSelectedVisitType] = useState<'PHYSICAL' | 'DIGITAL'>('PHYSICAL');
+  const [selectedHoliday, setSelectedHoliday] = useState<HolidayRequest | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showHolidayModal, setShowHolidayModal] = useState(false);
   const [expandedPersonMet, setExpandedPersonMet] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState({
     storeName: '',
@@ -102,15 +122,20 @@ const VisitHistory: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        
-        // Fetch physical, digital data and filter options in parallel
-        const [physicalRes, digitalRes, filterResponse] = await Promise.all([
+
+        // Fetch physical, digital data, holiday requests, and filter options in parallel
+        const [physicalRes, digitalRes, holidayRes, filterResponse] = await Promise.all([
           fetch(`/api/executive/visits/data?period=${encodeURIComponent(selectedPeriod)}`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include'
           }),
           fetch(`/api/executive/digital-visits/data?period=${encodeURIComponent(selectedPeriod)}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+          }),
+          fetch('/api/executive/holiday', {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include'
@@ -126,15 +151,17 @@ const VisitHistory: React.FC = () => {
           throw new Error('Failed to fetch visit or filter data');
         }
 
-        const [physicalResult, digitalResult, filterResult] = await Promise.all([
+        const [physicalResult, digitalResult, holidayResult, filterResult] = await Promise.all([
           physicalRes.json(),
           digitalRes.json(),
+          holidayRes.ok ? holidayRes.json() : { data: [] },
           filterResponse.json()
         ]);
-        
+
         if (physicalResult.success && digitalResult.success && filterResult.success) {
           setPhysicalVisits(physicalResult.data || []);
           setDigitalVisits(digitalResult.data || []);
+          setHolidayRequests(holidayResult.data || []);
           setFilterOptions(filterResult.data.filterOptions);
         } else {
           throw new Error(physicalResult.error || digitalResult.error || filterResult.error || 'Failed to fetch data');
@@ -158,6 +185,9 @@ const VisitHistory: React.FC = () => {
         return '#28a745';
       case 'REVIEWD':
         return '#007bff';
+      case 'PENDING': return '#ffc107';
+      case 'APPROVED': return '#28a745';
+      case 'REJECTED': return '#dc3545';
       default:
         return '#6c757d';
     }
@@ -169,7 +199,7 @@ const VisitHistory: React.FC = () => {
       // Already formatted, return as is
       return dateString;
     }
-    
+
     // Parse the date
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
@@ -180,12 +210,12 @@ const VisitHistory: React.FC = () => {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
-    
+
     // Reset time to 00:00:00 for accurate date comparison
     const visitDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const yesterdayDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
-    
+
     // Check if the visit date is today or yesterday
     if (visitDate.getTime() === todayDate.getTime()) {
       return 'Today';
@@ -201,14 +231,26 @@ const VisitHistory: React.FC = () => {
   };
 
   const openVisitModal = (visit: VisitDetail) => {
-    setSelectedVisit(visit);
-    setSelectedVisitType(activeTab);
+    setSelectedVisit({ ...visit, canViewDetails: true }); // Ensure compatibility
+    if (activeTab === 'PHYSICAL' || activeTab === 'DIGITAL') {
+      setSelectedVisitType(activeTab);
+    }
     setShowModal(true);
   };
 
   const closeVisitModal = () => {
     setSelectedVisit(null);
     setShowModal(false);
+  };
+
+  const openHolidayModal = (holiday: HolidayRequest) => {
+    setSelectedHoliday(holiday);
+    setShowHolidayModal(true);
+  };
+
+  const closeHolidayModal = () => {
+    setSelectedHoliday(null);
+    setShowHolidayModal(false);
   };
 
   const togglePersonMetExpansion = (visitId: string) => {
@@ -255,7 +297,7 @@ const VisitHistory: React.FC = () => {
       // Get user name from cookie for worksheet name
       const getCookie = (name: string): string | null => {
         if (typeof document === 'undefined') return null;
-        
+
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
         if (parts.length === 2) {
@@ -285,8 +327,8 @@ const VisitHistory: React.FC = () => {
           'Status': visit.status === 'PENDING_REVIEW' ? 'Pending Review' : (visit.reviewerName ? `Reviewed by ${visit.reviewerName}` : 'Reviewed'),
           'POSM Available': visit.POSMchecked === null ? 'Not specified' : (visit.POSMchecked ? 'Yes' : 'No'),
           'Visit Date': formatDate(visit.createdAt),
-          'Person Met': visit.personMet && visit.personMet.length > 0 
-            ? visit.personMet.map((p, index) => `${index + 1}. ${p.name} (${p.designation})`).join('; ') 
+          'Person Met': visit.personMet && visit.personMet.length > 0
+            ? visit.personMet.map((p, index) => `${index + 1}. ${p.name} (${p.designation})`).join('; ')
             : 'N/A',
           'Total People Met': visit.personMet?.length || 0,
           'Remarks': visit.remarks || 'No remarks',
@@ -295,7 +337,7 @@ const VisitHistory: React.FC = () => {
           'Image URLs': visit.imageUrls?.join('; ') || 'No images',
           'Number of Images': visit.imageUrls?.length || 0,
           'Issues Count': visit.issues?.length || 0,
-          'Issues Details': visit.issues?.map(issue => 
+          'Issues Details': visit.issues?.map(issue =>
             `${issue.details} (Status: ${issue.status})`
           ).join('; ') || 'No issues',
           'Created At': (() => {
@@ -359,7 +401,7 @@ const VisitHistory: React.FC = () => {
 
       // Write and download the file
       XLSX.writeFile(workbook, filename);
-      
+
       console.log(`Excel report exported successfully: ${filename}`);
     } catch (error) {
       console.error('Error exporting to Excel:', error);
@@ -386,7 +428,7 @@ const VisitHistory: React.FC = () => {
         {/* Filters Section */}
         <div className="exec-visits-filters-section">
           <div className="exec-visits-filters-header">
-            <button 
+            <button
               className={`exec-visits-filters-toggle ${filtersOpen ? 'active' : ''}`}
               onClick={() => setFiltersOpen(!filtersOpen)}
               disabled={loading}
@@ -394,14 +436,14 @@ const VisitHistory: React.FC = () => {
               <span>Filters</span>
               <span className="exec-visits-filter-arrow">▼</span>
             </button>
-            
+
             <button className="exec-visits-export-btn" onClick={handleExportToExcel} disabled={loading}>
               📊 Export
             </button>
           </div>
 
           {/* Tab Bar - Full width below filter header */}
-          <div className="exec-visits-tabbar">
+          <div className="exec-visits-tabbar" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
             <button
               type="button"
               className={`exec-visits-tab ${activeTab === 'PHYSICAL' ? 'active' : ''}`}
@@ -424,8 +466,19 @@ const VisitHistory: React.FC = () => {
                 <span className="exec-tab-visit">&nbsp;Visits</span>
               </span>
             </button>
+            <button
+              type="button"
+              className={`exec-visits-tab ${activeTab === 'HOLIDAY' ? 'active' : ''}`}
+              onClick={() => setActiveTab('HOLIDAY')}
+            >
+              <span className="exec-tab-icon">🏖️</span>
+              <span className="exec-tab-text">
+                <span className="exec-tab-word">Vacation</span>
+                <span className="exec-tab-visit">&nbsp;& Off</span>
+              </span>
+            </button>
           </div>
-          
+
           {filtersOpen && (
             <div className="exec-visits-filters-panel">
               <div className="exec-visits-filter-group">
@@ -439,7 +492,7 @@ const VisitHistory: React.FC = () => {
                   disabled={loading}
                 />
               </div>
-              
+
               <div className="exec-visits-filter-group">
                 <label className="exec-visits-filter-label">Filter by City</label>
                 <select
@@ -453,7 +506,7 @@ const VisitHistory: React.FC = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div className="exec-visits-filter-group">
                 <label className="exec-visits-filter-label">Filter by Partner Brand</label>
                 <select
@@ -467,7 +520,7 @@ const VisitHistory: React.FC = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div className="exec-visits-filter-group">
                 <label className="exec-visits-filter-label">Filter by Status</label>
                 <select
@@ -481,7 +534,7 @@ const VisitHistory: React.FC = () => {
                   <option value="REVIEWD">Reviewed</option>
                 </select>
               </div>
-              
+
               <div className="exec-visits-filter-group">
                 <label className="exec-visits-filter-label">Sort By</label>
                 <select
@@ -495,7 +548,7 @@ const VisitHistory: React.FC = () => {
                   ))}
                 </select>
               </div>
-              
+
             </div>
           )}
         </div>
@@ -503,143 +556,225 @@ const VisitHistory: React.FC = () => {
         {/* Visit History Table */}
         <div className="exec-visits-container">
           <div className="exec-visits-table-container">
-            <table className="exec-visits-table">
-              <thead>
-                <tr>
-                  <th>Store Name</th>
-                  <th>Partner Brand</th>
-                  <th>Person Met</th>
-                  <th>Date</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
+
+            {activeTab === 'HOLIDAY' ? (
+              <table className="exec-visits-table">
+                <thead>
                   <tr>
-                    <td colSpan={5}>
-                      <div className="loading-state">
-                        <div className="loading-spinner-large"></div>
-                        <span className="loading-text">Loading visits...</span>
-                      </div>
-                    </td>
+                    <th>Type</th>
+                    <th>SEC Details</th>
+                    <th>Store Name</th>
+                    <th>Date Range</th>
+                    <th>Action</th>
                   </tr>
-                ) : error ? (
-                  <tr>
-                    <td colSpan={5}>
-                      <div className="error-state">
-                        <p>Error: {error}</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : filteredVisits.length === 0 ? (
-                  <tr>
-                    <td colSpan={5}>
-                      <div className="no-data-state">
-                        <p>No visits found</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredVisits.map((visit) => (
-                    <tr key={visit.id}>
-                      <td data-label="Store Name">
-                        <div className="exec-visits-store-cell">
-                          <span className="exec-visits-store-name-cell">{visit.storeName || 'N/A'}</span>
-                        </div>
-                      </td>
-                      <td data-label="Partner Brand">
-                        <div className="exec-visits-brand-cell">
-                          <span className="exec-visits-partner-brand-cell">{visit.partnerBrand || 'N/A'}</span>
-                        </div>
-                      </td>
-                      <td data-label="Person Met">
-                        <div className="exec-visits-person-cell">
-                          {visit.personMet && visit.personMet.length > 0 ? (
-                            <div className="exec-visits-person-met-list">
-                              {visit.personMet.length === 1 ? (
-                                // Single person - show full details
-                                <div className="exec-visits-person-met-item">
-                                  <span className="exec-visits-person-name">{visit.personMet[0].name}</span>
-                                  <span className="exec-visits-person-designation">({visit.personMet[0].designation})</span>
-                                </div>
-                              ) : visit.personMet.length === 2 ? (
-                                // Two people - show both
-                                <>
-                                  <div className="exec-visits-person-met-item">
-                                    <span className="exec-visits-person-name">{visit.personMet[0].name}</span>
-                                    <span className="exec-visits-person-designation">({visit.personMet[0].designation})</span>
-                                  </div>
-                                  <div className="exec-visits-person-met-item">
-                                    <span className="exec-visits-person-name">{visit.personMet[1].name}</span>
-                                    <span className="exec-visits-person-designation">({visit.personMet[1].designation})</span>
-                                  </div>
-                                </>
-                              ) : (
-                                // Multiple people - show first person + expandable list
-                                <>
-                                  <div className="exec-visits-person-met-item">
-                                    <span className="exec-visits-person-name">{visit.personMet[0].name}</span>
-                                    <span className="exec-visits-person-designation">({visit.personMet[0].designation})</span>
-                                  </div>
-                                  
-                                  {expandedPersonMet.has(visit.id) ? (
-                                    // Show all additional people when expanded
-                                    <>
-                                      {visit.personMet.slice(1).map((person, index) => (
-                                        <div key={index + 1} className="exec-visits-person-met-item">
-                                          <span className="exec-visits-person-name">{person.name}</span>
-                                          <span className="exec-visits-person-designation">({person.designation})</span>
-                                        </div>
-                                      ))}
-                                      <div className="exec-visits-person-more" onClick={() => togglePersonMetExpansion(visit.id)}>
-                                        <span className="exec-visits-more-count exec-visits-show-less">Show less</span>
-                                      </div>
-                                    </>
-                                  ) : (
-                                    // Show "+ X more" button when collapsed
-                                    <div className="exec-visits-person-more" onClick={() => togglePersonMetExpansion(visit.id)}>
-                                      <span className="exec-visits-more-count">+{visit.personMet.length - 1} more</span>
-                                    </div>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="exec-visits-no-data">-</span>
-                          )}
-                        </div>
-                      </td>
-                      <td data-label="Date">
-                        <div className="exec-visits-date-cell">
-                          <span className="exec-visits-date-table">{formatDate(visit.createdAt)}</span>
-                        </div>
-                      </td>
-                      <td data-label="Action">
-                        <div className="exec-visits-action-cell">
-                          <span 
-                            className="exec-visits-status-badge"
-                            style={{ backgroundColor: getStatusColor(visit.status) }}
-                          >
-                            {visit.status === 'PENDING_REVIEW' 
-                              ? 'Pending Review' 
-                              : (visit.reviewerName ? `Reviewed by ${visit.reviewerName}` : 'Reviewed')}
-                          </span>
-                          <button 
-                            className="exec-visits-view-details-btn"
-                            onClick={() => openVisitModal(visit)}
-                          >
-                            View Detail
-                          </button>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={5}>
+                        <div className="loading-state">
+                          <div className="loading-spinner-large"></div>
+                          <span className="loading-text">Loading requests...</span>
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : holidayRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan={5}>
+                        <div className="no-data-state">
+                          <p>No vacation requests found</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    holidayRequests.map((req) => (
+                      <tr key={req.id}>
+                        <td data-label="Type">
+                          <div className="exec-visits-store-cell">
+                            <span
+                              className="exec-visits-status-badge"
+                              style={{
+                                backgroundColor: req.type === 'WEEK_OFF' ? '#17a2b8' : '#6f42c1',
+                                color: 'white'
+                              }}
+                            >
+                              {req.type === 'WEEK_OFF' ? 'Week Off' : 'Vacation'}
+                            </span>
+                          </div>
+                        </td>
+                        <td data-label="SEC Details">
+                          <div className="exec-visits-store-cell">
+                            {/* Show just first SEC or count as per space */}
+                            <span className="exec-visits-store-name-cell">
+                              {req.secNames && req.secNames.length > 0 ? req.secNames[0] + (req.secNames.length > 1 ? ` +${req.secNames.length - 1}` : '') : 'N/A'}
+                            </span>
+                          </div>
+                        </td>
+                        <td data-label="Store Name">
+                          <div className="exec-visits-store-cell">
+                            <span className="exec-visits-store-name-cell">{req.storeName || 'N/A'}</span>
+                          </div>
+                        </td>
+                        <td data-label="Date Range">
+                          <div className="exec-visits-date-cell">
+                            <span className="exec-visits-date-table">
+                              {formatDate(req.startDate)} - {formatDate(req.endDate)}
+                            </span>
+                          </div>
+                        </td>
+                        <td data-label="Action">
+                          <div className="exec-visits-action-cell">
+                            <button
+                              className="exec-visits-view-details-btn"
+                              onClick={() => openHolidayModal(req)}
+                            >
+                              View Detail
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            ) : (
+              <table className="exec-visits-table">
+                <thead>
+                  <tr>
+                    <th>Store Name</th>
+                    <th>Partner Brand</th>
+                    <th>Person Met</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={5}>
+                        <div className="loading-state">
+                          <div className="loading-spinner-large"></div>
+                          <span className="loading-text">Loading visits...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td colSpan={5}>
+                        <div className="error-state">
+                          <p>Error: {error}</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filteredVisits.length === 0 ? (
+                    <tr>
+                      <td colSpan={5}>
+                        <div className="no-data-state">
+                          <p>No visits found</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredVisits.map((visit) => (
+                      <tr key={visit.id}>
+                        <td data-label="Store Name">
+                          <div className="exec-visits-store-cell">
+                            <span className="exec-visits-store-name-cell">{visit.storeName || 'N/A'}</span>
+                          </div>
+                        </td>
+                        <td data-label="Partner Brand">
+                          <div className="exec-visits-brand-cell">
+                            <span className="exec-visits-partner-brand-cell">{visit.partnerBrand || 'N/A'}</span>
+                          </div>
+                        </td>
+                        <td data-label="Person Met">
+                          <div className="exec-visits-person-cell">
+                            {visit.personMet && visit.personMet.length > 0 ? (
+                              <div className="exec-visits-person-met-list">
+                                {visit.personMet.length === 1 ? (
+                                  // Single person - show full details
+                                  <div className="exec-visits-person-met-item">
+                                    <span className="exec-visits-person-name">{visit.personMet[0].name}</span>
+                                    <span className="exec-visits-person-designation">({visit.personMet[0].designation})</span>
+                                  </div>
+                                ) : visit.personMet.length === 2 ? (
+                                  // Two people - show both
+                                  <>
+                                    <div className="exec-visits-person-met-item">
+                                      <span className="exec-visits-person-name">{visit.personMet[0].name}</span>
+                                      <span className="exec-visits-person-designation">({visit.personMet[0].designation})</span>
+                                    </div>
+                                    <div className="exec-visits-person-met-item">
+                                      <span className="exec-visits-person-name">{visit.personMet[1].name}</span>
+                                      <span className="exec-visits-person-designation">({visit.personMet[1].designation})</span>
+                                    </div>
+                                  </>
+                                ) : (
+                                  // Multiple people - show first person + expandable list
+                                  <>
+                                    <div className="exec-visits-person-met-item">
+                                      <span className="exec-visits-person-name">{visit.personMet[0].name}</span>
+                                      <span className="exec-visits-person-designation">({visit.personMet[0].designation})</span>
+                                    </div>
+
+                                    {expandedPersonMet.has(visit.id) ? (
+                                      // Show all additional people when expanded
+                                      <>
+                                        {visit.personMet.slice(1).map((person, index) => (
+                                          <div key={index + 1} className="exec-visits-person-met-item">
+                                            <span className="exec-visits-person-name">{person.name}</span>
+                                            <span className="exec-visits-person-designation">({person.designation})</span>
+                                          </div>
+                                        ))}
+                                        <div className="exec-visits-person-more" onClick={() => togglePersonMetExpansion(visit.id)}>
+                                          <span className="exec-visits-more-count exec-visits-show-less">Show less</span>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      // Show "+ X more" button when collapsed
+                                      <div className="exec-visits-person-more" onClick={() => togglePersonMetExpansion(visit.id)}>
+                                        <span className="exec-visits-more-count">+{visit.personMet.length - 1} more</span>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="exec-visits-no-data">-</span>
+                            )}
+                          </div>
+                        </td>
+                        <td data-label="Date">
+                          <div className="exec-visits-date-cell">
+                            <span className="exec-visits-date-table">{formatDate(visit.createdAt)}</span>
+                          </div>
+                        </td>
+                        <td data-label="Action">
+                          <div className="exec-visits-action-cell">
+                            <span
+                              className="exec-visits-status-badge"
+                              style={{ backgroundColor: getStatusColor(visit.status) }}
+                            >
+                              {visit.status === 'PENDING_REVIEW'
+                                ? 'Pending Review'
+                                : (visit.reviewerName ? `Reviewed by ${visit.reviewerName}` : 'Reviewed')}
+                            </span>
+                            <button
+                              className="exec-visits-view-details-btn"
+                              onClick={() => openVisitModal(visit)}
+                            >
+                              View Detail
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
-
 
         {/* Visit Details Modal */}
         <VisitDetailsModal
@@ -647,6 +782,13 @@ const VisitHistory: React.FC = () => {
           onClose={closeVisitModal}
           visit={selectedVisit}
           isDigital={selectedVisitType === 'DIGITAL'}
+        />
+
+        {/* Holiday Details Modal */}
+        <HolidayDetailsModal
+          isOpen={showHolidayModal}
+          onClose={closeHolidayModal}
+          holiday={selectedHoliday}
         />
       </div>
     </div>

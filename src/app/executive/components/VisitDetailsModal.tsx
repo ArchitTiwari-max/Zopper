@@ -8,7 +8,7 @@ interface PastVisit {
   date: string;
   status: 'PENDING_REVIEW' | 'REVIEWD';
   representative: string;
-  canViewDetails: boolean;
+  canViewDetails?: boolean;
   personMet: PersonMet[];
   POSMchecked: boolean | null;
   remarks?: string;
@@ -83,7 +83,7 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
       // Already formatted, return as is
       return dateString;
     }
-    
+
     // Otherwise, format to dd/mm/yyyy format
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
@@ -116,7 +116,7 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
       };
       document.addEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'hidden';
-      
+
       return () => {
         document.removeEventListener('keydown', handleKeyDown);
         document.body.style.overflow = 'unset';
@@ -138,7 +138,7 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
 
     try {
       setIsDeleting(true);
-      const endpoint = isDigital 
+      const endpoint = isDigital
         ? `/api/executive/digital-visit/${visit.id}`
         : `/api/executive/visits/${visit.id}`;
       const res = await fetch(endpoint, {
@@ -153,7 +153,7 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
       // Close and refresh list
       onClose();
       // Soft refresh - let parent re-fetch; fallback to hard reload
-      try { (window as any).dispatchEvent(new CustomEvent('visit-deleted', { detail: { id: visit.id } })); } catch {}
+      try { (window as any).dispatchEvent(new CustomEvent('visit-deleted', { detail: { id: visit.id } })); } catch { }
       setTimeout(() => { if (typeof window !== 'undefined') window.location.reload(); }, 50);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to delete visit');
@@ -163,8 +163,8 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
   };
 
   return (
-    <div 
-      className="visit-modal-overlay" 
+    <div
+      className="visit-modal-overlay"
       onClick={handleOverlayClick}
       onKeyDown={handleEscapeKey}
       tabIndex={-1}
@@ -176,7 +176,7 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
             ×
           </button>
         </div>
-        
+
         <div className="visit-modal-body">
           <div className="visit-detail-section">
             <h3 className="visit-detail-section-title">Basic Information</h3>
@@ -191,7 +191,7 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
               </div>
               <div className="visit-detail-item">
                 <span className="visit-detail-label">Status:</span>
-                <span 
+                <span
                   className="visit-detail-value visit-status-badge"
                   style={{ backgroundColor: getStatusColor(visit.status), color: 'white', padding: '2px 8px', borderRadius: '4px' }}
                 >
@@ -233,16 +233,16 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
                       {person.phoneNumber && (
                         <>
                           {' • '}
-                          <a 
-                            href={`tel:${person.phoneNumber}`} 
+                          <a
+                            href={`tel:${person.phoneNumber}`}
                             className="visit-phone-link"
-                            style={{ 
-                              color: '#3b82f6', 
+                            style={{
+                              color: '#3b82f6',
                               textDecoration: 'none',
                               fontSize: '0.875rem'
                             }}
-                            onMouseOver={(e) => e.target.style.textDecoration = 'underline'}
-                            onMouseOut={(e) => e.target.style.textDecoration = 'none'}
+                            onMouseOver={(e) => (e.target as HTMLElement).style.textDecoration = 'underline'}
+                            onMouseOut={(e) => (e.target as HTMLElement).style.textDecoration = 'none'}
                           >
                             📞 {person.phoneNumber}
                           </a>
@@ -275,8 +275,8 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
               <div className="visit-images-grid">
                 {visit.imageUrls.map((imageUrl, index) => (
                   <div key={index} className="visit-image-item">
-                    <img 
-                      src={imageUrl} 
+                    <img
+                      src={imageUrl}
                       alt={`Visit image ${index + 1}`}
                       className="visit-detail-image"
                       onClick={() => window.open(imageUrl, '_blank')}
@@ -295,7 +295,7 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
                   <div key={issue.id} className="visit-issue-detail-item">
                     <div className="visit-issue-header">
                       <span className="visit-issue-details">{issue.details}</span>
-                      <span 
+                      <span
                         className="visit-issue-status-badge"
                         style={{ color: getStatusColor(issue.status) }}
                       >
