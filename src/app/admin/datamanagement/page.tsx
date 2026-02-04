@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Calendar, BarChart3, Upload, FileSpreadsheet, ArrowRight, Store, Settings } from 'lucide-react';
+import { Calendar, BarChart3, Upload, FileSpreadsheet, ArrowRight, Store, Settings, Database, TrendingUp } from 'lucide-react';
 import './data-management-dashboard.css';
 
 const DataManagementDashboard = () => {
@@ -22,12 +22,12 @@ const DataManagementDashboard = () => {
               </div>
               <ArrowRight className="adm-excel-import-card-arrow" />
             </div>
-            
+
             <p className="adm-excel-import-card-description">
-              Import monthly sales data with metrics like device sales, plan sales, 
+              Import monthly sales data with metrics like device sales, plan sales,
               attach percentage, and revenue organized by month.
             </p>
-            
+
             <div className="adm-excel-import-feature-list">
               <div className="adm-excel-import-feature-item">
                 <FileSpreadsheet className="adm-excel-import-feature-icon monthly" />
@@ -38,7 +38,7 @@ const DataManagementDashboard = () => {
                 Drag & drop interface
               </div>
             </div>
-            
+
             <div className="adm-excel-import-columns-section monthly">
               <h4 className="adm-excel-import-columns-title monthly">Expected Columns:</h4>
               <div className="adm-excel-import-columns-list monthly">
@@ -61,12 +61,12 @@ const DataManagementDashboard = () => {
               </div>
               <ArrowRight className="adm-excel-import-card-arrow" />
             </div>
-            
+
             <p className="adm-excel-import-card-description">
-              Import daily sales data with daily metrics like count of sales 
+              Import daily sales data with daily metrics like count of sales
               and revenue organized by specific dates.
             </p>
-            
+
             <div className="adm-excel-import-feature-list">
               <div className="adm-excel-import-feature-item">
                 <FileSpreadsheet className="adm-excel-import-feature-icon daily" />
@@ -77,7 +77,7 @@ const DataManagementDashboard = () => {
                 Drag & drop interface
               </div>
             </div>
-            
+
             <div className="adm-excel-import-columns-section daily">
               <h4 className="adm-excel-import-columns-title daily">Expected Columns:</h4>
               <div className="adm-excel-import-columns-list daily">
@@ -100,12 +100,12 @@ const DataManagementDashboard = () => {
               </div>
               <ArrowRight className="adm-excel-import-card-arrow" />
             </div>
-            
+
             <p className="adm-excel-import-card-description">
-              Import store information and manage executive assignments. 
+              Import store information and manage executive assignments.
               Add or remove executives from stores efficiently.
             </p>
-            
+
             <div className="adm-excel-import-feature-list">
               <div className="adm-excel-import-feature-item">
                 <FileSpreadsheet className="adm-excel-import-feature-icon store" />
@@ -116,7 +116,7 @@ const DataManagementDashboard = () => {
                 Drag & drop interface
               </div>
             </div>
-            
+
             <div className="adm-excel-import-columns-section store">
               <h4 className="adm-excel-import-columns-title store">Expected Columns:</h4>
               <div className="adm-excel-import-columns-list store">
@@ -139,12 +139,12 @@ const DataManagementDashboard = () => {
               </div>
               <ArrowRight className="adm-excel-import-card-arrow" />
             </div>
-            
+
             <p className="adm-excel-import-card-description">
-              Create new Admin and Executive users with automated ID generation. 
+              Create new Admin and Executive users with automated ID generation.
               Manage existing users with search and filter capabilities.
             </p>
-            
+
             <div className="adm-excel-import-feature-list">
               <div className="adm-excel-import-feature-item">
                 <Settings className="adm-excel-import-feature-icon user-mgmt" />
@@ -155,13 +155,91 @@ const DataManagementDashboard = () => {
                 Role-based user creation
               </div>
             </div>
-            
+
             <div className="adm-excel-import-columns-section user-mgmt">
               <h4 className="adm-excel-import-columns-title user-mgmt">Features:</h4>
               <div className="adm-excel-import-columns-list user-mgmt">
                 <p>• Auto-generate user_00001, admin_00001, executive_00001</p>
                 <p>• Search & filter users by name, email, role</p>
                 <p>• Secure password hashing and validation</p>
+              </div>
+            </div>
+          </Link>
+
+          {/* Dump Import */}
+          <Link href="/admin/datamanagement/dumpimport" className="adm-excel-import-import-card dump">
+            <div className="adm-excel-import-card-header">
+              <div className="adm-excel-import-card-icon dump">
+                <Database className="w-8 h-8 text-orange-600" />
+              </div>
+              <div className="adm-excel-import-card-title-section">
+                <h2 className="adm-excel-import-card-title">Dump Import</h2>
+                <p className="adm-excel-import-card-subtitle">Bulk data import</p>
+              </div>
+              <ArrowRight className="adm-excel-import-card-arrow" />
+            </div>
+
+            <p className="adm-excel-import-card-description">
+              Import large datasets and bulk data dumps. Process multiple records
+              efficiently with comprehensive validation and error handling.
+            </p>
+
+            <div className="adm-excel-import-feature-list">
+              <div className="adm-excel-import-feature-item">
+                <FileSpreadsheet className="adm-excel-import-feature-icon dump" />
+                Supports .xlsx and .xls files
+              </div>
+              <div className="adm-excel-import-feature-item">
+                <Upload className="adm-excel-import-feature-icon dump" />
+                Drag & drop interface
+              </div>
+            </div>
+
+            <div className="adm-excel-import-columns-section dump">
+              <h4 className="adm-excel-import-columns-title dump">Features:</h4>
+              <div className="adm-excel-import-columns-list dump">
+                <p>• Bulk data processing capabilities</p>
+                <p>• Comprehensive validation and error reporting</p>
+                <p>• Support for large datasets</p>
+              </div>
+            </div>
+          </Link>
+
+          {/* Partner Sales Dashboard */}
+          <Link href="/admin/datamanagement/partnerdashboard" className="adm-excel-import-import-card partner">
+            <div className="adm-excel-import-card-header">
+              <div className="adm-excel-import-card-icon partner">
+                <TrendingUp className="w-8 h-8 text-indigo-600" />
+              </div>
+              <div className="adm-excel-import-card-title-section">
+                <h2 className="adm-excel-import-card-title">Partner sales dashboard</h2>
+                <p className="adm-excel-import-card-subtitle">Partner analytics & insights</p>
+              </div>
+              <ArrowRight className="adm-excel-import-card-arrow" />
+            </div>
+
+            <p className="adm-excel-import-card-description">
+              View comprehensive partner sales analytics, performance metrics,
+              and insights across all partner stores and brands.
+            </p>
+
+            <div className="adm-excel-import-feature-list">
+              <div className="adm-excel-import-feature-item">
+                <BarChart3 className="adm-excel-import-feature-icon partner" />
+                Real-time analytics
+              </div>
+              <div className="adm-excel-import-feature-item">
+                <TrendingUp className="adm-excel-import-feature-icon partner" />
+                Performance tracking
+              </div>
+            </div>
+
+            <div className="adm-excel-import-columns-section partner">
+              <h4 className="adm-excel-import-columns-title partner">Features:</h4>
+              <div className="adm-excel-import-columns-list partner">
+                <p>• Sales performance by partner and brand</p>
+                <p>• Revenue trends and growth metrics</p>
+                <p>• Store-wise performance comparison</p>
               </div>
             </div>
           </Link>

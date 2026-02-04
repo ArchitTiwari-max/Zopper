@@ -188,6 +188,11 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
           title: 'User Management',
           subtitle: 'Create, manage, and export user accounts with comprehensive administrative controls'
         };
+      case '/admin/datamanagement/partnerdashboard':
+        return {
+          title: 'Partner Sales Dashboard',
+          subtitle: 'Comprehensive partner sales analytics and insights'
+        };
       default:
         return {
           title: currentPage || 'Dashboard',

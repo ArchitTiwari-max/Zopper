@@ -52,9 +52,9 @@ export default function RootLayout({
   const isMaintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true';
   // Check domain change mode - can be controlled via environment variable
   const isDomainChangeMode = process.env.NEXT_PUBLIC_DOMAIN_CHANGE_MODE === 'true';
-  
+
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         {isDomainChangeMode ? (
           <DomainChangePage />
