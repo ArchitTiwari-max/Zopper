@@ -89,7 +89,7 @@ const VPOEditModal: React.FC<VPOEditModalProps> = ({
   const fetchAvailableStores = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/executive/stores', {
+      const response = await fetch('/api/executive/store/data', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
