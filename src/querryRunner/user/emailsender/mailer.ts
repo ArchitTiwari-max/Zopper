@@ -42,7 +42,8 @@ export async function sendDailyVisitSummaryToAdmins(
   const adminEmails = [
     'bharat.kumar@zopper.com',
     'vikash.dubey@zopper.com',
-    'amit.srivastava@zopper.com'
+    'amit.srivastava@zopper.com',
+    'archit.tiwari@zopper.com'
   ];
 
   const today = new Date().toLocaleDateString('en-IN', {
