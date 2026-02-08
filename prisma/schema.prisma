@@ -94,6 +94,7 @@ model ExecutiveStoreAssignment {
   executiveId String
   storeId     String
   assignedAt  DateTime @default(now())
+  isFlagged   Boolean  @default(false)
 
   executive Executive @relation(fields: [executiveId], references: [id])
   store     Store     @relation(fields: [storeId], references: [id])

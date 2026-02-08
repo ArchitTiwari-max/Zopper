@@ -6,7 +6,7 @@ export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'VISIT_REVIEWED' | 'ISSUE_ASSIGNED' | 'ADMIN_COMMENT_ADDED' | 'SYSTEM_ANNOUNCEMENT';
+  type: 'VISIT_REVIEWED' | 'ISSUE_ASSIGNED' | 'ADMIN_COMMENT_ADDED' | 'SYSTEM_ANNOUNCEMENT' | 'VISIT_PLAN_SUBMITTED';
   status: 'UNREAD' | 'read' | 'ARCHIVED';
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
   createdAt: string;
@@ -62,11 +62,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       const response = await fetch('/api/notifications?limit=20', {
         credentials: 'include'
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch notifications');
       }
-      
+
       const data = await response.json();
       if (data.success) {
         setNotifications(data.data || []);
@@ -125,7 +125,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
               : notif
           )
         );
-        
+
         // Update unread count
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
@@ -162,7 +162,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
               : notif
           )
         );
-        
+
         // Reset unread count
         setUnreadCount(0);
       }
@@ -187,7 +187,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       if (response.ok) {
         // Remove from current list
         setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
-        
+
         // Update unread count if it was unread
         const notification = notifications.find(n => n.id === notificationId);
         if (notification && notification.status === 'UNREAD') {
@@ -202,7 +202,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   // Initial load and periodic refresh
   useEffect(() => {
     refreshNotifications();
-    
+
     // Set up periodic refresh every 30 seconds
     const interval = setInterval(() => {
       fetchUnreadCount();

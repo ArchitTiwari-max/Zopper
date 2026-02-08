@@ -14,6 +14,7 @@ interface StoreData {
   partnerBrandTypes: ('A_PLUS' | 'A' | 'B' | 'C' | 'D')[];
   visited: string;
   lastVisitDate: string | null;
+  isFlagged: boolean;
 }
 
 
@@ -27,10 +28,10 @@ const Store: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  
+
   // RAG data state
   const [ragData, setRagData] = useState<Map<string, string>>(new Map()); // Map of storeId -> RAG status
-  
+
   const [filters, setFilters] = useState({
     storeName: '',
     city: 'All Cities',
@@ -63,7 +64,7 @@ const Store: React.FC = () => {
   // Helper function to format brands with types
   const formatBrandsWithTypes = (brands: string[], types: ('A_PLUS' | 'A' | 'B' | 'C' | 'D')[]): string => {
     if (brands.length === 0) return 'No brands';
-    
+
     return brands.map((brand, index) => {
       const type = types[index];
       return type ? `${brand} (${formatBrandType(type)})` : brand;
@@ -117,7 +118,7 @@ const Store: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Fetch store data and filter options in parallel
       const [storeResponse, filterResponse] = await Promise.all([
         fetch('/api/executive/store/data', {
@@ -136,15 +137,18 @@ const Store: React.FC = () => {
         })
       ]);
 
-      if (!storeResponse.ok || !filterResponse.ok) {
-        throw new Error('Failed to fetch store or filter data');
+      if (!storeResponse.ok) {
+        throw new Error(`Store data fetch failed: ${storeResponse.status} ${storeResponse.statusText}`);
+      }
+      if (!filterResponse.ok) {
+        throw new Error(`Filter data fetch failed: ${filterResponse.status} ${filterResponse.statusText}`);
       }
 
       const [storeResult, filterResult] = await Promise.all([
         storeResponse.json(),
         filterResponse.json()
       ]);
-      
+
       if (storeResult.success && filterResult.success) {
         const stores: StoreData[] = storeResult.data.stores;
         const fo = filterResult.data.filterOptions || {};
@@ -163,6 +167,34 @@ const Store: React.FC = () => {
       setError(error instanceof Error ? error.message : 'Failed to fetch stores');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleStoreFlag = async (e: React.MouseEvent, storeId: string, currentFlag: boolean) => {
+    e.stopPropagation(); // Prevent row click
+
+    // Optimistic update
+    setStoreData(prev => prev.map(s =>
+      s.id === storeId ? { ...s, isFlagged: !currentFlag } : s
+    ));
+
+    try {
+      const response = await fetch('/api/executive/store/flag', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storeId, isFlagged: !currentFlag })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update flag');
+      }
+    } catch (error) {
+      console.error('Error toggling flag:', error);
+      // Revert on error
+      setStoreData(prev => prev.map(s =>
+        s.id === storeId ? { ...s, isFlagged: currentFlag } : s
+      ));
+      alert('Failed to update bookmark');
     }
   };
 
@@ -192,19 +224,19 @@ const Store: React.FC = () => {
 
   const handleSubmitVisitPlan = async () => {
     if (selectedStores.length === 0) return;
-    
+
     if (!plannedVisitDate) {
       alert('Please select a planned visit date before submitting.');
       return;
     }
-    
+
     // Validate that the planned date is not in the past (using local date)
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     const todayLocal = `${year}-${month}-${day}`;
-    
+
     if (plannedVisitDate < todayLocal) {
       alert('❌ Past date not allowed. Please select today or a future date.');
       return;
@@ -212,7 +244,7 @@ const Store: React.FC = () => {
 
     try {
       setSubmitting(true);
-      
+
       // Submit visit plan to backend
       const response = await fetch('/api/executive/visit-plan', {
         method: 'POST',
@@ -276,24 +308,24 @@ const Store: React.FC = () => {
   };
 
   const handleStoreRowClick = (storeId: string, event: React.MouseEvent) => {
-    // Don't navigate if clicking on checkbox in create mode
-    if (isCreateMode && (event.target as HTMLElement).tagName === 'INPUT') {
+    // Don't navigate if clicking on checkbox or flag button
+    if (isCreateMode && (event.target as HTMLElement).closest('.exec-v-form-checkbox-cell')) {
       return;
     }
-    
+
     // If in create mode, toggle selection instead of navigating
     if (isCreateMode) {
       handleStoreSelection(storeId);
       return;
     }
-    
+
     // Find the store data for this storeId
     const store = storeData.find(s => s.id === storeId);
     if (!store) {
       alert('Store data not found');
       return;
     }
-    
+
     // Create URL with store data as parameters
     const params = new URLSearchParams({
       storeId: store.id,
@@ -302,7 +334,7 @@ const Store: React.FC = () => {
       fullAddress: store.fullAddress || '',
       partnerBrands: JSON.stringify(store.partnerBrands)
     });
-    
+
     // Navigate to executive form with store data
     router.push(`/executive/executive-form?${params.toString()}`);
   };
@@ -333,7 +365,10 @@ const Store: React.FC = () => {
       case 'City A-Z':
         return a.city.localeCompare(b.city);
       default: // Recently Visited First
-        return 0; // Keep original order (already sorted by API)
+        // Sort flagged stores to top if using default sort?
+        // Let's keep original sort mostly, but maybe prioritize flagged?
+        // User didn't ask for sorting.
+        return 0;
     }
   });
 
@@ -366,7 +401,8 @@ const Store: React.FC = () => {
 
         {/* Filters Section */}
         <div className="exec-v-form-filters-section">
-          <button 
+          {/* ... existing filters ... */}
+          <button
             className={`exec-v-form-filters-toggle ${filtersOpen ? 'active' : ''}`}
             onClick={() => setFiltersOpen(!filtersOpen)}
             disabled={loading}
@@ -374,7 +410,7 @@ const Store: React.FC = () => {
             <span>Filters</span>
             <span className="exec-v-form-filter-arrow">▼</span>
           </button>
-          
+
           {filtersOpen && (
             <div className="exec-v-form-filters-panel">
               <div className="exec-v-form-filter-group">
@@ -388,7 +424,7 @@ const Store: React.FC = () => {
                   disabled={loading}
                 />
               </div>
-              
+
               <div className="exec-v-form-filter-group">
                 <label className="exec-v-form-filter-label">Filter by City</label>
                 <select
@@ -402,7 +438,7 @@ const Store: React.FC = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div className="exec-v-form-filter-group">
                 <label className="exec-v-form-filter-label">Filter by Partner Brand</label>
                 <select
@@ -430,7 +466,7 @@ const Store: React.FC = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div className="exec-v-form-filter-group">
                 <label className="exec-v-form-filter-label">Sort By</label>
                 <select
@@ -444,7 +480,7 @@ const Store: React.FC = () => {
                   ))}
                 </select>
               </div>
-              
+
             </div>
           )}
         </div>
@@ -482,10 +518,15 @@ const Store: React.FC = () => {
               </div>
             ) : (
               filteredStores.map((store) => (
-                <div 
-                  key={store.id} 
-                  className={`exec-v-form-table-row ${isCreateMode ? 'create-mode' : ''} ${selectedStores.includes(store.id) ? 'selected' : ''} ${!isCreateMode ? 'clickable' : ''}`}
+                <div
+                  key={store.id}
+                  className={`exec-v-form-table-row 
+                    ${isCreateMode ? 'create-mode' : ''} 
+                    ${selectedStores.includes(store.id) ? 'selected' : ''} 
+                    ${isCreateMode && selectedStores.includes(store.id) && store.isFlagged ? 'flagged-selected' : ''}
+                    ${!isCreateMode ? 'clickable' : ''}`}
                   onClick={(e) => handleStoreRowClick(store.id, e)}
+                  style={isCreateMode && selectedStores.includes(store.id) && store.isFlagged ? { backgroundColor: '#fef08a' } : {}}
                 >
                   {isCreateMode && (
                     <div className="exec-v-form-table-cell exec-v-form-checkbox-cell">
@@ -499,6 +540,20 @@ const Store: React.FC = () => {
                   )}
                   <div className="exec-v-form-table-cell exec-v-form-store-name-cell">
                     <div className="exec-v-form-store-name-wrapper">
+                      <button
+                        className="store-flag-btn"
+                        onClick={(e) => toggleStoreFlag(e, store.id, store.isFlagged)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          marginRight: '8px',
+                          fontSize: '18px',
+                          opacity: store.isFlagged ? 1 : 0.3
+                        }}
+                      >
+                        {store.isFlagged ? '⭐' : '☆'}
+                      </button>
                       <span className="exec-v-form-store-name-text">{store.storeName} {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}</span>
                       <span className="exec-v-form-store-subtext">{store.city}</span>
                     </div>
@@ -533,7 +588,7 @@ const Store: React.FC = () => {
           <div className="exec-v-form-preview-modal">
             <div className="exec-v-form-modal-header">
               <h2 className="exec-v-form-modal-title">📋 Visit Plan Preview</h2>
-              <button 
+              <button
                 className="exec-v-form-modal-close-btn"
                 onClick={() => setShowPreview(false)}
                 disabled={submitting}
@@ -541,14 +596,14 @@ const Store: React.FC = () => {
                 ✕
               </button>
             </div>
-            
+
             <div className="exec-v-form-modal-body">
               <div className="exec-v-form-preview-summary">
                 <p className="exec-v-form-summary-text">
                   You have selected <strong>{selectedStores.length}</strong> {selectedStores.length === 1 ? 'store' : 'stores'} for visits:
                 </p>
               </div>
-              
+
               {/* Planned Visit Date Section */}
               <div className="exec-v-form-date-section">
                 <label className="exec-v-form-date-label">
@@ -586,7 +641,7 @@ const Store: React.FC = () => {
                   </p>
                 )}
               </div>
-              
+
               <div className="exec-v-form-preview-stores-list">
                 {getSelectedStoreDetails().map((store, index) => (
                   <div key={store.id} className="exec-v-form-preview-store-item">
@@ -607,24 +662,24 @@ const Store: React.FC = () => {
                   </div>
                 ))}
               </div>
-              
+
               <div className="exec-v-form-preview-note">
                 <p className="exec-v-form-note-text">
-                  💡 <strong>Note:</strong> Submitting this visit plan will notify all admins about your intended store visits. 
+                  💡 <strong>Note:</strong> Submitting this visit plan will notify all admins about your intended store visits.
                   They will receive a notification with the list of selected stores.
                 </p>
               </div>
             </div>
-            
+
             <div className="exec-v-form-modal-footer">
-              <button 
+              <button
                 className="exec-v-form-cancel-modal-btn"
                 onClick={() => setShowPreview(false)}
                 disabled={submitting}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 className="exec-v-form-send-plan-btn"
                 onClick={handleSubmitVisitPlan}
                 disabled={submitting}
