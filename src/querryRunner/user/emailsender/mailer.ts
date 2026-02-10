@@ -45,6 +45,7 @@ export async function sendDailyVisitSummaryToAdmins(
    'vikash.dubey@zopper.com',
    'amit.srivastava@zopper.com',
    'archit.tiwari@zopper.com',
+   'harshdep.singh@zopper.com'
   ];
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
