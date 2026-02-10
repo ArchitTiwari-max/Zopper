@@ -24,7 +24,7 @@ const rewardPayload = {
       mailer: process.env.MAILER || "",
       certificateId: "",
       transactionId: "TXN-" + Date.now(),
-      entityId: "1063",
+      entityId: "4419",
       column1: "",
       column2: "",
       column3: "",
