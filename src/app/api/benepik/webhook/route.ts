@@ -61,7 +61,7 @@ async function forwardToProjectWebhook(
   rawBody: string,
   timestamp: string,
   signature: string
-): Promise<Response> {
+): Promise<{ response: Response; data: any }> {
   const webhookUrl = getProjectWebhookUrl(projectName);
   console.log(`🔄 Forwarding webhook to ${projectName} project: ${webhookUrl}`);
 
@@ -85,7 +85,7 @@ async function forwardToProjectWebhook(
   }
 
   console.log(`✅ Project webhook processed successfully:`, responseData);
-  return response;
+  return { response, data: responseData };
 }
 
 export async function POST(req: NextRequest) {
@@ -158,8 +158,7 @@ export async function POST(req: NextRequest) {
 
     // Forward to project-specific webhook (with same body and headers)
     // Individual webhook will handle signature verification and processing
-    const projectResponse = await forwardToProjectWebhook(projectName, rawBody, timestamp, signature);
-    const projectResponseData = await projectResponse.json();
+    const { response: projectResponse, data: projectResponseData } = await forwardToProjectWebhook(projectName, rawBody, timestamp, signature);
 
     // Return the project webhook's response
     return NextResponse.json(projectResponseData, { status: projectResponse.status });
