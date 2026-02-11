@@ -36,7 +36,7 @@ function getProjectWebhookUrl(projectName: string): string {
   const projectWebhookMap: Record<string, { localhost: string; production: string }> = {
     salesmitr: {
       localhost: 'http://localhost:3000/api/webhooks/benepik',
-      production: 'https://salesmitra.com/api/webhooks/benepik',
+      production: 'https://salesmitr.com/api/webhooks/benepik',
     },
     salesdost: {
       localhost: 'http://localhost:3001/api/webhooks/benepik',
