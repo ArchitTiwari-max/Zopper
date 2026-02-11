@@ -52,17 +52,18 @@ export async function sendMail(to: string, subject: string, html: string) {
 export async function sendDailyVisitSummaryToAdmins(
   visitData: Array<{ executiveId: string; executiveName: string; storeName: string; visitCount: number }>
 ) {
-  // const adminEmails = [
-  //   'vishal.shukla@zopper.com',
-  //    'bharat.kumar@zopper.com',
-  //  'vikash.dubey@zopper.com',
-  //  'amit.srivastava@zopper.com',
-  //  'archit.tiwari@zopper.com',
-  //  'harshdep.singh@zopper.com'
-  // ];
-  const adminEmails=[
+  const adminEmails = [
     'vishal.shukla@zopper.com',
-  ]
+     'bharat.kumar@zopper.com',
+   'vikash.dubey@zopper.com',
+   'amit.srivastava@zopper.com',
+   'archit.tiwari@zopper.com',
+   'harshdep.singh@zopper.com',
+   'assurance.tech@zopper.com'
+  ];
+  // const adminEmails=[
+  //   'vishal.shukla@zopper.com',
+  // ]
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
     year: 'numeric',
@@ -167,6 +168,6 @@ export async function sendVisitNotificationToExecutive(
     ? `📊 Daily Summary - No visits today` 
     : `✅ Visit Recorded - ${storeName}`;
 
- // await sendMail(executiveEmail, subject, html);
+  await sendMail(executiveEmail, subject, html);
   console.log(`✅ Email sent to ${executiveName} (${executiveEmail}) - Visits: ${todayVisitCount}`);
 }
