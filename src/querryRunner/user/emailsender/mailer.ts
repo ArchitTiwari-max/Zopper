@@ -52,18 +52,18 @@ export async function sendMail(to: string, subject: string, html: string) {
 export async function sendDailyVisitSummaryToAdmins(
   visitData: Array<{ executiveId: string; executiveName: string; storeName: string; visitCount: number }>
 ) {
-  const adminEmails = [
-    'vishal.shukla@zopper.com',
-     'bharat.kumar@zopper.com',
-   'vikash.dubey@zopper.com',
-   'amit.srivastava@zopper.com',
-   'archit.tiwari@zopper.com',
-   'harshdep.singh@zopper.com',
-   'assurance.tech@zopper.com'
-  ];
-  // const adminEmails=[
+  // const adminEmails = [
   //   'vishal.shukla@zopper.com',
-  // ]
+  //    'bharat.kumar@zopper.com',
+  //  'vikash.dubey@zopper.com',
+  //  'amit.srivastava@zopper.com',
+  //  'archit.tiwari@zopper.com',
+  //  'harshdeep.singh@zopper.com',
+  //  'assurance.tech@zopper.com'
+  // ];
+  const adminEmails=[
+    'harshdeep.singh@zopper.com',
+  ]
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
     year: 'numeric',
@@ -78,8 +78,7 @@ export async function sendDailyVisitSummaryToAdmins(
     
     if (visit.storeName.trim()) {
       // Convert comma-separated stores to bullet list
-      // Add zero-width space after hyphens to prevent auto-linking
-      const stores = visit.storeName.split(',').map(s => s.trim().replace(/-/g, '-​'));
+      const stores = visit.storeName.split(',').map(s => s.trim());
       storesList = stores
         .map(store => `<li style="margin: 4px 0;">${store}</li>`)
         .join('');
@@ -149,6 +148,8 @@ export async function sendVisitNotificationToExecutive(
   if (todayVisitCount === 0) {
     // No visits today - show a different message
     html = visitNotificationTemplate
+      .replace('{{HEADER_TITLE}}', 'No Visits Today')
+      .replace('{{STATUS_MESSAGE}}', 'No visits have been recorded for you today.')
       .replace('{{EXECUTIVE_NAME}}', executiveName)
       .replace(/{{STORE_NAME}}/g, 'No visits recorded')
       .replace(/{{DATE}}/g, today)
@@ -157,6 +158,8 @@ export async function sendVisitNotificationToExecutive(
   } else {
     // Has visits - show normal message
     html = visitNotificationTemplate
+      .replace('{{HEADER_TITLE}}', 'Visit Recorded')
+      .replace('{{STATUS_MESSAGE}}', 'Your visit has been successfully recorded in the system.')
       .replace('{{EXECUTIVE_NAME}}', executiveName)
       .replace(/{{STORE_NAME}}/g, storeName)
       .replace(/{{DATE}}/g, today)
@@ -168,6 +171,6 @@ export async function sendVisitNotificationToExecutive(
     ? `📊 Daily Summary - No visits today` 
     : `✅ Visit Recorded - ${storeName}`;
 
-  await sendMail(executiveEmail, subject, html);
+  //await sendMail(executiveEmail, subject, html);
   console.log(`✅ Email sent to ${executiveName} (${executiveEmail}) - Visits: ${todayVisitCount}`);
 }
