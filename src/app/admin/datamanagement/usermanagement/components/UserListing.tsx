@@ -8,6 +8,7 @@ interface UserInfo {
   username: string;
   email: string;
   role: string;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
   adminInfo?: {
@@ -44,6 +45,7 @@ const UserListing: React.FC<UserListingProps> = ({ refreshTrigger }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [isExporting, setIsExporting] = useState(false);
+  const [togglingUserId, setTogglingUserId] = useState<string | null>(null);
 
   // Helper function to get cookie value
   const getCookie = (name: string): string | null => {
@@ -245,6 +247,40 @@ const UserListing: React.FC<UserListingProps> = ({ refreshTrigger }) => {
     });
   };
 
+  const handleToggleActiveStatus = async (userId: string, currentStatus: boolean) => {
+    setTogglingUserId(userId);
+    setError('');
+
+    try {
+      const response = await fetch('/api/admin/users/toggle-status', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          isActive: !currentStatus,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update user in local state
+        setUsers(prev => prev.map(user => 
+          user.id === userId ? { ...user, isActive: !currentStatus } : user
+        ));
+      } else {
+        setError(result.error || 'Failed to update user status');
+      }
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+      setError('Network error. Please try again.');
+    } finally {
+      setTogglingUserId(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="user-mgmt-listing-container">
@@ -360,24 +396,57 @@ const UserListing: React.FC<UserListingProps> = ({ refreshTrigger }) => {
                     <span>{user.role}</span>
                   </div>
                   
-                  <button
-                    onClick={() => handleDeleteUser(user.id, user.username)}
-                    className={`user-mgmt-delete-btn ${currentUsername !== 'test_admin' ? 'disabled' : ''}`}
-                    disabled={isDeleting || currentUsername !== 'test_admin'}
-                    title={currentUsername !== 'test_admin' ? 'Only test_admin can delete users' : 'Delete user'}
-                  >
-                    {currentUsername !== 'test_admin' ? (
-                      <>
-                        <Lock size={16} />
-                        Restricted
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 size={16} />
-                        Delete
-                      </>
-                    )}
-                  </button>
+                  <div className="user-mgmt-status-badge" style={{
+                    backgroundColor: user.isActive ? '#d1fae5' : '#fee2e2',
+                    color: user.isActive ? '#047857' : '#dc2626',
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.75rem',
+                    fontWeight: '500',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.025em'
+                  }}>
+                    {user.isActive ? '● Active' : '● Inactive'}
+                  </div>
+                  
+                  <div className="user-mgmt-card-actions">
+                    <button
+                      onClick={() => handleToggleActiveStatus(user.id, user.isActive)}
+                      className={`user-mgmt-status-btn ${user.isActive ? 'active' : 'inactive'}`}
+                      disabled={togglingUserId === user.id}
+                      title={user.isActive ? 'Click to deactivate' : 'Click to activate'}
+                    >
+                      {togglingUserId === user.id ? (
+                        <>
+                          <div className="user-mgmt-status-spinner" />
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          {user.isActive ? 'Make Inactive' : 'Make Active'}
+                        </>
+                      )}
+                    </button>
+                    
+                    <button
+                      onClick={() => handleDeleteUser(user.id, user.username)}
+                      className={`user-mgmt-delete-btn ${currentUsername !== 'test_admin' ? 'disabled' : ''}`}
+                      disabled={isDeleting || currentUsername !== 'test_admin'}
+                      title={currentUsername !== 'test_admin' ? 'Only test_admin can delete users' : 'Delete user'}
+                    >
+                      {currentUsername !== 'test_admin' ? (
+                        <>
+                          <Lock size={16} />
+                          Restricted
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 size={16} />
+                          Delete
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {/* User Info */}

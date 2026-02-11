@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyUatToken } from '@/lib/jwt';
 // Note: We are importing from the benepik-client folder as requested
-import { sendRewards } from '../../../../benepik-client/src/benepik.js';
+import { sendRewards } from '../../../lib/benepik';
 
 export async function POST(req: NextRequest) {
     try {

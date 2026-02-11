@@ -40,24 +40,43 @@ export async function GET(req: Request) {
 
     console.log(`� Found ${visits.length} visits`);
 
+    // Fetch all active executives
+    const allExecutives = await prisma.executive.findMany({
+      include: {
+        user: true,
+      },
+      where: {
+        user: {
+          isActive: true,
+        },
+      },
+    });
+
+    console.log(`👥 Total executives: ${allExecutives.length}`);
+
     // Group visits by executive
     const executiveVisits = new Map();
     
+    // Initialize all executives with 0 visits
+    allExecutives.forEach((exec) => {
+      executiveVisits.set(exec.id, {
+        executiveId: exec.id,
+        executiveName: exec.name,
+        executiveEmail: exec.user.email,
+        stores: [],
+        visitCount: 0,
+      });
+    });
+
+    // Add today's visits to the map
     visits.forEach((visit) => {
       const executiveId = visit.executiveId;
       
-      if (!executiveVisits.has(executiveId)) {
-        executiveVisits.set(executiveId, {
-          executiveName: visit.executive.name,
-          executiveEmail: visit.executive.user.email,
-          stores: [],
-          visitCount: 0,
-        });
+      if (executiveVisits.has(executiveId)) {
+        const data = executiveVisits.get(executiveId);
+        data.stores.push(visit.store.storeName);
+        data.visitCount += 1;
       }
-      
-      const data = executiveVisits.get(executiveId);
-      data.stores.push(visit.store.storeName);
-      data.visitCount += 1;
     });
 
     // Send to each executive
@@ -71,11 +90,14 @@ export async function GET(req: Request) {
     }
 
     // Send admin summary
-    const summaryData = Array.from(executiveVisits.values()).map((data) => ({
-      executiveName: data.executiveName,
-      storeName: data.stores.join(', '),
-      visitCount: data.visitCount,
-    }));
+    const summaryData = Array.from(executiveVisits.values())
+      .map((data) => ({
+        executiveId: data.executiveId,
+        executiveName: data.executiveName,
+        storeName: data.stores.join(', '),
+        visitCount: data.visitCount,
+      }))
+      .sort((a, b) => b.visitCount - a.visitCount); // Sort by visitCount descending
 
     await sendDailyVisitSummaryToAdmins(summaryData);
 

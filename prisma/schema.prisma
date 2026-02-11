@@ -22,9 +22,9 @@ model User {
   username  String   @unique
   password  String
   role      Role     @default(EXECUTIVE)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   executive       Executive?
   admin           Admin?
   dostChats       DostChat[]

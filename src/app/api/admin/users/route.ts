@@ -125,6 +125,7 @@ export async function GET(request: NextRequest) {
         username: user.username,
         email: user.email,
         role: user.role,
+        isActive: user.isActive,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         adminInfo: user.admin ? {
