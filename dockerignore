@@ -5,3 +5,6 @@ npm-debug.log
 .git
 .env
 .env.production
+start.sh
+stop.sh
+push.sh

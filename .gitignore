@@ -174,3 +174,9 @@ pnpm-lock.yaml
 # Local development
 /local
 /playground
+
+# internal scripts
+start.sh
+stop.sh
+push.sh
+
