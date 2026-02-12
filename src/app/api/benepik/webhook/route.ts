@@ -119,6 +119,24 @@ export async function POST(req: NextRequest) {
     const payload = JSON.parse(rawJson);
     console.log('🔓 Decrypted payload:', rawJson);
 
+    // Verify entityId from payload matches environment
+    const expectedEntityId = process.env.EntityId;
+    if (!expectedEntityId) {
+      console.error('❌ EntityId not configured in environment');
+      return NextResponse.json(
+        { error: 'EntityId not configured' },
+        { status: 500 }
+      );
+    }
+
+    if (payload.entityId && payload.entityId.toString() !== expectedEntityId) {
+      console.error(`❌ Invalid entityId. Expected: ${expectedEntityId}, Got: ${payload.entityId}`);
+      return NextResponse.json(
+        { error: 'Invalid entityId' },
+        { status: 403 }
+      );
+    }
+
     // Get required headers
     const signature = req.headers.get('X-Webhook-Signature');
     const timestamp = req.headers.get('X-Timestamp');
