@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyUatToken } from '@/lib/jwt';
+import jwt from 'jsonwebtoken';
 // Note: We are importing from the benepik-client folder as requested
 import { sendRewards } from '../../../lib/benepik';
 
@@ -9,34 +9,36 @@ export async function POST(req: NextRequest) {
         const authHeader = req.headers.get('authorization');
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             const error = { success: false, error: 'Authorization header missing or invalid. Use Bearer <token>' };
-            console.error('UAT API Error (401):', error);
+            console.error('Zopper_Benepik API Error (401):', error);
             return NextResponse.json(error, { status: 401 });
         }
 
         const token = authHeader.split(' ')[1];
         try {
-            // Use dedicated UAT verification to avoid sharing main project secret
-            const decoded = verifyUatToken(token);
+            // Inline Zopper_Benepik token verification to avoid sharing main project secret
+            const secret = process.env.BENEPIK_JWT_SECRET;
+            if (!secret) throw new Error('BENEPIK_JWT_SECRET is not defined');
+            const decoded = jwt.verify(token, secret) as any;
 
             // 1.1 Verify required fields in payload
             if (!decoded.clientId) {
                 const error = { success: false, error: 'Invalid token payload. clientId is required.' };
-                console.error('UAT API Error (401):', error);
+                console.error('Zopper_Benepik API Error (401):', error);
                 return NextResponse.json(error, { status: 401 });
             }
 
-            // 1.2 Verify clientId matches UAT_CLIENT_ID
-            const allowedClientId = process.env.UAT_CLIENT_ID;
+            // 1.2 Verify clientId matches BENEPIK_CLIENT_ID
+            const allowedClientId = process.env.BENEPIK_CLIENT_ID;
             
             if (decoded.clientId !== allowedClientId) {
                 const error = { success: false, error: 'Unauthorized client. Invalid clientId.' };
-                console.error('UAT API Error (403):', error);
+                console.error('Zopper_Benepik API Error (403):', error);
                 return NextResponse.json(error, { status: 403 });
             }
 
         } catch (err: any) {
             const error = { success: false, error: 'Invalid or expired token', details: err.message };
-            console.error('UAT API Error (401):', error);
+            console.error('Zopper_Benepik API Error (401):', error);
             return NextResponse.json(error, { status: 401 });
         }
 
@@ -46,13 +48,13 @@ export async function POST(req: NextRequest) {
             payload = await req.json();
         } catch (e) {
             const error = { success: false, error: 'Request body must be valid JSON' };
-            console.error('UAT API Error (400):', error);
+            console.error('Zopper_Benepik API Error (400):', error);
             return NextResponse.json(error, { status: 400 });
         }
 
         if (!payload || Object.keys(payload).length === 0) {
             const error = { success: false, error: 'Payload is missing or empty' };
-            console.error('UAT API Error (400):', error);
+            console.error('Zopper_Benepik API Error (400):', error);
             return NextResponse.json(error, { status: 400 });
         }
 
@@ -75,7 +77,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(error.response.data, { status: error.response.status });
         }
 
-        console.error('UAT API Error:', error.message);
+        console.error('Zopper_Benepik API Error:', error.message);
         return NextResponse.json({
             success: false,
             error: error.message || 'Processing failed'
