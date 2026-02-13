@@ -182,6 +182,7 @@ model Visit {
   POSMchecked       Boolean?   @map("displayChecked") // Point of Sale Material availability check (nullable for backward compatibility)
   remarks           String?
   imageUrls         String[] // Array of image URLs
+  visitDate         DateTime?  // Actual date when visit occurred (nullable for backward compatibility during migration)
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
   status            viststatus @default(PENDING_REVIEW)

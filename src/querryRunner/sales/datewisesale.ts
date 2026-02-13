@@ -25,13 +25,16 @@ export async function postDailySales(rowObj: Record<string, any>, successCount: 
       return `❌ Category is not mapped to this brand. ${context}`;
     }
 
-    // Build dailySales array
+    // Build dailySales array - support both DD-MM-YYYY and D/M/YYYY formats
     const dailySales: any[] = [];
     for (const key in dateMetrics) {
-      const match = key.match(/^([0-9]{2})-([0-9]{2})-([0-9]{4}) (Count of Sales|Revenue)$/);
+      let match = key.match(/^([0-9]{1,2})-([0-9]{1,2})-([0-9]{4}) (Count of Sales|Revenue)$/);
+      if (!match) {
+        match = key.match(/^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{4}) (Count of Sales|Revenue)$/);
+      }
       if (!match) continue;
       const [_, dd, mm, yyyy, metric] = match;
-      const date = `${yyyy}-${mm}-${dd}`; // ISO format
+      const date = `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`; // ISO format with padding
       let entry = dailySales.find(e => e.date === date);
       if (!entry) {
         entry = { date };

@@ -20,14 +20,25 @@ function decryptPayload(encryptedData: string, secretKey: string): any {
 }
 
 function extractProjectNameFromTransactionId(transactionId: string): string {
-  // Format: TXN-{projectName}{timestamp}
-  // Example: TXN-godrej1707123456789
-  const match = transactionId.match(/^TXN-([a-zA-Z]+)/);
-  if (!match || !match[1]) {
-    throw new Error(`Invalid transaction ID format: ${transactionId}`);
+  // Format 1 (new): TXN-{projectName}-{reportId}-{timestamp}
+  // Example: TXN-godrej-report123-1707123456789
+  let match = transactionId.match(/^TXN-([a-zA-Z]+)-/);
+  
+  if (match && match[1]) {
+    return match[1].toLowerCase();
   }
-  return match[1].toLowerCase();
+  
+  // Format 2 (old): TXN-{projectName}{timestamp}
+  // Example: TXN-godrej1707123456789
+  match = transactionId.match(/^TXN-([a-zA-Z]+)/);
+  
+  if (match && match[1]) {
+    return match[1].toLowerCase();
+  }
+  
+  throw new Error(`Invalid transaction ID format: ${transactionId}`);
 }
+
 
 function getProjectWebhookUrl(projectName: string): string {
   // Check if running on localhost
