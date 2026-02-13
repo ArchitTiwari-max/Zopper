@@ -89,7 +89,7 @@ export async function GET(req: Request) {
       await sendVisitNotificationToExecutive(
         executiveData.executiveEmail,
         executiveData.executiveName,
-        executiveData.stores.join(', '),
+        executiveData.stores.join('|||'),
         executiveData.visitCount
       );
     }
@@ -99,7 +99,7 @@ export async function GET(req: Request) {
       .map((data) => ({
         executiveId: data.executiveId,
         executiveName: data.executiveName,
-        storeName: data.stores.join(', '),
+        storeName: data.stores.join('|||'),
         visitCount: data.visitCount,
       }))
       .sort((a, b) => b.visitCount - a.visitCount); // Sort by visitCount descending

@@ -77,8 +77,8 @@ export async function sendDailyVisitSummaryToAdmins(
     let storesList = '';
     
     if (visit.storeName.trim()) {
-      // Convert comma-separated stores to bullet list
-      const stores = visit.storeName.split(',').map(s => s.trim());
+      // Convert delimiter-separated stores to bullet list
+      const stores = visit.storeName.split('|||').map(s => s.trim());
       storesList = stores
         .map(store => `<li style="margin: 4px 0;">${store}</li>`)
         .join('');
