@@ -45,7 +45,7 @@ export async function sendMail(to: string, subject: string, html: string) {
 
 /**
  * Send daily visit summary to hardcoded admin emails
- * This function sends all executives' visit data for the day
+ * This function sends all executives' visit data
  * Each executive gets ONE row with all stores comma-separated and total visit count
  * @param visitData Array of visit data with executive name, stores (comma-separated), and total visit count
  */
@@ -83,8 +83,8 @@ export async function sendDailyVisitSummaryToAdmins(
         .map(store => `<li style="margin: 4px 0;">${store}</li>`)
         .join('');
     } else {
-      // No visits today
-      storesList = '<li style="margin: 4px 0; color: #999;">No visits today</li>';
+      // No visits recorded
+      storesList = '<li style="margin: 4px 0; color: #999;">No visits recorded</li>';
     }
 
     tableRows += `
@@ -128,7 +128,7 @@ export async function sendDailyVisitSummaryToAdmins(
  * @param executiveEmail Executive's email address
  * @param executiveName Executive's name
  * @param storeName Store name visited
- * @param todayVisitCount Total visits by this executive today
+ * @param todayVisitCount Total visits by this executive
  */
 export async function sendVisitNotificationToExecutive(
   executiveEmail: string,
@@ -160,10 +160,10 @@ export async function sendVisitNotificationToExecutive(
   let html = '';
   
   if (todayVisitCount === 0) {
-    // No visits today - show a different message
+    // No visits - show a different message
     html = visitNotificationTemplate
-      .replace('{{HEADER_TITLE}}', 'No Visits Today')
-      .replace('{{STATUS_MESSAGE}}', 'No visits have been recorded for you today.')
+      .replace('{{HEADER_TITLE}}', 'No Visits Recorded')
+      .replace('{{STATUS_MESSAGE}}', 'No visits have been recorded for you.')
       .replace('{{EXECUTIVE_NAME}}', executiveName)
       .replace(/{{STORE_NAME}}/g, 'No visits recorded')
       .replace(/{{DATE}}/g, today)
@@ -183,7 +183,7 @@ export async function sendVisitNotificationToExecutive(
   }
 
   const subject = todayVisitCount === 0 
-    ? `📊 Daily Summary - No visits today` 
+    ? `📊 Visit Summary - No visits recorded` 
     : `✅ Visit Recorded - ${todayVisitCount} store${todayVisitCount > 1 ? 's' : ''}`;
 
   await sendMail(executiveEmail, subject, html);
