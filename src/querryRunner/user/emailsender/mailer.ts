@@ -143,6 +143,20 @@ export async function sendVisitNotificationToExecutive(
     day: 'numeric'
   });
 
+  // Parse stores from delimiter-separated string and format as HTML list
+  const formatStoresList = (stores: string): string => {
+    if (!stores.trim()) {
+      return 'No visits recorded';
+    }
+    const storeArray = stores.split('|||').map(s => s.trim()).filter(s => s);
+    if (storeArray.length === 0) {
+      return 'No visits recorded';
+    }
+    return storeArray
+      .map(store => `<li style="margin: 6px 0; line-height: 1.5;">${store}</li>`)
+      .join('');
+  };
+
   let html = '';
   
   if (todayVisitCount === 0) {
@@ -156,12 +170,13 @@ export async function sendVisitNotificationToExecutive(
       .replace('{{TOTAL_VISITS}}', '0')
       .replace('{{FOOTER_MESSAGE}}', 'Keep pushing towards your goals and targets.');
   } else {
-    // Has visits - show normal message
+    // Has visits - show normal message with formatted store list
+    const storesListHtml = formatStoresList(storeName);
     html = visitNotificationTemplate
       .replace('{{HEADER_TITLE}}', 'Visit Recorded')
-      .replace('{{STATUS_MESSAGE}}', 'Your visit has been successfully recorded in the system.')
+      .replace('{{STATUS_MESSAGE}}', 'Your visits have been successfully recorded in the system.')
       .replace('{{EXECUTIVE_NAME}}', executiveName)
-      .replace(/{{STORE_NAME}}/g, storeName)
+      .replace(/{{STORE_NAME}}/g, `<ul style="margin: 0; padding-left: 20px;">${storesListHtml}</ul>`)
       .replace(/{{DATE}}/g, today)
       .replace('{{TOTAL_VISITS}}', todayVisitCount.toString())
       .replace('{{FOOTER_MESSAGE}}', 'Thank you for your consistent performance.');
@@ -169,7 +184,7 @@ export async function sendVisitNotificationToExecutive(
 
   const subject = todayVisitCount === 0 
     ? `📊 Daily Summary - No visits today` 
-    : `✅ Visit Recorded - ${storeName}`;
+    : `✅ Visit Recorded - ${todayVisitCount} store${todayVisitCount > 1 ? 's' : ''}`;
 
   await sendMail(executiveEmail, subject, html);
   console.log(`✅ Email sent to ${executiveName} (${executiveEmail}) - Visits: ${todayVisitCount}`);
