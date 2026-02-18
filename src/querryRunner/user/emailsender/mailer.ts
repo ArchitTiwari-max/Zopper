@@ -183,8 +183,8 @@ export async function sendVisitNotificationToExecutive(
   }
 
   const subject = todayVisitCount === 0 
-    ? `📊 Visit Summary - No visits recorded` 
-    : `✅ Visit Recorded - ${todayVisitCount} store${todayVisitCount > 1 ? 's' : ''}`;
+    ? `📋 No visits recorded` 
+    : `🎯 Visit Recorded - ${todayVisitCount} store${todayVisitCount > 1 ? 's' : ''}`;
 
   await sendMail(executiveEmail, subject, html);
   console.log(`✅ Email sent to ${executiveName} (${executiveEmail}) - Visits: ${todayVisitCount}`);
