@@ -163,7 +163,7 @@ export async function sendVisitNotificationToExecutive(
     // No visits - show a different message
     html = visitNotificationTemplate
       .replace('{{HEADER_TITLE}}', 'No Visits Recorded')
-      .replace('{{STATUS_MESSAGE}}', 'No visits have been recorded for you.')
+      .replace('{{STATUS_MESSAGE}}', 'No visits have been recorded by you.')
       .replace('{{EXECUTIVE_NAME}}', executiveName)
       .replace(/{{STORE_NAME}}/g, 'No visits recorded')
       .replace(/{{DATE}}/g, today)
