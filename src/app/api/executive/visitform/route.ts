@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const storeId = searchParams.get('storeId');
- 
+
     if (!storeId) {
       return NextResponse.json({ error: 'Store ID is required' }, { status: 400 });
     }
@@ -37,44 +37,81 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
-    // Get last 5 visits for this store by ANY executive
-    const visits = await prisma.visit.findMany({
-      where: {
-        storeId: storeId
-      },
-      include: {
-        issues: {
-          include: {
-            assigned: {
-              include: {
-                executive: {
-                  include: {
-                    user: true
+    // Get last 5 visits for this store by ANY executive or admin
+    const [execVisitsRaw, adminVisitsRaw] = await Promise.all([
+      prisma.visit.findMany({
+        where: {
+          storeId: storeId
+        },
+        include: {
+          issues: {
+            include: {
+              assigned: {
+                include: {
+                  executive: {
+                    include: {
+                      user: true
+                    }
                   }
                 }
               }
             }
+          },
+          store: true,
+          executive: {
+            include: {
+              user: true
+            }
           }
         },
-        store: true,
-        executive: {
-          include: {
-            user: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      take: 5
-    });
+        orderBy: {
+          createdAt: 'desc'
+        },
+        take: 5
+      }),
+      prisma.adminVisit.findMany({
+        where: { storeId: storeId },
+        include: { store: true, admin: true },
+        orderBy: { createdAt: 'desc' },
+        take: 5
+      })
+    ]);
+
+    const allVisits = [
+      ...execVisitsRaw.map(v => ({ ...v, submitterType: 'EXECUTIVE' as const })),
+      ...adminVisitsRaw.map(v => ({ ...v, submitterType: 'ADMIN' as const }))
+    ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 5);
 
     // Transform visits data, handling null executives
-    const transformedVisits = visits
-      .filter(visit => visit.executive) // Only include visits with valid executives
-      .map(visit => {
+    const transformedVisits = allVisits
+      .filter((visit: any) => visit.submitterType === 'ADMIN' ? visit.admin : visit.executive) // Only include visits with valid submitters
+      .map((visit: any) => {
+        if (visit.submitterType === 'ADMIN') {
+          // Limited data for admin visits - but include contact person for coordination
+          return {
+            id: visit.id,
+            date: visit.createdAt.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            }),
+            status: 'REVIEWD',
+            representative: visit.admin?.name ? `${visit.admin.name} (Admin)` : 'Unknown Admin',
+            canViewDetails: false,
+            personMet: visit.personMet, // Show contact person info for coordination
+            POSMchecked: null, // No sensitive POSM info
+            remarks: null, // No private remarks
+            imageUrls: [], // No private images
+            adminComment: null, // No admin comments
+            storeName: visit.store?.storeName || 'Unknown Store',
+            issues: [],
+            createdAt: visit.createdAt,
+            updatedAt: visit.updatedAt
+          };
+        }
+
         const isCurrentExecutive = visit.executiveId === currentExecutive.id;
-        
+
         if (isCurrentExecutive) {
           // Full data for current executive's visits
           return {
@@ -94,21 +131,21 @@ export async function GET(request: NextRequest) {
             adminComment: visit.adminComment,
             storeName: visit.store?.storeName || 'Unknown Store',
             issues: visit.issues
-              .filter(issue => 
-                issue.assigned.some(assignment => 
+              .filter((issue: any) =>
+                issue.assigned.some((assignment: any) =>
                   assignment.executive && assignment.executive.id === currentExecutive.id
                 )
               )
-              .map(issue => ({
+              .map((issue: any) => ({
                 id: issue.id,
                 details: issue.details,
                 status: issue.status,
                 createdAt: issue.createdAt,
                 assigned: issue.assigned
-                  .filter(assignment => 
+                  .filter((assignment: any) =>
                     assignment.executive && assignment.executive.id === currentExecutive.id
                   )
-                  .map(assignment => ({
+                  .map((assignment: any) => ({
                     id: assignment.id,
                     adminComment: assignment.adminComment,
                     status: assignment.status,
@@ -137,7 +174,7 @@ export async function GET(request: NextRequest) {
             imageUrls: [], // No private images
             adminComment: null, // No admin comments
             storeName: visit.store?.storeName || 'Unknown Store',
-            issues: visit.issues.map(issue => ({
+            issues: (visit.issues || []).map((issue: any) => ({
               id: issue.id,
               details: issue.details,
               status: issue.status,
@@ -202,14 +239,14 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!storeId || !personMet || personMet.length === 0) {
-      return NextResponse.json({ 
-        error: 'Store ID and at least one person met are required' 
+      return NextResponse.json({
+        error: 'Store ID and at least one person met are required'
       }, { status: 400 });
     }
 
     if (!visitDate) {
-      return NextResponse.json({ 
-        error: 'Visit date is required' 
+      return NextResponse.json({
+        error: 'Visit date is required'
       }, { status: 400 });
     }
 
@@ -220,7 +257,7 @@ export async function POST(request: NextRequest) {
     const todayStr = istToday.toISOString().split('T')[0];
     const ninetyDaysAgo = new Date(istToday.getTime() - (90 * 24 * 60 * 60 * 1000));
     const ninetyDaysAgoStr = ninetyDaysAgo.toISOString().split('T')[0];
-    
+
     if (visitDate > todayStr) {
       return NextResponse.json({
         error: 'Visit date cannot be in the future',
@@ -228,7 +265,7 @@ export async function POST(request: NextRequest) {
         code: 'INVALID_VISIT_DATE_FUTURE'
       }, { status: 400 });
     }
-    
+
     if (visitDate < ninetyDaysAgoStr) {
       return NextResponse.json({
         error: 'Visit date is too old',
@@ -301,7 +338,7 @@ export async function POST(request: NextRequest) {
         if (issueDetail && issueDetail.trim() !== '') {
           // Generate unique 7-character issue ID
           const uniqueIssueId = await generateUniqueIssueId();
-          
+
           const createdIssue = await prisma.issue.create({
             data: {
               id: uniqueIssueId,

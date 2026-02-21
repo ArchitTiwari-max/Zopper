@@ -44,6 +44,8 @@ model Admin {
   // Back-relations: visits reviewed by this admin
   reviewedVisits        Visit[]
   reviewedDigitalVisits DigitalVisit[]
+
+  adminVisits           AdminVisit[]
 }
 
 model Executive {
@@ -87,6 +89,7 @@ model Store {
   partnerBrandTypes PartnerBrandType[] // parallel array corresoponding to same index in partnerBrandIds
   executiveStores   ExecutiveStoreAssignment[]
   salesRecords      SalesRecord[]
+  adminVisits       AdminVisit[]
 }
 
 model ExecutiveStoreAssignment {
@@ -203,6 +206,27 @@ model Visit {
 
   // Critical performance indexes based on actual queries
   @@index([executiveId, createdAt])
+  @@index([storeId])
+}
+
+model AdminVisit {
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  personMet         Json // [{ name: "Rajesh", designation: "Manager", phoneNumber: "1234567890" }]
+  POSMchecked       Boolean?   @map("displayChecked")
+  remarks           String?
+  imageUrls         String[]
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  
+  // relations
+  adminId           String
+  admin             Admin      @relation(fields: [adminId], references: [id])
+
+  storeId           String
+  store             Store      @relation(fields: [storeId], references: [id])
+  brandIds          String[]
+
+  @@index([adminId, createdAt])
   @@index([storeId])
 }
 
