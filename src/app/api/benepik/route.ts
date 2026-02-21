@@ -58,6 +58,22 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(error, { status: 400 });
         }
 
+        // 2.1 Verify entityId from payload matches environment
+        const expectedEntityIds = process.env.EntityIds;
+        if (!expectedEntityIds) {
+            const error = { success: false, error: 'EntityIds not configured in environment' };
+            console.error('Zopper_Benepik API Error (500):', error);
+            return NextResponse.json(error, { status: 500 });
+        }
+
+        // Parse comma-separated EntityIds and validate
+        const allowedEntityIds = expectedEntityIds.split(',').map(id => id.trim());
+        if (payload.entityId && !allowedEntityIds.includes(payload.entityId.toString())) {
+            const error = { success: false, error: `Invalid entityId. Expected one of: ${allowedEntityIds.join(', ')}, Got: ${payload.entityId}` };
+            console.error('Zopper_Benepik API Error (403):', error);
+            return NextResponse.json(error, { status: 403 });
+        }
+
         // 3. Call Benepik API using existing logic
         const response = await sendRewards(payload);
 // const response={data:{success:true,message:"Reward sent successfully"}}

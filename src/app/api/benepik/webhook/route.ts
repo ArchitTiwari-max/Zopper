@@ -19,62 +19,41 @@ function decryptPayload(encryptedData: string, secretKey: string): any {
   }
 }
 
-function extractProjectNameFromTransactionId(transactionId: string): string {
-  // Format 1 (new): TXN-{projectName}-{reportId}-{timestamp}
-  // Example: TXN-godrej-report123-1707123456789
-  let match = transactionId.match(/^TXN-([a-zA-Z]+)-/);
-  
-  if (match && match[1]) {
-    return match[1].toLowerCase();
-  }
-  
-  // Format 2 (old): TXN-{projectName}{timestamp}
-  // Example: TXN-godrej1707123456789
-  match = transactionId.match(/^TXN-([a-zA-Z]+)/);
-  
-  if (match && match[1]) {
-    return match[1].toLowerCase();
-  }
-  
-  throw new Error(`Invalid transaction ID format: ${transactionId}`);
-}
-
-
-function getProjectWebhookUrl(projectName: string): string {
+function getProjectWebhookUrl(entityId: string): string {
   // Check if running on localhost
   const isLocalhost = process.env.NODE_ENV === 'development';
   
-  const projectWebhookMap: Record<string, { localhost: string; production: string }> = {
-    salesmitr: {
+  const entityIdToProjectMap: Record<string, { localhost: string; production: string }> = {
+    '4466': {
       localhost: 'http://localhost:3000/api/webhooks/benepik',
       production: 'https://salesmitr.com/api/webhooks/benepik',
     },
-    salesdost: {
+    '4506': {
       localhost: 'http://localhost:3001/api/webhooks/benepik',
       production: 'https://salesdost.com/api/webhooks/benepik',
     },
   };
 
-  const config = projectWebhookMap[projectName];
+  const config = entityIdToProjectMap[entityId];
   if (!config) {
-    throw new Error(`No webhook URL configured for project: ${projectName}`);
+    throw new Error(`No webhook URL configured for entityId: ${entityId}`);
   }
 
   // Use localhost if in development, otherwise use production domain
   const webhookUrl = isLocalhost ? config.localhost : config.production;
-  console.log(`🌐 Environment: ${isLocalhost ? 'localhost' : 'production'}`);
+  console.log(`🌐 Environment: ${isLocalhost ? 'localhost' : 'production'}, EntityId: ${entityId}`);
   
   return webhookUrl;
 }
 
 async function forwardToProjectWebhook(
-  projectName: string,
+  entityId: string,
   rawBody: string,
   timestamp: string,
   signature: string
 ): Promise<{ response: Response; data: any }> {
-  const webhookUrl = getProjectWebhookUrl(projectName);
-  console.log(`🔄 Forwarding webhook to ${projectName} project: ${webhookUrl}`);
+  const webhookUrl = getProjectWebhookUrl(entityId);
+  console.log(`🔄 Forwarding webhook for entityId ${entityId}: ${webhookUrl}`);
 
   // Forward the exact same request to the project-specific webhook
   const response = await fetch(webhookUrl, {
@@ -131,17 +110,19 @@ export async function POST(req: NextRequest) {
     console.log('🔓 Decrypted payload:', rawJson);
 
     // Verify entityId from payload matches environment
-    const expectedEntityId = process.env.EntityId;
-    if (!expectedEntityId) {
-      console.error('❌ EntityId not configured in environment');
+    const expectedEntityIds = process.env.EntityIds;
+    if (!expectedEntityIds) {
+      console.error('❌ EntityIds not configured in environment');
       return NextResponse.json(
-        { error: 'EntityId not configured' },
+        { error: 'EntityIds not configured' },
         { status: 500 }
       );
     }
 
-    if (payload.entityId && payload.entityId.toString() !== expectedEntityId) {
-      console.error(`❌ Invalid entityId. Expected: ${expectedEntityId}, Got: ${payload.entityId}`);
+    // Parse comma-separated EntityIds and validate
+    const allowedEntityIds = expectedEntityIds.split(',').map(id => id.trim());
+    if (payload.entityId && !allowedEntityIds.includes(payload.entityId.toString())) {
+      console.error(`❌ Invalid entityId. Expected one of: ${allowedEntityIds.join(', ')}, Got: ${payload.entityId}`);
       return NextResponse.json(
         { error: 'Invalid entityId' },
         { status: 403 }
@@ -178,16 +159,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const transactionId = rewardTransactionDetails[0].transactionId;
-    console.log(`🔍 Transaction ID: ${transactionId}`);
+    const entityId = payload.entityId.toString();
+    console.log(`� EntityId: ${entityId}`);
 
-    // Extract project name from transaction ID
-    const projectName = extractProjectNameFromTransactionId(transactionId);
-    console.log(`📦 Project: ${projectName}`);
-
-    // Forward to project-specific webhook (with same body and headers)
+    // Forward to project-specific webhook based on entityId
     // Individual webhook will handle signature verification and processing
-    const { response: projectResponse, data: projectResponseData } = await forwardToProjectWebhook(projectName, rawBody, timestamp, signature);
+    const { response: projectResponse, data: projectResponseData } = await forwardToProjectWebhook(entityId, rawBody, timestamp, signature);
 
     // Return the project webhook's response
     return NextResponse.json(projectResponseData, { status: projectResponse.status });
