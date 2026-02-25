@@ -9,7 +9,7 @@ import * as XLSX from 'xlsx';
 import './page.css';
 
 // Types for visit report
-  interface VisitReportData {
+interface VisitReportData {
   id: string; // ObjectId
   executiveName: string;
   executiveInitials: string;
@@ -18,6 +18,7 @@ import './page.css';
   storeId: string;
   partnerBrand: string[];
   visitDate: string;
+  previousVisitDate?: string | null;
   visitStatus: 'PENDING_REVIEW' | 'REVIEWD';
   reviewerName?: string;
   issueStatus: 'Pending' | 'Assigned' | 'Resolved' | null;
@@ -26,7 +27,7 @@ import './page.css';
   issueId?: string;
   feedback: string;
   POSMchecked: boolean | null;
-  peopleMet?: Array<{name: string, designation: string, phoneNumber?: string}>;
+  peopleMet?: Array<{ name: string, designation: string, phoneNumber?: string }>;
   imageUrls?: string[];
 }
 
@@ -130,20 +131,80 @@ const VisitReportPage: React.FC = () => {
   const [selectedVisit, setSelectedVisit] = useState<any>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [markingReviewedId, setMarkingReviewedId] = useState<string | null>(null);
-  
+  const [selectedVisits, setSelectedVisits] = useState<Set<string>>(new Set());
+  const [isBulkApproving, setIsBulkApproving] = useState<boolean>(false);
+
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      const allPendingIds = filteredVisits.filter(v => v.visitStatus === 'PENDING_REVIEW').map(v => v.id);
+      setSelectedVisits(new Set(allPendingIds));
+    } else {
+      setSelectedVisits(new Set());
+    }
+  };
+
+  const handleSelectVisit = (visitId: string, isChecked: boolean) => {
+    const newSelected = new Set(selectedVisits);
+    if (isChecked) {
+      newSelected.add(visitId);
+    } else {
+      newSelected.delete(visitId);
+    }
+    setSelectedVisits(newSelected);
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedVisits.size === 0) return;
+    setIsBulkApproving(true);
+
+    // Convert to Array
+    const idsToApprove = Array.from(selectedVisits);
+
+    // We can do them in parallel or sequentially. Next API handles individual routes.
+    let successCount = 0;
+
+    // Here we map over them and resolve all using Promis.allSettled
+    const promises = idsToApprove.map(id => fetch(`${baseEndpoint}/${id}/mark-reviewed`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ requiresFollowUp: false, adminComment: 'Bulk Approved' })
+    }).then(res => res.json()));
+
+    try {
+      const results = await Promise.allSettled(promises);
+      results.forEach((result, idx) => {
+        if (result.status === 'fulfilled' && result.value.success) {
+          successCount++;
+          // Update the localized visit as well efficiently
+          const reviewerName = result.value.visit?.reviewedByAdmin?.name;
+          setVisitData(prev => prev.map(v => v.id === idsToApprove[idx] ? { ...v, visitStatus: 'REVIEWD' as const, reviewerName } : v));
+        }
+      });
+      alert(`Bulk approved ${successCount} out of ${idsToApprove.length} visits successfully!`);
+    } catch (err) {
+      console.error("Bulk approve error:", err);
+      alert('Error during bulk approve.');
+    } finally {
+      setIsBulkApproving(false);
+      setSelectedVisits(new Set());
+    }
+  };
+
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{
     key: 'executiveName' | 'storeName' | 'visitDate' | null;
     direction: 'asc' | 'desc';
   }>({ key: null, direction: 'asc' });
-  
+
   // Filter data from API
   const [filterData, setFilterData] = useState<{
-    stores: Array<{id: string, name: string, city: string}>;
-    executives: Array<{id: string, name: string, region: string}>;
-    brands: Array<{id: string, name: string}>;
+    stores: Array<{ id: string, name: string, city: string }>;
+    executives: Array<{ id: string, name: string, region: string }>;
+    brands: Array<{ id: string, name: string }>;
     cities: string[];
-  }>({stores: [], executives: [], brands: [], cities: []});
+  }>({ stores: [], executives: [], brands: [], cities: [] });
 
   const [filters, setFilters] = useState<VisitReportFilters>({
     partnerBrand: 'All Brands',
@@ -196,7 +257,7 @@ const VisitReportPage: React.FC = () => {
         const current = new URL(window.location.href);
         current.searchParams.set('dateFilter', effectiveDateFilter);
         window.history.replaceState({}, '', current.toString());
-      } catch {}
+      } catch { }
 
       const params = new URLSearchParams();
       params.append('dateFilter', effectiveDateFilter);
@@ -332,7 +393,7 @@ const VisitReportPage: React.FC = () => {
   useEffect(() => {
     // Only process URL params after filter data is loaded
     if (filterData.stores.length === 0) return;
-    
+
     const urlStoreId = searchParams.get('storeId');
     const urlStoreName = searchParams.get('storeName');
     const urlExecutiveId = searchParams.get('executiveId');
@@ -340,14 +401,14 @@ const VisitReportPage: React.FC = () => {
     const urlCity = searchParams.get('city');
     const urlVisitStatus = searchParams.get('visitStatus');
     const urlIssueStatus = searchParams.get('issueStatus');
-    
+
     if (urlStoreId || urlStoreName || urlExecutiveId || urlPartnerBrand || urlCity || urlVisitStatus || urlIssueStatus) {
       // Set storeName from URL if present (for text-based search)
       let storeNameFilter = '';
       if (urlStoreName) {
         storeNameFilter = urlStoreName;
       }
-      
+
       // Use executive ID directly
       let executiveFilter = 'All Executive';
       if (urlExecutiveId && urlExecutiveId !== 'All Executive') {
@@ -356,7 +417,7 @@ const VisitReportPage: React.FC = () => {
         executiveFilter = matchingExecutive ? urlExecutiveId : 'All Executive';
         console.log('[URL DEBUG] Executive ID from URL:', urlExecutiveId, '→ Valid:', !!matchingExecutive);
       }
-      
+
       setFilters(prevFilters => ({
         ...prevFilters,
         partnerBrand: urlPartnerBrand || prevFilters.partnerBrand,
@@ -386,9 +447,9 @@ const VisitReportPage: React.FC = () => {
       ...filters,
       [filterType]: value
     };
-    
+
     setFilters(newFilters);
-    
+
     // Update URL with current filter state
     updateUrlWithFilters(newFilters);
   };
@@ -396,7 +457,7 @@ const VisitReportPage: React.FC = () => {
   // Function to update URL based on current filter state
   const updateUrlWithFilters = (currentFilters: VisitReportFilters) => {
     const newUrl = new URL(window.location.href);
-    
+
     // Clear all existing filter params
     newUrl.searchParams.delete('partnerBrand');
     newUrl.searchParams.delete('city');
@@ -406,33 +467,33 @@ const VisitReportPage: React.FC = () => {
     newUrl.searchParams.delete('issueStatus');
     newUrl.searchParams.delete('storeId');
     newUrl.searchParams.delete('executiveId');
-    
+
     // Add current filter values to URL (only if not default)
     if (currentFilters.partnerBrand !== 'All Brands') {
       newUrl.searchParams.set('partnerBrand', currentFilters.partnerBrand);
     }
-    
+
     if (currentFilters.city !== 'All City') {
       newUrl.searchParams.set('city', currentFilters.city);
     }
-    
+
     if (currentFilters.visitStatus !== 'All Status') {
       newUrl.searchParams.set('visitStatus', currentFilters.visitStatus);
     }
-    
+
     if (currentFilters.issueStatus !== 'All Status') {
       newUrl.searchParams.set('issueStatus', currentFilters.issueStatus);
     }
-    
+
     // Use storeName parameter for text-based search
     if (currentFilters.storeName && currentFilters.storeName.trim() !== '') {
       newUrl.searchParams.set('storeName', currentFilters.storeName);
     }
-    
+
     if (currentFilters.executiveName !== 'All Executive') {
       newUrl.searchParams.set('executiveId', currentFilters.executiveName);
     }
-    
+
     // Update URL without reloading page
     window.history.pushState({}, '', newUrl.toString());
   };
@@ -498,10 +559,10 @@ const VisitReportPage: React.FC = () => {
   // Smart date formatting function for visit dates
   const formatVisitDate = (dateString: string): string => {
     if (!dateString) return dateString;
-    
+
     // Handle different date formats that might come from API
     let visitDate: Date;
-    
+
     // If it's already in dd/mm/yyyy format, parse it correctly
     if (dateString.includes('/') && dateString.split('/').length === 3) {
       const parts = dateString.split('/');
@@ -516,21 +577,21 @@ const VisitReportPage: React.FC = () => {
     } else {
       visitDate = new Date(dateString);
     }
-    
+
     // Check if date is valid
     if (isNaN(visitDate.getTime())) {
       return dateString; // Return original if can't parse
     }
-    
+
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     // Reset time to compare only dates
     today.setHours(0, 0, 0, 0);
     yesterday.setHours(0, 0, 0, 0);
     visitDate.setHours(0, 0, 0, 0);
-    
+
     if (visitDate.getTime() === today.getTime()) {
       return 'Today';
     } else if (visitDate.getTime() === yesterday.getTime()) {
@@ -546,7 +607,7 @@ const VisitReportPage: React.FC = () => {
 
   const getIssueStatusBadgeClass = (status: 'Pending' | 'Assigned' | 'Resolved' | null): string => {
     if (!status) return 'issue-status-default';
-    
+
     switch (status) {
       case 'Pending':
         return 'issue-status-pending';
@@ -724,11 +785,11 @@ const VisitReportPage: React.FC = () => {
   // Sorting functions
   const handleSort = (key: 'executiveName' | 'storeName' | 'visitDate') => {
     let direction: 'asc' | 'desc' = 'asc';
-    
+
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc';
     }
-    
+
     setSortConfig({ key, direction });
   };
 
@@ -773,9 +834,9 @@ const VisitReportPage: React.FC = () => {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ 
-          requiresFollowUp, 
-          adminComment 
+        body: JSON.stringify({
+          requiresFollowUp,
+          adminComment
         })
       });
 
@@ -785,27 +846,27 @@ const VisitReportPage: React.FC = () => {
       }
 
       const result = await response.json();
-      
+
       if (result.success) {
         const reviewerName: string | undefined = result?.visit?.reviewedByAdmin?.name;
         // Update the local state to reflect the change
-        setVisitData(prevVisits => 
-          prevVisits.map(visit => 
-            visit.id === visitId 
+        setVisitData(prevVisits =>
+          prevVisits.map(visit =>
+            visit.id === visitId
               ? { ...visit, visitStatus: 'REVIEWD' as const, reviewerName }
               : visit
           )
         );
-        
+
         // Also update filtered visits if they exist
-        setFilteredVisits(prevVisits => 
-          prevVisits.map(visit => 
-            visit.id === visitId 
+        setFilteredVisits(prevVisits =>
+          prevVisits.map(visit =>
+            visit.id === visitId
               ? { ...visit, visitStatus: 'REVIEWD' as const, reviewerName }
               : visit
           )
         );
-        
+
         // Show success message
         alert(result.message || 'Visit marked as reviewed successfully!');
       }
@@ -824,8 +885,8 @@ const VisitReportPage: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '400px', gap: '1rem' }}>
           <div style={{ fontSize: '1.2rem', color: '#ef4444' }}>Error loading visit reports</div>
           <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{error}</div>
-          <button 
-            onClick={() => fetchVisitReportData()} 
+          <button
+            onClick={() => fetchVisitReportData()}
             style={{ padding: '0.5rem 1rem', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
           >
             Retry
@@ -848,7 +909,7 @@ const VisitReportPage: React.FC = () => {
           filterError ? (
             <div style={{ padding: '1rem', background: '#fee2e2', color: '#dc2626', borderRadius: '6px', margin: '0.5rem 0' }}>
               Error loading filters: {filterError}
-              <button 
+              <button
                 onClick={() => fetchFilterData()}
                 style={{ marginLeft: '1rem', padding: '0.25rem 0.5rem', backgroundColor: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
               >
@@ -860,7 +921,7 @@ const VisitReportPage: React.FC = () => {
               {/* Store filter first */}
               <div className="admin-visit-report-filter-group">
                 <label>Filter by Store Name</label>
-                <input 
+                <input
                   type="text"
                   value={filters.storeName}
                   onChange={(e) => handleFilterChange('storeName', e.target.value)}
@@ -878,7 +939,7 @@ const VisitReportPage: React.FC = () => {
               {/* Then Partner Brand */}
               <div className="admin-visit-report-filter-group">
                 <label>Filter by Partner Brand</label>
-                <select 
+                <select
                   value={filters.partnerBrand}
                   onChange={(e) => handleFilterChange('partnerBrand', e.target.value)}
                   className="admin-visit-report-filter-select"
@@ -899,7 +960,7 @@ const VisitReportPage: React.FC = () => {
               {/* Then City */}
               <div className="admin-visit-report-filter-group">
                 <label>Filter by City</label>
-                <select 
+                <select
                   value={filters.city}
                   onChange={(e) => handleFilterChange('city', e.target.value)}
                   className="admin-visit-report-filter-select"
@@ -920,7 +981,7 @@ const VisitReportPage: React.FC = () => {
               {/* Then Executive */}
               <div className="admin-visit-report-filter-group">
                 <label>Filter by Executive Name</label>
-                <select 
+                <select
                   value={filters.executiveName}
                   onChange={(e) => handleFilterChange('executiveName', e.target.value)}
                   className="admin-visit-report-filter-select"
@@ -941,7 +1002,7 @@ const VisitReportPage: React.FC = () => {
               {/* Then other filters */}
               <div className="admin-visit-report-filter-group">
                 <label>Filter by Review Status</label>
-                <select 
+                <select
                   value={filters.visitStatus}
                   onChange={(e) => handleFilterChange('visitStatus', e.target.value)}
                   className="admin-visit-report-filter-select"
@@ -955,7 +1016,7 @@ const VisitReportPage: React.FC = () => {
 
               <div className="admin-visit-report-filter-group">
                 <label>Filter by Issue Status</label>
-                <select 
+                <select
                   value={filters.issueStatus}
                   onChange={(e) => handleFilterChange('issueStatus', e.target.value)}
                   className="admin-visit-report-filter-select"
@@ -971,13 +1032,37 @@ const VisitReportPage: React.FC = () => {
         )}
       </div>
 
-      {/* Actions - Export */}
+      {/* Actions - Export and Bulk Approve */}
       <div style={{
         display: 'flex',
-        justifyContent: 'flex-end',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginTop: '12px',
         marginBottom: '12px'
       }}>
+        <div>
+          {selectedVisits.size > 0 && (
+            <button
+              onClick={handleBulkApprove}
+              disabled={isBulkApproving}
+              style={{
+                padding: '10px 16px',
+                backgroundColor: '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: isBulkApproving ? 'not-allowed' : 'pointer',
+                transition: 'background-color 0.2s',
+                boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)',
+                opacity: isBulkApproving ? 0.7 : 1
+              }}
+            >
+              {isBulkApproving ? 'Approving...' : `Bulk Approve (${selectedVisits.size})`}
+            </button>
+          )}
+        </div>
         <button
           onClick={handleExportXLS}
           style={{
@@ -1004,30 +1089,38 @@ const VisitReportPage: React.FC = () => {
         <div className="admin-visit-report-table">
           {/* Always show table header for context */}
           <div className="admin-visit-report-table-header">
-            <div 
-              className="admin-visit-report-header-cell sortable-header" 
+            <div className="admin-visit-report-header-cell checkbox-cell" style={{ width: '40px', padding: '0 10px' }}>
+              <input
+                type="checkbox"
+                onChange={handleSelectAll}
+                checked={selectedVisits.size > 0 && selectedVisits.size === filteredVisits.filter(v => v.visitStatus === 'PENDING_REVIEW').length && filteredVisits.filter(v => v.visitStatus === 'PENDING_REVIEW').length > 0}
+                title="Select all pending visits"
+              />
+            </div>
+            <div
+              className="admin-visit-report-header-cell sortable-header"
               onClick={() => handleSort('executiveName')}
             >
               Executive Name <span className="sort-icon">{getSortIcon('executiveName')}</span>
             </div>
-            <div 
-              className="admin-visit-report-header-cell sortable-header" 
+            <div
+              className="admin-visit-report-header-cell sortable-header"
               onClick={() => handleSort('storeName')}
             >
               Store Name <span className="sort-icon">{getSortIcon('storeName')}</span>
             </div>
             <div className="admin-visit-report-header-cell">Partner Brand</div>
-            <div 
-              className="admin-visit-report-header-cell sortable-header" 
+            <div
+              className="admin-visit-report-header-cell sortable-header"
               onClick={() => handleSort('visitDate')}
             >
               {isDigital ? 'Connect Date' : 'Visit Date'} <span className="sort-icon">{getSortIcon('visitDate')}</span>
             </div>
             <div className="admin-visit-report-header-cell">Issues</div>
-            <div className="admin-visit-report-header-cell">Status</div>
+            <div className="admin-visit-report-header-cell">Sales</div>
             <div className="admin-visit-report-header-cell">Actions</div>
           </div>
-          
+
           {/* Table body with loading state */}
           <div className="admin-visit-report-table-body">
             {isLoading ? (
@@ -1037,115 +1130,129 @@ const VisitReportPage: React.FC = () => {
               </div>
             ) : filteredVisits.length > 0 ? (
               filteredVisits.map(visit => (
-              <div key={visit.id} className="admin-visit-report-table-row">
-                <div className="admin-visit-report-cell admin-visit-report-executive-cell">
-                  <div 
-                    className="admin-visit-report-executive-avatar"
-                    style={{ backgroundColor: visit.avatarColor }}
-                  >
-                    {visit.executiveInitials}
+                <div key={visit.id} className="admin-visit-report-table-row">
+                  <div className="admin-visit-report-cell checkbox-cell" style={{ width: '40px', padding: '0 10px', display: 'flex', alignItems: 'center' }}>
+                    {visit.visitStatus === 'PENDING_REVIEW' && (
+                      <input
+                        type="checkbox"
+                        checked={selectedVisits.has(visit.id)}
+                        onChange={(e) => handleSelectVisit(visit.id, e.target.checked)}
+                      />
+                    )}
                   </div>
-                  <span className="admin-visit-report-executive-name">{visit.executiveName}</span>
-                </div>
-                
-                <div className="admin-visit-report-cell admin-visit-report-store-name-cell">
-                  <Link href={`/admin/stores?storeId=${visit.storeId}`} className="admin-visit-report-store-name-link">
-                    {visit.storeName}
-                  </Link>
-                </div>
-                
-                <div className="admin-visit-report-cell admin-visit-report-partner-brands-cell">
-                  {visit.partnerBrand.map((brand, index) => (
-                    <span 
-                      key={index}
-                      className="admin-visit-report-brand-tag"
-                      style={{ backgroundColor: getBrandColor(brand) }}
+                  <div className="admin-visit-report-cell admin-visit-report-executive-cell">
+                    <div
+                      className="admin-visit-report-executive-avatar"
+                      style={{ backgroundColor: visit.avatarColor }}
                     >
-                      {brand}
-                    </span>
-                  ))}
-                </div>
-                
-                <div className="admin-visit-report-cell admin-visit-report-date-cell">
-                  <span className="admin-visit-report-visit-date">📅 {formatVisitDate(visit.visitDate)}</span>
-                </div>
-                
-                <div className="admin-visit-report-cell admin-visit-report-issues-cell">
-                  <div className="admin-visit-report-issues-content">
-                    {visit.issues === 'None' ? (
-                      <span className="admin-visit-report-no-issues">⚠️ {visit.issues}</span>
-                    ) : (
-                      <div className="admin-visit-report-issue-link-container">
-                        <span className="admin-visit-report-issue-icon">⚠️</span>
-                        {visit.issueId ? (
-                          <Link 
-                            href={`/admin/issues/${visit.issueId}`}
-                            className="admin-visit-report-issue-link"
-                            title={`View issue: ${visit.issues}`}
-                          >
-                            <ExpandableText 
-                              text={visit.issues} 
-                              maxHeight={40}
-                              className="issue-expandable-text"
-                            />
-                          </Link>
-                        ) : (
-                          <ExpandableText 
-                            text={visit.issues} 
-                            maxHeight={40}
-                            className="admin-visit-report-has-issues issue-expandable-text"
-                          />
-                        )}
+                      {visit.executiveInitials}
+                    </div>
+                    <span className="admin-visit-report-executive-name">{visit.executiveName}</span>
+                  </div>
+
+                  <div className="admin-visit-report-cell admin-visit-report-store-name-cell">
+                    <Link href={`/admin/stores?storeId=${visit.storeId}`} className="admin-visit-report-store-name-link">
+                      {visit.storeName}
+                    </Link>
+                  </div>
+
+                  <div className="admin-visit-report-cell admin-visit-report-partner-brands-cell">
+                    {visit.partnerBrand.map((brand, index) => (
+                      <span
+                        key={index}
+                        className="admin-visit-report-brand-tag"
+                        style={{ backgroundColor: getBrandColor(brand) }}
+                      >
+                        {brand}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="admin-visit-report-cell admin-visit-report-date-cell">
+                    <div className="admin-visit-report-visit-date" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      📅 {formatVisitDate(visit.visitDate)}
+                    </div>
+                    {visit.previousVisitDate && (
+                      <div className="admin-visit-report-prev-date" style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                        Prev: {visit.previousVisitDate}
                       </div>
                     )}
                   </div>
-                </div>
-                
-                <div className="admin-visit-report-cell admin-visit-report-status-cell">
-                  <div className="admin-visit-report-status-badges">
-                    <span className={`admin-visit-report-status-badge ${getVisitStatusBadgeClass(visit.visitStatus)}`}>
-                      {visit.visitStatus === 'REVIEWD' && visit.reviewerName
-                        ? `Reviewed by ${visit.reviewerName}`
-                        : formatVisitStatus(visit.visitStatus)}
-                    </span>
-                    {visit.issueStatus && visit.issues !== 'None' && (
-                      <span className={`admin-visit-report-status-badge ${getIssueStatusBadgeClass(visit.issueStatus)}`}>
-                        Issue {formatIssueStatus(visit.issueStatus)}
-                      </span>
-                    )}
+
+                  <div className="admin-visit-report-cell admin-visit-report-issues-cell">
+                    <div className="admin-visit-report-issues-content">
+                      {visit.issues === 'None' ? (
+                        <span className="admin-visit-report-no-issues">⚠️ {visit.issues}</span>
+                      ) : (
+                        <div className="admin-visit-report-issue-link-container">
+                          <span className="admin-visit-report-issue-icon">⚠️</span>
+                          {visit.issueId ? (
+                            <Link
+                              href={`/admin/issues/${visit.issueId}`}
+                              className="admin-visit-report-issue-link"
+                              title={`View issue: ${visit.issues}`}
+                            >
+                              <ExpandableText
+                                text={visit.issues}
+                                maxHeight={40}
+                                className="issue-expandable-text"
+                              />
+                            </Link>
+                          ) : (
+                            <ExpandableText
+                              text={visit.issues}
+                              maxHeight={40}
+                              className="admin-visit-report-has-issues issue-expandable-text"
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                
-                <div className="admin-visit-report-cell admin-visit-report-actions-cell">
-                  <div className="admin-visit-report-action-buttons-group">
-                    <button 
-                      className="admin-visit-report-view-details-btn"
-                      onClick={() => openVisitModal(visit)}
+
+                  <div className="admin-visit-report-cell admin-visit-report-status-cell" style={{ display: 'flex', justifyContent: 'center' }}>
+                    <Link
+                      href={`/admin/sales?storeId=${visit.storeId}&storeName=${encodeURIComponent(visit.storeName)}`}
+                      target="_blank"
                     >
-                      View Details
-                    </button>
-                    {visit.visitStatus === 'PENDING_REVIEW' && (
-                      <button 
-                        className="admin-visit-report-mark-reviewed-btn"
-                        onClick={() => markAsReviewed(visit.id, false)}
-                        disabled={markingReviewedId === visit.id}
-                        style={{
-                          opacity: markingReviewedId === visit.id ? 0.6 : 1,
-                          cursor: markingReviewedId === visit.id ? 'not-allowed' : 'pointer'
-                        }}
+                      <button
+                        className="admin-visit-report-view-details-btn"
+                        style={{ backgroundColor: '#8b5cf6', borderColor: '#7c3aed', color: 'white' }}
                       >
-                        {markingReviewedId === visit.id ? 'Marking...' : 'Mark Reviewed'}
+                        View Sales
                       </button>
-                    )}
+                    </Link>
+                  </div>
+
+                  <div className="admin-visit-report-cell admin-visit-report-actions-cell">
+                    <div className="admin-visit-report-action-buttons-group">
+                      <button
+                        className="admin-visit-report-view-details-btn"
+                        onClick={() => openVisitModal(visit)}
+                      >
+                        View Details
+                      </button>
+                      {visit.visitStatus === 'PENDING_REVIEW' && (
+                        <button
+                          className="admin-visit-report-mark-reviewed-btn"
+                          onClick={() => markAsReviewed(visit.id, false)}
+                          disabled={markingReviewedId === visit.id}
+                          style={{
+                            opacity: markingReviewedId === visit.id ? 0.6 : 1,
+                            cursor: markingReviewedId === visit.id ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          {markingReviewedId === visit.id ? 'Marking...' : 'Mark Reviewed'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
               ))
             ) : (
-              <div style={{ 
-                padding: '3rem', 
-                textAlign: 'center', 
-                color: '#64748b', 
+              <div style={{
+                padding: '3rem',
+                textAlign: 'center',
+                color: '#64748b',
                 fontSize: '1rem',
                 gridColumn: '1 / -1'
               }}>
