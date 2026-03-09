@@ -81,6 +81,8 @@ model Store {
   storeName         String
   city              String
   fullAddress       String?
+  latitude          Float?                      // Geocoded latitude (Google Places API)
+  longitude         Float?                      // Geocoded longitude (Google Places API)
   visits            Visit[]
   digitalVisits     DigitalVisit[]
   partnerBrandIds   String[]                    // references Brand IDs

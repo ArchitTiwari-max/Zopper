@@ -1,0 +1,500 @@
+/* ─── Distance Tracker Page ─────────────────────────────────────── */
+
+.dt-page {
+    padding: 1.5rem 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Header */
+.dt-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.dt-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary, #1e293b);
+    margin: 0 0 0.25rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dt-title-icon {
+    font-size: 1.4rem;
+}
+
+.dt-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #64748b);
+    margin: 0;
+}
+
+.dt-header-stats {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.dt-stat-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 0.5rem 1rem;
+    min-width: 70px;
+}
+
+.dt-stat-chip--blue {
+    background: #eff6ff;
+}
+
+.dt-stat-chip--blue .dt-stat-value {
+    color: #2563eb;
+}
+
+.dt-stat-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1;
+}
+
+.dt-stat-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 0.2rem;
+}
+
+/* Filters */
+.dt-filters {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.dt-select {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #374151;
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+    min-width: 200px;
+}
+
+.dt-select:hover {
+    border-color: #94a3b8;
+}
+
+.dt-select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+/* Loading / Error / Empty states */
+.dt-loading,
+.dt-error,
+.dt-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 4rem 2rem;
+    color: #64748b;
+    text-align: center;
+}
+
+.dt-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: dt-spin 0.7s linear infinite;
+}
+
+@keyframes dt-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.dt-error-icon,
+.dt-empty-icon {
+    font-size: 2rem;
+}
+
+.dt-retry-btn {
+    padding: 0.45rem 1rem;
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.dt-retry-btn:hover {
+    background: #4f46e5;
+}
+
+/* Executive card */
+.dt-executive-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.dt-executive-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+
+.dt-executive-card--open,
+.dt-executive-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+}
+
+.dt-executive-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    gap: 1rem;
+    transition: background 0.15s;
+}
+
+.dt-executive-header:hover {
+    background: #f8fafc;
+}
+
+.dt-executive-left {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.dt-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.dt-executive-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.dt-executive-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dt-executive-meta {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    margin-top: 0.15rem;
+}
+
+.dt-executive-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.dt-total-km-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+}
+
+.dt-km-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+}
+
+.dt-km-unit {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.dt-chevron {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    transition: transform 0.2s;
+    display: inline-block;
+    line-height: 1;
+}
+
+.dt-chevron--up {
+    transform: rotate(180deg);
+}
+
+.dt-chevron--sm {
+    font-size: 0.9rem;
+}
+
+/* Journeys section */
+.dt-journeys {
+    border-top: 1px solid #f1f5f9;
+    padding: 0.5rem 0;
+}
+
+.dt-journey {
+    margin: 0.25rem 0.75rem;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #f1f5f9;
+}
+
+.dt-journey-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 1rem;
+    background: #f8fafc;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    gap: 1rem;
+    transition: background 0.15s;
+}
+
+.dt-journey-header:hover {
+    background: #f1f5f9;
+}
+
+.dt-journey-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.dt-journey-date {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.dt-journey-meta {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    background: #e2e8f0;
+    border-radius: 20px;
+    padding: 0.1rem 0.5rem;
+}
+
+.dt-journey-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dt-journey-km {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6366f1;
+}
+
+/* Store chain */
+.dt-store-chain {
+    padding: 0.75rem 1rem 0.5rem;
+    background: #fff;
+    position: relative;
+}
+
+.dt-store-stop {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    position: relative;
+    padding-bottom: 0.25rem;
+    min-height: 52px;
+}
+
+/* Vertical connector between stops */
+.dt-connector {
+    position: absolute;
+    left: 15px;
+    top: 28px;
+    bottom: -8px;
+    width: 2px;
+    z-index: 0;
+}
+
+.dt-connector-line {
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to bottom, #c7d2fe, #e0e7ff);
+    border-radius: 2px;
+}
+
+.dt-stop-dot-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1;
+    flex-shrink: 0;
+    padding-top: 0.1rem;
+}
+
+.dt-stop-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #ede9fe;
+    color: #6366f1;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #c4b5fd;
+    flex-shrink: 0;
+}
+
+.dt-stop-dot--start {
+    background: #dcfce7;
+    color: #16a34a;
+    border-color: #86efac;
+}
+
+.dt-stop-info {
+    flex: 1;
+    min-width: 0;
+    padding-top: 0.15rem;
+}
+
+.dt-stop-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dt-stop-meta {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.15rem;
+}
+
+.dt-stop-city,
+.dt-stop-time {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.dt-stop-distance {
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-start;
+    padding-top: 0.1rem;
+}
+
+.dt-distance-badge {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #4f46e5;
+    background: #ede9fe;
+    border-radius: 20px;
+    padding: 0.2rem 0.65rem;
+    white-space: nowrap;
+}
+
+.dt-distance-badge--start {
+    color: #16a34a;
+    background: #dcfce7;
+}
+
+.dt-distance-badge--warn {
+    color: #b45309;
+    background: #fef3c7;
+    cursor: help;
+}
+
+/* Journey total footer */
+.dt-journey-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed #e2e8f0;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.dt-journey-total strong {
+    font-size: 0.875rem;
+    color: #6366f1;
+    font-weight: 700;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .dt-page {
+        padding: 1rem;
+    }
+
+    .dt-header {
+        flex-direction: column;
+    }
+
+    .dt-header-stats {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .dt-stop-name {
+        font-size: 0.8rem;
+    }
+}
