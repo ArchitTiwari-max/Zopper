@@ -19,25 +19,36 @@ export async function GET(request: NextRequest) {
     }
 
     // Get executive data
-    const executive = await prisma.executive.findUnique({
-      where: { userId: user.userId },
-      include: {
-        user: true,
-        executiveStores: {
-          select: { storeId: true }
+    let executive;
+    try {
+      executive = await prisma.executive.findUnique({
+        where: { userId: user.userId },
+        include: {
+          user: true,
+          executiveStores: {
+            select: { storeId: true, isFlagged: true }
+          }
         }
-      }
-    });
+      });
+    } catch (dbError) {
+      console.error('Database error fetching executive:', dbError);
+      return NextResponse.json({ error: 'Database error fetching executive profile' }, { status: 500 });
+    }
 
     if (!executive) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
+    // Create a map for quick lookup of flagged status
+    const flaggedMap = new Map<string, boolean>();
+    executive.executiveStores.forEach(es => {
+      flaggedMap.set(es.storeId, es.isFlagged);
+    });
+
     // ETag for cache validation (includes user ID for security)
     const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
     const apiVersion = 'v2-data-only';
     const etag = `"${currentTime}-${executive.id}-${user.userId}-${apiVersion}"`;
-    console.log('executive.id:', executive.id);
     const ifNoneMatch = request.headers.get('if-none-match');
     if (ifNoneMatch === etag) {
       return new NextResponse(null, {
@@ -73,10 +84,10 @@ export async function GET(request: NextRequest) {
         .map(brandId => brandMap.get(brandId))
         .filter(Boolean)
         .map(b => b!.brandName);
-      
+
       // Get partner brand types - ensure we have the same length as brand IDs
-      const partnerBrandTypes = Array.isArray((store as any).partnerBrandTypes) 
-        ? (store as any).partnerBrandTypes 
+      const partnerBrandTypes = Array.isArray((store as any).partnerBrandTypes)
+        ? (store as any).partnerBrandTypes
         : [];
 
       let visitStatus = 'No visit';
@@ -103,6 +114,7 @@ export async function GET(request: NextRequest) {
         partnerBrandTypes,
         visited: visitStatus,
         lastVisitDate,
+        isFlagged: flaggedMap.get(store.id) || false,
         sortOrder: lastVisitDate ? new Date(lastVisitDate).getTime() : 0
       };
     });

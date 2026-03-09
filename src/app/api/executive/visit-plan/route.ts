@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!plannedVisitDate) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Planned visit date is required',
         details: 'Please provide a valid date in YYYY-MM-DD format (e.g., 2025-01-20)'
       }, { status: 400 });
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     // Validate and parse the planned visit date
     const visitDate = new Date(plannedVisitDate);
     if (isNaN(visitDate.getTime())) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Invalid planned visit date format',
         details: `Received: "${plannedVisitDate}". Expected format: YYYY-MM-DD (e.g., 2025-01-20)`
       }, { status: 400 });
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     // Additional validation for unrealistic dates
     const currentYear = new Date().getFullYear();
     const visitYear = visitDate.getFullYear();
-    
+
     if (visitYear < 2000 || visitYear > currentYear + 10) {
       return NextResponse.json({
         error: 'Invalid planned visit date',
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     const today = new Date();
     const todayDateString = today.toISOString().split('T')[0]; // YYYY-MM-DD format
     const visitDateString = visitDate.toISOString().split('T')[0]; // YYYY-MM-DD format
-    
+
     if (visitDateString < todayDateString) {
       return NextResponse.json({
         error: 'Past date not allowed',
@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Get executive details
     // Get executive details
     const executive = await prisma.executive.findUnique({
       where: { userId: user.userId },
@@ -84,13 +85,35 @@ export async function POST(request: NextRequest) {
         id: true,
         storeName: true,
         city: true,
-        fullAddress: true
+        fullAddress: true,
+        executiveStores: {
+          where: { executiveId: executive.id },
+          select: { isFlagged: true }
+        }
       }
     });
 
     if (stores.length !== storeIds.length) {
       return NextResponse.json({ error: 'Some stores were not found' }, { status: 400 });
     }
+
+    // Identify flagged stores
+    const flaggedStoreNames: string[] = [];
+
+    // Process stores to extract flag status and prepare snapshot
+    const storesWithFlag = stores.map(store => {
+      const isFlagged = store.executiveStores[0]?.isFlagged || false;
+      if (isFlagged) {
+        flaggedStoreNames.push(store.storeName);
+      }
+      return {
+        id: store.id,
+        storeName: store.storeName,
+        city: store.city,
+        fullAddress: store.fullAddress,
+        isFlagged
+      };
+    });
 
     // Get all admin users to notify
     const adminUsers = await prisma.user.findMany({
@@ -103,13 +126,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Create a VisitPlan (PJP) record
-    const storesSnapshot = stores.map(s => ({ 
-      id: s.id, 
-      storeName: s.storeName, 
-      city: s.city, 
+    const storesSnapshot = storesWithFlag.map(s => ({
+      id: s.id,
+      storeName: s.storeName,
+      city: s.city,
       fullAddress: s.fullAddress,
-      status: 'SUBMITTED' // Default status for each store
+      status: 'SUBMITTED', // Default status for each store
+      isFlagged: s.isFlagged
     }));
+
     const visitPlan = await prisma.visitPlan.create({
       data: {
         executiveId: executive.id,
@@ -123,13 +148,13 @@ export async function POST(request: NextRequest) {
     // Create visit plan submission notification for each admin
     const storeNames = stores.map(store => store.storeName);
     const storeCount = stores.length;
-    const storeList = storeNames.length > 3 
+    const storeList = storeNames.length > 3
       ? `${storeNames.slice(0, 3).join(', ')} and ${storeNames.length - 3} more`
       : storeNames.join(', ');
 
     const { NotificationService } = await import('@/lib/notification');
 
-    const notificationPromises = adminUsers.map(admin => 
+    const notificationPromises = adminUsers.map(admin =>
       NotificationService.createNotification({
         title: `📋 New Visit Plan Submitted - ${visitDate.toLocaleDateString()}`,
         message: `${executive.name} has submitted a visit plan for ${storeCount} ${storeCount === 1 ? 'store' : 'stores'}: ${storeList}`,
@@ -146,6 +171,7 @@ export async function POST(request: NextRequest) {
           storeCount: storeCount,
           storeIds: storeIds,
           storeNames: storeNames,
+          flaggedStoreNames: flaggedStoreNames,
           plannedVisitDate: visitDate.toISOString(),
           submissionTime: new Date().toISOString()
         },
@@ -155,7 +181,7 @@ export async function POST(request: NextRequest) {
 
     // Wait for all notification creations to complete
     const notificationResults = await Promise.allSettled(notificationPromises);
-    
+
     // Check if any notifications failed
     const failedNotifications = notificationResults.filter(result => result.status === 'rejected');
     if (failedNotifications.length > 0) {
@@ -186,7 +212,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error submitting visit plan:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to submit visit plan',
         details: error instanceof Error ? error.message : String(error)
       },

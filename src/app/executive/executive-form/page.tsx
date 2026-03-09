@@ -119,7 +119,8 @@ const ExecutiveFormContent: React.FC = () => {
   const [holidayForm, setHolidayForm] = useState({
     startDate: '',
     endDate: '',
-    reason: ''
+    reason: '',
+    replacementAvailable: null as boolean | null
   });
   const [holidaySecNames, setHolidaySecNames] = useState<{ name: string, phoneNumber: string }[]>([]);
   const [currentSecName, setCurrentSecName] = useState('');
@@ -354,6 +355,10 @@ const ExecutiveFormContent: React.FC = () => {
         alert('Start date cannot be after end date');
         return;
       }
+      if (holidayForm.replacementAvailable === null) {
+        alert('Please indicate if a replacement request is available');
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -367,7 +372,8 @@ const ExecutiveFormContent: React.FC = () => {
           startDate: holidayForm.startDate,
           endDate: visitType === 'WEEK_OFF' ? holidayForm.startDate : holidayForm.endDate,
           storeId, // Include storeId for context
-          type: visitType === 'WEEK_OFF' ? 'WEEK_OFF' : 'VACATION'
+          type: visitType === 'WEEK_OFF' ? 'WEEK_OFF' : 'VACATION',
+          replacementAvailable: visitType === 'WEEK_OFF' ? false : holidayForm.replacementAvailable
         };
 
         const response = await fetch('/api/executive/holiday', {
@@ -682,7 +688,8 @@ const ExecutiveFormContent: React.FC = () => {
           <h3 className="exec-f-sub-section-title">
             {visitType === 'PHYSICAL' ? 'Log Visit Details' :
               visitType === 'DIGITAL' ? 'Log Digital Connect' :
-                'Vacation Request Form'}
+                visitType === 'WEEK_OFF' ? 'Week Off Info Form' :
+                  'Vacation Info Form'}
           </h3>
 
           {visitType === 'PHYSICAL' && (
@@ -1248,6 +1255,38 @@ const ExecutiveFormContent: React.FC = () => {
 
               <div className="exec-f-sub-form-group">
                 <label className="exec-f-sub-form-label">
+                  Is a replacement staff available during this period? <span className="exec-f-sub-required">*</span>
+                </label>
+                <div className="exec-f-sub-radio-group">
+                  <label className="exec-f-sub-radio-option">
+                    <input
+                      type="radio"
+                      name="replacementAvailable"
+                      value="true"
+                      checked={holidayForm.replacementAvailable === true}
+                      onChange={() => setHolidayForm(prev => ({ ...prev, replacementAvailable: true }))}
+                      className="exec-f-sub-radio-input"
+                    />
+                    <span className="exec-f-sub-radio-custom"></span>
+                    <span className="exec-f-sub-radio-label">Available</span>
+                  </label>
+                  <label className="exec-f-sub-radio-option">
+                    <input
+                      type="radio"
+                      name="replacementAvailable"
+                      value="false"
+                      checked={holidayForm.replacementAvailable === false}
+                      onChange={() => setHolidayForm(prev => ({ ...prev, replacementAvailable: false }))}
+                      className="exec-f-sub-radio-input"
+                    />
+                    <span className="exec-f-sub-radio-custom"></span>
+                    <span className="exec-f-sub-radio-label">Not Available</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="exec-f-sub-form-group">
+                <label className="exec-f-sub-form-label">
                   Reason for Absence <span className="exec-f-sub-required">*</span>
                 </label>
                 <textarea
@@ -1263,9 +1302,9 @@ const ExecutiveFormContent: React.FC = () => {
                 <button
                   className="exec-f-sub-submit-visit-btn"
                   onClick={handleSubmitVisit}
-                  disabled={submitting || holidaySecNames.length === 0 || !holidayForm.reason.trim() || !holidayForm.startDate || !holidayForm.endDate}
+                  disabled={submitting || holidaySecNames.length === 0 || !holidayForm.reason.trim() || !holidayForm.startDate || !holidayForm.endDate || holidayForm.replacementAvailable === null}
                 >
-                  {submitting ? 'Submitting...' : 'Submit Vacation Request'}
+                  {submitting ? 'Submitting...' : 'Submit Vacation Info'}
                 </button>
               </div>
             </>
@@ -1343,6 +1382,9 @@ const ExecutiveFormContent: React.FC = () => {
                   )}
                 </div>
               </div>
+
+
+
 
               <div className="exec-f-sub-form-actions">
                 <button
@@ -1510,7 +1552,7 @@ const ExecutiveFormContent: React.FC = () => {
           isDigital={false}
         />
       </div>
-    </div>
+    </div >
   );
 };
 

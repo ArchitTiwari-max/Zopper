@@ -7,20 +7,20 @@ import { useNotifications } from './components/contexts/NotificationContext';
 
 const AdminNotifications: React.FC = () => {
   const router = useRouter();
-  const { 
-    notifications, 
-    loading, 
-    error, 
-    markAsRead, 
-    markAllAsRead, 
+  const {
+    notifications,
+    loading,
+    error,
+    markAsRead,
+    markAllAsRead,
     archiveNotification,
-    refreshNotifications 
+    refreshNotifications
   } = useNotifications();
-  
+
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [expandedStores, setExpandedStores] = useState<Set<string>>(new Set());
-  
+
   // Refresh notifications when page loads to ensure latest data
   useEffect(() => {
     refreshNotifications();
@@ -36,13 +36,13 @@ const AdminNotifications: React.FC = () => {
     const now = new Date();
     const notificationDate = new Date(dateString);
     const diffInMinutes = Math.floor((now.getTime() - notificationDate.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    
+
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours}h ago`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays === 1) return '1 day ago';
     return `${diffInDays} days ago`;
@@ -64,7 +64,7 @@ const AdminNotifications: React.FC = () => {
     if (notification.status === 'UNREAD') {
       markAsRead(notification.id);
     }
-    
+
     if (notification.actionUrl) {
       router.push(notification.actionUrl);
     }
@@ -88,17 +88,18 @@ const AdminNotifications: React.FC = () => {
     if (notification.type !== 'VISIT_PLAN_SUBMITTED' || !notification.metadata) {
       return null;
     }
-    
+
     try {
-      const metadata = typeof notification.metadata === 'string' 
-        ? JSON.parse(notification.metadata) 
+      const metadata = typeof notification.metadata === 'string'
+        ? JSON.parse(notification.metadata)
         : notification.metadata;
-      
+
       return {
         plannedVisitDate: metadata.plannedVisitDate,
         executiveName: metadata.executiveName,
         storeCount: metadata.storeCount,
-        storeNames: metadata.storeNames || []
+        storeNames: metadata.storeNames || [],
+        flaggedStoreNames: metadata.flaggedStoreNames || [] // Get flagged stores
       };
     } catch {
       return null;
@@ -118,6 +119,15 @@ const AdminNotifications: React.FC = () => {
     });
   };
 
+  const renderStoreName = (name: string, flaggedNames: string[]) => {
+    const isFlagged = flaggedNames.includes(name);
+    return (
+      <span key={name} style={isFlagged ? { backgroundColor: '#fef08a', padding: '0 4px', borderRadius: '4px', fontWeight: '500' } : {}}>
+        {name} {isFlagged && '⭐'}
+      </span>
+    );
+  };
+
   return (
     <div className="notifications-container">
       <div className="notifications-content">
@@ -135,19 +145,19 @@ const AdminNotifications: React.FC = () => {
           <div className="notif-filter-group">
             <label>Status:</label>
             <div className="notif-filter-tabs">
-              <button 
+              <button
                 className={`notif-filter-tab ${filter === 'all' ? 'active' : ''}`}
                 onClick={() => setFilter('all')}
               >
                 All ({notifications.length})
               </button>
-              <button 
+              <button
                 className={`notif-filter-tab ${filter === 'unread' ? 'active' : ''}`}
                 onClick={() => setFilter('unread')}
               >
                 Unread ({notifications.filter(n => n.status === 'UNREAD').length})
               </button>
-              <button 
+              <button
                 className={`notif-filter-tab ${filter === 'read' ? 'active' : ''}`}
                 onClick={() => setFilter('read')}
               >
@@ -186,13 +196,11 @@ const AdminNotifications: React.FC = () => {
                 return true;
               })
               .map((notification) => (
-                <div 
-                  key={notification.id} 
-                  className={`notification-item ${
-                    notification.status === 'UNREAD' ? 'unread' : ''
-                  } priority-${notification.priority.toLowerCase()} ${
-                    notification.type === 'VISIT_PLAN_SUBMITTED' ? 'no-click' : ''
-                  }`}
+                <div
+                  key={notification.id}
+                  className={`notification-item ${notification.status === 'UNREAD' ? 'unread' : ''
+                    } priority-${notification.priority.toLowerCase()} ${notification.type === 'VISIT_PLAN_SUBMITTED' ? 'no-click' : ''
+                    }`}
                   onClick={notification.type === 'VISIT_PLAN_SUBMITTED' ? undefined : () => handleViewDetails(notification)}
                 >
                   <div className="notification-content">
@@ -206,7 +214,7 @@ const AdminNotifications: React.FC = () => {
                         {notification.type !== 'VISIT_PLAN_SUBMITTED' && (
                           <p className="notification-description">{notification.message}</p>
                         )}
-                        
+
                         {/* Visit Plan Specific Metadata */}
                         {(() => {
                           const visitPlanMeta = getVisitPlanMetadata(notification);
@@ -234,11 +242,26 @@ const AdminNotifications: React.FC = () => {
                                       <span className="store-value">
                                         {visitPlanMeta.storeCount} store{visitPlanMeta.storeCount !== 1 ? 's' : ''}
                                         {visitPlanMeta.storeNames.length > 0 && visitPlanMeta.storeNames.length <= 3 && (
-                                          <span className="store-names"> - {visitPlanMeta.storeNames.join(', ')}</span>
+                                          <span className="store-names">
+                                            {' - '}
+                                            {visitPlanMeta.storeNames.map((name: string, idx: number) => (
+                                              <React.Fragment key={idx}>
+                                                {idx > 0 && ', '}
+                                                {renderStoreName(name, visitPlanMeta.flaggedStoreNames)}
+                                              </React.Fragment>
+                                            ))}
+                                          </span>
                                         )}
                                         {visitPlanMeta.storeNames.length > 3 && !expandedStores.has(notification.id) && (
-                                          <span className="store-names"> - {visitPlanMeta.storeNames.slice(0, 2).join(', ')} 
-                                            <button 
+                                          <span className="store-names">
+                                            {' - '}
+                                            {visitPlanMeta.storeNames.slice(0, 2).map((name: string, idx: number) => (
+                                              <React.Fragment key={idx}>
+                                                {idx > 0 && ', '}
+                                                {renderStoreName(name, visitPlanMeta.flaggedStoreNames)}
+                                              </React.Fragment>
+                                            ))}
+                                            <button
                                               className="view-stores-btn"
                                               onClick={(e) => {
                                                 e.stopPropagation();
@@ -251,8 +274,14 @@ const AdminNotifications: React.FC = () => {
                                         )}
                                         {visitPlanMeta.storeNames.length > 3 && expandedStores.has(notification.id) && (
                                           <span className="store-names-expanded">
-                                            {' - '}{visitPlanMeta.storeNames.join(', ')}
-                                            <button 
+                                            {' - '}
+                                            {visitPlanMeta.storeNames.map((name: string, idx: number) => (
+                                              <React.Fragment key={idx}>
+                                                {idx > 0 && ', '}
+                                                {renderStoreName(name, visitPlanMeta.flaggedStoreNames)}
+                                              </React.Fragment>
+                                            ))}
+                                            <button
                                               className="hide-stores-btn"
                                               onClick={(e) => {
                                                 e.stopPropagation();
@@ -288,7 +317,7 @@ const AdminNotifications: React.FC = () => {
                           <span className="notification-time">{getTimeAgo(notification.createdAt)}</span>
                           <div className="action-buttons">
                             {notification.status === 'UNREAD' && (
-                              <button 
+                              <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   markAsRead(notification.id);
@@ -298,7 +327,7 @@ const AdminNotifications: React.FC = () => {
                                 Mark as Read
                               </button>
                             )}
-                            <button 
+                            <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 archiveNotification(notification.id);

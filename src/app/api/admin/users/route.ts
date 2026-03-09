@@ -125,6 +125,7 @@ export async function GET(request: NextRequest) {
         username: user.username,
         email: user.email,
         role: user.role,
+        isActive: user.isActive,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         adminInfo: user.admin ? {
@@ -419,7 +420,15 @@ export async function DELETE(request: NextRequest) {
         });
         console.log(`Deleted ${notifications.count} notifications`);
         
-        // 8. Finally, delete the Executive record
+        // 8. Delete DostChat records (they have required relations to Executive and User)
+        const dostChats = await tx.dostChat.deleteMany({
+          where: {
+            executiveId: executiveId
+          }
+        });
+        console.log(`Deleted ${dostChats.count} dost chats`);
+        
+        // 9. Finally, delete the Executive record
         await tx.executive.delete({
           where: { id: executiveId }
         });

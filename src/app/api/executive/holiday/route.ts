@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { secNames, reason, startDate, endDate, storeId, type } = body;
+    const { secNames, reason, startDate, endDate, storeId, type, replacementAvailable } = body;
 
     // Validate required fields
     if (!secNames || !Array.isArray(secNames) || secNames.length === 0) {
@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
         storeId: storeId || null,
         status: 'PENDING',
         type: type === 'WEEK_OFF' ? 'WEEK_OFF' : 'VACATION',
-        submittedAt: new Date()
+        submittedAt: new Date(),
+        replacementAvailable: replacementAvailable
       }
     });
 
@@ -72,10 +73,11 @@ export async function POST(request: NextRequest) {
       }
     }, { status: 201 });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating holiday request:', error);
     return NextResponse.json({
-      message: 'Internal server error'
+      message: error instanceof Error ? error.message : 'Internal server error',
+      details: String(error)
     }, { status: 500 });
   } finally {
     await prisma.$disconnect();

@@ -62,6 +62,7 @@ interface HolidayRequest {
   reviewedAt?: string;
   reviewedBy?: string;
   type?: 'VACATION' | 'WEEK_OFF';
+  replacementAvailable?: boolean | null;
 }
 
 const VisitHistory: React.FC = () => {
@@ -148,7 +149,13 @@ const VisitHistory: React.FC = () => {
         ]);
 
         if (!physicalRes.ok || !digitalRes.ok || !filterResponse.ok) {
-          throw new Error('Failed to fetch visit or filter data');
+          console.error('Fetch failed:', {
+            physical: { ok: physicalRes.ok, status: physicalRes.status, statusText: physicalRes.statusText },
+            digital: { ok: digitalRes.ok, status: digitalRes.status, statusText: digitalRes.statusText },
+            filter: { ok: filterResponse.ok, status: filterResponse.status, statusText: filterResponse.statusText }
+          });
+          const errorMsg = `Failed to fetch data: P:${physicalRes.status} D:${digitalRes.status} F:${filterResponse.status}`;
+          throw new Error(errorMsg);
         }
 
         const [physicalResult, digitalResult, holidayResult, filterResult] = await Promise.all([
@@ -618,10 +625,17 @@ const VisitHistory: React.FC = () => {
                         <td data-label="Date Range">
                           <div className="exec-visits-date-cell">
                             <span className="exec-visits-date-table">
-                              {formatDate(req.startDate)} - {formatDate(req.endDate)}
+                              {req.type === 'WEEK_OFF' ? (() => {
+                                const d = new Date(req.startDate);
+                                const day = d.getDate().toString().padStart(2, '0');
+                                const month = (d.getMonth() + 1).toString().padStart(2, '0');
+                                const year = d.getFullYear();
+                                return `${day}/${month}/${year}`;
+                              })() : `${formatDate(req.startDate)} - ${formatDate(req.endDate)}`}
                             </span>
                           </div>
                         </td>
+
                         <td data-label="Action">
                           <div className="exec-visits-action-cell">
                             <button

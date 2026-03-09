@@ -88,10 +88,13 @@ export async function optimizedPostSales(rowObj: Record<string, any>, storeCount
       return `❌ Category is not mapped to this brand. ${context}`;
     }
 
-    // Process monthly sales data
+    // Process monthly sales data - support both DD-MM-YYYY and D/M/YYYY formats
     const salesByYear: Record<number, any[]> = {};
     for (const key in monthMetrics) {
-      const match = key.match(/^([0-9]{2})-([0-9]{2})-([0-9]{4}) (.+)$/);
+      let match = key.match(/^([0-9]{1,2})-([0-9]{1,2})-([0-9]{4}) (.+)$/);
+      if (!match) {
+        match = key.match(/^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{4}) (.+)$/);
+      }
       if (!match) continue;
       const [_, dd, mm, yyyy, metric] = match;
       const year = parseInt(yyyy, 10);
@@ -163,12 +166,16 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
     const dailySalesByMonth: Record<string, any[]> = {};
     let detectedYear: number | null = null;
     for (const key in dateMetrics) {
-      const match = key.match(/^([0-9]{2})-([0-9]{2})-([0-9]{4}) (Count of Sales|Revenue)$/);
+      // Support both DD-MM-YYYY and D/M/YYYY formats
+      let match = key.match(/^([0-9]{1,2})-([0-9]{1,2})-([0-9]{4}) (Count of Sales|Revenue)$/);
+      if (!match) {
+        match = key.match(/^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{4}) (Count of Sales|Revenue)$/);
+      }
       if (!match) continue;
       const [_, dd, mm, yyyy, metric] = match;
       const monthNum = parseInt(mm, 10);
       const monthKey = String(monthNum); // "1".."12"
-      const date = `${dd}-${mm}-${yyyy}`; // DD-MM-YYYY per schema note
+      const date = `${dd.padStart(2, '0')}-${mm.padStart(2, '0')}-${yyyy}`; // Ensure DD-MM-YYYY format
       detectedYear = detectedYear ?? parseInt(yyyy, 10);
 
       if (!dailySalesByMonth[monthKey]) dailySalesByMonth[monthKey] = [];

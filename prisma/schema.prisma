@@ -22,9 +22,9 @@ model User {
   username  String   @unique
   password  String
   role      Role     @default(EXECUTIVE)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   executive       Executive?
   admin           Admin?
   dostChats       DostChat[]
@@ -44,6 +44,8 @@ model Admin {
   // Back-relations: visits reviewed by this admin
   reviewedVisits        Visit[]
   reviewedDigitalVisits DigitalVisit[]
+
+  adminVisits           AdminVisit[]
 }
 
 model Executive {
@@ -89,6 +91,7 @@ model Store {
   partnerBrandTypes PartnerBrandType[] // parallel array corresoponding to same index in partnerBrandIds
   executiveStores   ExecutiveStoreAssignment[]
   salesRecords      SalesRecord[]
+  adminVisits       AdminVisit[]
 }
 
 model ExecutiveStoreAssignment {
@@ -96,6 +99,7 @@ model ExecutiveStoreAssignment {
   executiveId String
   storeId     String
   assignedAt  DateTime @default(now())
+  isFlagged   Boolean  @default(false)
 
   executive Executive @relation(fields: [executiveId], references: [id])
   store     Store     @relation(fields: [storeId], references: [id])
@@ -183,6 +187,7 @@ model Visit {
   POSMchecked       Boolean?   @map("displayChecked") // Point of Sale Material availability check (nullable for backward compatibility)
   remarks           String?
   imageUrls         String[] // Array of image URLs
+  visitDate         DateTime?  // Actual date when visit occurred (nullable for backward compatibility during migration)
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
   status            viststatus @default(PENDING_REVIEW)
@@ -203,6 +208,27 @@ model Visit {
 
   // Critical performance indexes based on actual queries
   @@index([executiveId, createdAt])
+  @@index([storeId])
+}
+
+model AdminVisit {
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  personMet         Json // [{ name: "Rajesh", designation: "Manager", phoneNumber: "1234567890" }]
+  POSMchecked       Boolean?   @map("displayChecked")
+  remarks           String?
+  imageUrls         String[]
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  
+  // relations
+  adminId           String
+  admin             Admin      @relation(fields: [adminId], references: [id])
+
+  storeId           String
+  store             Store      @relation(fields: [storeId], references: [id])
+  brandIds          String[]
+
+  @@index([adminId, createdAt])
   @@index([storeId])
 }
 
@@ -539,6 +565,8 @@ model HolidayRequest {
   userId  String // Executive user who submitted the request
   user    User   @relation(fields: [userId], references: [id])
   storeId String? // Optional store context
+  
+  replacementAvailable Boolean? // Is a replacement available?
   
   // Indexes for performance
   @@index([userId, submittedAt])

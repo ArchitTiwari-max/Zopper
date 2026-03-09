@@ -29,10 +29,10 @@ export async function generateJSON({ systemPrompt, userPrompt, model = defaultMo
       temperature,
       response_format: { type: 'json_object' },
       input: [
-        { role: 'system', content: [ { type: 'text', text: systemPrompt } ] },
-        { role: 'user',   content: [ { type: 'text', text: userPrompt } ] }
+        { role: 'system', content: systemPrompt },
+        { role: 'user',   content: userPrompt }
       ]
-    })
+    } as any)
 
     // SDK provides a convenience string containing all text
     const content = (response as any).output_text ||
