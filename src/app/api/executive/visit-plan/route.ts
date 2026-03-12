@@ -220,3 +220,57 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// GET method to fetch submitted PJPs for the executive
+export async function GET(request: NextRequest) {
+  try {
+    const user = await getAuthenticatedUser(request);
+    if (!user || user.role !== 'EXECUTIVE') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const executive = await prisma.executive.findUnique({
+      where: { userId: user.userId },
+      select: { id: true }
+    });
+
+    if (!executive) {
+      return NextResponse.json({ error: 'Executive not found' }, { status: 404 });
+    }
+
+    // Fetch visit plans sorted by submission date
+    const visitPlans = await prisma.visitPlan.findMany({
+      where: { executiveId: executive.id },
+      orderBy: { submittedAt: 'desc' }
+    });
+
+    // Extract all unique store IDs mentioned across all plans to fetch their names/cities
+    const allStoreIdsInPlans = [...new Set(visitPlans.flatMap(p => p.storeIds))];
+
+    const storesData = await prisma.store.findMany({
+      where: { id: { in: allStoreIdsInPlans } },
+      select: { id: true, storeName: true, city: true }
+    });
+
+    const storeMap = new Map(storesData.map(s => [s.id, s]));
+
+    // Format plans and preserve the order of storeIds
+    const formattedPlans = visitPlans.map(plan => ({
+      id: plan.id,
+      plannedVisitDate: plan.plannedVisitDate,
+      submittedAt: plan.submittedAt,
+      status: plan.status,
+      stores: plan.storeIds.map(id => storeMap.get(id)).filter(Boolean)
+    }));
+
+    return NextResponse.json({
+      success: true,
+      data: formattedPlans
+    });
+
+  } catch (error) {
+    console.error('Error fetching visit plans:', error);
+    return NextResponse.json({ error: 'Failed to fetch visit plans' }, { status: 500 });
+  }
+}
+

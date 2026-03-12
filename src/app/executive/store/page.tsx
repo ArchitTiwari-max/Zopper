@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getRAGEmoji, RAGStorePerformance } from '@/lib/ragUtils';
 import './Store.css';
+import SuggestPJP from './SuggestPJP';
+import SubmittedPJPModal from './SubmittedPJPModal';
 
 interface StoreData {
   id: string;
@@ -22,6 +24,8 @@ const Store: React.FC = () => {
   const router = useRouter();
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [isCreateMode, setIsCreateMode] = useState(false);
+  const [isSuggestMode, setIsSuggestMode] = useState(false);
+  const [showSubmittedModal, setShowSubmittedModal] = useState(false);
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
   const [plannedVisitDate, setPlannedVisitDate] = useState<string>(''); // Will be set in useEffect
   const [loading, setLoading] = useState(true);
@@ -222,10 +226,11 @@ const Store: React.FC = () => {
     setShowPreview(true);
   };
 
-  const handleSubmitVisitPlan = async () => {
-    if (selectedStores.length === 0) return;
+  // Shared submit function — used by both Create PJP and Suggest PJP
+  const submitVisitPlan = async (storeIds: string[], date: string): Promise<void> => {
+    if (storeIds.length === 0) return;
 
-    if (!plannedVisitDate) {
+    if (!date) {
       alert('Please select a planned visit date before submitting.');
       return;
     }
@@ -237,7 +242,7 @@ const Store: React.FC = () => {
     const day = String(today.getDate()).padStart(2, '0');
     const todayLocal = `${year}-${month}-${day}`;
 
-    if (plannedVisitDate < todayLocal) {
+    if (date < todayLocal) {
       alert('❌ Past date not allowed. Please select today or a future date.');
       return;
     }
@@ -245,49 +250,45 @@ const Store: React.FC = () => {
     try {
       setSubmitting(true);
 
-      // Submit visit plan to backend
       const response = await fetch('/api/executive/visit-plan', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          storeIds: selectedStores,
-          plannedVisitDate: plannedVisitDate
-        })
+        body: JSON.stringify({ storeIds, plannedVisitDate: date })
       });
 
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
-          alert(`✅ Visit plan submitted successfully! ${selectedStores.length} stores scheduled for visits.`);
-          // Reset state
+          alert(`✅ Visit plan submitted successfully! ${storeIds.length} stores scheduled for visits.`);
+          // Reset all modes
           setIsCreateMode(false);
+          setIsSuggestMode(false);
           setSelectedStores([]);
-          // Reset to today using local date
-          const today = new Date();
-          const year = today.getFullYear();
-          const month = String(today.getMonth() + 1).padStart(2, '0');
-          const day = String(today.getDate()).padStart(2, '0');
-          const todayLocal = `${year}-${month}-${day}`;
-          setPlannedVisitDate(todayLocal);
+          const t = new Date();
+          const y = t.getFullYear();
+          const mo = String(t.getMonth() + 1).padStart(2, '0');
+          const d = String(t.getDate()).padStart(2, '0');
+          setPlannedVisitDate(`${y}-${mo}-${d}`);
           setShowPreview(false);
         } else {
-          const errorMessage = result.details ? `${result.error}: ${result.details}` : (result.error || 'Failed to submit visit plan');
-          throw new Error(errorMessage);
+          const msg = result.details ? `${result.error}: ${result.details}` : (result.error || 'Failed to submit visit plan');
+          throw new Error(msg);
         }
       } else {
-        // Handle HTTP error responses (400, 500, etc.)
-        const errorResult = await response.json();
-        const errorMessage = errorResult.details ? `${errorResult.error}: ${errorResult.details}` : (errorResult.error || 'Failed to submit visit plan');
-        throw new Error(errorMessage);
+        const errResult = await response.json();
+        const msg = errResult.details ? `${errResult.error}: ${errResult.details}` : (errResult.error || 'Failed to submit visit plan');
+        throw new Error(msg);
       }
     } catch (error) {
       alert(`❌ Error: ${error instanceof Error ? error.message : 'Failed to submit visit plan'}`);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSubmitVisitPlan = async () => {
+    await submitVisitPlan(selectedStores, plannedVisitDate);
   };
 
   const getSelectedStoreDetails = () => {
@@ -383,10 +384,25 @@ const Store: React.FC = () => {
             <p className="exec-v-form-subtitle">Manage your visits and track progress</p>
           </div>
           {!isCreateMode ? (
-            <button className="exec-v-form-create-visit-btn" onClick={handleCreateVisit} disabled={loading}>
-              <span className="exec-v-form-plus-icon">+</span>
-              Create PJP
-            </button>
+            <div className="spjp-header-btns">
+              <button className="exec-v-form-create-visit-btn" onClick={handleCreateVisit} disabled={loading}>
+                <span className="exec-v-form-plus-icon">+</span>
+                Create PJP
+              </button>
+              <button
+                className="spjp-suggest-btn"
+                onClick={() => setIsSuggestMode(true)}
+                disabled={loading}
+              >
+                ✨ Suggest PJP
+              </button>
+              <button
+                className="spjp-submitted-btn"
+                onClick={() => setShowSubmittedModal(true)}
+              >
+                📋 Submitted PJPs
+              </button>
+            </div>
           ) : (
             <div className="exec-v-form-action-buttons">
               <button className="exec-v-form-preview-send-btn" onClick={handlePreviewAndSend} disabled={loading}>
@@ -582,6 +598,22 @@ const Store: React.FC = () => {
         </div>
       </div>
 
+      {/* Suggest PJP Modal */}
+      {isSuggestMode && (
+        <SuggestPJP
+          allStores={storeData.map(s => ({
+            id: s.id,
+            storeName: s.storeName,
+            city: s.city,
+            visited: s.visited,
+            lastVisitDate: s.lastVisitDate ? s.lastVisitDate.toString() : null,
+          }))}
+          onClose={() => setIsSuggestMode(false)}
+          onSubmit={submitVisitPlan}
+          submitting={submitting}
+        />
+      )}
+
       {/* Preview Modal */}
       {showPreview && (
         <div className="exec-v-form-modal-overlay">
@@ -699,6 +731,12 @@ const Store: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Submitted PJPs Modal */}
+      <SubmittedPJPModal
+        isOpen={showSubmittedModal}
+        onClose={() => setShowSubmittedModal(false)}
+      />
     </div>
   );
 };

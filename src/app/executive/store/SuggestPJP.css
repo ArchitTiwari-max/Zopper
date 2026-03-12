@@ -1,0 +1,1013 @@
+/* ===== Suggest PJP Global Styles ===== */
+
+/* Overlay */
+.spjp-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 16px 80px 16px;
+    /* Increased bottom padding to clear bottom nav */
+    animation: spjp-fade-in 0.2s ease;
+}
+
+@keyframes spjp-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Close Button */
+.spjp-close-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+    line-height: 1;
+    transition: background 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+
+.spjp-close-btn:hover {
+    background: #f1f3f5;
+    color: #212529;
+}
+
+/* Error banner */
+.spjp-error-banner {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #856404;
+    margin-bottom: 12px;
+}
+
+/* ───────────────────────────────────────
+   STEP 1 — Start Store Picker
+─────────────────────────────────────── */
+.spjp-step1-modal {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 520px;
+    max-height: calc(100vh - 110px);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+    animation: spjp-slide-up 0.25s ease;
+    overflow: hidden;
+}
+
+@keyframes spjp-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.spjp-step1-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 24px 24px 0 24px;
+}
+
+.spjp-step1-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0 0 4px 0;
+}
+
+.spjp-step1-subtitle {
+    font-size: 13px;
+    color: #6c757d;
+    margin: 0;
+}
+
+/* Search */
+.spjp-search-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 24px 12px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.spjp-search-icon {
+    font-size: 16px;
+}
+
+.spjp-search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    color: #212529;
+    background: transparent;
+}
+
+.spjp-search-input::placeholder {
+    color: #adb5bd;
+}
+
+/* Loading overlay */
+.spjp-loading-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.spjp-loading-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid #e9ecef;
+    border-top-color: #4f46e5;
+    border-radius: 50%;
+    animation: spjp-spin 0.7s linear infinite;
+}
+
+@keyframes spjp-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Store list */
+.spjp-step1-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 8px 0;
+}
+
+.spjp-store-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.spjp-store-option:hover {
+    background: #f8f9ff;
+}
+
+.spjp-store-option:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.spjp-store-option-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.spjp-store-option-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #212529;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.spjp-store-option-city {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.spjp-store-option-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+
+.spjp-visited-badge {
+    font-size: 11px;
+    color: #6c757d;
+    background: #f1f3f5;
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.spjp-pjp-badge {
+    font-size: 11px;
+    color: #4f46e5;
+    background: #ede9fe;
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.spjp-arrow-icon {
+    color: #adb5bd;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.spjp-empty {
+    text-align: center;
+    color: #adb5bd;
+    padding: 40px 20px;
+    font-size: 14px;
+}
+
+/* ───────────────────────────────────────
+   STEP 2 — Route Editor
+─────────────────────────────────────── */
+.spjp-step2-panel {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 600px;
+    max-height: calc(100vh - 110px);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+    animation: spjp-slide-up 0.25s ease;
+    overflow: hidden;
+}
+
+.spjp-step2-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 20px 20px 0 20px;
+    gap: 12px;
+}
+
+.spjp-step2-header-left {
+    flex: 1;
+}
+
+.spjp-step2-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0 0 4px 0;
+}
+
+.spjp-step2-subtitle {
+    font-size: 13px;
+    color: #6c757d;
+    margin: 0;
+}
+
+/* Start badge */
+.spjp-start-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin: 14px 20px 10px;
+    flex-shrink: 0;
+}
+
+.spjp-start-dot {
+    width: 10px;
+    height: 10px;
+    background: white;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.spjp-start-badge>div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.spjp-start-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    opacity: 0.8;
+}
+
+.spjp-start-name {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.spjp-start-city {
+    font-size: 12px;
+    opacity: 0.85;
+}
+
+/* Route list */
+.spjp-route-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 20px 8px;
+}
+
+.spjp-route-card {
+    background: #fafbfc;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+
+.spjp-route-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.spjp-route-card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+}
+
+.spjp-route-number {
+    width: 28px;
+    height: 28px;
+    background: #4f46e5;
+    color: white;
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.spjp-route-card-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.spjp-route-store-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a2e;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.spjp-route-store-city {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.spjp-route-card-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.spjp-move-btn {
+    background: #f1f3f5;
+    border: none;
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #495057;
+    transition: background 0.15s;
+}
+
+.spjp-move-btn:hover:not(:disabled) {
+    background: #dee2e6;
+}
+
+.spjp-move-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.spjp-remove-btn {
+    background: #fff0f0;
+    border: none;
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #dc3545;
+    transition: background 0.15s;
+}
+
+.spjp-remove-btn:hover {
+    background: #ffd6d6;
+}
+
+/* Meta chips */
+.spjp-route-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0 14px 10px;
+}
+
+.spjp-distance-chip,
+.spjp-last-visit-chip,
+.spjp-was-pjp-chip {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 10px;
+}
+
+.spjp-distance-chip {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.spjp-last-visit-chip {
+    background: #f1f3f5;
+    color: #6c757d;
+}
+
+.spjp-was-pjp-chip {
+    background: #ede9fe;
+    color: #4f46e5;
+}
+
+/* Previous Conversation */
+.spjp-prev-conv {
+    border-top: 1px solid #e9ecef;
+}
+
+.spjp-prev-conv-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: none;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4f46e5;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.spjp-prev-conv-toggle:hover {
+    background: #f5f3ff;
+}
+
+.spjp-toggle-arrow {
+    font-size: 10px;
+    color: #9ca3af;
+}
+
+.spjp-prev-conv-body {
+    padding: 0 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #fefefe;
+}
+
+.spjp-conv-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.spjp-conv-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #9ca3af;
+}
+
+.spjp-conv-value {
+    font-size: 13px;
+    color: #212529;
+}
+
+.spjp-people-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.spjp-person-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #212529;
+}
+
+.spjp-designation {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.spjp-phone {
+    color: #2563eb;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.spjp-phone:hover {
+    text-decoration: underline;
+}
+
+.spjp-remarks-text {
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.6;
+    background: #f8f9fa;
+    border-left: 3px solid #4f46e5;
+    border-radius: 0 6px 6px 0;
+    padding: 8px 12px;
+    margin: 0;
+}
+
+.spjp-img-toggle {
+    background: none;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #495057;
+    transition: background 0.15s;
+}
+
+.spjp-img-toggle:hover {
+    background: #f1f3f5;
+}
+
+.spjp-image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.spjp-thumb {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    transition: opacity 0.2s;
+}
+
+.spjp-thumb:hover {
+    opacity: 0.85;
+}
+
+/* Add more stores */
+.spjp-add-more-section {
+    padding: 8px 20px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.spjp-add-more-btn {
+    background: none;
+    border: 1.5px dashed #4f46e5;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4f46e5;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.15s;
+}
+
+.spjp-add-more-btn:hover {
+    background: #f5f3ff;
+}
+
+.spjp-add-more-dropdown {
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 20px;
+    right: 20px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    overflow: hidden;
+}
+
+.spjp-add-more-search {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #e9ecef;
+    padding: 12px 16px;
+    font-size: 14px;
+    outline: none;
+    color: #212529;
+    box-sizing: border-box;
+}
+
+.spjp-add-more-list {
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.spjp-add-more-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 11px 16px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid #f1f3f5;
+    cursor: pointer;
+    text-align: left;
+    gap: 10px;
+    transition: background 0.15s;
+}
+
+.spjp-add-more-item:hover {
+    background: #f8f9ff;
+}
+
+.spjp-add-more-item:last-child {
+    border-bottom: none;
+}
+
+.spjp-add-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #212529;
+}
+
+.spjp-add-city {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.spjp-empty-small {
+    text-align: center;
+    color: #adb5bd;
+    font-size: 13px;
+    padding: 20px;
+}
+
+/* Step 2 footer */
+.spjp-step2-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px 16px;
+    border-top: 1px solid #e9ecef;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.spjp-back-btn {
+    background: none;
+    border: 1.5px solid #dee2e6;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #495057;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.spjp-back-btn:hover {
+    background: #f1f3f5;
+}
+
+.spjp-continue-btn {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+}
+
+.spjp-continue-btn:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.spjp-continue-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* ───────────────────────────────────────
+   STEP 3 — Confirm & Submit
+─────────────────────────────────────── */
+.spjp-step3-panel {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 520px;
+    max-height: calc(100vh - 110px);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+    animation: spjp-slide-up 0.25s ease;
+    overflow: hidden;
+}
+
+.spjp-step3-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 20px 0 20px;
+}
+
+.spjp-step3-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+}
+
+.spjp-step3-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.spjp-step3-summary {
+    font-size: 14px;
+    color: #495057;
+    margin: 0;
+}
+
+/* Store list */
+.spjp-step3-stores {
+    background: #f8f9fa;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e9ecef;
+}
+
+.spjp-step3-store-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.spjp-step3-store-row:last-child {
+    border-bottom: none;
+}
+
+.spjp-step3-num {
+    width: 26px;
+    height: 26px;
+    background: #4f46e5;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.spjp-step3-num.start {
+    background: #059669;
+    font-size: 14px;
+}
+
+.spjp-step3-store-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.spjp-step3-store-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #212529;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.spjp-step3-store-city {
+    font-size: 11px;
+    color: #6c757d;
+}
+
+/* Date section */
+.spjp-date-section {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.spjp-date-label {
+    display: block;
+    font-size: 14px;
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+.spjp-required {
+    color: #dc3545;
+}
+
+.spjp-date-input {
+    width: 100%;
+    max-width: 280px;
+    padding: 10px 14px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #495057;
+    background: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.spjp-date-input:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.spjp-date-input:disabled {
+    background: #f8f9fa;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.spjp-date-preview {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: #e8f5e8;
+    border: 1px solid #c3e6c3;
+    border-radius: 8px;
+    color: #155724;
+    font-size: 13px;
+    margin-bottom: 0;
+}
+
+.spjp-step3-note {
+    font-size: 13px;
+    color: #6c757d;
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+/* Step 3 footer */
+.spjp-step3-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px 16px;
+    border-top: 1px solid #e9ecef;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.spjp-send-btn {
+    background: linear-gradient(135deg, #059669, #047857);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.spjp-send-btn:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.spjp-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.spjp-spinner {
+    width: 15px;
+    height: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spjp-spin 0.7s linear infinite;
+}
+
+/* ───────────────────────────────────────
+   Header button group
+─────────────────────────────────────── */
+.spjp-header-btns {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.spjp-suggest-btn {
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.2s, transform 0.1s;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    white-space: nowrap;
+}
+
+.spjp-suggest-btn:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.spjp-suggest-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@media (min-width: 1024px) {
+    .spjp-suggest-btn {
+        padding: 14px 24px;
+        font-size: 16px;
+    }
+}
