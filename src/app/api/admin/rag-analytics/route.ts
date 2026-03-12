@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 export const runtime = 'nodejs';
 import { 
   calculateAttachRate, 
@@ -15,8 +15,6 @@ import {
   type RAGInsight
 } from '@/lib/ragUtils';
 
-const prisma = new PrismaClient();
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -28,8 +26,8 @@ export async function GET(request: NextRequest) {
     // Calculate date ranges - handle 2025 data
     const now = new Date();
     // For demo purposes, using 2025 data - in production, use actual current date
-    const currentMonth = 9; // September (based on your sample data)
-    const currentYear = 2025;
+    let currentMonth = 9; // September (based on your sample data)
+    let currentYear = 2025;
     const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1; // August
     const previousYear = currentMonth === 1 ? currentYear - 1 : currentYear;
 
@@ -296,7 +294,5 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

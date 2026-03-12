@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import './profile.css';
 
 interface UserProfile {
@@ -18,23 +19,31 @@ interface NotificationSettings {
   pushNotifications: boolean;
 }
 
+interface GodrejSFDCRecord {
+  id: string;
+  planId: string;
+  phone: string;
+  contractBookingId: string;
+  uploadedAt: string;
+}
+
 const Settings: React.FC = () => {
   const router = useRouter();
   
   // User profile state
   const [profile, setProfile] = useState<UserProfile | null>(null);
-
+  
   // Notification settings state
   const [notifications, setNotifications] = useState<NotificationSettings>({
     emailNotifications: true,
     pushNotifications: false
   });
-
+  
   // Form state
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
-
+  
   // Helper function to get cookie value
   const getCookie = (name: string): string | null => {
     if (typeof document === 'undefined') return null;
@@ -47,7 +56,7 @@ const Settings: React.FC = () => {
     }
     return null;
   };
-
+  
   // Load profile data from cookie on component mount
   useEffect(() => {
     const loadProfileFromCookie = () => {
@@ -86,18 +95,24 @@ const Settings: React.FC = () => {
         setIsLoadingProfile(false);
       }
     };
-
+    
     // Add a small delay to ensure cookies are available
     setTimeout(loadProfileFromCookie, 100);
   }, []);
-
+  
+  // Fetch Godrej SFDC data when component mounts
+  useEffect(() => {
+    // We moved the actual data fetching to the dedicated page
+    // but we can still show a record count if needed by a lighter API call
+  }, []);
+  
   const handleNotificationToggle = (type: keyof NotificationSettings) => {
     setNotifications(prev => ({
       ...prev,
       [type]: !prev[type]
     }));
   };
-
+  
   const handleLogout = async () => {
     console.log('🚪 Starting logout process...');
     setIsLoggingOut(true);
@@ -108,7 +123,7 @@ const Settings: React.FC = () => {
         method: 'POST',
         credentials: 'include',
       });
-
+      
       if (response.ok) {
         console.log('✅ Logout API call successful');
         
@@ -131,7 +146,7 @@ const Settings: React.FC = () => {
       setIsLoggingOut(false);
     }
   };
-
+  
   return (
     <div className="exec-prof-settings-container">
       <div className="exec-prof-settings-content">
@@ -140,7 +155,7 @@ const Settings: React.FC = () => {
           <h1 className="exec-prof-settings-title">Profile</h1>
           <p className="exec-prof-settings-subtitle">Manage your profile and notification preferences</p>
         </div>
-
+        
         {/* Profile Information Card */}
         <div className="exec-prof-profile-card">
           <div className="exec-prof-profile-card-header">
@@ -149,7 +164,7 @@ const Settings: React.FC = () => {
             </div>
             <h2 className="exec-prof-profile-card-title">Profile Information</h2>
           </div>
-
+          
           {isLoadingProfile ? (
             <div className="loading-state">
               <div className="loading-spinner"></div>
@@ -171,7 +186,7 @@ const Settings: React.FC = () => {
                   readOnly
                 />
               </div>
-
+              
               <div className="exec-prof-form-group">
                 <label className="exec-prof-form-label">Email</label>
                 <input
@@ -183,7 +198,7 @@ const Settings: React.FC = () => {
                 />
                 <span className="exec-prof-form-helper">Contact admin to update email address</span>
               </div>
-
+              
               <div className="exec-prof-form-group">
                 <label className="exec-prof-form-label">Username</label>
                 <input
@@ -195,7 +210,7 @@ const Settings: React.FC = () => {
                 />
                 <span className="exec-prof-form-helper">Username cannot be changed</span>
               </div>
-
+              
               <div className="exec-prof-form-group">
                 <label className="exec-prof-form-label">Contact Number</label>
                 <input
@@ -207,7 +222,7 @@ const Settings: React.FC = () => {
                 />
                 <span className="exec-prof-form-helper">Contact admin to update contact number</span>
               </div>
-
+              
               <div className="exec-prof-form-group">
                 <label className="exec-prof-form-label">Region</label>
                 <input
@@ -222,7 +237,7 @@ const Settings: React.FC = () => {
             </div>
           ) : null}
         </div>
-
+        
         {/* Notifications Card */}
         <div className="exec-prof-notifications-card">
           <h2 className="exec-prof-notifications-card-title">Notifications</h2>
@@ -246,7 +261,7 @@ const Settings: React.FC = () => {
                 </label>
               </div>
             </div>
-
+            
             <div className="exec-prof-notification-item">
               <div className="exec-prof-notification-info">
                 <span className="exec-prof-notification-label">Push Notifications</span>
@@ -267,7 +282,27 @@ const Settings: React.FC = () => {
             </div>
           </div>
         </div>
-
+        
+        {/* Godrej SFDC Card */}
+        <div 
+          className="exec-prof-godrej-sfdc-card clickable"
+          onClick={() => router.push('/executive/godrej-sfdc')}
+        >
+          <div className="exec-prof-card-header-with-action">
+            <h2 className="exec-prof-godrej-sfdc-card-title">Godrej SFDC</h2>
+            <div className="exec-prof-link-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 18L15 12L9 6" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          
+          <div className="exec-prof-card-preview">
+            <span className="exec-prof-preview-text">View your sync history & records</span>
+            <span className="exec-prof-preview-count">Click to open dedicated view</span>
+          </div>
+        </div>
+        
         {/* Account Management Card */}
         <div className="exec-prof-account-card">
           <h2 className="exec-prof-account-card-title">Account Management</h2>

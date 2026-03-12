@@ -573,3 +573,19 @@ model HolidayRequest {
   @@index([status, submittedAt])
   @@map("HolidayRequest")
 }
+
+//
+// Godrej SFDC Data
+//
+
+model GodrejSfdc {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  planId            String   // Plan ID
+  phone             String   // Customer Phone
+  contractBookingId String   // Contract Booking ID
+  uploadedAt        DateTime @default(now())
+  
+  // Index for efficient sorting by upload date
+  @@index([uploadedAt])
+  @@map("GodrejSfdc")
+}
