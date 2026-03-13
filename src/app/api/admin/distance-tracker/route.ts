@@ -100,6 +100,14 @@ export async function GET(request: NextRequest) {
             orderBy: { createdAt: 'asc' },
         });
 
+        // DEBUG: log first visit's store coords to server console
+        if (visits.length > 0) {
+            const s = visits[0].store;
+            console.log(`[distance-tracker] visits fetched: ${visits.length}, sample store: "${s.storeName}", lat: ${s.latitude}, lng: ${s.longitude}`);
+        } else {
+            console.log(`[distance-tracker] 0 visits found for dateFilter="${dateFilter}" range ${start.toISOString()} → ${end.toISOString()}`);
+        }
+
         // Group: executiveId → dateKey → visits[]
         const grouped: Record<string, Record<string, typeof visits>> = {};
 
@@ -146,10 +154,15 @@ export async function GET(request: NextRequest) {
                                 prev.latitude != null && prev.longitude != null &&
                                 store.latitude != null && store.longitude != null
                             ) {
-                                distanceFromPrev = parseFloat(
-                                    haversineKm(prev.latitude, prev.longitude, store.latitude, store.longitude).toFixed(2)
-                                );
-                                totalDistanceKm += distanceFromPrev;
+                                const rawDistance = haversineKm(prev.latitude, prev.longitude, store.latitude, store.longitude);
+
+                                // Cap at 200km: If the hop is > 200km, it's likely a phone call or mistake check-in.
+                                if (rawDistance > 200) {
+                                    distanceFromPrev = 0;
+                                } else {
+                                    distanceFromPrev = parseFloat(rawDistance.toFixed(2));
+                                    totalDistanceKm += distanceFromPrev;
+                                }
                             } else {
                                 hasCoordsError = true;
                             }
