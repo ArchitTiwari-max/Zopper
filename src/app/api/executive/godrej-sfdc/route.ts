@@ -29,10 +29,11 @@ export async function GET(request: NextRequest) {
     if (!(prisma as any).godrejSfdc) {
       console.error("Prisma error: godrejSfdc model not found in client");
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: "Database model error",
-          message: "The data model 'godrejSfdc' is missing from the client. Please run prisma generate."
+          message:
+            "The data model 'godrejSfdc' is missing from the client. Please run prisma generate.",
         },
         { status: 500 },
       );
@@ -48,6 +49,7 @@ export async function GET(request: NextRequest) {
         planId: true,
         phone: true,
         contractBookingId: true,
+        customerName: true,
         uploadedAt: true,
       },
     });
@@ -58,7 +60,10 @@ export async function GET(request: NextRequest) {
       planId: record.planId,
       phone: record.phone,
       contractBookingId: record.contractBookingId,
-      uploadedAt: record.uploadedAt ? record.uploadedAt.toISOString() : new Date().toISOString(),
+      customerName: record.customerName ?? null,
+      uploadedAt: record.uploadedAt
+        ? record.uploadedAt.toISOString()
+        : new Date().toISOString(),
     }));
 
     return NextResponse.json(
@@ -71,11 +76,14 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Executive Godrej SFDC fetch error:", error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Internal Server Error",
         message: error instanceof Error ? error.message : String(error),
-        stack: process.env.NODE_ENV === 'development' && error instanceof Error ? error.stack : undefined
+        stack:
+          process.env.NODE_ENV === "development" && error instanceof Error
+            ? error.stack
+            : undefined,
       },
       { status: 500 },
     );

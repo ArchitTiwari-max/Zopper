@@ -23,6 +23,15 @@ interface ImportResult {
   errors: string[];
 }
 
+interface GodrejRecord {
+  id: string;
+  planId: string;
+  phone: string;
+  contractBookingId: string;
+  customerName?: string | null;
+  uploadedAt: string;
+}
+
 interface ImportStatus {
   isImporting: boolean;
   result: ImportResult | null;
@@ -50,7 +59,7 @@ const GodrejSfdcImport = () => {
     current: number;
     total: number;
   } | null>(null);
-  const [records, setRecords] = useState<any[]>([]);
+  const [records, setRecords] = useState<GodrejRecord[]>([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
   const consoleEndRef = useRef<HTMLDivElement>(null);
 
@@ -190,7 +199,7 @@ const GodrejSfdcImport = () => {
       result: null,
       error: null,
     });
-    
+
     let timeoutId: NodeJS.Timeout | null = null;
 
     try {
@@ -261,6 +270,7 @@ const GodrejSfdcImport = () => {
                       planId,
                       phone,
                       contractBookingId,
+                      customerName,
                       status,
                       message,
                     } = data.rowData;
@@ -269,7 +279,7 @@ const GodrejSfdcImport = () => {
 
                     addConsoleLog(
                       logType,
-                      `${icon} Row ${data.currentRow}/${data.totalRows}: ${planId} | ${phone} | ${contractBookingId}`,
+                      `${icon} Row ${data.currentRow}/${data.totalRows}: ${planId} | ${phone} | ${contractBookingId}${customerName ? ` | ${customerName}` : ""}`,
                     );
                     if (message && message !== "Records processed:") {
                       addConsoleLog(
@@ -649,14 +659,19 @@ const GodrejSfdcImport = () => {
           </h3>
           <div className="excel-godrej-sfdc-format-list">
             <p>
-              • <strong>Required columns:</strong> Plan Id, Phone, ContractBookingID
+              • <strong>Required columns:</strong> Plan Id, Phone,
+              ContractBookingID
+            </p>
+            <p>
+              • <strong>Optional columns:</strong> Customer Name
             </p>
             <p>
               • <strong>Data format:</strong> Plain values (no special
               formatting needed)
             </p>
             <p>
-              • <strong>Header row:</strong> Content should start from row 2 (row 1 is ignored if headers are complex)
+              • <strong>Header row:</strong> Content should start from row 2
+              (row 1 is ignored if headers are complex)
             </p>
           </div>
         </div>
@@ -665,9 +680,13 @@ const GodrejSfdcImport = () => {
         <div className="excel-godrej-sfdc-records-table-section">
           <h3 className="excel-godrej-sfdc-table-title">Imported Records</h3>
           {isLoadingRecords ? (
-            <div className="excel-godrej-sfdc-table-loading">Loading records...</div>
+            <div className="excel-godrej-sfdc-table-loading">
+              Loading records...
+            </div>
           ) : records.length === 0 ? (
-            <div className="excel-godrej-sfdc-table-empty">No records imported yet.</div>
+            <div className="excel-godrej-sfdc-table-empty">
+              No records imported yet.
+            </div>
           ) : (
             <div className="excel-godrej-sfdc-table-wrapper">
               <table className="excel-godrej-sfdc-table">
@@ -676,6 +695,7 @@ const GodrejSfdcImport = () => {
                     <th>Plan Id</th>
                     <th>Phone</th>
                     <th>ContractBookingID</th>
+                    <th>Customer Name</th>
                     <th>Uploaded At</th>
                   </tr>
                 </thead>
@@ -685,6 +705,7 @@ const GodrejSfdcImport = () => {
                       <td>{record.planId}</td>
                       <td>{record.phone}</td>
                       <td>{record.contractBookingId}</td>
+                      <td>{record.customerName ?? "-"}</td>
                       <td>{new Date(record.uploadedAt).toLocaleString()}</td>
                     </tr>
                   ))}

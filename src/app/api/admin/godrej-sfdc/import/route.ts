@@ -14,6 +14,7 @@ interface ProgressUpdate {
     planId: string;
     phone: string;
     contractBookingId: string;
+    customerName?: string | null;
     status: "success" | "error";
     message: string;
   };
@@ -121,7 +122,12 @@ export async function POST(request: NextRequest) {
           secondHeaderRow.push(subHeader);
         }
 
-        const keepFields = ["Plan Id", "Phone", "ContractBookingID"];
+        const keepFields = [
+          "Plan Id",
+          "Phone",
+          "ContractBookingID",
+          "Customer Name",
+        ];
         const totalRows = range.e.r - range.s.r - 1;
         let successful = 0;
         let failed = 0;
@@ -265,6 +271,9 @@ export async function POST(request: NextRequest) {
               planId: String(rowObj["Plan Id"]).trim(),
               phone: String(rowObj["Phone"]).trim(),
               contractBookingId: String(rowObj["ContractBookingID"]).trim(),
+              customerName: rowObj["Customer Name"]
+                ? String(rowObj["Customer Name"]).trim()
+                : null,
             });
 
             successful++;
@@ -283,6 +292,9 @@ export async function POST(request: NextRequest) {
                         planId: rowObj["Plan Id"],
                         phone: rowObj["Phone"],
                         contractBookingId: rowObj["ContractBookingID"],
+                        customerName: rowObj["Customer Name"]
+                          ? String(rowObj["Customer Name"]).trim()
+                          : null,
                         status: "success",
                         message: "Validated and queued for batch processing",
                       },
@@ -319,6 +331,7 @@ export async function POST(request: NextRequest) {
                       planId: "N/A",
                       phone: "N/A",
                       contractBookingId: "N/A",
+                      customerName: null,
                       status: "error",
                       message: msg.replace(/❌ /g, ""),
                     },
