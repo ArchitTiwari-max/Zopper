@@ -193,6 +193,11 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
           title: 'Partner Sales Dashboard',
           subtitle: 'Comprehensive partner sales analytics and insights'
         };
+      case '/admin/datamanagement/godrejsfdc':
+        return {
+          title: 'Godrej SFDC',
+          subtitle: 'Secure and streamline data synchronization for field executives'
+        };
       default:
         return {
           title: currentPage || 'Dashboard',

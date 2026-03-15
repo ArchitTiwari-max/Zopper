@@ -22,15 +22,15 @@ const AdminStoresPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [filterError, setFilterError] = useState<string | null>(null);
   const [isFiltersVisible, setIsFiltersVisible] = useState<boolean>(true);
-  
+
   // Filter data from API
   const [filterData, setFilterData] = useState<{
-    stores: Array<{id: string, name: string, city: string}>;
-    executives: Array<{id: string, name: string, region: string, assignedStoreIds: string[]}>;
-    brands: Array<{id: string, name: string}>;
+    stores: Array<{ id: string, name: string, city: string }>;
+    executives: Array<{ id: string, name: string, region: string, assignedStoreIds: string[] }>;
+    brands: Array<{ id: string, name: string }>;
     cities: string[];
     statuses: string[];
-  }>({stores: [], executives: [], brands: [], cities: [], statuses: []});
+  }>({ stores: [], executives: [], brands: [], cities: [], statuses: [] });
 
   const [filters, setFilters] = useState<StoreFilters>({
     partnerBrand: 'All Brands',
@@ -57,7 +57,7 @@ const AdminStoresPage: React.FC = () => {
 
   // RAG data state
   const [ragData, setRagData] = useState<Map<string, string>>(new Map()); // Map of storeId -> RAG status
-  
+
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{
     key: 'storeName' | 'city' | 'lastVisit' | null;
@@ -99,10 +99,10 @@ const AdminStoresPage: React.FC = () => {
       if (!storeIds && storeData.length === 0) {
         return;
       }
-      
+
       const idsToFetch = storeIds || storeData.map(s => s.id);
       if (idsToFetch.length === 0) return;
-      
+
       const response = await fetch(`/api/admin/stores/rag-summary?storeIds=${idsToFetch.join(',')}&year=${new Date().getFullYear()}`, {
         method: 'GET',
         credentials: 'include',
@@ -119,8 +119,8 @@ const AdminStoresPage: React.FC = () => {
           Object.entries(data.ragSummary).forEach(([storeId, ragInfo]: [string, any]) => {
             // Map our RAG status to match existing frontend expectations
             const ragStatus = ragInfo.ragStatus;
-            const mappedStatus = ragStatus === 'green' ? 'Green' : 
-                               ragStatus === 'amber' ? 'Amber' : 'Red';
+            const mappedStatus = ragStatus === 'green' ? 'Green' :
+              ragStatus === 'amber' ? 'Amber' : 'Red';
             console.log(`Store ${storeId}: RAG ${ragStatus} -> ${mappedStatus}`); // DEBUG
             ragMap.set(storeId, mappedStatus);
           });
@@ -224,7 +224,7 @@ const AdminStoresPage: React.FC = () => {
         // Need to check if this store is assigned to this executive
         const executive = filterData.executives.find(e => e.id === filters.executiveName);
         if (!executive) return false;
-        
+
         // Check if this store's ID is in the executive's assignedStoreIds array
         if (!executive.assignedStoreIds || !executive.assignedStoreIds.includes(store.id)) {
           return false;
@@ -288,7 +288,7 @@ const AdminStoresPage: React.FC = () => {
   // Function to update URL based on current filter state
   const updateUrlWithFilters = (currentFilters: StoreFilters) => {
     const newUrl = new URL(window.location.href);
-    
+
     // Clear all existing filter params
     newUrl.searchParams.delete('storeId');
     newUrl.searchParams.delete('executiveId');
@@ -301,19 +301,19 @@ const AdminStoresPage: React.FC = () => {
     newUrl.searchParams.delete('showUnreviewedVisits');
     // Always reset page to 1 when filters change
     newUrl.searchParams.delete('page');
-    
+
     // Add current filter values to URL using IDs (only if not default)
-    
+
     // Use store ID in URL
     if (currentFilters.storeName !== 'All Store') {
       newUrl.searchParams.set('storeId', currentFilters.storeName);
     }
-    
+
     // Use executive ID in URL
     if (currentFilters.executiveName !== 'All Executive') {
       newUrl.searchParams.set('executiveId', currentFilters.executiveName);
     }
-    
+
     // Use brand ID in URL (convert brand name to ID)
     if (currentFilters.partnerBrand !== 'All Brands') {
       const brand = filterData.brands.find(b => b.name === currentFilters.partnerBrand);
@@ -326,24 +326,24 @@ const AdminStoresPage: React.FC = () => {
     if (currentFilters.partnerBrandType && currentFilters.partnerBrandType !== 'All Category') {
       newUrl.searchParams.set('category', currentFilters.partnerBrandType);
     }
-    
+
     // Use city name in URL
     if (currentFilters.city !== 'All City') {
       newUrl.searchParams.set('city', currentFilters.city);
     }
-    
+
     // Add checkbox filter states to URL
     if (currentFilters.showOnlyUnresolvedIssues) {
       newUrl.searchParams.set('showUnresolvedIssues', 'true');
     }
-    
+
     if (currentFilters.showOnlyUnreviewedVisits) {
       newUrl.searchParams.set('showUnreviewedVisits', 'true');
     }
 
     // Set page=1 on any filter change
     newUrl.searchParams.set('page', '1');
-    
+
     // Update URL without reloading page
     window.history.pushState({}, '', newUrl.toString());
   };
@@ -407,7 +407,7 @@ const AdminStoresPage: React.FC = () => {
   useEffect(() => {
     // Load table data first (higher priority for user experience)
     fetchStoreData();
-    
+
     // Load filter data concurrently
     fetchFilterData();
   }, []);
@@ -503,11 +503,11 @@ const AdminStoresPage: React.FC = () => {
       });
 
       const result = await response.json();
-      
+
       if (response.ok && result.success) {
         // Success - show success message and reset state
         alert(`Visit plan assigned successfully! ${result.message}`);
-        
+
         // Reset all states
         setShowVisitPlanModal(false);
         setIsCreatingVisitPlan(false);
@@ -543,17 +543,17 @@ const AdminStoresPage: React.FC = () => {
   // Smart date formatting function
   const formatLastVisitDate = (dateString: string | null): string => {
     if (!dateString) return 'Never';
-    
+
     const visitDate = new Date(dateString);
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     // Reset time to compare only dates
     today.setHours(0, 0, 0, 0);
     yesterday.setHours(0, 0, 0, 0);
     visitDate.setHours(0, 0, 0, 0);
-    
+
     if (visitDate.getTime() === today.getTime()) {
       return 'Today';
     } else if (visitDate.getTime() === yesterday.getTime()) {
@@ -570,11 +570,11 @@ const AdminStoresPage: React.FC = () => {
   // Sorting functions
   const handleSort = (key: 'storeName' | 'city' | 'lastVisit') => {
     let direction: 'asc' | 'desc' = 'asc';
-    
+
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc';
     }
-    
+
     setSortConfig({ key, direction });
   };
 
@@ -587,7 +587,7 @@ const AdminStoresPage: React.FC = () => {
 
   // Build data for Excel export from the currently filtered rows
   const buildExportAOA = (): (string | number)[][] => {
-          const headers = [
+    const headers = [
       'Store ID',
       'Store Name',
       'City',
@@ -598,8 +598,8 @@ const AdminStoresPage: React.FC = () => {
       'Pending Issues'
     ];
 
-      const rows = filteredStores.map((s) => {
-      const pbPairs = (s as any).partnerBrandPairs as Array<{ id: string; name: string; type?: string | null }>|undefined;
+    const rows = filteredStores.map((s) => {
+      const pbPairs = (s as any).partnerBrandPairs as Array<{ id: string; name: string; type?: string | null }> | undefined;
       const partnerBrandsCombined = Array.isArray(pbPairs) && pbPairs.length > 0
         ? pbPairs.map(pb => `${pb.name}${pb.type ? ` (${pb.type === 'A_PLUS' ? 'A+' : pb.type})` : ''}`).join(', ')
         : s.partnerBrands.join(', ');
@@ -672,7 +672,7 @@ const AdminStoresPage: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '400px', gap: '1rem' }}>
           <div style={{ fontSize: '1.2rem', color: '#ef4444' }}>Error loading stores</div>
           <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{error}</div>
-          <button 
+          <button
             onClick={() => fetchStoreData()}
             style={{ padding: '0.5rem 1rem', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
           >
@@ -753,16 +753,16 @@ const AdminStoresPage: React.FC = () => {
           <h2>Stores assigned to {currentExecutiveName}</h2>
         </div>
       )}
-      
+
       {/* Filters Section */}
       <div className="admin-stores-filters-section">
         <div className="admin-stores-filters-header">
-          <h3 
+          <h3
             onClick={() => setIsFiltersVisible(!isFiltersVisible)}
             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           >
-            Filters 
-            <span style={{ 
+            Filters
+            <span style={{
               transform: isFiltersVisible ? 'rotate(180deg)' : 'rotate(0deg)',
               transition: 'transform 0.2s ease'
             }}>
@@ -774,7 +774,7 @@ const AdminStoresPage: React.FC = () => {
           filterError ? (
             <div style={{ padding: '1rem', background: '#fee2e2', color: '#dc2626', borderRadius: '6px', margin: '0.5rem 0' }}>
               Error loading filters: {filterError}
-              <button 
+              <button
                 onClick={() => fetchFilterData()}
                 style={{ marginLeft: '1rem', padding: '0.25rem 0.5rem', backgroundColor: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
               >
@@ -782,144 +782,144 @@ const AdminStoresPage: React.FC = () => {
               </button>
             </div>
           ) : (
-        <>
-        <div className="admin-stores-filters-grid">
-          {/* Store filter first */}
-          <div className="admin-stores-filter-group">
-            <label>Filter by Store Name</label>
-            <input
-              type="text"
-              value={storeSearchText}
-              onChange={(e) => { setIsFilterChanging(true); setStoreSearchText(e.target.value); }}
-              className="filter-input"
-              placeholder="Type to search store name..."
-            />
-          </div>
+            <>
+              <div className="admin-stores-filters-grid">
+                {/* Store filter first */}
+                <div className="admin-stores-filter-group">
+                  <label>Filter by Store Name</label>
+                  <input
+                    type="text"
+                    value={storeSearchText}
+                    onChange={(e) => { setIsFilterChanging(true); setStoreSearchText(e.target.value); }}
+                    className="filter-input"
+                    placeholder="Type to search store name..."
+                  />
+                </div>
 
-          {/* Category (Partner Brand Type) */}
-          <div className="admin-stores-filter-group">
-            <label>Category</label>
-            <select 
-              value={filters.partnerBrandType}
-              onChange={(e) => handleFilterChange('partnerBrandType', e.target.value)}
-              className="admin-stores-filter-select"
-            >
-              <option value="All Category">All Category</option>
-              {['A+','A','B','C','D'].map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
+                {/* Category (Partner Brand Type) */}
+                <div className="admin-stores-filter-group">
+                  <label>Category</label>
+                  <select
+                    value={filters.partnerBrandType}
+                    onChange={(e) => handleFilterChange('partnerBrandType', e.target.value)}
+                    className="admin-stores-filter-select"
+                  >
+                    <option value="All Category">All Category</option>
+                    {['A+', 'A', 'B', 'C', 'D'].map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
 
-          {/* Then Partner Brand */}
-          <div className="admin-stores-filter-group">
-            <label>Filter by Partner Brand</label>
-            <select 
-              value={filters.partnerBrand}
-              onChange={(e) => handleFilterChange('partnerBrand', e.target.value)}
-              className="admin-stores-filter-select"
-            >
-              <option value="All Brands">All Brands</option>
-              {getFilterOptions('brands').map(brand => (
-                <option key={brand} value={brand}>{brand}</option>
-              ))}
-            </select>
-          </div>
+                {/* Then Partner Brand */}
+                <div className="admin-stores-filter-group">
+                  <label>Filter by Partner Brand</label>
+                  <select
+                    value={filters.partnerBrand}
+                    onChange={(e) => handleFilterChange('partnerBrand', e.target.value)}
+                    className="admin-stores-filter-select"
+                  >
+                    <option value="All Brands">All Brands</option>
+                    {getFilterOptions('brands').map(brand => (
+                      <option key={brand} value={brand}>{brand}</option>
+                    ))}
+                  </select>
+                </div>
 
-          {/* Then City */}
-          <div className="admin-stores-filter-group">
-            <label>Filter by City</label>
-            <select 
-              value={filters.city}
-              onChange={(e) => handleFilterChange('city', e.target.value)}
-              className="admin-stores-filter-select"
-            >
-              <option value="All City">All City</option>
-              {getFilterOptions('cities').map(city => (
-                <option key={city} value={city}>{city}</option>
-              ))}
-            </select>
-          </div>
+                {/* Then City */}
+                <div className="admin-stores-filter-group">
+                  <label>Filter by City</label>
+                  <select
+                    value={filters.city}
+                    onChange={(e) => handleFilterChange('city', e.target.value)}
+                    className="admin-stores-filter-select"
+                  >
+                    <option value="All City">All City</option>
+                    {getFilterOptions('cities').map(city => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
+                </div>
 
-          {/* Then Assigned Executive */}
-          <div className="admin-stores-filter-group">
-            <label>Assigned Executive</label>
-            <select 
-              value={filters.executiveName}
-              onChange={(e) => handleFilterChange('executiveName', e.target.value)}
-              className="admin-stores-filter-select"
-            >
-              <option value="All Executive">All Executive</option>
-              {filterData.executives.map(executive => (
-                <option key={executive.id} value={executive.id}>{executive.name}</option>
-              ))}
-            </select>
-          </div>
+                {/* Then Assigned Executive */}
+                <div className="admin-stores-filter-group">
+                  <label>Assigned Executive</label>
+                  <select
+                    value={filters.executiveName}
+                    onChange={(e) => handleFilterChange('executiveName', e.target.value)}
+                    className="admin-stores-filter-select"
+                  >
+                    <option value="All Executive">All Executive</option>
+                    {filterData.executives.map(executive => (
+                      <option key={executive.id} value={executive.id}>{executive.name}</option>
+                    ))}
+                  </select>
+                </div>
 
-        </div>
-        
-        {/* Quick Filters - Horizontal Layout */}
-        <div className="admin-stores-checkbox-filters" style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '24px',
-          marginTop: '12px',
-          padding: '12px 16px',
-          backgroundColor: '#f8fafc',
-          borderRadius: '6px',
-          border: '1px solid #e2e8f0'
-        }}>
-          <div style={{ fontWeight: '600', fontSize: '13px', color: '#374151', minWidth: 'fit-content' }}>
-            Quick Filters:
-          </div>
-          
-          <label className="admin-stores-checkbox-filter" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '13px',
-            cursor: 'pointer',
-            color: '#374151',
-            whiteSpace: 'nowrap'
-          }}>
-            <input 
-              type="checkbox" 
-              checked={filters.showOnlyUnresolvedIssues}
-              onChange={(e) => handleFilterChange('showOnlyUnresolvedIssues', e.target.checked)}
-              style={{
-                width: '14px',
-                height: '14px',
-                cursor: 'pointer',
-                accentColor: '#3b82f6'
-              }}
-            />
-            Stores with Unresolved issues
-          </label>
-          
-          <label className="admin-stores-checkbox-filter" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '13px',
-            cursor: 'pointer',
-            color: '#374151',
-            whiteSpace: 'nowrap'
-          }}>
-            <input 
-              type="checkbox" 
-              checked={filters.showOnlyUnreviewedVisits}
-              onChange={(e) => handleFilterChange('showOnlyUnreviewedVisits', e.target.checked)}
-              style={{
-                width: '14px',
-                height: '14px',
-                cursor: 'pointer',
-                accentColor: '#3b82f6'
-              }}
-            />
-            Stores with Unreviewed visits
-          </label>
-        </div>
-        </>
+              </div>
+
+              {/* Quick Filters - Horizontal Layout */}
+              <div className="admin-stores-checkbox-filters" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '24px',
+                marginTop: '12px',
+                padding: '12px 16px',
+                backgroundColor: '#f8fafc',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0'
+              }}>
+                <div style={{ fontWeight: '600', fontSize: '13px', color: '#374151', minWidth: 'fit-content' }}>
+                  Quick Filters:
+                </div>
+
+                <label className="admin-stores-checkbox-filter" style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  color: '#374151',
+                  whiteSpace: 'nowrap'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={filters.showOnlyUnresolvedIssues}
+                    onChange={(e) => handleFilterChange('showOnlyUnresolvedIssues', e.target.checked)}
+                    style={{
+                      width: '14px',
+                      height: '14px',
+                      cursor: 'pointer',
+                      accentColor: '#3b82f6'
+                    }}
+                  />
+                  Stores with Unresolved issues
+                </label>
+
+                <label className="admin-stores-checkbox-filter" style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  color: '#374151',
+                  whiteSpace: 'nowrap'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={filters.showOnlyUnreviewedVisits}
+                    onChange={(e) => handleFilterChange('showOnlyUnreviewedVisits', e.target.checked)}
+                    style={{
+                      width: '14px',
+                      height: '14px',
+                      cursor: 'pointer',
+                      accentColor: '#3b82f6'
+                    }}
+                  />
+                  Stores with Unreviewed visits
+                </label>
+              </div>
+            </>
           )
         )}
         {isCreatingVisitPlan && (
@@ -936,7 +936,7 @@ const AdminStoresPage: React.FC = () => {
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', color: '#0369a1', fontWeight: '500' }}>
               {selectedStores.length > 0 ? `${selectedStores.length} store${selectedStores.length > 1 ? 's' : ''} selected` : 'Select stores to create visit plan'}
             </div>
-            <button 
+            <button
               onClick={handleCancelVisitPlan}
               style={{
                 padding: '8px 16px',
@@ -950,7 +950,7 @@ const AdminStoresPage: React.FC = () => {
             >
               Cancel
             </button>
-            <button 
+            <button
               onClick={handleSelectAndProceed}
               disabled={selectedStores.length === 0}
               style={{
@@ -1006,7 +1006,7 @@ const AdminStoresPage: React.FC = () => {
             Export XLS
           </button>
           {!isCreatingVisitPlan && (
-            <button 
+            <button
               onClick={handleCreateVisitPlan}
               className="create-visit-plan-btn"
               style={{
@@ -1039,25 +1039,25 @@ const AdminStoresPage: React.FC = () => {
         <div className="admin-stores-table">
           {/* Always show table header for context */}
           <div className="admin-stores-table-header">
-            <div 
-              className="admin-stores-header-cell sortable-header" 
+            <div
+              className="admin-stores-header-cell sortable-header"
               onClick={() => handleSort('storeName')}
             >
               STORE NAME <span className="sort-icon">{getSortIcon('storeName')}</span>
             </div>
             <div className="admin-stores-header-cell">PARTNER BRANDS</div>
             <div className="admin-stores-header-cell">ASSIGNED EXECUTIVE</div>
-            <div 
-              className="admin-stores-header-cell sortable-header" 
+            <div
+              className="admin-stores-header-cell sortable-header"
               onClick={() => handleSort('lastVisit')}
             >
               LAST VISIT <span className="sort-icon">{getSortIcon('lastVisit')}</span>
             </div>
-              <div className="admin-stores-header-cell">TOTAL VISITS</div>
+            <div className="admin-stores-header-cell">TOTAL VISITS</div>
             <div className="admin-stores-header-cell">PENDING ISSUES</div>
             <div className="admin-stores-header-cell">STORE SALES</div>
           </div>
-          
+
           {/* Table body with loading state */}
           <div className="admin-stores-table-body">
             {(isLoading || isFilterChanging) ? (
@@ -1067,7 +1067,18 @@ const AdminStoresPage: React.FC = () => {
               </div>
             ) : filteredStores.length > 0 ? (
               currentPageStores.map(store => (
-                <div key={store.id} className="admin-stores-table-row">
+                <div
+                  key={store.id}
+                  className="admin-stores-table-row"
+                  onClick={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.closest('a, button, input')) {
+                      return;
+                    }
+                    window.location.href = `/admin/admin-form?storeId=${store.id}&storeName=${encodeURIComponent(store.storeName)}&city=${encodeURIComponent(store.city)}&fullAddress=${encodeURIComponent((store as any).address || '')}&partnerBrands=${encodeURIComponent(JSON.stringify(store.partnerBrands))}`;
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="admin-stores-cell admin-stores-store-name-cell">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', minWidth: 0 }}>
                       {isCreatingVisitPlan && (
@@ -1101,7 +1112,7 @@ const AdminStoresPage: React.FC = () => {
                   <div className="admin-stores-cell admin-stores-partner-brands-cell">
                     {(store as any).partnerBrandPairs && (store as any).partnerBrandPairs.length > 0 ? (
                       (store as any).partnerBrandPairs.map((pb: any, index: number) => (
-                        <span 
+                        <span
                           key={pb.id + '_' + index}
                           className="admin-stores-brand-tag"
                           style={{ backgroundColor: getBrandColor(pb.name) }}
@@ -1111,7 +1122,7 @@ const AdminStoresPage: React.FC = () => {
                       ))
                     ) : (
                       store.partnerBrands.map((brand, index) => (
-                        <span 
+                        <span
                           key={index}
                           className="admin-stores-brand-tag"
                           style={{ backgroundColor: getBrandColor(brand) }}
@@ -1128,11 +1139,11 @@ const AdminStoresPage: React.FC = () => {
                   </div>
                   <div className="admin-stores-cell admin-stores-last-visit-cell">
                     <span className="admin-stores-last-visit-text">
-                      {formatLastVisitDate(store.lastVisit)}
+                      {formatLastVisitDate(store.lastVisit ?? null)}
                     </span>
                   </div>
                   <div className="admin-stores-cell">
-                    <Link 
+                    <Link
                       href={`/admin/visit-report?storeId=${store.id}&dateFilter=${encodeURIComponent(selectedDateFilter)}`}
                       className="admin-stores-count-badge admin-stores-visits-badge admin-stores-clickable-badge-issues"
                       title={`View all visits for ${store.storeName}`}
@@ -1142,8 +1153,8 @@ const AdminStoresPage: React.FC = () => {
                   </div>
                   <div className="admin-stores-cell">
                     {store.pendingIssues > 0 ? (
-                      <Link 
-                        href={`/admin/issues?storeId=${encodeURIComponent(store.id)}&status=Pending&dateFilter=${encodeURIComponent(selectedDateFilter)}`} 
+                      <Link
+                        href={`/admin/issues?storeId=${encodeURIComponent(store.id)}&status=Pending&dateFilter=${encodeURIComponent(selectedDateFilter)}`}
                         className="admin-stores-count-badge admin-stores-issues-badge admin-stores-clickable-badge-issues"
                         title={`View ${store.pendingIssues} pending issues for ${store.storeName}`}
                         target="_blank"
@@ -1163,10 +1174,10 @@ const AdminStoresPage: React.FC = () => {
                 </div>
               ))
             ) : (
-              <div style={{ 
-                padding: '3rem', 
-                textAlign: 'center', 
-                color: '#64748b', 
+              <div style={{
+                padding: '3rem',
+                textAlign: 'center',
+                color: '#64748b',
                 fontSize: '1rem',
                 gridColumn: '1 / -1'
               }}>

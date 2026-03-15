@@ -1,0 +1,14 @@
+Store Name,City,State,Alignment Score,Status,Executives,Store Code,Last Updated
+Delhi HQ,New Delhi,Delhi,92%,High,12,ZOP-DL-001,2024-03-10
+Mumbai Hub,Mumbai,Maharashtra,88%,High,8,ZOP-MH-001,2024-03-09
+Bangalore Tech Park,Bangalore,Karnataka,74%,Medium,6,ZOP-KA-001,2024-03-08
+Chennai OMR,Chennai,Tamil Nadu,65%,Medium,4,ZOP-TN-001,2024-03-07
+Kolkata Sector 5,Kolkata,West Bengal,85%,High,5,ZOP-WB-001,2024-03-06
+Hyderabad Cyber City,Hyderabad,Telangana,71%,Medium,3,ZOP-TG-001,2024-03-05
+Pune IT Park,Pune,Maharashtra,78%,Medium,3,ZOP-MH-002,2024-03-04
+Ahmedabad West,Ahmedabad,Gujarat,42%,Low,2,ZOP-GJ-001,2024-03-03
+Jaipur Central,Jaipur,Rajasthan,35%,Low,2,ZOP-RJ-001,2024-03-02
+Lucknow Gomti,Lucknow,Uttar Pradesh,68%,Medium,3,ZOP-UP-001,2024-03-01
+Srinagar North,Srinagar,Jammu and Kashmir,28%,Low,1,ZOP-JK-001,2024-02-28
+Guwahati East,Guwahati,Assam,45%,Low,2,ZOP-AS-001,2024-02-27
+Indore Hub,Indore,Madhya Pradesh,81%,High,5,ZOP-MP-001,2024-03-11

@@ -362,4 +362,58 @@
   .adm-excel-import-import-card.partner:hover .adm-excel-import-card-title {
     color: #4f46e5;
   }
+
+  .adm-excel-import-import-card.godrej:hover .adm-excel-import-card-title {
+    color: #0e7490;
+  }
+}
+
+/* Godrej Styles - Enhanced Aesthetics */
+.adm-excel-import-import-card.godrej {
+  border: 1px solid #a5f3fc;
+  background: linear-gradient(135deg, #ffffff 0%, #ecfeff 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.adm-excel-import-import-card.godrej::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.adm-excel-import-import-card.godrej:hover {
+  border-color: #22d3ee;
+  box-shadow: 0 20px 25px -5px rgba(34, 211, 238, 0.2), 0 10px 10px -5px rgba(34, 211, 238, 0.1);
+}
+
+.adm-excel-import-card-icon.godrej {
+  background-color: #cffafe;
+  box-shadow: 0 4px 6px -1px rgba(34, 211, 238, 0.2);
+}
+
+.adm-excel-import-feature-icon.godrej {
+  color: #0891b2;
+}
+
+.adm-excel-import-columns-section.godrej {
+  background-color: #ecfeff;
+  border: 1px solid #a5f3fc;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-top: 1rem;
+}
+
+.adm-excel-import-columns-title.godrej {
+  color: #164e63;
+  font-weight: 600;
+}
+
+.adm-excel-import-columns-list.godrej {
+  color: #0e7490;
 }

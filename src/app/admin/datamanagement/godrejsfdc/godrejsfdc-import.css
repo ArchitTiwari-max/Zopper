@@ -1,0 +1,579 @@
+.excel-godrej-sfdc-import-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.excel-godrej-sfdc-import-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.excel-godrej-sfdc-back-button-section {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.excel-godrej-sfdc-back-button {
+  display: flex;
+  align-items: center;
+  color: #64748b;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.excel-godrej-sfdc-back-button:hover {
+  color: #334155;
+}
+
+.excel-godrej-sfdc-import-header {
+  padding: 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.excel-godrej-sfdc-import-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+}
+
+.excel-godrej-sfdc-import-description {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0;
+}
+
+.excel-godrej-sfdc-template-section {
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.excel-godrej-sfdc-template-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.excel-godrej-sfdc-template-info h3 {
+  font-size: 16px;
+  font-weight: 500;
+  color: #334155;
+  margin: 0 0 4px 0;
+}
+
+.excel-godrej-sfdc-template-info p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.excel-godrej-sfdc-template-button {
+  display: flex;
+  align-items: center;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.excel-godrej-sfdc-template-button:hover {
+  background: #e2e8f0;
+}
+
+.excel-godrej-sfdc-template-button:active {
+  background: #cbd5e1;
+}
+
+.excel-godrej-sfdc-upload-section {
+  padding: 24px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+.excel-godrej-sfdc-upload-area {
+  border: 2px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 32px 24px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.excel-godrej-sfdc-upload-area.drag-active {
+  border-color: #3b82f6;
+  background-color: #f0f9ff;
+}
+
+.excel-godrej-sfdc-upload-area.file-uploaded {
+  border-color: #10b981;
+  background-color: #f0fdf4;
+}
+
+.excel-godrej-sfdc-upload-icon {
+  width: 48px;
+  height: 48px;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+.excel-godrej-sfdc-upload-text-primary {
+  font-size: 16px;
+  font-weight: 500;
+  color: #334155;
+  margin-bottom: 8px;
+}
+
+.excel-godrej-sfdc-upload-text-secondary {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.excel-godrej-sfdc-upload-text-info {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.excel-godrej-sfdc-file-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.excel-godrej-sfdc-file-info .w-8 {
+  width: 2rem;
+  height: 2rem;
+}
+
+.excel-godrej-sfdc-file-details {
+  text-align: left;
+}
+
+.excel-godrej-sfdc-file-name {
+  font-weight: 500;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.excel-godrej-sfdc-file-size {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.excel-godrej-sfdc-clear-file-button {
+  background: none;
+  border: none;
+  color: #ef4444;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.excel-godrej-sfdc-clear-file-button:hover {
+  background: #fee2e2;
+}
+
+.excel-godrej-sfdc-import-button-section {
+  padding: 24px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+.excel-godrej-sfdc-import-button {
+  display: inline-flex;
+  align-items: center;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.excel-godrej-sfdc-import-button:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.excel-godrej-sfdc-import-button:active:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.excel-godrej-sfdc-import-button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+.excel-godrej-sfdc-import-button .w-5 {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 8px;
+}
+
+.excel-godrej-sfdc-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.excel-godrej-sfdc-error-message {
+  padding: 24px;
+}
+
+.excel-godrej-sfdc-error-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.excel-godrej-sfdc-error-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #dc2626;
+  margin: 0 0 8px 0;
+}
+
+.excel-godrej-sfdc-error-text {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.excel-godrej-sfdc-success-message {
+  padding: 24px;
+}
+
+.excel-godrej-sfdc-success-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.excel-godrej-sfdc-success-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #059669;
+  margin: 0 0 12px 0;
+}
+
+.excel-godrej-sfdc-results-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.excel-godrej-sfdc-result-card {
+  text-align: center;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+}
+
+.excel-godrej-sfdc-result-number {
+  font-size: 24px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.excel-godrej-sfdc-result-number.success {
+  color: #059669;
+}
+
+.excel-godrej-sfdc-result-number.error {
+  color: #dc2626;
+}
+
+.excel-godrej-sfdc-result-label {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.excel-godrej-sfdc-error-details {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+.excel-godrej-sfdc-error-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #334155;
+  margin: 0 0 8px 0;
+}
+
+.excel-godrej-sfdc-error-item {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.excel-godrej-sfdc-console-section {
+  padding: 24px;
+}
+
+.excel-godrej-sfdc-console-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.excel-godrej-sfdc-console-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.excel-godrej-sfdc-console-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #334155;
+  margin: 0;
+}
+
+.excel-godrej-sfdc-console-count {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.excel-godrej-sfdc-console-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.excel-godrej-sfdc-console-clear-button,
+.excel-godrej-sfdc-console-toggle-button {
+  background: none;
+  border: none;
+  color: #64748b;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.excel-godrej-sfdc-console-clear-button:hover,
+.excel-godrej-sfdc-console-toggle-button:hover {
+  background: #f1f5f9;
+}
+
+.excel-godrej-sfdc-console-progress {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+}
+
+.excel-godrej-sfdc-progress-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.excel-godrej-sfdc-progress-text {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.excel-godrej-sfdc-progress-percentage {
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.excel-godrej-sfdc-progress-bar {
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.excel-godrej-sfdc-progress-fill {
+  height: 100%;
+  background: #3b82f6;
+  width: 0%;
+  transition: width 0.2s ease;
+}
+
+.excel-godrej-sfdc-console-body {
+  max-height: 200px;
+  overflow-y: auto;
+  background: #f8fafc;
+  border-radius: 6px;
+}
+
+.excel-godrej-sfdc-console-empty {
+  text-align: center;
+  padding: 24px;
+  color: #94a3b8;
+}
+
+.excel-godrej-sfdc-console-empty-text {
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.excel-godrej-sfdc-console-log {
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.excel-godrej-sfdc-console-log-info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.excel-godrej-sfdc-console-log-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.excel-godrej-sfdc-console-log-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.excel-godrej-sfdc-console-log-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.excel-godrej-sfdc-console-timestamp {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-right: 8px;
+}
+
+.excel-godrej-sfdc-console-message {
+  flex: 1;
+}
+
+.excel-godrej-sfdc-format-info {
+  padding: 24px;
+  background: #f8fafc;
+  border-radius: 6px;
+}
+
+.excel-godrej-sfdc-format-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #334155;
+  margin: 0 0 12px 0;
+}
+
+.excel-godrej-sfdc-format-list {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.7;
+}
+
+.excel-godrej-sfdc-format-list p {
+  margin: 0 0 8px 0;
+  display: flex;
+}
+
+.excel-godrej-sfdc-format-list p::before {
+  content: "• ";
+  margin-right: 4px;
+  color: #3b82f6;
+}
+
+/* Records Table Styles */
+.excel-godrej-sfdc-records-table-section {
+  padding: 24px;
+  border-top: 1px solid #eee;
+}
+
+.excel-godrej-sfdc-table-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 16px;
+}
+
+.excel-godrej-sfdc-table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.excel-godrej-sfdc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: left;
+}
+
+.excel-godrej-sfdc-table th {
+  background: #f8fafc;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.excel-godrej-sfdc-table td {
+  padding: 12px 16px;
+  color: #1e293b;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.excel-godrej-sfdc-table tr:last-child td {
+  border-bottom: none;
+}
+
+.excel-godrej-sfdc-table tr:hover td {
+  background: #f1f5f9;
+}
+
+.excel-godrej-sfdc-table-loading,
+.excel-godrej-sfdc-table-empty {
+  padding: 40px;
+  text-align: center;
+  color: #64748b;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-style: italic;
+}

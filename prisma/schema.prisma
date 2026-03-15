@@ -29,7 +29,7 @@ model User {
   admin           Admin?
   dostChats       DostChat[]
   holidayRequests HolidayRequest[]
-  
+
   @@map("User")
 }
 
@@ -44,6 +44,8 @@ model Admin {
   // Back-relations: visits reviewed by this admin
   reviewedVisits        Visit[]
   reviewedDigitalVisits DigitalVisit[]
+
+  adminVisits           AdminVisit[]
 }
 
 model Executive {
@@ -64,7 +66,7 @@ model Executive {
 }
 
 //
-// Store & Brand 
+// Store & Brand
 //
 
 // Brand type classification for partner brands associated to a store
@@ -77,16 +79,19 @@ enum PartnerBrandType {
 }
 
 model Store {
-  id                String                      @id @map("_id") 
+  id                String                      @id @map("_id")
   storeName         String
   city              String
   fullAddress       String?
+  latitude          Float?                      // Geocoded latitude (Google Places API)
+  longitude         Float?                      // Geocoded longitude (Google Places API)
   visits            Visit[]
   digitalVisits     DigitalVisit[]
   partnerBrandIds   String[]                    // references Brand IDs
   partnerBrandTypes PartnerBrandType[] // parallel array corresoponding to same index in partnerBrandIds
   executiveStores   ExecutiveStoreAssignment[]
   salesRecords      SalesRecord[]
+  adminVisits       AdminVisit[]
 }
 
 model ExecutiveStoreAssignment {
@@ -114,7 +119,7 @@ model Category {
   categoryName  String          @unique
   brands        CategoryBrand[]
   salesRecords  SalesRecord[]
-  
+
   // Index for better performance when searching by category name
 }
 
@@ -154,7 +159,7 @@ model SalesRecord {
   //   ],
   //   ...
   // }
-  dailySales   Json 
+  dailySales   Json
 
   store     Store     @relation(fields: [storeId], references: [id])
   brand     Brand     @relation(fields: [brandId], references: [id])
@@ -206,6 +211,27 @@ model Visit {
   @@index([storeId])
 }
 
+model AdminVisit {
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  personMet         Json // [{ name: "Rajesh", designation: "Manager", phoneNumber: "1234567890" }]
+  POSMchecked       Boolean?   @map("displayChecked")
+  remarks           String?
+  imageUrls         String[]
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  // relations
+  adminId           String
+  admin             Admin      @relation(fields: [adminId], references: [id])
+
+  storeId           String
+  store             Store      @relation(fields: [storeId], references: [id])
+  brandIds          String[]
+
+  @@index([adminId, createdAt])
+  @@index([storeId])
+}
+
 enum IssueStatus {
   Pending
   Assigned
@@ -228,7 +254,7 @@ model Issue {
 
   assigned  Assigned[]  // One Issue can have multiple Assigned records
   notifications Notification[] // Notifications related to this issue
-  
+
   // Critical performance indexes based on actual queries
   @@index([visitId])
   @@index([digitalVisitId])
@@ -361,7 +387,7 @@ model OTP {
 
 enum NotificationType {
   VISIT_SUBMITTED // Executive submits a visit -> Admin
-  VISIT_REVIEWED // Admin reviews a visit -> Executive  
+  VISIT_REVIEWED // Admin reviews a visit -> Executive
   ISSUE_REPORTED // Executive reports an issue -> Admin
   ISSUE_ASSIGNED // Admin assigns issue -> Executive
   ISSUE_STATUS_UPDATED // Executive updates issue status -> Admin
@@ -459,7 +485,7 @@ model BrandDump {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   brandName String   // Godrej, Samsung, Havells, etc.
   uploadedAt DateTime @default(now())
-  
+
   // Godrej specific columns (22 fields)
   warrantyActivationCode String?
   customerPremium        String?
@@ -483,11 +509,11 @@ model BrandDump {
   branch                 String?
   pocName                String?
   channel                String?
-  
+
   // For future brands (Samsung, Havells), we can add their specific columns
   // or use a JSON field for flexibility
   additionalData Json? // For any extra brand-specific data
-  
+
   @@index([brandName, uploadedAt])
   @@map("BrandDump")
 }
@@ -505,7 +531,7 @@ model Holiday {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdBy   String?  // Admin ID who created this holiday
-  
+
   // Index for efficient date lookups
   @@index([date])
   @@map("Holiday")
@@ -534,16 +560,33 @@ model HolidayRequest {
   reviewedAt    DateTime?            // When admin reviewed the request
   reviewedBy    String?              // Admin ID who reviewed
   adminComment  String?              // Admin's comment on the request
-  
+
   // Relations
   userId  String // Executive user who submitted the request
   user    User   @relation(fields: [userId], references: [id])
   storeId String? // Optional store context
-  
+
   replacementAvailable Boolean? // Is a replacement available?
-  
+
   // Indexes for performance
   @@index([userId, submittedAt])
   @@index([status, submittedAt])
   @@map("HolidayRequest")
+}
+
+//
+// Godrej SFDC Data
+//
+
+model GodrejSfdc {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  planId            String   // Plan ID
+  phone             String   // Customer Phone
+  contractBookingId String   // Contract Booking ID
+  customerName      String?  // Customer Name (optional, added later)
+  uploadedAt        DateTime @default(now())
+
+  // Index for efficient sorting by upload date
+  @@index([uploadedAt])
+  @@map("GodrejSfdc")
 }

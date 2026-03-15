@@ -59,6 +59,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -138,7 +139,7 @@
 .admin-visit-report-table .admin-visit-report-table-header {
   background: #6b7280;
   display: grid;
-  grid-template-columns: 1.6fr 1.5fr 1.2fr 1.1fr 1.3fr 1.5fr 1.8fr;
+  grid-template-columns: 40px 1.6fr 1.5fr 1.2fr 1.1fr 1.3fr 1.2fr 1.8fr;
   gap: 2rem;
   padding: 1rem;
   width: 100%;
@@ -178,7 +179,7 @@
 
 .admin-visit-report-table .admin-visit-report-table-row {
   display: grid;
-  grid-template-columns: 1.6fr 1.5fr 1.2fr 1.1fr 1.3fr 1.5fr 1.8fr;
+  grid-template-columns: 40px 1.6fr 1.5fr 1.2fr 1.1fr 1.3fr 1.2fr 1.8fr;
   gap: 2rem;
   padding: 1rem;
   border-bottom: 1px solid #f1f5f9;
@@ -281,6 +282,10 @@
 .admin-visit-report-date-cell {
   font-size: 0.875rem;
   color: #6b7280;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
 }
 
 .admin-visit-report-issue-date {
@@ -492,12 +497,12 @@
   .admin-visit-report-overview {
     padding: 0.5rem;
   }
-  
+
   .admin-visit-report-table-section {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   .admin-visit-report-table .admin-visit-report-table-header,
   .admin-visit-report-table .admin-visit-report-table-row {
     gap: 1rem;
@@ -508,7 +513,7 @@
   .admin-visit-report-filters-grid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
-  
+
   .admin-visit-report-table-section {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -519,19 +524,19 @@
   .admin-visit-report-overview {
     padding: 1rem;
   }
-  
+
   .admin-visit-report-filters-section {
     padding: 1rem;
   }
-  
+
   .admin-visit-report-filters-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .admin-visit-report-table .admin-visit-report-table-header {
     display: none;
   }
-  
+
   .admin-visit-report-table .admin-visit-report-table-row {
     grid-template-columns: 1fr;
     gap: 0.5rem;
@@ -541,16 +546,16 @@
     margin-bottom: 1rem;
     background: #f9fafb;
   }
-  
+
   .admin-visit-report-table .admin-visit-report-cell {
     padding: 0.5rem 0;
     border-bottom: 1px solid #f1f5f9;
   }
-  
+
   .admin-visit-report-table .admin-visit-report-cell:last-child {
     border-bottom: none;
   }
-  
+
   .admin-visit-report-table .admin-visit-report-cell:before {
     content: attr(data-label) ': ';
     font-weight: 600;
@@ -558,12 +563,12 @@
     display: inline-block;
     width: 120px;
   }
-  
+
   .admin-visit-report-action-buttons-group {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .admin-visit-report-view-details-btn,
   .admin-visit-report-view-issue-btn,
   .admin-visit-report-mark-reviewed-btn {
@@ -576,13 +581,13 @@
   .admin-visit-report-title h2 {
     font-size: 1.5rem;
   }
-  
+
   .admin-visit-report-executive-cell {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .admin-visit-report-partner-brands-cell {
     flex-direction: column;
     align-items: flex-start;

@@ -30,19 +30,14 @@ export async function GET(request: NextRequest) {
 
     // Disable caching for My Visits data to always return the latest state
 
-    // Add pagination support
-    const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '50'); // Default 50 visits
-    const skip = (page - 1) * limit;
-
     // Add date period filtering
+    const url = new URL(request.url);
     const period = url.searchParams.get('period') || 'Last 30 Days';
-    
+
     // Calculate date range based on period
     const now = new Date();
     let startDate: Date;
-    
+
     switch (period) {
       case 'Today':
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -61,7 +56,6 @@ export async function GET(request: NextRequest) {
         break;
       case 'Last Month':
         const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
         startDate = lastMonth;
         // For last month, we need both start and end date
         break;
@@ -88,6 +82,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get visits for this executive with date filtering and optimized query
+    // Removing take: limit to ensure all visits for the selected period are fetched
     const visits = await prisma.visit.findMany({
       where: whereClause,
       select: {
@@ -145,9 +140,7 @@ export async function GET(request: NextRequest) {
       },
       orderBy: {
         visitDate: 'desc'
-      },
-      skip: skip,
-      take: limit
+      }
     });
 
     // Get all unique brand IDs from all visits
@@ -173,7 +166,7 @@ export async function GET(request: NextRequest) {
     const transformedVisits = visits.map(visit => ({
       id: visit.id,
       storeName: visit.store?.storeName || 'Unknown Store',
-      partnerBrand: visit.store?.partnerBrandIds && visit.store.partnerBrandIds.length > 0 
+      partnerBrand: visit.store?.partnerBrandIds && visit.store.partnerBrandIds.length > 0
         ? visit.store.partnerBrandIds.map(brandId => brandMap.get(brandId) || 'Unknown Brand').join(', ')
         : 'N/A',
       status: visit.status,
@@ -220,13 +213,13 @@ export async function GET(request: NextRequest) {
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');
     response.headers.set('Vary', 'Cookie');
-    
+
     return response;
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching executive visits:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch executive visits' },
+      { error: 'Failed to fetch executive visits', details: error.message },
       { status: 500 }
     );
   }

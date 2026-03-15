@@ -142,6 +142,25 @@ export async function GET(request: NextRequest) {
     ]);
     const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
 
+    // Get previous visit dates for these stores safely
+    const validStoreIds = visits.map(v => v.store?.id).filter(Boolean);
+    const storeIds = Array.from(new Set(validStoreIds));
+    let storeVisitDates = new Map();
+    
+    if (storeIds.length > 0) {
+      const previousVisitsRaw = await prisma.visit.findMany({
+        where: { storeId: { in: storeIds } },
+        select: { storeId: true, createdAt: true },
+        orderBy: { createdAt: 'desc' }
+      });
+      for (const pv of previousVisitsRaw) {
+        if (!pv.storeId) continue;
+        const existing = storeVisitDates.get(pv.storeId) || [];
+        existing.push(pv.createdAt);
+        storeVisitDates.set(pv.storeId, existing);
+      }
+    }
+
     // Process visit data
     let processedVisits = visits.map((visit) => {
       // Get partner brands for this visit
@@ -218,6 +237,17 @@ export async function GET(request: NextRequest) {
       const visitDateObj = new Date(visit.visitDate || visit.createdAt);
       const formattedVisitDate = `${visitDateObj.getDate().toString().padStart(2, '0')}/${(visitDateObj.getMonth() + 1).toString().padStart(2, '0')}/${visitDateObj.getFullYear()}`;
 
+      // Get previous visit date
+      let prevVisitDateStr = null;
+      if (visit.store?.id) {
+        const dates = storeVisitDates.get(visit.store.id) || [];
+        const thisTime = (visit.visitDate || visit.createdAt).getTime();
+        const prevDates = dates.filter((d: any) => d.getTime() < thisTime);
+        if (prevDates.length > 0) {
+          const prevDate = prevDates[0];
+          prevVisitDateStr = `${prevDate.getDate().toString().padStart(2, '0')}/${(prevDate.getMonth() + 1).toString().padStart(2, '0')}/${prevDate.getFullYear()}`;
+        }
+      }
       return {
         id: visit.id, // Keep actual ObjectId for database operations
         executiveId: visit.executive?.id || 'unknown',
@@ -228,6 +258,7 @@ export async function GET(request: NextRequest) {
         storeId: visit.store?.id || 'unknown', // Add store ID for linking
         partnerBrand: partnerBrands,
         visitDate: formattedVisitDate,
+        previousVisitDate: prevVisitDateStr,
         visitStatus: visit.status as 'PENDING_REVIEW' | 'REVIEWD',
         reviewerName: visit.reviewedByAdmin?.name,
         issueStatus: issueStatusResult,

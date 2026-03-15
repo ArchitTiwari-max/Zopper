@@ -2,7 +2,8 @@
 .exec-v-form-container {
   padding: 24px 20px;
   background-color: #f8f9fa;
-  min-height: calc(100vh - 140px); /* Account for header and footer */
+  min-height: calc(100vh - 140px);
+  /* Account for header and footer */
   width: 100%;
   box-sizing: border-box;
 }
@@ -66,6 +67,34 @@
 .exec-v-form-plus-icon {
   font-size: 16px;
   font-weight: bold;
+}
+
+/* Submitted PJPs Button */
+.spjp-submitted-btn {
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.spjp-submitted-btn:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #334155;
+  transform: translateY(-1px);
+}
+
+.spjp-submitted-btn:active {
+  transform: translateY(0);
 }
 
 /* Action Buttons */
@@ -163,6 +192,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -456,6 +486,7 @@
   background-color: #f8f9fa;
   cursor: pointer;
 }
+
 .exec-v-form-table-row.clickable {
   cursor: pointer;
 }
@@ -673,74 +704,74 @@
   .exec-v-form-container {
     padding: 32px 40px;
   }
-  
+
   .exec-v-form-header {
     margin-bottom: 32px;
   }
-  
+
   .exec-v-form-title {
     font-size: 32px;
     margin-bottom: 12px;
   }
-  
+
   .exec-v-form-subtitle {
     font-size: 16px;
   }
-  
+
   .exec-v-form-create-visit-btn {
     padding: 14px 24px;
     font-size: 16px;
   }
-  
+
   .exec-v-form-preview-send-btn,
   .exec-v-form-cancel-btn {
     padding: 14px 24px;
     font-size: 16px;
   }
-  
+
   .exec-v-form-store-checkbox {
     width: 20px;
     height: 20px;
   }
-  
+
   .exec-v-form-filters-toggle {
     font-size: 16px;
     padding: 10px 0;
   }
-  
+
   .exec-v-form-filters-panel {
     padding: 24px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px 24px;
   }
-  
+
   .exec-v-form-filter-group:nth-child(5) {
     grid-column: 1 / -1;
   }
-  
+
   .exec-v-form-filter-label {
     font-size: 16px;
   }
-  
+
   .exec-v-form-filter-input,
   .exec-v-form-filter-select,
   .exec-v-form-filter-date {
     padding: 14px 18px;
     font-size: 16px;
   }
-  
+
   .exec-v-form-header-cell {
     padding: 20px 24px;
     font-size: 12px;
   }
-  
+
   .exec-v-form-table-cell {
     padding: 20px 24px;
     min-height: 70px;
   }
-  
-.exec-v-form-store-name-text,
+
+  .exec-v-form-store-name-text,
   .exec-v-form-store-subtext,
   .exec-v-form-brand-text,
   .exec-v-form-visited-text {
@@ -753,62 +784,62 @@
   .exec-v-form-container {
     padding: 24px 32px;
   }
-  
+
   .exec-v-form-content {
     max-width: 800px;
   }
-  
+
   .exec-v-form-title {
     font-size: 28px;
   }
-  
+
   .exec-v-form-subtitle {
     font-size: 15px;
   }
-  
+
   .exec-v-form-create-visit-btn {
     padding: 13px 22px;
     font-size: 15px;
   }
-  
+
   .exec-v-form-preview-send-btn,
   .exec-v-form-cancel-btn {
     padding: 13px 22px;
     font-size: 15px;
   }
-  
+
   .exec-v-form-filters-panel {
     padding: 20px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px 20px;
   }
-  
+
   .exec-v-form-filter-group:nth-child(5) {
     grid-column: 1 / -1;
   }
-  
+
   .exec-v-form-filter-label {
     font-size: 15px;
   }
-  
+
   .exec-v-form-filter-input,
   .exec-v-form-filter-select,
   .exec-v-form-filter-date {
     padding: 13px 16px;
     font-size: 15px;
   }
-  
+
   .exec-v-form-header-cell {
     padding: 18px 22px;
   }
-  
+
   .exec-v-form-table-cell {
     padding: 18px 22px;
     min-height: 65px;
   }
-  
-.exec-v-form-store-name-text,
+
+  .exec-v-form-store-name-text,
   .exec-v-form-store-subtext,
   .exec-v-form-brand-text,
   .exec-v-form-visited-text {
@@ -821,141 +852,143 @@
   .exec-v-form-container {
     padding: 16px;
   }
-  
+
   .exec-v-form-header {
     flex-direction: column;
     gap: 16px;
     align-items: stretch;
     margin-bottom: 20px;
   }
-  
+
   .exec-v-form-title {
     font-size: 20px;
     margin-bottom: 6px;
   }
-  
+
   .exec-v-form-subtitle {
     font-size: 13px;
   }
-  
+
   .exec-v-form-create-visit-btn {
     padding: 10px 16px;
     font-size: 13px;
     align-self: flex-start;
   }
-  
+
   .exec-v-form-action-buttons {
     gap: 8px;
     flex-direction: column;
     width: 100%;
   }
-  
+
   .exec-v-form-preview-send-btn,
   .exec-v-form-cancel-btn {
     padding: 10px 16px;
     font-size: 13px;
     width: 100%;
   }
-  
+
   .exec-v-form-filters-section {
     margin-bottom: 16px;
   }
-  
+
   .exec-v-form-filters-toggle {
     font-size: 13px;
   }
-  
+
   .exec-v-form-filters-panel {
     padding: 16px;
     margin-top: 8px;
   }
-  
+
   .exec-v-form-filter-group {
     margin-bottom: 16px;
   }
-  
+
   .exec-v-form-filter-label {
     font-size: 13px;
     margin-bottom: 6px;
   }
-  
+
   .exec-v-form-filter-input,
   .exec-v-form-filter-select,
   .exec-v-form-filter-date {
     padding: 10px 12px;
-    font-size: 16px; /* Prevents zoom on iOS */
-    min-height: 44px; /* Touch-friendly */
+    font-size: 16px;
+    /* Prevents zoom on iOS */
+    min-height: 44px;
+    /* Touch-friendly */
   }
-  
+
   .exec-v-form-filter-select {
     background-size: 14px;
   }
-  
+
   .exec-v-form-date-icon {
     font-size: 14px;
     right: 10px;
   }
-  
+
   /* Keep table view on mobile - responsive grid */
   .exec-v-form-table-header {
     grid-template-columns: 2fr 1.5fr 1fr 1fr;
     width: 100%;
   }
-  
+
   .exec-v-form-table-header.create-mode {
     grid-template-columns: 50px 2fr 1.5fr 1fr 1fr;
   }
-  
+
   .exec-v-form-table-row {
     grid-template-columns: 2fr 1.5fr 1fr 1fr;
     width: 100%;
   }
-  
+
   .exec-v-form-table-row.create-mode {
     grid-template-columns: 50px 2fr 1.5fr 1fr 1fr;
   }
-  
+
   .exec-v-form-header-cell {
     padding: 12px 4px;
     font-size: 9px;
   }
-  
+
   .exec-v-form-table-cell {
     padding: 12px 4px;
     min-height: 50px;
   }
-  
+
   .exec-v-form-store-name-text {
     font-size: 11px;
     line-height: 1.2;
     word-break: break-word;
   }
-  
+
   .exec-v-form-brand-text {
     font-size: 11px;
     word-break: break-word;
   }
-  
+
   .exec-v-form-dropdown-arrow {
     font-size: 8px;
   }
-  
-.exec-v-form-store-subtext,
+
+  .exec-v-form-store-subtext,
   .exec-v-form-visited-text {
     font-size: 10px;
     word-break: break-word;
   }
-  
+
   /* Mobile dropdown styles */
   .exec-v-form-partner-dropdown {
     padding: 2px 4px;
   }
-  
+
   .exec-v-form-dropdown-menu {
     font-size: 11px;
     max-height: 150px;
   }
-  
+
   .exec-v-form-dropdown-item {
     padding: 8px 10px;
     font-size: 11px;
@@ -966,44 +999,44 @@
   .exec-v-form-container {
     padding: 12px;
   }
-  
+
   .exec-v-form-title {
     font-size: 18px;
   }
-  
+
   .exec-v-form-subtitle {
     font-size: 12px;
   }
-  
+
   .exec-v-form-create-visit-btn {
     padding: 8px 14px;
     font-size: 12px;
   }
-  
+
   .exec-v-form-preview-send-btn,
   .exec-v-form-cancel-btn {
     padding: 8px 14px;
     font-size: 12px;
   }
-  
+
   .exec-v-form-store-checkbox {
     width: 16px;
     height: 16px;
   }
-  
+
   .exec-v-form-filters-panel {
     padding: 14px;
   }
-  
+
   .exec-v-form-filter-group {
     margin-bottom: 14px;
   }
-  
+
   .exec-v-form-filter-label {
     font-size: 12px;
     margin-bottom: 5px;
   }
-  
+
   .exec-v-form-filter-input,
   .exec-v-form-filter-select,
   .exec-v-form-filter-date {
@@ -1011,48 +1044,48 @@
     font-size: 14px;
     min-height: 40px;
   }
-  
+
   .exec-v-form-date-icon {
     font-size: 12px;
   }
-  
+
   .exec-v-form-header-cell {
     padding: 10px 2px;
     font-size: 8px;
   }
-  
+
   .exec-v-form-table-cell {
     padding: 10px 2px;
     min-height: 45px;
   }
-  
+
   .exec-v-form-store-name-text {
     font-size: 10px;
     line-height: 1.2;
     word-break: break-word;
   }
-  
+
   .exec-v-form-brand-text {
     font-size: 10px;
     word-break: break-word;
   }
-  
-.exec-v-form-store-subtext,
+
+  .exec-v-form-store-subtext,
   .exec-v-form-visited-text {
     font-size: 9px;
     word-break: break-word;
   }
-  
+
   /* Very small mobile dropdown styles */
   .exec-v-form-partner-dropdown {
     padding: 1px 2px;
   }
-  
+
   .exec-v-form-dropdown-menu {
     font-size: 10px;
     max-height: 120px;
   }
-  
+
   .exec-v-form-dropdown-item {
     padding: 6px 8px;
     font-size: 10px;
@@ -1078,6 +1111,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -1099,6 +1133,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1282,6 +1317,7 @@
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -1293,55 +1329,55 @@
     width: 95%;
     max-height: 90vh;
   }
-  
+
   .exec-v-form-modal-header {
     padding: 20px;
   }
-  
+
   .exec-v-form-modal-title {
     font-size: 18px;
   }
-  
+
   .exec-v-form-modal-body {
     padding: 20px;
     max-height: 60vh;
   }
-  
+
   .exec-v-form-summary-text {
     font-size: 14px;
   }
-  
+
   .exec-v-form-preview-store-item {
     gap: 12px;
     padding: 14px;
   }
-  
+
   .exec-v-form-store-number {
     width: 28px;
     height: 28px;
     font-size: 12px;
   }
-  
+
   .exec-v-form-store-name {
     font-size: 14px;
     margin-bottom: 6px;
   }
-  
+
   .exec-v-form-store-details,
   .exec-v-form-store-brands,
   .exec-v-form-store-status {
     font-size: 12px;
   }
-  
+
   .exec-v-form-note-text {
     font-size: 12px;
   }
-  
+
   .exec-v-form-modal-footer {
     padding: 20px;
     flex-direction: column;
   }
-  
+
   .exec-v-form-cancel-modal-btn,
   .exec-v-form-send-plan-btn {
     width: 100%;
@@ -1353,34 +1389,34 @@
   .exec-v-form-preview-modal {
     width: 98%;
   }
-  
+
   .exec-v-form-modal-header {
     padding: 16px;
   }
-  
+
   .exec-v-form-modal-title {
     font-size: 16px;
   }
-  
+
   .exec-v-form-modal-body {
     padding: 16px;
   }
-  
+
   .exec-v-form-preview-store-item {
     gap: 10px;
     padding: 12px;
   }
-  
+
   .exec-v-form-store-number {
     width: 24px;
     height: 24px;
     font-size: 11px;
   }
-  
+
   .exec-v-form-store-name {
     font-size: 13px;
   }
-  
+
   .exec-v-form-modal-footer {
     padding: 16px;
   }

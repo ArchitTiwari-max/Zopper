@@ -10,7 +10,6 @@ const prisma = new PrismaClient();
 // GET endpoint to fetch past visits for a store (all executives)
 export async function GET(request: NextRequest) {
   try {
-    // Get authenticated user from token
     const user = await getAuthenticatedUser(request);
 
     if (!user) {
@@ -23,12 +22,11 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const storeId = searchParams.get('storeId');
- 
+
     if (!storeId) {
       return NextResponse.json({ error: 'Store ID is required' }, { status: 400 });
     }
 
-    // Get current executive info first
     const currentExecutive = await prisma.executive.findUnique({
       where: { userId: user.userId }
     });
@@ -37,46 +35,77 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
-    // Get last 5 visits for this store by ANY executive
-    const visits = await prisma.visit.findMany({
-      where: {
-        storeId: storeId
-      },
-      include: {
-        issues: {
-          include: {
-            assigned: {
-              include: {
-                executive: {
-                  include: {
-                    user: true
+    // Get last 5 visits for this store by ANY executive or admin
+    const [execVisitsRaw, adminVisitsRaw] = await Promise.all([
+      prisma.visit.findMany({
+        where: { storeId },
+        include: {
+          issues: {
+            include: {
+              assigned: {
+                include: {
+                  executive: {
+                    include: { user: true }
                   }
                 }
               }
             }
+          },
+          store: true,
+          executive: {
+            include: { user: true }
           }
         },
-        store: true,
-        executive: {
-          include: {
-            user: true
-          }
-        }
-      },
-      orderBy: {
-        visitDate: 'desc'
-      },
-      take: 5
-    });
+        orderBy: { visitDate: 'desc' },
+        take: 5
+      }),
+      (prisma as any).adminVisit ? (prisma as any).adminVisit.findMany({
+        where: { storeId },
+        include: { store: true, admin: true },
+        orderBy: { createdAt: 'desc' },
+        take: 5
+      }) : Promise.resolve([])
+    ]);
 
-    // Transform visits data, handling null executives
-    const transformedVisits = visits
-      .filter(visit => visit.executive) // Only include visits with valid executives
-      .map(visit => {
+    const allVisits = [
+      ...execVisitsRaw.map((v: any) => ({ ...v, submitterType: 'EXECUTIVE' as const })),
+      ...adminVisitsRaw.map((v: any) => ({ ...v, submitterType: 'ADMIN' as const }))
+    ].sort((a, b) => {
+      const aDate = (a as any).visitDate || a.createdAt;
+      const bDate = (b as any).visitDate || b.createdAt;
+      return new Date(bDate).getTime() - new Date(aDate).getTime();
+    }).slice(0, 5);
+
+    // Transform visits data
+    const transformedVisits = allVisits
+      .filter((visit: any) => visit.submitterType === 'ADMIN' ? visit.admin : visit.executive)
+      .map((visit: any) => {
+        if (visit.submitterType === 'ADMIN') {
+          return {
+            id: visit.id,
+            date: visit.createdAt.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            }),
+            status: 'REVIEWD',
+            representative: visit.admin?.name ? `${visit.admin.name} (Admin)` : 'Unknown Admin',
+            canViewDetails: false,
+            personMet: visit.personMet,
+            POSMchecked: null,
+            remarks: null,
+            imageUrls: [],
+            adminComment: null,
+            storeName: visit.store?.storeName || 'Unknown Store',
+            issues: [],
+            createdAt: visit.createdAt,
+            updatedAt: visit.updatedAt
+          };
+        }
+
         const isCurrentExecutive = visit.executiveId === currentExecutive.id;
-        
+
         if (isCurrentExecutive) {
-          // Full data for current executive's visits
           return {
             id: visit.id,
             date: (visit.visitDate || visit.createdAt).toLocaleDateString('en-US', {
@@ -94,21 +123,21 @@ export async function GET(request: NextRequest) {
             adminComment: visit.adminComment,
             storeName: visit.store?.storeName || 'Unknown Store',
             issues: visit.issues
-              .filter(issue => 
-                issue.assigned.some(assignment => 
+              .filter((issue: any) =>
+                issue.assigned.some((assignment: any) =>
                   assignment.executive && assignment.executive.id === currentExecutive.id
                 )
               )
-              .map(issue => ({
+              .map((issue: any) => ({
                 id: issue.id,
                 details: issue.details,
                 status: issue.status,
                 createdAt: issue.createdAt,
                 assigned: issue.assigned
-                  .filter(assignment => 
+                  .filter((assignment: any) =>
                     assignment.executive && assignment.executive.id === currentExecutive.id
                   )
-                  .map(assignment => ({
+                  .map((assignment: any) => ({
                     id: assignment.id,
                     adminComment: assignment.adminComment,
                     status: assignment.status,
@@ -120,7 +149,6 @@ export async function GET(request: NextRequest) {
             updatedAt: visit.updatedAt
           };
         } else {
-          // Limited data for other executives' visits - but include contact person and issues for coordination
           return {
             id: visit.id,
             date: (visit.visitDate || visit.createdAt).toLocaleDateString('en-US', {
@@ -131,18 +159,18 @@ export async function GET(request: NextRequest) {
             status: visit.status,
             representative: visit.executive?.name || 'Unknown Executive',
             canViewDetails: false,
-            personMet: visit.personMet, // Show contact person info for coordination
-            POSMchecked: null, // No sensitive POSM info
-            remarks: null, // No private remarks
-            imageUrls: [], // No private images
-            adminComment: null, // No admin comments
+            personMet: visit.personMet,
+            POSMchecked: null,
+            remarks: null,
+            imageUrls: [],
+            adminComment: null,
             storeName: visit.store?.storeName || 'Unknown Store',
-            issues: visit.issues.map(issue => ({
+            issues: (visit.issues || []).map((issue: any) => ({
               id: issue.id,
               details: issue.details,
               status: issue.status,
               createdAt: issue.createdAt,
-              assigned: [] // Don't show assignments for other executives
+              assigned: []
             })),
             createdAt: visit.createdAt,
             updatedAt: visit.updatedAt
@@ -150,17 +178,11 @@ export async function GET(request: NextRequest) {
         }
       });
 
-    return NextResponse.json({
-      success: true,
-      data: transformedVisits
-    });
+    return NextResponse.json({ success: true, data: transformedVisits });
 
   } catch (error) {
     console.error('Error fetching visits:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch visits' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch visits' }, { status: 500 });
   } finally {
     await prisma.$disconnect();
   }
@@ -169,7 +191,6 @@ export async function GET(request: NextRequest) {
 // POST endpoint to create a new visit with optional issue
 export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user from token
     const user = await getAuthenticatedUser(request);
 
     if (!user) {
@@ -180,7 +201,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
     }
 
-    // Get executive data
     const executive = await prisma.executive.findUnique({
       where: { userId: user.userId }
     });
@@ -200,27 +220,24 @@ export async function POST(request: NextRequest) {
       imageUrls
     } = await request.json();
 
-    // Validate required fields
     if (!storeId || !personMet || personMet.length === 0) {
-      return NextResponse.json({ 
-        error: 'Store ID and at least one person met are required' 
+      return NextResponse.json({
+        error: 'Store ID and at least one person met are required'
       }, { status: 400 });
     }
 
     if (!visitDate) {
-      return NextResponse.json({ 
-        error: 'Visit date is required' 
-      }, { status: 400 });
+      return NextResponse.json({ error: 'Visit date is required' }, { status: 400 });
     }
 
     // Validate visit date (IST timezone)
     const today = new Date();
-    const istOffset = 5.5 * 60 * 60 * 1000; // IST offset
+    const istOffset = 5.5 * 60 * 60 * 1000;
     const istToday = new Date(today.getTime() + istOffset);
     const todayStr = istToday.toISOString().split('T')[0];
     const ninetyDaysAgo = new Date(istToday.getTime() - (90 * 24 * 60 * 60 * 1000));
     const ninetyDaysAgoStr = ninetyDaysAgo.toISOString().split('T')[0];
-    
+
     if (visitDate > todayStr) {
       return NextResponse.json({
         error: 'Visit date cannot be in the future',
@@ -228,7 +245,7 @@ export async function POST(request: NextRequest) {
         code: 'INVALID_VISIT_DATE_FUTURE'
       }, { status: 400 });
     }
-    
+
     if (visitDate < ninetyDaysAgoStr) {
       return NextResponse.json({
         error: 'Visit date is too old',
@@ -237,7 +254,6 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // CRITICAL: Validate that executive is assigned to this store
     const assignment = await prisma.executiveStoreAssignment.findUnique({
       where: {
         executiveId_storeId: {
@@ -258,56 +274,42 @@ export async function POST(request: NextRequest) {
     const brandIds: string[] = [];
     if (brandsVisited && brandsVisited.length > 0) {
       const brands = await prisma.brand.findMany({
-        where: {
-          brandName: {
-            in: brandsVisited
-          }
-        }
+        where: { brandName: { in: brandsVisited } }
       });
       brandIds.push(...brands.map(brand => brand.id));
     }
 
-    // Convert visit date to proper DateTime for database
     const visitDateTime = new Date(visitDate + 'T00:00:00.000Z');
 
-    // Create the visit
     const visit = await prisma.visit.create({
       data: {
-        personMet: personMet, // JSON array
-        POSMchecked: POSMchecked,
+        personMet,
+        POSMchecked,
         remarks: remarks || '',
         imageUrls: imageUrls || [],
-        status: 'PENDING_REVIEW' as any, // Default status
+        status: 'PENDING_REVIEW' as any,
         executiveId: executive.id,
-        storeId: storeId,
-        brandIds: brandIds,
-        visitDate: visitDateTime // The actual date when the visit occurred
+        storeId,
+        brandIds,
+        visitDate: visitDateTime
       },
       include: {
         store: true,
-        executive: {
-          include: {
-            user: true
-          }
-        }
+        executive: { include: { user: true } }
       }
     });
 
-    // Create issues if any are raised
     let createdIssues: any[] = [];
     if (issuesRaised && Array.isArray(issuesRaised) && issuesRaised.length > 0) {
-      // Create multiple issues
       for (const issueDetail of issuesRaised) {
         if (issueDetail && issueDetail.trim() !== '') {
-          // Generate unique 7-character issue ID
           const uniqueIssueId = await generateUniqueIssueId();
-          
           const createdIssue = await prisma.issue.create({
             data: {
               id: uniqueIssueId,
               details: issueDetail.trim(),
               visitId: visit.id,
-              status: 'Pending' // Default status
+              status: 'Pending'
             }
           });
           createdIssues.push({
@@ -334,10 +336,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error creating visit:', error);
-    return NextResponse.json(
-      { error: 'Failed to create visit' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create visit' }, { status: 500 });
   } finally {
     await prisma.$disconnect();
   }
