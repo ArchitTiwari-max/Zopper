@@ -139,7 +139,7 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
               </div>
               <div className="visit-detail-item">
                 <span className="visit-detail-label">Visit Date:</span>
-                <span className="visit-detail-value">{formatDate(visit.createdAt)}</span>
+                <span className="visit-detail-value">{formatDate(visit.visitDate || visit.createdAt)}</span>
               </div>
               <div className="visit-detail-item">
                 <span className="visit-detail-label">Status:</span>

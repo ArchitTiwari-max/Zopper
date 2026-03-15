@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       prisma.visit.aggregate({
         _count: true,
         where: {
-          createdAt: {
+          visitDate: {
             gte: startDate,
             lte: endDate
           }
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
         _count: true,
         where: {
           status: 'PENDING_REVIEW',
-          createdAt: {
+          visitDate: {
             gte: startDate,
             lte: endDate
           }
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
       prisma.visit.aggregate({
         _count: true,
         where: {
-          createdAt: {
+          visitDate: {
             gte: new Date(startDate.getTime() - (now.getTime() - startDate.getTime())),
             lt: startDate
           }
@@ -187,7 +187,7 @@ async function getBrandVisitDataOptimized(startDate: Date, endDate: Date) {
       // Get ALL visits within the date period (no limit needed since period filter already limits data)
       prisma.visit.findMany({
         where: {
-          createdAt: {
+          visitDate: {
             gte: startDate,
             lte: endDate
           }
@@ -263,7 +263,7 @@ async function getBrandVisitData(startDate: Date, endDate: Date) {
     // Get visit data with brand information
     const visits = await prisma.visit.findMany({
       where: {
-        createdAt: {
+        visitDate: {
           gte: startDate,
           lte: endDate
         }

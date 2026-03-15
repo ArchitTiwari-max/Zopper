@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
     // Physical visits
     const visitWhere: any = {
       storeId: { in: storeIds },
-      createdAt: { gte: selStart, lte: selEnd },
+      visitDate: { gte: selStart, lte: selEnd },
     };
     if (user.role === 'EXECUTIVE') {
       // Filter to this executive's visits only
@@ -163,8 +163,8 @@ export async function GET(request: NextRequest) {
 
     const visits = await prisma.visit.findMany({
       where: visitWhere,
-      select: { storeId: true, createdAt: true, executive: { select: { name: true } } },
-      orderBy: { createdAt: 'desc' },
+      select: { storeId: true, visitDate: true, createdAt: true, executive: { select: { name: true } } },
+      orderBy: { visitDate: 'desc' },
     });
 
     // Digital visits
@@ -189,7 +189,8 @@ export async function GET(request: NextRequest) {
     const lastVisitMap = new Map<string, LastVisitInfo>();
     for (const v of visits) {
       const cur = lastVisitMap.get(v.storeId);
-      if (!cur || v.createdAt > cur.date) lastVisitMap.set(v.storeId, { date: v.createdAt, execName: v.executive?.name || '-' });
+      const vDate = (v.visitDate || v.createdAt) as Date;
+      if (!cur || vDate > cur.date) lastVisitMap.set(v.storeId, { date: vDate, execName: v.executive?.name || '-' });
     }
     for (const dv of dVisits) {
       const cur = lastVisitMap.get(dv.storeId);
@@ -214,12 +215,12 @@ export async function GET(request: NextRequest) {
     }, firstAfter);
 
     // Superset fetches for visits/digitalVisits and issues within the global window
-    const supVisitWhere: any = { ...visitWhere, createdAt: { gte: globalBefore, lte: globalAfter } };
+    const supVisitWhere: any = { ...visitWhere, visitDate: { gte: globalBefore, lte: globalAfter } };
     const supDVisitWhere: any = { ...dVisitWhere, connectDate: { gte: globalBefore, lte: globalAfter } };
 
     const supVisits = await prisma.visit.findMany({
       where: supVisitWhere,
-      select: { storeId: true, createdAt: true },
+      select: { storeId: true, visitDate: true, createdAt: true },
       orderBy: undefined,
     });
     const supDigitalVisits = await prisma.digitalVisit.findMany({
@@ -328,7 +329,10 @@ export async function GET(request: NextRequest) {
       // Aggregate visits/digitalVisits (no per-store queries)
       const vForStore = supVisits.filter(v => v.storeId === s.id);
       const dvForStore = supDigitalVisits.filter(dv => dv.storeId === s.id);
-      const completedAfter = vForStore.filter(v => v.createdAt >= afterStart && v.createdAt <= afterEnd).length +
+      const completedAfter = vForStore.filter(v => {
+        const vDate = (v.visitDate || v.createdAt) as Date;
+        return vDate >= afterStart && vDate <= afterEnd;
+      }).length +
         dvForStore.filter(dv => dv.connectDate >= afterStart && dv.connectDate <= afterEnd).length;
 
       // Aggregate issues (no per-store queries)

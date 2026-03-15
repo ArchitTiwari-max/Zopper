@@ -117,9 +117,9 @@ export async function GET(request: NextRequest) {
     const visitsInRange = await prisma.visit.findMany({
       where: {
         executiveId: { in: executives.map(e => e.id) },
-        createdAt: { gte: startDate, lte: now }
+        visitDate: { gte: startDate, lte: now }
       },
-      select: { executiveId: true, createdAt: true }
+      select: { executiveId: true, visitDate: true, createdAt: true }
     });
 
     // Aggregate counts and last visit per executive within range
@@ -127,9 +127,10 @@ export async function GET(request: NextRequest) {
     const lastVisitMap = new Map<string, Date>();
     for (const v of visitsInRange) {
       visitCountMap.set(v.executiveId, (visitCountMap.get(v.executiveId) || 0) + 1);
+      const visitTime = v.visitDate || v.createdAt;
       const prev = lastVisitMap.get(v.executiveId);
-      if (!prev || prev < v.createdAt) {
-        lastVisitMap.set(v.executiveId, v.createdAt as unknown as Date);
+      if (!prev || prev < (visitTime as Date)) {
+        lastVisitMap.set(v.executiveId, visitTime as Date);
       }
     }
 

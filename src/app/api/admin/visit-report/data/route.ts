@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
 
     // Build where clause for visits
     let whereClause: any = {
-      createdAt: {
+      visitDate: {
         gte: startDate,
         lte: endDate
       }
@@ -99,6 +99,7 @@ export async function GET(request: NextRequest) {
           status: true,
           remarks: true,
           brandIds: true,
+          visitDate: true,
           createdAt: true,
           POSMchecked: true,
           personMet: true,
@@ -127,7 +128,7 @@ export async function GET(request: NextRequest) {
           }
         },
         orderBy: {
-          createdAt: 'desc'
+          visitDate: 'desc'
         }
       }),
 
@@ -214,8 +215,8 @@ export async function GET(request: NextRequest) {
       }
 
       // Format date to dd/mm/yyyy format
-      const visitDate = new Date(visit.createdAt);
-      const formattedVisitDate = `${visitDate.getDate().toString().padStart(2, '0')}/${(visitDate.getMonth() + 1).toString().padStart(2, '0')}/${visitDate.getFullYear()}`;
+      const visitDateObj = new Date(visit.visitDate || visit.createdAt);
+      const formattedVisitDate = `${visitDateObj.getDate().toString().padStart(2, '0')}/${(visitDateObj.getMonth() + 1).toString().padStart(2, '0')}/${visitDateObj.getFullYear()}`;
 
       return {
         id: visit.id, // Keep actual ObjectId for database operations

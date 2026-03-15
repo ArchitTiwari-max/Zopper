@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       }),
       prisma.brand.findMany({ select: { id: true, brandName: true } }),
       prisma.visit.findMany({
-        where: { executiveId: executive.id, createdAt: { gte: startDate, lte: now } },
+        where: { executiveId: executive.id, visitDate: { gte: startDate, lte: now } },
         select: { brandIds: true }
       }),
       // MongoDB provider does not support groupBy in Prisma. Use count queries instead.

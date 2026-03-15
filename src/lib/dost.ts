@@ -94,9 +94,10 @@ export async function getDostSuggestions(executiveId: string, opts?: { question?
     Promise.all(storeIds.map(async (storeId) => {
       const lastVisit = await prisma.visit.findFirst({
         where: { executiveId: executive.id, storeId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { visitDate: 'desc' },
         select: {
           id: true,
+          visitDate: true,
           createdAt: true,
           remarks: true,
           issues: { select: { status: true, details: true } }
@@ -152,9 +153,9 @@ export async function getDostSuggestions(executiveId: string, opts?: { question?
   }>()
 
   for (const { storeId, lastVisit } of visitsByStore) {
-    const days = daysBetween(lastVisit?.createdAt ?? null, now)
+    const days = daysBetween(lastVisit?.visitDate ?? lastVisit?.createdAt ?? null, now)
     storeSignals.set(storeId, {
-      lastVisitDate: lastVisit?.createdAt ?? undefined,
+      lastVisitDate: lastVisit?.visitDate ?? lastVisit?.createdAt ?? undefined,
       daysSinceLastVisit: days,
       remarks: lastVisit?.remarks ?? null,
       unresolvedIssueCount: lastVisit?.issues?.filter(i => i.status !== 'Resolved').length ?? 0,

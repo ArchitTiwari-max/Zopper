@@ -31,7 +31,7 @@ export async function GET(
       include: {
         visits: {
           orderBy: {
-            createdAt: 'desc'
+            visitDate: 'desc'
           },
           take: 1 // Get latest visit for any additional info if needed
         }

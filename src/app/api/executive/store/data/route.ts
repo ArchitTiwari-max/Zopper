@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
         include: {
           visits: {
             where: { executiveId: executive.id },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { visitDate: 'desc' },
             take: 1
           }
         }
@@ -95,9 +95,9 @@ export async function GET(request: NextRequest) {
 
       if (store.visits.length > 0) {
         const lastVisit = store.visits[0];
-        lastVisitDate = lastVisit.createdAt;
+        lastVisitDate = lastVisit.visitDate || lastVisit.createdAt;
         const now = new Date();
-        const visitDate = new Date(lastVisit.createdAt);
+        const visitDate = new Date(lastVisit.visitDate || lastVisit.createdAt);
         const diffDays = Math.floor(Math.abs(now.getTime() - visitDate.getTime()) / (1000 * 60 * 60 * 24));
 
         if (diffDays === 0) visitStatus = 'Today';

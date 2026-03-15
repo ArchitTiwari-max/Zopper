@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
           where: {
             storeId: { in: allStoreIds },
             executiveId: executive.id,
-            createdAt: { gte: start, lte: end },
+            visitDate: { gte: start, lte: end },
           },
           select: { storeId: true },
         }),

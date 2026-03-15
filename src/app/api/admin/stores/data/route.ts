@@ -137,11 +137,12 @@ export async function GET(request: NextRequest) {
         include: {
           visits: {
             orderBy: {
-              createdAt: 'desc' // Order visits by most recent first
+              visitDate: 'desc' // Order visits by most recent first
             },
             select: {
               id: true,
               executiveId: true,
+              visitDate: true,
               createdAt: true,
               status: true,
               executive: {
@@ -230,7 +231,7 @@ export async function GET(request: NextRequest) {
       prisma.visit.findMany({
         where: {
           storeId: { in: storeIds },
-          createdAt: {
+          visitDate: {
             gte: startDate,
             lte: now
           }
@@ -319,7 +320,7 @@ export async function GET(request: NextRequest) {
       let lastVisitDate: Date | null = null;
       if (store.visits.length > 0) {
         const recentVisit = store.visits[0];
-        lastVisitDate = new Date(recentVisit.createdAt);
+        lastVisitDate = new Date(recentVisit.visitDate || recentVisit.createdAt);
       }
 
       // Build {name,type} pairs aligned by index

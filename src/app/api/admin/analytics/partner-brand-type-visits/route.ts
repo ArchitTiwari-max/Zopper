@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
         by: ['storeId'],
         where: {
           storeId: { in: storeIds },
-          createdAt: { gte: start, lte: end },
+          visitDate: { gte: start, lte: end },
         },
         _count: {
           id: true,

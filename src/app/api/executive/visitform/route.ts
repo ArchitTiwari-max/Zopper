@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
         }
       },
       orderBy: {
-        createdAt: 'desc'
+        visitDate: 'desc'
       },
       take: 5
     });
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
           // Full data for current executive's visits
           return {
             id: visit.id,
-            date: visit.createdAt.toLocaleDateString('en-US', {
+            date: (visit.visitDate || visit.createdAt).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
               day: 'numeric'
@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
           // Limited data for other executives' visits - but include contact person and issues for coordination
           return {
             id: visit.id,
-            date: visit.createdAt.toLocaleDateString('en-US', {
+            date: (visit.visitDate || visit.createdAt).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
               day: 'numeric'
@@ -281,7 +281,7 @@ export async function POST(request: NextRequest) {
         executiveId: executive.id,
         storeId: storeId,
         brandIds: brandIds,
-        createdAt: visitDateTime // The actual date when the visit occurred
+        visitDate: visitDateTime // The actual date when the visit occurred
       },
       include: {
         store: true,
@@ -307,8 +307,7 @@ export async function POST(request: NextRequest) {
               id: uniqueIssueId,
               details: issueDetail.trim(),
               visitId: visit.id,
-              status: 'Pending', // Default status
-              createdAt: visitDateTime // Same date as the visit occurred
+              status: 'Pending' // Default status
             }
           });
           createdIssues.push({
@@ -326,6 +325,7 @@ export async function POST(request: NextRequest) {
         visit: {
           id: visit.id,
           status: visit.status,
+          visitDate: visit.visitDate,
           createdAt: visit.createdAt
         },
         issues: createdIssues

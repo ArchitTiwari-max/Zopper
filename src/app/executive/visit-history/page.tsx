@@ -290,7 +290,7 @@ const VisitHistory: React.FC = () => {
       case 'Status':
         return a.status.localeCompare(b.status);
       default: // Recent First
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return new Date(b.visitDate || b.createdAt).getTime() - new Date(a.visitDate || a.createdAt).getTime();
     }
   });
 
@@ -333,7 +333,7 @@ const VisitHistory: React.FC = () => {
           'Partner Brand': visit.partnerBrand || 'N/A',
           'Status': visit.status === 'PENDING_REVIEW' ? 'Pending Review' : (visit.reviewerName ? `Reviewed by ${visit.reviewerName}` : 'Reviewed'),
           'POSM Available': visit.POSMchecked === null ? 'Not specified' : (visit.POSMchecked ? 'Yes' : 'No'),
-          'Visit Date': formatDate(visit.createdAt),
+          'Visit Date': formatDate(visit.visitDate || visit.createdAt),
           'Person Met': visit.personMet && visit.personMet.length > 0
             ? visit.personMet.map((p, index) => `${index + 1}. ${p.name} (${p.designation})`).join('; ')
             : 'N/A',
@@ -760,7 +760,7 @@ const VisitHistory: React.FC = () => {
                         </td>
                         <td data-label="Date">
                           <div className="exec-visits-date-cell">
-                            <span className="exec-visits-date-table">{formatDate(visit.createdAt)}</span>
+                            <span className="exec-visits-date-table">{formatDate(visit.visitDate || visit.createdAt)}</span>
                           </div>
                         </td>
                         <td data-label="Action">

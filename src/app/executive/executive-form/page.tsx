@@ -18,6 +18,7 @@ interface PastVisit {
   imageUrls: string[];
   adminComment?: string;
   issues: VisitIssue[];
+  visitDate?: string;
   createdAt: string;
   updatedAt: string;
   storeName: string;
@@ -1415,7 +1416,7 @@ const ExecutiveFormContent: React.FC = () => {
                   <div key={visit.id} className="exec-f-sub-visit-item">
                     <div className="exec-f-sub-visit-header">
                       <div className="exec-f-sub-visit-date-status">
-                        <span className="exec-f-sub-visit-date">{formatDate(visit.createdAt)}</span>
+                        <span className="exec-f-sub-visit-date">{formatDate(visit.visitDate || visit.createdAt)}</span>
                         <span
                           className="exec-f-sub-visit-status"
                           style={{ backgroundColor: getStatusColor(visit.status) }}
@@ -1481,7 +1482,7 @@ const ExecutiveFormContent: React.FC = () => {
                   <div key={visit.id} className="exec-f-sub-visit-item">
                     <div className="exec-f-sub-visit-header">
                       <div className="exec-f-sub-visit-date-status">
-                        <span className="exec-f-sub-visit-date">{formatDate(visit.createdAt)}</span>
+                        <span className="exec-f-sub-visit-date">{formatDate(visit.visitDate || visit.createdAt)}</span>
                         <span
                           className="exec-f-sub-visit-status"
                           style={{ backgroundColor: getStatusColor(visit.status) }}

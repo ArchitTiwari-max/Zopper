@@ -6,7 +6,8 @@ const XLSX = require('xlsx');
 const path = require('path');
 
 // MongoDB connection string from environment or default
-const mongoUri = process.env.DATABASE_URL || "mongodb+srv://zoppertrack:1YplhDwwA8lL6Fq8@cluster0.zfkavqf.mongodb.net/zoppertrack?retryWrites=true&w=majority&appName=Cluster0";
+const mongoUri = process.env.DATABASE_URL;
+if (!mongoUri) { console.error('❌ DATABASE_URL env variable not set'); process.exit(1); }
 
 async function exportStoreData() {
   let client;

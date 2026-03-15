@@ -2,9 +2,11 @@
 // Export from: zoppertrack
 // Import to: zoppertrack_dev
 
-// Source and target connection strings
-const sourceUri = "mongodb+srv://zoppertrack:1YplhDwwA8lL6Fq8@cluster0.zfkavqf.mongodb.net/zoppertrack?retryWrites=true&w=majority&appName=Cluster0";
-const targetUri = "mongodb+srv://zoppertrack:1YplhDwwA8lL6Fq8@cluster0.zfkavqf.mongodb.net/zoppertrack_dev?retryWrites=true&w=majority&appName=Cluster0";
+// Source and target connection strings - set via environment variables
+const sourceUri = process.env.SOURCE_DATABASE_URL || process.env.DATABASE_URL;
+const targetUri = process.env.TARGET_DATABASE_URL;
+if (!sourceUri) { console.error('❌ SOURCE_DATABASE_URL or DATABASE_URL env variable not set'); process.exit(1); }
+if (!targetUri) { console.error('❌ TARGET_DATABASE_URL env variable not set'); process.exit(1); }
 
 async function migrateVisits() {
   console.log('🚀 Starting Visit collection migration...');

@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     // Build where clause with date filtering
     const whereClause: any = {
       executiveId: executive.id,
-      createdAt: {
+      visitDate: {
         gte: startDate
       }
     };
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     if (period === 'Last Month') {
       const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-      whereClause.createdAt = {
+      whereClause.visitDate = {
         gte: lastMonth,
         lte: lastMonthEnd
       };
@@ -99,6 +99,7 @@ export async function GET(request: NextRequest) {
         imageUrls: true,
         adminComment: true,
         brandIds: true,
+        visitDate: true,
         createdAt: true,
         updatedAt: true,
         reviewedAt: true,
@@ -143,7 +144,7 @@ export async function GET(request: NextRequest) {
         }
       },
       orderBy: {
-        createdAt: 'desc'
+        visitDate: 'desc'
       },
       skip: skip,
       take: limit
@@ -183,7 +184,7 @@ export async function GET(request: NextRequest) {
       remarks: visit.remarks,
       imageUrls: visit.imageUrls,
       adminComment: visit.adminComment,
-      date: visit.createdAt.toLocaleDateString('en-US', {
+      date: (visit.visitDate || visit.createdAt).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
@@ -203,6 +204,7 @@ export async function GET(request: NextRequest) {
             executiveName: assignment.executive?.name || 'Unknown Executive'
           }))
       })),
+      visitDate: visit.visitDate,
       createdAt: visit.createdAt,
       updatedAt: visit.updatedAt
     }));
