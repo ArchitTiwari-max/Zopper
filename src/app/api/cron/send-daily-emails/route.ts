@@ -23,7 +23,7 @@ export async function GET(req: Request) {
     // Fetch all visits for today (only from active executives)
     const visits = await prisma.visit.findMany({
       where: {
-        createdAt: {
+        visitDate: {
           gte: today,
           lt: tomorrow,
         },

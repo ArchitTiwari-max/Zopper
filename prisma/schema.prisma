@@ -217,6 +217,7 @@ model AdminVisit {
   POSMchecked       Boolean?   @map("displayChecked")
   remarks           String?
   imageUrls         String[]
+  visitDate         DateTime?  // Actual date of the visit (set by admin)
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
 
@@ -228,7 +229,7 @@ model AdminVisit {
   store             Store      @relation(fields: [storeId], references: [id])
   brandIds          String[]
 
-  @@index([adminId, createdAt])
+  @@index([adminId, visitDate])
   @@index([storeId])
 }
 

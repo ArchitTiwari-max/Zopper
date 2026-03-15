@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
         // Get last 5 visits for this store by ANY admin or executive
         const [adminVisitsRaw, executiveVisitsRaw] = await Promise.all([
-            prisma.adminVisit.findMany({
+            (prisma as any).adminVisit.findMany({
                 where: { storeId: storeId },
                 include: { store: true, admin: { include: { user: true } } },
                 orderBy: { createdAt: 'desc' },
@@ -47,21 +47,25 @@ export async function GET(request: NextRequest) {
                         }
                     }
                 },
-                orderBy: { createdAt: 'desc' },
+                orderBy: { visitDate: 'desc' },
                 take: 5
             })
         ]);
 
         const allVisits = [
-            ...adminVisitsRaw.map(v => ({ ...v, submitterType: 'ADMIN' as const })),
-            ...executiveVisitsRaw.map(v => ({ ...v, submitterType: 'EXECUTIVE' as const }))
-        ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 5);
+            ...adminVisitsRaw.map((v: any) => ({ ...v, submitterType: 'ADMIN' as const })),
+            ...executiveVisitsRaw.map((v: any) => ({ ...v, submitterType: 'EXECUTIVE' as const }))
+        ].sort((a, b) => {
+            const aDate = (a as any).visitDate || a.createdAt;
+            const bDate = (b as any).visitDate || b.createdAt;
+            return new Date(bDate).getTime() - new Date(aDate).getTime();
+        }).slice(0, 5);
 
         const transformedVisits = allVisits.map(visit => {
             if (visit.submitterType === 'ADMIN') {
                 return {
                     id: visit.id,
-                    date: visit.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                    date: ((visit as any).visitDate || visit.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
                     status: 'REVIEWD',
                     representative: (visit as any).admin?.name ? `${(visit as any).admin.name} (Admin)` : 'Unknown Admin',
                     canViewDetails: true,
@@ -78,7 +82,7 @@ export async function GET(request: NextRequest) {
             } else {
                 return {
                     id: visit.id,
-                    date: visit.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                    date: ((visit as any).visitDate || visit.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
                     status: (visit as any).status,
                     representative: (visit as any).executive?.name || 'Unknown Executive',
                     canViewDetails: true, // Admins can view all executive details
@@ -176,7 +180,7 @@ export async function POST(request: NextRequest) {
 
         const visitDateTime = new Date(visitDate + 'T00:00:00.000Z');
 
-        const visit = await prisma.adminVisit.create({
+        const visit = await (prisma as any).adminVisit.create({
             data: {
                 personMet: personMet,
                 POSMchecked: POSMchecked,
@@ -185,7 +189,7 @@ export async function POST(request: NextRequest) {
                 adminId: admin.id,
                 storeId: storeId,
                 brandIds: brandIds,
-                createdAt: visitDateTime
+                visitDate: visitDateTime
             },
             include: {
                 store: true,
@@ -198,6 +202,7 @@ export async function POST(request: NextRequest) {
             data: {
                 visit: {
                     id: visit.id,
+                    visitDate: visit.visitDate,
                     createdAt: visit.createdAt
                 }
             }
