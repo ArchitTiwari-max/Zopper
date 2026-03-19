@@ -1,5 +1,5 @@
-import 'dotenv/config';
-import { sendRewards } from './src/lib/benepik.js';
+require('dotenv').config();
+const { sendRewards } = require('./src/lib/benepik');
 
 async function sendTestReward() {
   try {
