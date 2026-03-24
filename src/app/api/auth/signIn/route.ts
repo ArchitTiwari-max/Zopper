@@ -44,6 +44,14 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    // Check if user account is active
+    if (!user.isActive) {
+      return NextResponse.json(
+        { error: 'Your account has been deactivated. Please contact admin.' },
+        { status: 403 }
+      );
+    }
     
     
     // Use the user's email from database for OTP
