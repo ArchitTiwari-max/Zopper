@@ -1,0 +1,55 @@
+{
+  "brands": [
+    {
+      "id": "brand_001",
+      "brandName": "Godrej"
+    },
+    {
+      "id": "brand_002",
+      "brandName": "Samsung"
+    },
+    {
+      "id": "brand_010",
+      "brandName": "Havells"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat_001",
+      "categoryName": "AC"
+    },
+    {
+      "id": "cat_002",
+      "categoryName": "Laptop"
+    },
+    {
+      "id": "cat_003",
+      "categoryName": "Others"
+    },
+    {
+      "id": "cat_004",
+      "categoryName": "Refrigerator"
+    },
+    {
+      "id": "cat_005",
+      "categoryName": "SmartWatch"
+    },
+    {
+      "id": "cat_006",
+      "categoryName": "Smartphone"
+    },
+    {
+      "id": "cat_007",
+      "categoryName": "Tab"
+    },
+    {
+      "id": "cat_008",
+      "categoryName": "Washing Machine"
+    }
+  ],
+  "summary": {
+    "totalBrands": 3,
+    "totalCategories": 8,
+    "exportedAt": "2026-03-26T05:24:10.507Z"
+  }
+}
