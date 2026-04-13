@@ -17,6 +17,7 @@ interface VisitDetail {
   reviewerName?: string;
   personMet: PersonMet[];
   date: string;
+  visitDate?: string;
   POSMchecked: boolean | null;
   remarks?: string;
   imageUrls: string[];

@@ -9,6 +9,7 @@ import './ExecutiveForm.css';
 interface PastVisit {
   id: string;
   date: string;
+  visitDate?: string;
   status: 'PENDING_REVIEW' | 'REVIEWD';
   representative: string;
   canViewDetails: boolean;
