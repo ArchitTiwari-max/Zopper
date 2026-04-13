@@ -531,6 +531,7 @@ const AdminStoresPage: React.FC = () => {
   const getBrandColor = (brand: string): string => {
     const brandColors: Record<string, string> = {
       'Samsung': '#1DB584',
+      'Hitachi': '#2563EB',
       'Vivo': '#8B5CF6',
       'Oppo': '#F97316',
       'OnePlus': '#1DB584',
@@ -601,7 +602,7 @@ const AdminStoresPage: React.FC = () => {
     const rows = filteredStores.map((s) => {
       const pbPairs = (s as any).partnerBrandPairs as Array<{ id: string; name: string; type?: string | null }> | undefined;
       const partnerBrandsCombined = Array.isArray(pbPairs) && pbPairs.length > 0
-        ? pbPairs.map(pb => `${pb.name}${pb.type ? ` (${pb.type === 'A_PLUS' ? 'A+' : pb.type})` : ''}`).join(', ')
+        ? pbPairs.map(pb => `${pb.name} (${pb.type ? (pb.type === 'A_PLUS' ? 'A+' : pb.type) : 'Not Categorized'})`).join(', ')
         : s.partnerBrands.join(', ');
 
       return [
@@ -1117,7 +1118,7 @@ const AdminStoresPage: React.FC = () => {
                           className="admin-stores-brand-tag"
                           style={{ backgroundColor: getBrandColor(pb.name) }}
                         >
-                          {pb.name}{pb.type ? ` (${pb.type === 'A_PLUS' ? 'A+' : pb.type})` : ''}
+                          {pb.name} ({pb.type ? (pb.type === 'A_PLUS' ? 'A+' : pb.type) : 'Not Categorized'})
                         </span>
                       ))
                     ) : (
