@@ -312,6 +312,33 @@ const StorewiseExcelImport = () => {
     addConsoleLog('info', '📅 Excel template downloaded successfully');
   };
 
+  const exportStores = async () => {
+    try {
+      addConsoleLog('info', '📤 Starting store export...');
+      
+      const response = await fetch('/api/admin/excel-export/stores');
+      
+      if (!response.ok) {
+        throw new Error('Failed to export stores');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `stores-export-${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      addConsoleLog('success', '✅ Stores exported successfully');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to export stores';
+      addConsoleLog('error', `❌ Export failed: ${errorMessage}`);
+    }
+  };
+
   return (
     <div className="excel-stor-sale-import-container">
       <div className="excel-stor-sale-import-card">
@@ -335,17 +362,23 @@ const StorewiseExcelImport = () => {
           </p>
         </div>
 
-        {/* Template Download */}
+        {/* Template Download & Export */}
         <div className="excel-stor-sale-template-section">
           <div className="excel-stor-sale-template-content">
             <div className="excel-stor-sale-template-info">
-              <h3>Need a template?</h3>
-              <p>Download the Excel template with the correct format for store imports</p>
+              <h3>Manage Store Data</h3>
+              <p>Download template or export existing stores with the same format</p>
             </div>
-            <button onClick={downloadTemplate} className="excel-stor-sale-template-button">
-              <Download size={16} />
-              <span style={{ marginLeft: '0.5rem' }}>Download Template</span>
-            </button>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={downloadTemplate} className="excel-stor-sale-template-button">
+                <Download size={16} />
+                <span style={{ marginLeft: '0.5rem' }}>Download Template</span>
+              </button>
+              <button onClick={exportStores} className="excel-stor-sale-template-button" style={{ backgroundColor: '#0891b2', borderColor: '#0891b2' }}>
+                <Download size={16} />
+                <span style={{ marginLeft: '0.5rem' }}>Export Stores</span>
+              </button>
+            </div>
           </div>
         </div>
 
