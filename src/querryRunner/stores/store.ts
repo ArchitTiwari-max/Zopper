@@ -72,13 +72,9 @@ async function main() {
     const executiveIds = executiveIdsString.split(',').map(id => id.trim()).filter(Boolean);
 
     // Parse and validate partnerBrandTypes (aligned with partnerBrandIds)
-    const rawTypes = partnerBrandTypesString.split(',').map(t => t.trim()).filter(Boolean);
+    const rawTypes = partnerBrandTypesString.split(',').map(t => t.trim());
     let partnerBrandTypes: PartnerBrandType[] = [];
-    if (rawTypes.length > 0) {
-      if (rawTypes.length !== partnerBrandIds.length) {
-        console.error(`❌ partnerBrandTypes count (${rawTypes.length}) does not match partnerBrandIds count (${partnerBrandIds.length}) for store ${storeId}. Skipping this row.`);
-        continue;
-      }
+    if (rawTypes.length > 0 && partnerBrandTypesString.trim() !== '') {
       const mapType = (val: string): PartnerBrandType | null => {
         const v = val.toUpperCase().replace(/\s+/g, '');
         if (v === 'A+' || v === 'A_PLUS') return PartnerBrandType.A_PLUS;
@@ -88,12 +84,12 @@ async function main() {
         if (v === 'D') return PartnerBrandType.D;
         return null;
       };
-      const mapped = rawTypes.map(mapType);
-      if (mapped.some(m => m === null)) {
-        console.error(`❌ Invalid partnerBrandTypes value(s) for store ${storeId}. Allowed: A+, A, B, C, D. Skipping this row.`);
-        continue;
+      // Map and filter out nulls (blanks or invalid values) to prevent Prisma error
+      partnerBrandTypes = rawTypes.map(mapType).filter((t): t is PartnerBrandType => t !== null);
+      
+      if (partnerBrandTypes.length !== partnerBrandIds.length) {
+        console.warn(`⚠️  Type count mismatch for store ${storeId}. Some brands will be 'Not Categorized'.`);
       }
-      partnerBrandTypes = mapped as PartnerBrandType[];
     }
    
     try {

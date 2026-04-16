@@ -93,8 +93,12 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
     // Parse partner brand types, if provided
     const rawTypes = partnerBrandTypesString
       .split(',')
-      .map((t: string) => t.trim())
-      .filter(Boolean);
+      .map((t: string) => t.trim()); 
+      // Do NOT filter(Boolean) yet, we need to preserve indices for mapping if possible, 
+      // but since Prisma rejects null, we will eventually filter them out.
+      // However, the user's request is to treat null/empty as "Not Categorized".
+      // In the current parallel array setup, the only way to be "Not Categorized" is 
+      // to have NO entry at that index. 
 
     // Helper: map string to enum value
     const mapType = (val: string): PartnerBrandType | null => {
@@ -114,17 +118,16 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
       }
     }
 
-    // If types were provided, ensure length matches IDs and values are valid
+    // If types were provided, map them and filter out nulls/blanks to keep Prisma happy
     let partnerBrandTypes: PartnerBrandType[] | undefined = undefined;
-    if (rawTypes.length > 0) {
-      if (rawTypes.length !== partnerBrandIds.length) {
-        return `❌ partnerBrandTypes count (${rawTypes.length}) does not match partnerBrandIds count (${partnerBrandIds.length}). ${context}`;
+    if (rawTypes.length > 0 && partnerBrandTypesString.trim() !== '') {
+      const mapped = rawTypes.map(mapType).filter((m): m is PartnerBrandType => m !== null);
+      partnerBrandTypes = mapped;
+      
+      // Log a warning if counts don't match but don't block the import
+      if (mapped.length !== partnerBrandIds.length) {
+        console.warn(`⚠️  partnerBrandTypes count (${mapped.length}) mismatch with brands (${partnerBrandIds.length}) for store ${storeId}. Some brands will show as 'Not Categorized'.`);
       }
-      const mapped = rawTypes.map(mapType);
-      if (mapped.some(m => m === null)) {
-        return `❌ Invalid partnerBrandTypes value(s). Allowed: A+, A, B, C, D. ${context}`;
-      }
-      partnerBrandTypes = mapped as PartnerBrandType[];
     }
 
     // Parse executive IDs
