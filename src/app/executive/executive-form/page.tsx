@@ -158,8 +158,8 @@ const ExecutiveFormContent: React.FC = () => {
         const parsedData = JSON.parse(savedData);
         setFormData({
           ...parsedData,
-          // Only set default visitDate if no saved visitDate exists
-          visitDate: parsedData.visitDate || defaultVisitDate
+          // Always override visitDate with today's IST date, ignoring stale saved dates
+          visitDate: defaultVisitDate
         });
       } catch (error) {
         console.error('Error loading saved form data:', error);
