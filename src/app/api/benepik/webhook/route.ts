@@ -32,6 +32,10 @@ function getProjectWebhookUrl(entityId: string): string {
       localhost: 'http://localhost:3001/api/webhooks/benepik',
       production: 'https://salesdost.com/api/webhooks/benepik',
     },
+    '4831': {
+      localhost: 'http://localhost:3002/api/webhooks/benepik',
+      production: 'https://salessathi.com/api/webhooks/benepik',
+    },
   };
 
   const config = entityIdToProjectMap[entityId];
