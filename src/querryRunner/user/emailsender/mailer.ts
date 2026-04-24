@@ -50,7 +50,7 @@ export async function sendMail(to: string, subject: string, html: string) {
  * @param visitData Array of visit data with executive name, stores (comma-separated), and total visit count
  */
 export async function sendDailyVisitSummaryToAdmins(
-  visitData: Array<{ executiveId: string; executiveName: string; storeName: string; visitCount: number }>
+  visitData: Array<{ executiveId: string; executiveName: string; storeName: string; visitCount: number; pjpStoreNames: string }>
 ) {
   const adminEmails = [
     'vishal.shukla@zopper.com',
@@ -75,6 +75,7 @@ export async function sendDailyVisitSummaryToAdmins(
   let tableRows = '';
   visitData.forEach((visit, index) => {
     let storesList = '';
+    let pjpStoresList = '';
     
     if (visit.storeName.trim()) {
       // Convert delimiter-separated stores to bullet list
@@ -87,12 +88,28 @@ export async function sendDailyVisitSummaryToAdmins(
       storesList = '<li style="margin: 4px 0; color: #999;">No visits recorded</li>';
     }
 
+    if (visit.pjpStoreNames && visit.pjpStoreNames.trim()) {
+      // Convert delimiter-separated PJP stores to bullet list
+      const pjpStores = visit.pjpStoreNames.split('|||').map(s => s.trim());
+      pjpStoresList = pjpStores
+        .map(store => `<li style="margin: 4px 0;">${store}</li>`)
+        .join('');
+    } else {
+      // No PJP recorded
+      pjpStoresList = '<li style="margin: 4px 0; color: #999;">No PJP submitted</li>';
+    }
+
     tableRows += `
       <tr style="background-color: ${index % 2 === 0 ? '#f9f9f9' : '#ffffff'}; vertical-align: top;">
         <td style="padding: 12px; border: 1px solid #ddd;">${visit.executiveName}</td>
         <td style="padding: 12px; border: 1px solid #ddd;">
           <ul style="margin: 0; padding-left: 20px;">
             ${storesList}
+          </ul>
+        </td>
+        <td style="padding: 12px; border: 1px solid #ddd;">
+          <ul style="margin: 0; padding-left: 20px;">
+            ${pjpStoresList}
           </ul>
         </td>
         <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: #667eea;">
@@ -134,7 +151,8 @@ export async function sendVisitNotificationToExecutive(
   executiveEmail: string,
   executiveName: string,
   storeName: string,
-  todayVisitCount: number
+  todayVisitCount: number,
+  pjpStoreName: string = ''
 ) {
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
@@ -144,18 +162,21 @@ export async function sendVisitNotificationToExecutive(
   });
 
   // Parse stores from delimiter-separated string and format as HTML list
-  const formatStoresList = (stores: string): string => {
-    if (!stores.trim()) {
-      return 'No visits recorded';
+  const formatStoresList = (stores: string, noDataText: string = 'No visits recorded'): string => {
+    if (!stores || !stores.trim()) {
+      return noDataText;
     }
     const storeArray = stores.split('|||').map(s => s.trim()).filter(s => s);
     if (storeArray.length === 0) {
-      return 'No visits recorded';
+      return noDataText;
     }
-    return storeArray
+    return `<ul style="margin: 0; padding-left: 20px;">` + storeArray
       .map(store => `<li style="margin: 6px 0; line-height: 1.5;">${store}</li>`)
-      .join('');
+      .join('') + `</ul>`;
   };
+
+  const storesListHtml = formatStoresList(storeName);
+  const pjpStoresListHtml = formatStoresList(pjpStoreName, 'No PJP submitted');
 
   let html = '';
   
@@ -163,20 +184,21 @@ export async function sendVisitNotificationToExecutive(
     // No visits - show a different message
     html = visitNotificationTemplate
       .replace('{{HEADER_TITLE}}', 'No Visits Recorded')
-      .replace('{{STATUS_MESSAGE}}', 'No visits have been recorded by you.')
+      .replace('{{STATUS_MESSAGE}}', 'No visits have been recorded by you today.')
       .replace('{{EXECUTIVE_NAME}}', executiveName)
-      .replace(/{{STORE_NAME}}/g, 'No visits recorded')
+      .replace(/{{STORE_NAME}}/g, storesListHtml)
+      .replace(/{{PJP_STORES}}/g, pjpStoresListHtml)
       .replace(/{{DATE}}/g, today)
       .replace('{{TOTAL_VISITS}}', '0')
       .replace('{{FOOTER_MESSAGE}}', 'Keep pushing towards your goals and targets.');
   } else {
     // Has visits - show normal message with formatted store list
-    const storesListHtml = formatStoresList(storeName);
     html = visitNotificationTemplate
       .replace('{{HEADER_TITLE}}', 'Visit Recorded')
       .replace('{{STATUS_MESSAGE}}', 'Your visits have been successfully recorded in the system.')
       .replace('{{EXECUTIVE_NAME}}', executiveName)
-      .replace(/{{STORE_NAME}}/g, `<ul style="margin: 0; padding-left: 20px;">${storesListHtml}</ul>`)
+      .replace(/{{STORE_NAME}}/g, storesListHtml)
+      .replace(/{{PJP_STORES}}/g, pjpStoresListHtml)
       .replace(/{{DATE}}/g, today)
       .replace('{{TOTAL_VISITS}}', todayVisitCount.toString())
       .replace('{{FOOTER_MESSAGE}}', 'Thank you for your consistent performance.');
@@ -186,6 +208,6 @@ export async function sendVisitNotificationToExecutive(
     ? `📋 No visits recorded` 
     : `🎯 Visit Recorded - ${todayVisitCount} store${todayVisitCount > 1 ? 's' : ''}`;
 
-  await sendMail(executiveEmail, subject, html);
+   await sendMail(executiveEmail, subject, html);
   console.log(`✅ Email sent to ${executiveName} (${executiveEmail}) - Visits: ${todayVisitCount}`);
 }

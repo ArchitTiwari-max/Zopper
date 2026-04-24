@@ -11,21 +11,31 @@ export async function GET(req: Request) {
       return Response.json({ success: true, message: 'Skipped - Sunday' });
     }
 
-    // Get today's date range (00:00:00 to 23:59:59)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Logic for PJP (Visit Plan) created before 12 PM IST
+    const now = new Date();
+    // Convert current time to IST to find out what "today" is in India
+    const istNow = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+    const todayStr = istNow.toISOString().split('T')[0]; // e.g., "2026-04-24"
     
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // In the DB, visitDate is stored as "YYYY-MM-DDT00:00:00.000Z"
+    const todayVisitDateStart = new Date(todayStr + 'T00:00:00.000Z');
+    const tomorrowVisitDateStart = new Date(todayVisitDateStart);
+    tomorrowVisitDateStart.setDate(tomorrowVisitDateStart.getDate() + 1);
+    
+    // 12:00 PM IST is 06:30 AM UTC on the same day
+    const utcToday12Noon = new Date(todayVisitDateStart.getTime() + 6.5 * 60 * 60 * 1000);
 
-    console.log(`📅 Fetching visits for ${today.toDateString()}`);
+    console.log(`📅 Current Time (UTC): ${now.toISOString()}`);
+    console.log(`📅 Today (IST): ${todayStr}`);
+    console.log(`📅 Querying visits with visitDate: ${todayVisitDateStart.toISOString()}`);
+    console.log(`📅 PJP Cutoff (IST 12 PM): ${utcToday12Noon.toISOString()}`);
 
     // Fetch all visits for today (only from active executives)
     const visits = await prisma.visit.findMany({
       where: {
         visitDate: {
-          gte: today,
-          lt: tomorrow,
+          gte: todayVisitDateStart,
+          lt: tomorrowVisitDateStart,
         },
         executive: {
           user: {
@@ -43,7 +53,23 @@ export async function GET(req: Request) {
       },
     });
 
-    console.log(`� Found ${visits.length} visits`);
+    // Fetch PJPs for today submitted before 12 PM IST
+    const visitPlans = await prisma.visitPlan.findMany({
+      where: {
+        plannedVisitDate: {
+          gte: todayVisitDateStart,
+          lt: tomorrowVisitDateStart,
+        },
+        submittedAt: {
+          lte: utcToday12Noon,
+        }
+      },
+      orderBy: {
+        submittedAt: 'desc'
+      }
+    });
+
+    console.log(`🔍 Found ${visits.length} visits and ${visitPlans.length} PJPs`);
 
     // Fetch all active executives
     const allExecutives = await prisma.executive.findMany({
@@ -59,10 +85,10 @@ export async function GET(req: Request) {
 
     console.log(`👥 Total executives: ${allExecutives.length}`);
 
-    // Group visits by executive
+    // Group visits and PJPs by executive
     const executiveVisits = new Map();
     
-    // Initialize all executives with 0 visits
+    // Initialize all executives with 0 visits and empty PJP
     allExecutives.forEach((exec) => {
       executiveVisits.set(exec.id, {
         executiveId: exec.id,
@@ -70,6 +96,7 @@ export async function GET(req: Request) {
         executiveEmail: exec.user.email,
         stores: [],
         visitCount: 0,
+        pjpStores: [],
       });
     });
 
@@ -84,13 +111,27 @@ export async function GET(req: Request) {
       }
     });
 
+    // Add PJP stores to the map (latest one per executive)
+    const seenExecs = new Set();
+    visitPlans.forEach((plan) => {
+      if (!seenExecs.has(plan.executiveId)) {
+        seenExecs.add(plan.executiveId);
+        const data = executiveVisits.get(plan.executiveId);
+        if (data && plan.storesSnapshot) {
+          const snapshot = plan.storesSnapshot as any[];
+          data.pjpStores = snapshot.map(s => s.storeName);
+        }
+      }
+    });
+
     // Send to each executive
     for (const [, executiveData] of executiveVisits) {
       await sendVisitNotificationToExecutive(
         executiveData.executiveEmail,
         executiveData.executiveName,
         executiveData.stores.join('|||'),
-        executiveData.visitCount
+        executiveData.visitCount,
+        executiveData.pjpStores.join('|||')
       );
     }
 
@@ -101,6 +142,7 @@ export async function GET(req: Request) {
         executiveName: data.executiveName,
         storeName: data.stores.join('|||'),
         visitCount: data.visitCount,
+        pjpStoreNames: data.pjpStores.join('|||'),
       }))
       .sort((a, b) => b.visitCount - a.visitCount); // Sort by visitCount descending
 
@@ -109,7 +151,8 @@ export async function GET(req: Request) {
     return Response.json({ 
       success: true, 
       executivesNotified: executiveVisits.size,
-      totalVisits: visits.length
+      totalVisits: visits.length,
+      totalPJPs: visitPlans.length
     });
   } catch (error) {
     console.error('❌ Error:', error);
