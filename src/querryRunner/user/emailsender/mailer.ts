@@ -158,12 +158,12 @@ export async function sendDailyPJPSummaryToAdmins(
 ) {
   const adminEmails = [
     'vishal.shukla@zopper.com',
-    // 'bharat.kumar@zopper.com',
-    // 'vikash.dubey@zopper.com',
-    // 'amit.srivastava@zopper.com',
-    // 'archit.tiwari@zopper.com',
-    // 'harshdeep.singh@zopper.com',
-    // 'assurance.tech@zopper.com'
+    'bharat.kumar@zopper.com',
+    'vikash.dubey@zopper.com',
+    'amit.srivastava@zopper.com',
+    'archit.tiwari@zopper.com',
+    'harshdeep.singh@zopper.com',
+    'assurance.tech@zopper.com'
   ];
 
   const today = new Date().toLocaleDateString('en-IN', {
