@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
+  <style>
+    @media only screen and (max-width: 600px) {
+      body { padding: 10px !important; }
+      .container { padding: 15px !important; }
+      h1 { font-size: 20px !important; }
+      h2 { font-size: 16px !important; }
+      .box { padding: 15px !important; margin: 15px 0 !important; }
+      p { font-size: 14px !important; }
+    }
+  </style>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div class="header" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 28px;">📅 Today's Visit Plan (PJP)</h1>
+    <p style="color: #f0f0f0; margin: 10px 0 0 0; font-size: 16px;">{{DATE}}</p>
+  </div>
+  
+  <div class="container" style="background-color: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
+    <h2 style="color: #38a169; margin-top: 0;">Hello {{EXECUTIVE_NAME}},</h2>
+    
+    <p style="font-size: 16px; color: #555;">{{STATUS_MESSAGE}}</p>
+    
+    <div class="box" style="background-color: #f0fff4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #48bb78;">
+      <h3 style="margin: 0 0 15px 0; color: #38a169; font-size: 16px;">Your Planned Stores</h3>
+      <div style="margin: 8px 0; font-size: 15px;">
+        {{PJP_STORES}}
+      </div>
+    </div>
+
+    <div style="margin-top: 30px; padding: 20px; background-color: #fffaf0; border: 1px solid #feebc8; border-radius: 8px;">
+      <h3 style="margin: 0 0 15px 0; color: #c05621; font-size: 16px; border-bottom: 1px solid #feebc8; padding-bottom: 8px;">📢 Important Guidelines (Visit & PJP Rules)</h3>
+      
+      <div style="margin-bottom: 15px;">
+        <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold; color: #7b341e;">1. PJP (Visit Plan) Submission</p>
+        <p style="margin: 8px 0 5px 0; font-size: 13px; color: #555;"><strong>Time Limit (Updated):</strong><br>For any visit date you select, the Daily Visit Plan (PJP) must be submitted before 12:00 PM (IST) on that same date.</p>
+        <p style="margin: 8px 0 5px 0; font-size: 13px; color: #555;"><strong>Note:</strong><br>If the plan is submitted after 12:00 PM of the selected visit date, it will not be reflected in the "PJP" column of the daily summary report.</p>
+        <p style="margin: 8px 0 0 0; font-size: 13px; color: #555;"><strong>Best Practice:</strong><br>It is recommended to submit the next day’s plan one day in advance (in the evening) to avoid any delays.</p>
+      </div>
+
+      <div style="border-top: 1px dashed #feebc8; margin: 15px 0; padding-top: 15px;">
+        <p style="margin: 0 0 5px 0; font-size: 14px; font-weight: bold; color: #7b341e;">2. Summary Report</p>
+        <p style="margin: 8px 0 5px 0; font-size: 13px; color: #555;">In the daily report shared with admins, the following comparison will be tracked:</p>
+        <ul style="margin: 5px 0; padding-left: 20px; font-size: 13px; color: #555;">
+          <li>What you planned before 12:00 PM</li>
+          <li>The actual number of visits completed during the day</li>
+        </ul>
+        <p style="margin: 8px 0 0 0; font-size: 13px; color: #555;">This helps in evaluating planning vs execution performance.</p>
+      </div>
+    </div>
+    
+    <div style="margin-top: 25px; padding: 15px; background-color: #f0fff4; border-radius: 4px; text-align: center; border-left: 4px solid #38a169;">
+      <p style="margin: 0; font-size: 14px; color: #38a169;">
+        {{FOOTER_MESSAGE}}
+      </p>
+    </div>
+  </div>
+  
+  <div style="text-align: center; margin-top: 20px; color: #888; font-size: 12px;">
+    <p>This is an automated email from SalesDost. Please do not reply.</p>
+  </div>
+</body>
+</html>

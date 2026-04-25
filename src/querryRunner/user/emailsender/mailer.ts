@@ -12,6 +12,16 @@ const dailyVisitSummaryTemplate = fs.readFileSync(
   'utf-8'
 );
 
+const dailyPJPSummaryTemplate = fs.readFileSync(
+  path.join(process.cwd(), 'public/email-templates/dailyPJPSummary.html'),
+  'utf-8'
+);
+
+const pjpNotificationTemplate = fs.readFileSync(
+  path.join(process.cwd(), 'public/email-templates/pjpNotification.html'),
+  'utf-8'
+);
+
 const visitNotificationTemplate = fs.readFileSync(
   path.join(process.cwd(), 'public/email-templates/visitNotification.html'),
   'utf-8'
@@ -140,6 +150,79 @@ export async function sendDailyVisitSummaryToAdmins(
 }
 
 /**
+ * Send daily PJP summary (Planned visits only) to admins
+ * @param pjpData Array of PJP data with executive name and planned stores
+ */
+export async function sendDailyPJPSummaryToAdmins(
+  pjpData: Array<{ executiveName: string; pjpStoreNames: string }>
+) {
+  const adminEmails = [
+    'vishal.shukla@zopper.com',
+    // 'bharat.kumar@zopper.com',
+    // 'vikash.dubey@zopper.com',
+    // 'amit.srivastava@zopper.com',
+    // 'archit.tiwari@zopper.com',
+    // 'harshdeep.singh@zopper.com',
+    // 'assurance.tech@zopper.com'
+  ];
+
+  const today = new Date().toLocaleDateString('en-IN', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  // Create HTML table for all PJPs
+  let tableRows = '';
+  if (pjpData.length === 0) {
+    tableRows = `
+      <tr>
+        <td colspan="2" style="padding: 20px; border: 1px solid #ddd; text-align: center; color: #666; font-style: italic;">
+          No PJP created by any executive.
+        </td>
+      </tr>
+    `;
+  } else {
+    pjpData.forEach((pjp, index) => {
+      let pjpStoresList = '';
+      
+      if (pjp.pjpStoreNames && pjp.pjpStoreNames.trim()) {
+        const pjpStores = pjp.pjpStoreNames.split('|||').map(s => s.trim());
+        pjpStoresList = pjpStores
+          .map(store => `<li style="margin: 4px 0;">${store}</li>`)
+          .join('');
+      } else {
+        pjpStoresList = '<li style="margin: 4px 0; color: #999;">No PJP submitted</li>';
+      }
+
+      tableRows += `
+        <tr style="background-color: ${index % 2 === 0 ? '#f9f9f9' : '#ffffff'}; vertical-align: top;">
+          <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold;">${pjp.executiveName}</td>
+          <td style="padding: 12px; border: 1px solid #ddd;">
+            <ul style="margin: 0; padding-left: 20px;">
+              ${pjpStoresList}
+            </ul>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  const html = dailyPJPSummaryTemplate
+    .replace('{{DATE}}', today)
+    .replace('{{TABLE_ROWS}}', tableRows);
+
+  const subject = `📅 Daily PJP Summary (Planned) - ${today}`;
+
+  for (const adminEmail of adminEmails) {
+    await sendMail(adminEmail, subject, html);
+  }
+
+  console.log(`✅ Daily PJP summary sent to ${adminEmails.length} admins`);
+}
+
+/**
  * Send visit notification to individual executive
  * This function sends the executive their own visit details
  * @param executiveEmail Executive's email address
@@ -211,3 +294,58 @@ export async function sendVisitNotificationToExecutive(
    await sendMail(executiveEmail, subject, html);
   console.log(`✅ Email sent to ${executiveName} (${executiveEmail}) - Visits: ${todayVisitCount}`);
 }
+
+/**
+ * Send daily PJP notification (morning) to individual executive
+ * @param executiveEmail Executive's email address
+ * @param executiveName Executive's name
+ * @param pjpStoreName Delimiter separated store names from PJP
+ */
+export async function sendPJPNotificationToExecutive(
+  executiveEmail: string,
+  executiveName: string,
+  pjpStoreName: string = ''
+) {
+  const today = new Date().toLocaleDateString('en-IN', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  const formatPJPList = (stores: string): string => {
+    if (!stores || !stores.trim()) {
+      return '<p style="color: #999; font-style: italic;">No PJP submitted for today.</p>';
+    }
+    const storeArray = stores.split('|||').map(s => s.trim()).filter(s => s);
+    if (storeArray.length === 0) {
+      return '<p style="color: #999; font-style: italic;">No PJP submitted for today.</p>';
+    }
+    return `<ul style="margin: 0; padding-left: 20px;">` + storeArray
+      .map(store => `<li style="margin: 6px 0; line-height: 1.5;">${store}</li>`)
+      .join('') + `</ul>`;
+  };
+
+  const pjpListHtml = formatPJPList(pjpStoreName);
+  
+  const hasPJP = pjpStoreName && pjpStoreName.trim().length > 0;
+  
+  const html = pjpNotificationTemplate
+    .replace('{{EXECUTIVE_NAME}}', executiveName)
+    .replace('{{DATE}}', today)
+    .replace('{{STATUS_MESSAGE}}', hasPJP 
+      ? 'Here is your planned visit list. Good luck with your visits!' 
+      : 'You haven\'t submitted a visit plan (PJP).')
+    .replace('{{PJP_STORES}}', pjpListHtml)
+    .replace('{{FOOTER_MESSAGE}}', hasPJP 
+      ? 'Have a productive day ahead!' 
+      : 'Planning is the first step to success. Have a great day!');
+
+  const subject = hasPJP 
+    ? `🎯Visit Plan (PJP) - ${today}`
+    : `⚠️ PJP Reminder - ${today}`;
+
+  await sendMail(executiveEmail, subject, html);
+  console.log(`✅ Executive PJP notification sent to ${executiveName}`);
+}
+

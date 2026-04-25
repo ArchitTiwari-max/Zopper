@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
+  <style>
+    @media only screen and (max-width: 600px) {
+      body { padding: 10px !important; }
+      .container { padding: 15px !important; }
+      h1 { font-size: 20px !important; }
+      h2 { font-size: 16px !important; }
+      table { font-size: 12px !important; }
+      th, td { padding: 8px !important; }
+      .header { padding: 20px !important; }
+    }
+  </style>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div class="header" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 28px;">📋 Daily PJP Summary (Planned)</h1>
+    <p style="color: #f0f0f0; margin: 10px 0 0 0; font-size: 16px;">{{DATE}}</p>
+  </div>
+  
+  <div class="container" style="background-color: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
+    <h2 style="color: #38a169; margin-top: 0;">Today's Planned Visits</h2>
+    
+    <div style="margin-bottom: 20px; padding: 15px; background-color: #f0fff4; border-left: 4px solid #48bb78; border-radius: 4px;">
+      <p style="margin: 0; font-size: 14px; color: #555;">
+        This report contains the visit plans (PJP) submitted by executives for today before 12:00 PM IST.
+      </p>
+    </div>
+    
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+      <thead>
+        <tr style="background-color: #48bb78; color: white;">
+          <th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 30%;">Executive Name</th>
+          <th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 70%;">Planned Stores (PJP)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{TABLE_ROWS}}
+      </tbody>
+    </table>
+  </div>
+  
+  <div style="text-align: center; margin-top: 20px; color: #888; font-size: 12px;">
+    <p>This is an automated email from SalesDost. Please do not reply.</p>
+  </div>
+</body>
+</html>
