@@ -6,6 +6,7 @@ import {
   Calendar,
   Database,
   FileSpreadsheet,
+  GitBranch,
   Settings,
   Store,
   TrendingUp,
@@ -297,6 +298,56 @@ const DataManagementDashboard = () => {
                 <p>• Sales performance by partner and brand</p>
                 <p>• Revenue trends and growth metrics</p>
                 <p>• Store-wise performance comparison</p>
+              </div>
+            </div>
+          </Link>
+
+          {/* Chain Role Configuration */}
+          <Link
+            href="/admin/datamanagement/chainconfig"
+            className="adm-excel-import-import-card chain"
+          >
+            <div className="adm-excel-import-card-header">
+              <div className="adm-excel-import-card-icon chain">
+                <GitBranch className="w-8 h-8 text-violet-600" />
+              </div>
+              <div className="adm-excel-import-card-title-section">
+                <div className="flex items-center gap-2">
+                  <h2 className="adm-excel-import-card-title">Chain Role Config</h2>
+                  <span className="bg-violet-100 text-violet-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider border border-violet-200">
+                    New
+                  </span>
+                </div>
+                <p className="adm-excel-import-card-subtitle">
+                  Role templates per store chain
+                </p>
+              </div>
+              <ArrowRight className="adm-excel-import-card-arrow" />
+            </div>
+
+            <p className="adm-excel-import-card-description">
+              Configure which roles appear in the executive alignment page per store chain (CROMA, VS, HITACHI, etc.) with custom percentage weights.
+            </p>
+
+            <div className="adm-excel-import-feature-list">
+              <div className="adm-excel-import-feature-item">
+                <GitBranch className="adm-excel-import-feature-icon chain" />
+                Auto-detects store chains
+              </div>
+              <div className="adm-excel-import-feature-item">
+                <Settings className="adm-excel-import-feature-icon chain" />
+                Per-role weight config
+              </div>
+            </div>
+
+            <div className="adm-excel-import-columns-section chain">
+              <h4 className="adm-excel-import-columns-title chain">
+                Controls:
+              </h4>
+              <div className="adm-excel-import-columns-list chain">
+                <p>• Store Level and Stakeholder roles</p>
+                <p>• Percentage weight per role (must total 100%)</p>
+                <p>• Remove specific stores from a chain</p>
               </div>
             </div>
           </Link>
