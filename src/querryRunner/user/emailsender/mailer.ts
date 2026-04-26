@@ -213,7 +213,7 @@ export async function sendDailyPJPSummaryToAdmins(
     .replace('{{DATE}}', today)
     .replace('{{TABLE_ROWS}}', tableRows);
 
-  const subject = `📅 Daily PJP Summary (Planned) - ${today}`;
+  const subject = `🗓️ Daily PJP Summary (Planned) - ${today}`;
 
   for (const adminEmail of adminEmails) {
     await sendMail(adminEmail, subject, html);
