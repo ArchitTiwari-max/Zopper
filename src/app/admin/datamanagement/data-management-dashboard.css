@@ -417,3 +417,39 @@
 .adm-excel-import-columns-list.godrej {
   color: #0e7490;
 }
+
+/* Chain Config Card */
+.adm-excel-import-import-card.chain {
+  border: 1px solid #c4b5fd;
+  background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
+}
+
+.adm-excel-import-import-card.chain:hover {
+  border-color: #8b5cf6;
+  box-shadow: 0 20px 25px -5px rgba(139, 92, 246, 0.2), 0 10px 10px -5px rgba(139, 92, 246, 0.1);
+}
+
+.adm-excel-import-card-icon.chain {
+  background-color: #ede9fe;
+}
+
+.adm-excel-import-feature-icon.chain {
+  color: #7c3aed;
+}
+
+.adm-excel-import-columns-section.chain {
+  background-color: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-top: 1rem;
+}
+
+.adm-excel-import-columns-title.chain {
+  color: #4c1d95;
+  font-weight: 600;
+}
+
+.adm-excel-import-columns-list.chain {
+  color: #6d28d9;
+}

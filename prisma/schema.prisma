@@ -92,6 +92,7 @@ model Store {
   executiveStores   ExecutiveStoreAssignment[]
   salesRecords      SalesRecord[]
   adminVisits       AdminVisit[]
+  alignment         StoreAlignment?
 }
 
 model ExecutiveStoreAssignment {
@@ -579,6 +580,7 @@ model HolidayRequest {
 // Godrej SFDC Data
 //
 
+
 model GodrejSfdc {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId
   planId            String   // Plan ID
@@ -591,3 +593,39 @@ model GodrejSfdc {
   @@index([uploadedAt])
   @@map("GodrejSfdc")
 }
+
+model StoreAlignment {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  storeId          String   @unique
+  store            Store    @relation(fields: [storeId], references: [id])
+  
+  // Dynamic staffing data stored as flexible JSON
+  // Supports multiple names/contacts per role
+  storeLevel       Json     
+  stakeholderLevel Json
+
+  updatedAt        DateTime @updatedAt
+  updatedBy        String?  // ID of the user who last updated the data
+
+  @@map("StoreAlignment")
+}
+
+// ─── Store Chain Role Configuration ──────────────────────────────────────────
+// Admin-managed role templates per store chain (e.g. CROMA, VS, HITACHI)
+// Stores are auto-matched by prefix; excluded store IDs can be managed per chain.
+model StoreChainConfig {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  chainName        String   @unique           // Display name: "CROMA", "VS", "HITACHI"
+  prefix           String                     // Matching prefix (uppercase): "CROMA", "VS"
+  excludedStoreIds String[]                   // Store IDs manually removed from this chain
+
+  // JSON arrays of { role: string, weight: number }
+  storeRoles       Json                       // Store-level roles
+  stakeholderRoles Json                       // Stakeholder-level roles
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("StoreChainConfig")
+}
+

@@ -4,14 +4,26 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getRAGEmoji, RAGStorePerformance } from '@/lib/ragUtils';
 import './Store.css';
+import { 
+  Menu, 
+  ChevronDown, 
+  Plus, 
+  Sparkles, 
+  ClipboardList, 
+  Users,
+  X
+} from 'lucide-react';
 import SuggestPJP from './SuggestPJP';
 import SubmittedPJPModal from './SubmittedPJPModal';
+import UpdateCoordinatesModal from './UpdateCoordinatesModal';
 
 interface StoreData {
   id: string;
   storeName: string;
   city: string;
   fullAddress?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   partnerBrands: string[];
   partnerBrandTypes: ('A_PLUS' | 'A' | 'B' | 'C' | 'D')[];
   visited: string;
@@ -26,12 +38,14 @@ const Store: React.FC = () => {
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [isSuggestMode, setIsSuggestMode] = useState(false);
   const [showSubmittedModal, setShowSubmittedModal] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
   const [plannedVisitDate, setPlannedVisitDate] = useState<string>(''); // Will be set in useEffect
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [coordinateStore, setCoordinateStore] = useState<StoreData | null>(null);
 
   // RAG data state
   const [ragData, setRagData] = useState<Map<string, string>>(new Map()); // Map of storeId -> RAG status
@@ -384,24 +398,54 @@ const Store: React.FC = () => {
             <p className="exec-v-form-subtitle">Manage your visits and track progress</p>
           </div>
           {!isCreateMode ? (
-            <div className="spjp-header-btns">
-              <button className="exec-v-form-create-visit-btn" onClick={handleCreateVisit} disabled={loading}>
-                <span className="exec-v-form-plus-icon">+</span>
-                Create PJP
-              </button>
-              <button
-                className="spjp-suggest-btn"
-                onClick={() => setIsSuggestMode(true)}
-                disabled={loading}
+            <div className="exec-header-menu-container">
+              <button 
+                className="exec-header-menu-btn" 
+                onClick={() => setMenuOpen(!menuOpen)}
               >
-                ✨ Suggest PJP
+                <Menu size={18} />
+                Actions
+                <ChevronDown size={14} className={`menu-arrow ${menuOpen ? 'open' : ''}`} />
               </button>
-              <button
-                className="spjp-submitted-btn"
-                onClick={() => setShowSubmittedModal(true)}
-              >
-                📋 Submitted PJPs
-              </button>
+
+              {menuOpen && (
+                <>
+                  <div className="exec-menu-overlay" onClick={() => setMenuOpen(false)} />
+                  <div className="exec-header-dropdown">
+                    <button 
+                      className="exec-dropdown-item"
+                      onClick={() => { handleCreateVisit(); setMenuOpen(false); }}
+                    >
+                      <Plus size={16} />
+                      Create PJP
+                    </button>
+                    <button 
+                      className="exec-dropdown-item"
+                      onClick={() => { setIsSuggestMode(true); setMenuOpen(false); }}
+                    >
+                      <Sparkles size={16} />
+                      Suggest PJP
+                    </button>
+                    <button 
+                      className="exec-dropdown-item"
+                      onClick={() => { setShowSubmittedModal(true); setMenuOpen(false); }}
+                    >
+                      <ClipboardList size={16} />
+                      Submitted PJPs
+                    </button>
+                    
+                    <div className="exec-dropdown-divider" />
+                    
+                    <button 
+                      className="exec-dropdown-item primary"
+                      onClick={() => { router.push('/executive/alignment'); setMenuOpen(false); }}
+                    >
+                      <Users size={16} />
+                      Store Alignment
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <div className="exec-v-form-action-buttons">
@@ -572,6 +616,24 @@ const Store: React.FC = () => {
                       </button>
                       <span className="exec-v-form-store-name-text">{store.storeName} {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}</span>
                       <span className="exec-v-form-store-subtext">{store.city}</span>
+                      {!isCreateMode && (
+                        <button
+                          className="store-coords-btn"
+                          title={store.latitude != null ? `Coords: ${store.latitude.toFixed(4)}, ${store.longitude?.toFixed(4)}` : 'No coordinates — click to fix'}
+                          onClick={(e) => { e.stopPropagation(); setCoordinateStore(store); }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            marginLeft: '4px',
+                            fontSize: '15px',
+                            opacity: store.latitude != null ? 0.6 : 1,
+                            transition: 'opacity 0.15s',
+                          }}
+                        >
+                          📍
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className="exec-v-form-table-cell exec-v-form-partner-cell">
@@ -737,6 +799,23 @@ const Store: React.FC = () => {
         isOpen={showSubmittedModal}
         onClose={() => setShowSubmittedModal(false)}
       />
+
+      {/* Update Coordinates Modal */}
+      {coordinateStore && (
+        <UpdateCoordinatesModal
+          storeId={coordinateStore.id}
+          storeName={coordinateStore.storeName}
+          city={coordinateStore.city}
+          currentLat={coordinateStore.latitude}
+          currentLng={coordinateStore.longitude}
+          onClose={() => setCoordinateStore(null)}
+          onSuccess={(storeId, latitude, longitude) => {
+            setStoreData(prev =>
+              prev.map(s => s.id === storeId ? { ...s, latitude, longitude } : s)
+            );
+          }}
+        />
+      )}
     </div>
   );
 };

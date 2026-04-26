@@ -396,6 +396,34 @@
     color: #6c757d;
 }
 
+/* Inline Fix Coords button */
+.spjp-city-row-fix {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.spjp-inline-fix-btn {
+    background: #e0e7ff;
+    color: #4338ca;
+    border: none;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.spjp-inline-fix-btn:hover {
+    background: #c7d2fe;
+}
+
+.spjp-inline-fix-btn:active {
+    transform: scale(0.96);
+}
+
 .spjp-route-card-actions {
     display: flex;
     gap: 4px;

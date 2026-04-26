@@ -1421,3 +1421,115 @@
     padding: 16px;
   }
 }
+/* Header Menu Dropdown */
+.exec-header-menu-container {
+  position: relative;
+  display: inline-block;
+  z-index: 1000;
+}
+
+.exec-header-menu-btn {
+  background: white;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.exec-header-menu-btn:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.menu-arrow {
+  transition: transform 0.2s ease;
+}
+
+.menu-arrow.open {
+  transform: rotate(180deg);
+}
+
+.exec-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+.exec-header-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 200px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.exec-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.exec-dropdown-item:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+.exec-dropdown-item svg {
+  color: #64748b;
+  width: 16px;
+  height: 16px;
+}
+
+.exec-dropdown-item:hover svg {
+  color: #4f46e5;
+}
+
+.exec-dropdown-item.primary {
+  color: #4f46e5;
+  font-weight: 600;
+}
+
+.exec-dropdown-item.primary:hover {
+  background-color: #eef2ff;
+}
+
+.exec-dropdown-item.primary svg {
+  color: #4f46e5;
+}
+
+.exec-dropdown-divider {
+  height: 1px;
+  background-color: #f1f5f9;
+  margin: 4px 8px;
+}
