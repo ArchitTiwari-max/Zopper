@@ -26,11 +26,58 @@ const SubmittedPJPModal: React.FC<SubmittedPJPModalProps> = ({ isOpen, onClose }
     const [error, setError] = useState<string | null>(null);
     const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
 
+    // Deviation state
+    const [deviationData, setDeviationData] = useState<{ hasDeviation: boolean, planId?: string, pjpNotFollowedReason?: string } | null>(null);
+    const [deviationReason, setDeviationReason] = useState('');
+    const [submittingDeviation, setSubmittingDeviation] = useState(false);
+    const [deviationSuccess, setDeviationSuccess] = useState(false);
+
     useEffect(() => {
         if (isOpen) {
             fetchPlans();
+            fetchDeviation();
         }
     }, [isOpen]);
+
+    const fetchDeviation = async () => {
+        try {
+            const res = await fetch('/api/executive/pjp-deviation');
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.hasDeviation) {
+                    setDeviationData(data);
+                    if (data.pjpNotFollowedReason) {
+                        setDeviationReason(data.pjpNotFollowedReason);
+                        setDeviationSuccess(true);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching deviation:', err);
+        }
+    };
+
+    const handleSubmitDeviation = async (planId: string) => {
+        if (!deviationReason.trim()) return;
+        setSubmittingDeviation(true);
+        try {
+            const res = await fetch('/api/executive/pjp-deviation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ planId, reason: deviationReason })
+            });
+            if (res.ok) {
+                setDeviationSuccess(true);
+            } else {
+                alert('Failed to submit reason');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Failed to submit reason');
+        } finally {
+            setSubmittingDeviation(false);
+        }
+    };
 
     const fetchPlans = async () => {
         try {
@@ -144,7 +191,44 @@ const SubmittedPJPModal: React.FC<SubmittedPJPModalProps> = ({ isOpen, onClose }
 
                                     {expandedPlanId === plan.id && (
                                         <div style={{ padding: '0 16px 16px 16px', borderTop: '1px solid #f1f5f9' }}>
-                                            <div style={{ marginTop: '12px' }}>
+                                            
+                                            {/* Deviation Banner */}
+                                            {deviationData?.hasDeviation && deviationData.planId === plan.id && (
+                                                <div style={{ marginTop: '16px', padding: '16px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px' }}>
+                                                    <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#b45309' }}>⚠️ PJP Mismatch Detected</h3>
+                                                    <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: '#92400e' }}>
+                                                        Your actual visited stores today do not match this submitted PJP. Please provide a reason:
+                                                    </p>
+                                                    <textarea
+                                                        style={{ width: '100%', padding: '8px', border: '1px solid #fcd34d', borderRadius: '4px', fontSize: '13px', minHeight: '60px', marginBottom: '8px', outline: 'none' }}
+                                                        placeholder="Enter reason here..."
+                                                        value={deviationReason}
+                                                        onChange={(e) => {
+                                                            setDeviationReason(e.target.value);
+                                                            setDeviationSuccess(false);
+                                                        }}
+                                                        disabled={submittingDeviation}
+                                                    />
+                                                    <button
+                                                        onClick={() => handleSubmitDeviation(plan.id)}
+                                                        disabled={!deviationReason.trim() || submittingDeviation || deviationSuccess}
+                                                        style={{
+                                                            padding: '6px 12px',
+                                                            background: deviationSuccess ? '#10b981' : '#f59e0b',
+                                                            color: 'white',
+                                                            border: 'none',
+                                                            borderRadius: '4px',
+                                                            fontSize: '13px',
+                                                            cursor: (deviationSuccess || !deviationReason.trim()) ? 'not-allowed' : 'pointer',
+                                                            opacity: (!deviationReason.trim() || submittingDeviation) ? 0.7 : 1
+                                                        }}
+                                                    >
+                                                        {submittingDeviation ? 'Saving...' : deviationSuccess ? '✓ Saved' : 'Save Reason'}
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            <div style={{ marginTop: '16px' }}>
                                                 <p style={{ fontSize: '0.8rem', fontWeight: '600', color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                                     Visit Sequence
                                                 </p>
