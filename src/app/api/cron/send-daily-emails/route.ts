@@ -191,3 +191,5 @@ export async function GET(req: Request) {
     await prisma.$disconnect();
   }
 }
+
+//curl -X GET "http://localhost:3000/api/cron/send-daily-emails"

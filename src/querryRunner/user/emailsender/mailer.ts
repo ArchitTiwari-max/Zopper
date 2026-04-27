@@ -122,11 +122,6 @@ export async function sendDailyVisitSummaryToAdmins(
             ${pjpStoresList}
           </ul>
         </td>
-        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: #667eea;">
-          <a href="https://salesdost.zopper.com/admin/visit-report?executiveId=${visit.executiveId}" style="color: #667eea; text-decoration: none; cursor: pointer;">
-            ${visit.visitCount}
-          </a>
-        </td>
         <td style="padding: 12px; border: 1px solid #ddd; font-style: italic; color: #555;">
           ${
             visit.hasDeviation === false
@@ -137,6 +132,11 @@ export async function sendDailyVisitSummaryToAdmins(
                    : visit.pjpReason)
                 : '<span style="color: #ccc;">-</span>'
           }
+        </td>
+        <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: #667eea;">
+          <a href="https://salesdost.zopper.com/admin/visit-report?executiveId=${visit.executiveId}" style="color: #667eea; text-decoration: none; cursor: pointer;">
+            ${visit.visitCount}
+          </a>
         </td>
       </tr>
     `;
