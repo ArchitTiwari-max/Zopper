@@ -229,6 +229,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const skip = (page - 1) * limit;
+
     const executive = await prisma.executive.findUnique({
       where: { userId: user.userId },
       select: { id: true }
@@ -238,11 +243,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Executive not found' }, { status: 404 });
     }
 
-    // Fetch visit plans sorted by submission date
-    const visitPlans = await prisma.visitPlan.findMany({
-      where: { executiveId: executive.id },
-      orderBy: { submittedAt: 'desc' }
-    });
+    // Fetch visit plans with pagination
+    const [visitPlans, totalCount] = await Promise.all([
+      prisma.visitPlan.findMany({
+        where: { executiveId: executive.id },
+        orderBy: { submittedAt: 'desc' },
+        skip: skip,
+        take: limit,
+      }),
+      prisma.visitPlan.count({
+        where: { executiveId: executive.id }
+      })
+    ]);
 
     // Extract all unique store IDs mentioned across all plans to fetch their names/cities
     const allStoreIdsInPlans = [...new Set(visitPlans.flatMap(p => p.storeIds))];
@@ -265,7 +277,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: formattedPlans
+      data: formattedPlans,
+      pagination: {
+        total: totalCount,
+        page,
+        limit,
+        hasMore: skip + visitPlans.length < totalCount
+      }
     });
 
   } catch (error) {

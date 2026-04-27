@@ -25,6 +25,9 @@ const SubmittedPJPModal: React.FC<SubmittedPJPModalProps> = ({ isOpen, onClose }
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(false);
+    const [totalPages, setTotalPages] = useState(1);
 
     // Deviation state
     const [deviationData, setDeviationData] = useState<{ hasDeviation: boolean, planId?: string, pjpNotFollowedReason?: string } | null>(null);
@@ -34,7 +37,9 @@ const SubmittedPJPModal: React.FC<SubmittedPJPModalProps> = ({ isOpen, onClose }
 
     useEffect(() => {
         if (isOpen) {
-            fetchPlans();
+            setPlans([]);
+            setPage(1);
+            fetchPlans(1, false);
             fetchDeviation();
         }
     }, [isOpen]);
@@ -79,11 +84,11 @@ const SubmittedPJPModal: React.FC<SubmittedPJPModalProps> = ({ isOpen, onClose }
         }
     };
 
-    const fetchPlans = async () => {
+    const fetchPlans = async (pageNumber: number) => {
         try {
             setLoading(true);
             setError(null);
-            const res = await fetch('/api/executive/visit-plan');
+            const res = await fetch(`/api/executive/visit-plan?page=${pageNumber}&limit=50`);
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({ error: 'Failed to fetch' }));
                 throw new Error(errData.error || `HTTP error ${res.status}`);
@@ -91,12 +96,30 @@ const SubmittedPJPModal: React.FC<SubmittedPJPModalProps> = ({ isOpen, onClose }
             const data = await res.json();
             if (data.success) {
                 setPlans(data.data);
+                setHasMore(data.pagination.hasMore);
+                setTotalPages(Math.ceil(data.pagination.total / 50));
+                setPage(pageNumber);
+                // Scroll to top of list when changing pages
+                const listContainer = document.querySelector('.spjp-step1-list');
+                if (listContainer) listContainer.scrollTop = 0;
             }
         } catch (err) {
             console.error('Error fetching plans:', err);
             setError(err instanceof Error ? err.message : 'Failed to fetch visit plans');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (hasMore && !loading) {
+            fetchPlans(page + 1);
+        }
+    };
+
+    const handlePrevPage = () => {
+        if (page > 1 && !loading) {
+            fetchPlans(page - 1);
         }
     };
 
@@ -270,6 +293,59 @@ const SubmittedPJPModal: React.FC<SubmittedPJPModalProps> = ({ isOpen, onClose }
                             ))}
                         </div>
                     )}
+                </div>
+
+                <div className="spjp-pagination-footer" style={{ 
+                    padding: '12px 16px', 
+                    borderTop: '1px solid #e9ecef', 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    background: '#f8fafc'
+                }}>
+                    <button
+                        onClick={handlePrevPage}
+                        disabled={page === 1 || loading}
+                        style={{
+                            padding: '8px 16px',
+                            background: page === 1 ? '#f1f5f9' : '#6366f1',
+                            color: page === 1 ? '#94a3b8' : 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontWeight: '600',
+                            fontSize: '0.85rem',
+                            cursor: (page === 1 || loading) ? 'not-allowed' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                        }}
+                    >
+                        ← Previous
+                    </button>
+                    
+                    <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>
+                        Page {page} of {totalPages || 1}
+                    </div>
+
+                    <button
+                        onClick={handleNextPage}
+                        disabled={!hasMore || loading}
+                        style={{
+                            padding: '8px 16px',
+                            background: !hasMore ? '#f1f5f9' : '#6366f1',
+                            color: !hasMore ? '#94a3b8' : 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontWeight: '600',
+                            fontSize: '0.85rem',
+                            cursor: (!hasMore || loading) ? 'not-allowed' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                        }}
+                    >
+                        Next →
+                    </button>
                 </div>
 
                 <div className="spjp-modal-footer">
