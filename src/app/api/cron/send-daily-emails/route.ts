@@ -97,6 +97,8 @@ export async function GET(req: Request) {
         stores: [],
         visitCount: 0,
         pjpStores: [],
+        pjpReason: '',
+        actualStoreIds: new Set(),
       });
     });
 
@@ -107,6 +109,7 @@ export async function GET(req: Request) {
       if (executiveVisits.has(executiveId)) {
         const data = executiveVisits.get(executiveId);
         data.stores.push(visit.store.storeName);
+        data.actualStoreIds.add(visit.storeId);
         data.visitCount += 1;
       }
     });
@@ -120,6 +123,31 @@ export async function GET(req: Request) {
         if (data && plan.storesSnapshot) {
           const snapshot = plan.storesSnapshot as any[];
           data.pjpStores = snapshot.map(s => s.storeName);
+          
+          // Calculate if there's STILL a mismatch at the time this email is generated
+          const plannedStoreIds = new Set(plan.storeIds);
+          const actualStoreIds = data.actualStoreIds;
+          
+          let hasDeviation = false;
+          if (plannedStoreIds.size !== actualStoreIds.size) {
+            hasDeviation = true;
+          } else {
+            for (const id of plannedStoreIds) {
+              if (!actualStoreIds.has(id)) {
+                hasDeviation = true;
+                break;
+              }
+            }
+          }
+
+          // Only show the reason if there is currently a mismatch
+          if (hasDeviation) {
+            data.pjpReason = plan.pjpNotFollowedReason || 'Reason not provided';
+            data.hasDeviation = true;
+          } else {
+            data.pjpReason = ''; // Resolved or no mismatch
+            data.hasDeviation = false;
+          }
         }
       }
     });
@@ -143,6 +171,8 @@ export async function GET(req: Request) {
         storeName: data.stores.join('|||'),
         visitCount: data.visitCount,
         pjpStoreNames: data.pjpStores.join('|||'),
+        pjpReason: data.pjpReason,
+        hasDeviation: data.hasDeviation,
       }))
       .sort((a, b) => b.visitCount - a.visitCount); // Sort by visitCount descending
 

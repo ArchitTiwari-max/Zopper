@@ -368,6 +368,9 @@ model VisitPlan {
   // Notifications related to this plan
   notifications Notification[]
 
+  // Reason why PJP was not followed
+  pjpNotFollowedReason String?
+
   @@index([executiveId, submittedAt])
   @@index([createdByAdminId, submittedAt])
   @@map("VisitPlan")

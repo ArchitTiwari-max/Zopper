@@ -52,7 +52,7 @@ interface CountsResponse {
   error?: string;
 }
 
-type TaskCategory = 'visit' | 'issues' | 'training';
+type TaskCategory = 'issues' | 'training';
 
 const ExecutiveTodoList: React.FC = () => {
   const router = useRouter();
@@ -61,14 +61,13 @@ const ExecutiveTodoList: React.FC = () => {
   // Get tab from URL query parameter, default to 'visit'
   const getInitialTab = (): TaskCategory => {
     const tabParam = searchParams.get('tab');
-    if (tabParam === 'visit' || tabParam === 'issues' || tabParam === 'training') {
+    if (tabParam === 'issues' || tabParam === 'training') {
       return tabParam as TaskCategory;
     }
-    return 'visit'; // Default to 'visit' instead of 'issues'
+    return 'issues';
   };
   
   const [activeTab, setActiveTab] = useState<TaskCategory>(getInitialTab());
-  const [visitCount, setVisitCount] = useState<number>(0);
   const [issueCount, setIssueCount] = useState<number>(0);
 
   // Fetch counts from unified API
@@ -85,7 +84,6 @@ const ExecutiveTodoList: React.FC = () => {
       if (response.ok) {
         const result: CountsResponse = await response.json();
         if (result.success) {
-          setVisitCount(result.data.pendingVisitsCount);
           setIssueCount(result.data.pendingIssuesCount);
         }
       }
@@ -137,18 +135,7 @@ const ExecutiveTodoList: React.FC = () => {
 
           {/* Task Tabs */}
           <div className="exec-tasks-tabs">
-            <button 
-              className={`exec-tasks-tab-btn ${activeTab === 'visit' ? 'active' : ''}`}
-              onClick={() => setActiveTab('visit')}
-            >
-              <span className="exec-tasks-tab-icon">🏪</span>
-              <span className="exec-tasks-tab-label">
-                Pending Visits
-                {visitCount > 0 && (
-                  <span className="exec-tasks-tab-count">({visitCount})</span>
-                )}
-              </span>
-            </button>
+
             <button 
               className={`exec-tasks-tab-btn ${activeTab === 'issues' ? 'active' : ''}`}
               onClick={() => setActiveTab('issues')}
@@ -172,9 +159,7 @@ const ExecutiveTodoList: React.FC = () => {
 
           {/* Tab Content */}
           <div className="exec-tasks-tab-content">
-            {activeTab === 'visit' && (
-              <VisitsTab onCountUpdate={refreshCounts} />
-            )}
+
 
             {activeTab === 'issues' && (
               <IssuesTab onCountUpdate={refreshCounts} />

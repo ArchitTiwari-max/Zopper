@@ -60,7 +60,7 @@ export async function sendMail(to: string, subject: string, html: string) {
  * @param visitData Array of visit data with executive name, stores (comma-separated), and total visit count
  */
 export async function sendDailyVisitSummaryToAdmins(
-  visitData: Array<{ executiveId: string; executiveName: string; storeName: string; visitCount: number; pjpStoreNames: string }>
+  visitData: Array<{ executiveId: string; executiveName: string; storeName: string; visitCount: number; pjpStoreNames: string; pjpReason?: string; hasDeviation?: boolean }>
 ) {
   const adminEmails = [
     'vishal.shukla@zopper.com',
@@ -126,6 +126,17 @@ export async function sendDailyVisitSummaryToAdmins(
           <a href="https://salesdost.zopper.com/admin/visit-report?executiveId=${visit.executiveId}" style="color: #667eea; text-decoration: none; cursor: pointer;">
             ${visit.visitCount}
           </a>
+        </td>
+        <td style="padding: 12px; border: 1px solid #ddd; font-style: italic; color: #555;">
+          ${
+            visit.hasDeviation === false
+              ? '<span style="color: #10b981; font-weight: bold; font-style: normal;">✅ PJP matches with visits</span>'
+              : visit.hasDeviation === true
+                ? (visit.pjpReason === 'Reason not provided' 
+                   ? '<span style="color: #ef4444; font-weight: bold; font-style: normal;">⚠️ Reason not provided</span>' 
+                   : visit.pjpReason)
+                : '<span style="color: #ccc;">-</span>'
+          }
         </td>
       </tr>
     `;
