@@ -267,7 +267,7 @@ export async function sendVisitNotificationToExecutive(
     // No visits - show a different message
     html = visitNotificationTemplate
       .replace('{{HEADER_TITLE}}', 'No Visits Recorded')
-      .replace('{{STATUS_MESSAGE}}', 'No visits have been recorded by you today.')
+      .replace('{{STATUS_MESSAGE}}', 'No visits have been recorded by you.')
       .replace('{{EXECUTIVE_NAME}}', executiveName)
       .replace(/{{STORE_NAME}}/g, storesListHtml)
       .replace(/{{PJP_STORES}}/g, pjpStoresListHtml)
@@ -315,11 +315,11 @@ export async function sendPJPNotificationToExecutive(
 
   const formatPJPList = (stores: string): string => {
     if (!stores || !stores.trim()) {
-      return '<p style="color: #999; font-style: italic;">No PJP submitted for today.</p>';
+      return '<p style="color: #999; font-style: italic;">No PJP submitted.</p>';
     }
     const storeArray = stores.split('|||').map(s => s.trim()).filter(s => s);
     if (storeArray.length === 0) {
-      return '<p style="color: #999; font-style: italic;">No PJP submitted for today.</p>';
+      return '<p style="color: #999; font-style: italic;">No PJP submitted.</p>';
     }
     return `<ul style="margin: 0; padding-left: 20px;">` + storeArray
       .map(store => `<li style="margin: 6px 0; line-height: 1.5;">${store}</li>`)
