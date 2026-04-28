@@ -116,11 +116,14 @@ export async function POST(request: NextRequest) {
       const actualStoreIds = new Set(planVisits.map(v => v.storeId));
 
       let hasDeviation = false;
-      // Deviation only if a planned store was MISSED.
-      for (const id of plannedStoreIds) {
-        if (!actualStoreIds.has(id)) {
-          hasDeviation = true;
-          break;
+      if (plannedStoreIds.size !== actualStoreIds.size) {
+        hasDeviation = true;
+      } else {
+        for (const id of plannedStoreIds) {
+          if (!actualStoreIds.has(id)) {
+            hasDeviation = true;
+            break;
+          }
         }
       }
 
