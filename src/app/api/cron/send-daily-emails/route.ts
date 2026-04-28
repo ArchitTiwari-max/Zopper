@@ -69,7 +69,15 @@ export async function GET(req: Request) {
       }
     });
 
-    console.log(`🔍 Found ${visits.length} visits and ${visitPlans.length} PJPs`);
+    // Fetch all brands mentioned in today's visits
+    const allBrandIds = [...new Set(visits.flatMap(v => v.brandIds || []))];
+    const brands = await prisma.brand.findMany({
+      where: { id: { in: allBrandIds } },
+      select: { id: true, brandName: true }
+    });
+    const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
+
+    console.log(`🔍 Found ${visits.length} visits, ${visitPlans.length} PJPs and ${brands.length} unique brands`);
 
     // Fetch all active executives
     const allExecutives = await prisma.executive.findMany({
@@ -108,7 +116,18 @@ export async function GET(req: Request) {
       
       if (executiveVisits.has(executiveId)) {
         const data = executiveVisits.get(executiveId);
-        data.stores.push(visit.store.storeName);
+        
+        // Format brand names
+        const visitBrands = (visit.brandIds || [])
+          .map(id => brandMap.get(id))
+          .filter(Boolean)
+          .join(', ');
+          
+        const displayString = visitBrands 
+          ? `${visit.store.storeName} - ${visitBrands}`
+          : visit.store.storeName;
+
+        data.stores.push(displayString);
         data.actualStoreIds.add(visit.storeId);
         data.visitCount += 1;
       }
