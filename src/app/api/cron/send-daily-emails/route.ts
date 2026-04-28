@@ -244,13 +244,13 @@ export async function GET(req: Request) {
       });
 
       // Send to each executive
-      // await sendVisitNotificationToExecutive(
-      //   exec.executiveEmail,
-      //   exec.executiveName,
-      //   visitsHtml,
-      //   exec.visitCount,
-      //   pjpHtml
-      // );
+      await sendVisitNotificationToExecutive(
+        exec.executiveEmail,
+        exec.executiveName,
+        visitsHtml,
+        exec.visitCount,
+        pjpHtml
+      );
     }
 
     // Send admin summary
