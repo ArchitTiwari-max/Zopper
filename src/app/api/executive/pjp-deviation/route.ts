@@ -79,15 +79,12 @@ export async function GET(request: NextRequest) {
 
     let hasDeviation = false;
     
-    // Deviation is if sets do not match (ignoring sequence)
-    if (plannedStoreIds.size !== actualStoreIds.size) {
-      hasDeviation = true;
-    } else {
-      for (const id of plannedStoreIds) {
-        if (!actualStoreIds.has(id)) {
-          hasDeviation = true;
-          break;
-        }
+    // Deviation only if a planned store was MISSED.
+    // Extra unplanned visits do not count as deviation.
+    for (const id of plannedStoreIds) {
+      if (!actualStoreIds.has(id)) {
+        hasDeviation = true;
+        break;
       }
     }
 

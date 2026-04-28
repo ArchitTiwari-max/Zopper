@@ -66,18 +66,18 @@ export async function sendDailyVisitSummaryToAdmins(
     visitCount: number; 
     visitsHtml: string; 
     pjpStoresHtml: string; 
-    pjpReason?: string; 
-    hasDeviation?: boolean 
+    hasDeviation?: boolean;
+    hasPjp: boolean;
   }>
 ) {
   const adminEmails = [
     'vishal.shukla@zopper.com',
-     'bharat.kumar@zopper.com',
-   'vikash.dubey@zopper.com',
-   'amit.srivastava@zopper.com',
-   'archit.tiwari@zopper.com',
-   'harshdeep.singh@zopper.com',
-   'assurance.tech@zopper.com'
+  //    'bharat.kumar@zopper.com',
+  //  'vikash.dubey@zopper.com',
+  //  'amit.srivastava@zopper.com',
+  //  'archit.tiwari@zopper.com',
+  //  'harshdeep.singh@zopper.com',
+  //  'assurance.tech@zopper.com'
   ];
   // const adminEmails=[
   //   'harshdeep.singh@zopper.com',
@@ -110,13 +110,13 @@ export async function sendDailyVisitSummaryToAdmins(
         </td>
         <td style="padding: 12px; border: 1px solid #ddd; font-style: italic; color: #555;">
           ${
-            visit.hasDeviation === false
-              ? '<span style="color: #10b981; font-weight: bold; font-style: normal;">✅ PJP matches with visits</span>'
-              : visit.hasDeviation === true
-                ? (visit.pjpReason === 'Reason not provided' 
+            visit.hasPjp === false
+              ? '<span style="color: #ccc;">-</span>'
+              : visit.hasDeviation === false
+                ? '<span style="color: #10b981; font-weight: bold; font-style: normal;">✅ PJP matches with visits</span>'
+                : (visit.pjpReason === 'Reason not provided' 
                    ? '<span style="color: #ef4444; font-weight: bold; font-style: normal;">⚠️ Reason not provided</span>' 
                    : visit.pjpReason)
-                : '<span style="color: #ccc;">-</span>'
           }
         </td>
         <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: #667eea;">
