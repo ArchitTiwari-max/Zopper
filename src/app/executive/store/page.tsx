@@ -13,6 +13,7 @@ import {
   Users,
   X
 } from 'lucide-react';
+import Swal from 'sweetalert2';
 import SuggestPJP from './SuggestPJP';
 import SubmittedPJPModal from './SubmittedPJPModal';
 import UpdateCoordinatesModal from './UpdateCoordinatesModal';
@@ -216,8 +217,43 @@ const Store: React.FC = () => {
     }
   };
 
+  const checkDeviationAndProceed = async (callback: () => void) => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/executive/pjp-deviation');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.hasDeviation) {
+          setLoading(false);
+          Swal.fire({
+            title: '⚠️ Action Blocked',
+            text: 'You cannot create a new PJP because you have not submitted a reason for your recent unfulfilled PJP. Please provide the reason first.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#6366f1',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Go to Submitted PJPs',
+            cancelButtonText: 'Close'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              setShowSubmittedModal(true);
+            }
+          });
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('Error checking deviation:', err);
+    } finally {
+      setLoading(false);
+    }
+    
+    // No deviation or error, proceed
+    callback();
+  };
+
   const handleCreateVisit = () => {
-    setIsCreateMode(true);
+    checkDeviationAndProceed(() => setIsCreateMode(true));
   };
 
   const handleCancel = () => {
@@ -421,7 +457,7 @@ const Store: React.FC = () => {
                     </button>
                     <button 
                       className="exec-dropdown-item"
-                      onClick={() => { setIsSuggestMode(true); setMenuOpen(false); }}
+                      onClick={() => { setMenuOpen(false); checkDeviationAndProceed(() => setIsSuggestMode(true)); }}
                     >
                       <Sparkles size={16} />
                       Suggest PJP

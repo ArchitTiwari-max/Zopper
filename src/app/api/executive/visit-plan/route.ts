@@ -65,7 +65,19 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Get executive details
+    // --- Block PJP Creation if there's a pending deviation reason ---
+    const now = new Date();
+    const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+    const istHours = istTime.getUTCHours();
+    const startOfIstToday = new Date(Date.UTC(istTime.getUTCFullYear(), istTime.getUTCMonth(), istTime.getUTCDate(), -5, -30, 0, 0));
+    
+    let maxEvaluableDate: Date;
+    if (istHours >= 12) {
+      maxEvaluableDate = new Date(startOfIstToday.getTime() + 24 * 60 * 60 * 1000);
+    } else {
+      maxEvaluableDate = startOfIstToday;
+    }
+
     // Get executive details
     const executive = await prisma.executive.findUnique({
       where: { userId: user.userId },
@@ -75,6 +87,55 @@ export async function POST(request: NextRequest) {
     if (!executive) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
+
+    const recentPlan = await prisma.visitPlan.findFirst({
+      where: {
+        executiveId: executive.id,
+        plannedVisitDate: { lt: maxEvaluableDate }
+      },
+      orderBy: [
+        { plannedVisitDate: 'desc' },
+        { submittedAt: 'desc' }
+      ]
+    });
+
+    if (recentPlan && !recentPlan.pjpNotFollowedReason) {
+      const planDate = new Date(recentPlan.plannedVisitDate);
+      const startOfPlanDay = new Date(Date.UTC(planDate.getUTCFullYear(), planDate.getUTCMonth(), planDate.getUTCDate(), -5, -30, 0, 0));
+      const endOfPlanDay = new Date(startOfPlanDay.getTime() + 24 * 60 * 60 * 1000);
+
+      const planVisits = await prisma.visit.findMany({
+        where: {
+          executiveId: executive.id,
+          createdAt: { gte: startOfPlanDay, lt: endOfPlanDay }
+        },
+        select: { storeId: true }
+      });
+
+      const plannedStoreIds = new Set(recentPlan.storeIds);
+      const actualStoreIds = new Set(planVisits.map(v => v.storeId));
+
+      let hasDeviation = false;
+      if (plannedStoreIds.size !== actualStoreIds.size) {
+        hasDeviation = true;
+      } else {
+        for (const id of plannedStoreIds) {
+          if (!actualStoreIds.has(id)) {
+            hasDeviation = true;
+            break;
+          }
+        }
+      }
+
+      if (hasDeviation) {
+        return NextResponse.json({
+          error: 'Action Blocked',
+          details: 'You cannot create a new PJP until you provide a reason for the previous unfulfilled PJP.',
+          hasDeviation: true
+        }, { status: 403 });
+      }
+    }
+    // --- End Block Logic ---
 
     // Get store details for the selected stores
     const stores = await prisma.store.findMany({
