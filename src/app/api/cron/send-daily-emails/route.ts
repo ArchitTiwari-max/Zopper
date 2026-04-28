@@ -211,24 +211,17 @@ export async function GET(req: Request) {
       // Build PJP HTML
       let pjpHtml = '';
       if (exec.hasPjp) {
-        if (missedPlanned.length === 0) {
-          pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #10b981; font-size: 13px;">Planned Stores (${exec.plannedVisits.length})</div>`;
+        if (followedPlanned.length > 0) {
+          pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #10b981; font-size: 13px;">✅ Followed (${followedPlanned.length})</div>`;
           pjpHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
-          exec.plannedVisits.forEach((v: any) => pjpHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
+          followedPlanned.forEach((v: any) => pjpHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
           pjpHtml += `</ul>`;
-        } else {
-          if (followedPlanned.length > 0) {
-            pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #10b981; font-size: 13px;">✅ Followed (${followedPlanned.length})</div>`;
-            pjpHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
-            followedPlanned.forEach((v: any) => pjpHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
-            pjpHtml += `</ul>`;
-          }
-          if (missedPlanned.length > 0) {
-            pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #ef4444; font-size: 13px;">❌ Missed (${missedPlanned.length})</div>`;
-            pjpHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
-            missedPlanned.forEach((v: any) => pjpHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
-            pjpHtml += `</ul>`;
-          }
+        }
+        if (missedPlanned.length > 0) {
+          pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #ef4444; font-size: 13px;">❌ Missed (${missedPlanned.length})</div>`;
+          pjpHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
+          missedPlanned.forEach((v: any) => pjpHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
+          pjpHtml += `</ul>`;
         }
       }
 
