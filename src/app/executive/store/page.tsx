@@ -46,6 +46,7 @@ const Store: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [coordinateStore, setCoordinateStore] = useState<StoreData | null>(null);
 
   // RAG data state
@@ -309,8 +310,14 @@ const Store: React.FC = () => {
     try {
       setSubmitting(true);
 
-      const response = await fetch('/api/executive/visit-plan', {
-        method: 'POST',
+      const url = editingPlanId 
+        ? `/api/executive/visit-plan/${editingPlanId}` 
+        : '/api/executive/visit-plan';
+      
+      const method = editingPlanId ? 'PATCH' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ storeIds, plannedVisitDate: date })
@@ -323,6 +330,7 @@ const Store: React.FC = () => {
           // Reset all modes
           setIsCreateMode(false);
           setIsSuggestMode(false);
+          setEditingPlanId(null);
           setSelectedStores([]);
           const t = new Date();
           const y = t.getFullYear();
@@ -860,6 +868,7 @@ const Store: React.FC = () => {
           const dateString = plan.plannedVisitDate.split('T')[0];
           setPlannedVisitDate(dateString);
           
+          setEditingPlanId(plan.id);
           setIsCreateMode(true);
         }}
       />
