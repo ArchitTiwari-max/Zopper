@@ -214,9 +214,16 @@ export async function POST(request: NextRequest) {
     if (isPastDeadline) {
       return NextResponse.json({
         error: 'Action Blocked',
-        details: 'You cannot submit or edit a PJP for this date after 12:00 PM IST.',
+        details: 'You cannot submit or edit PJP for this date after 12:00 PM IST.',
         hasDeviation: false
       }, { status: 403 });
+    }
+
+    if (existingPlan) {
+      return NextResponse.json({
+        error: 'PJP Already Exists',
+        details: 'You have already created a visit plan for this date. If you wish to make changes, please refer to it and use the "Edit" option in the Submitted PJPs section.'
+      }, { status: 409 });
     }
 
     const storesSnapshot = storesWithFlag.map(s => ({
@@ -228,30 +235,16 @@ export async function POST(request: NextRequest) {
       isFlagged: s.isFlagged
     }));
 
-    let visitPlan;
-    if (existingPlan) {
-      // Edit existing plan
-      visitPlan = await prisma.visitPlan.update({
-        where: { id: existingPlan.id },
-        data: {
-          storeIds: storeIds,
-          storesSnapshot: storesSnapshot as any,
-          status: 'SUBMITTED',
-          submittedAt: new Date() // Update submission time
-        }
-      });
-    } else {
-      // Create new plan
-      visitPlan = await prisma.visitPlan.create({
-        data: {
-          executiveId: executive.id,
-          storeIds: storeIds,
-          storesSnapshot: storesSnapshot as any,
-          status: 'SUBMITTED',
-          plannedVisitDate: visitDate
-        }
-      });
-    }
+    // Create new plan
+    const visitPlan = await prisma.visitPlan.create({
+      data: {
+        executiveId: executive.id,
+        storeIds: storeIds,
+        storesSnapshot: storesSnapshot as any,
+        status: 'SUBMITTED',
+        plannedVisitDate: visitDate
+      }
+    });
 
     // Create visit plan submission notification for each admin
     const storeNames = stores.map(store => store.storeName);
