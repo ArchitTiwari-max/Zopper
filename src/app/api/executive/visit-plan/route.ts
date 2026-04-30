@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
-    const recentPlan = await prisma.visitPlan.findFirst({
+    const recentPlans = await prisma.visitPlan.findMany({
       where: {
         executiveId: executive.id,
         plannedVisitDate: { lt: maxEvaluableDate }
@@ -96,8 +96,21 @@ export async function POST(request: NextRequest) {
       orderBy: [
         { plannedVisitDate: 'desc' },
         { submittedAt: 'desc' }
-      ]
+      ],
+      take: 5
     });
+
+    let recentPlan = null;
+    for (const plan of recentPlans) {
+      const planDate = new Date(plan.plannedVisitDate);
+      // 12:00 PM IST is 06:30 AM UTC
+      const deadlineUTC = new Date(Date.UTC(planDate.getUTCFullYear(), planDate.getUTCMonth(), planDate.getUTCDate(), 6, 30, 0, 0)); 
+      
+      if (plan.submittedAt < deadlineUTC) {
+        recentPlan = plan;
+        break;
+      }
+    }
 
     if (recentPlan && !recentPlan.pjpNotFollowedReason) {
       const planDate = new Date(recentPlan.plannedVisitDate);
@@ -186,7 +199,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No admin users found to notify' }, { status: 500 });
     }
 
-    // Create a VisitPlan (PJP) record
+    // 1. Calculate deadline for this plannedVisitDate (12:00 PM IST)
+    const deadlineUTC = new Date(Date.UTC(visitDate.getUTCFullYear(), visitDate.getUTCMonth(), visitDate.getUTCDate(), 6, 30, 0, 0));
+    const isPastDeadline = now >= deadlineUTC;
+
+    // 2. Check if a PJP already exists for this date
+    const existingPlan = await prisma.visitPlan.findFirst({
+      where: {
+        executiveId: executive.id,
+        plannedVisitDate: visitDate
+      }
+    });
+
+    if (isPastDeadline) {
+      return NextResponse.json({
+        error: 'Action Blocked',
+        details: 'You cannot submit or edit a PJP for this date after 12:00 PM IST.',
+        hasDeviation: false
+      }, { status: 403 });
+    }
+
     const storesSnapshot = storesWithFlag.map(s => ({
       id: s.id,
       storeName: s.storeName,
@@ -196,15 +228,30 @@ export async function POST(request: NextRequest) {
       isFlagged: s.isFlagged
     }));
 
-    const visitPlan = await prisma.visitPlan.create({
-      data: {
-        executiveId: executive.id,
-        storeIds: storeIds,
-        storesSnapshot: storesSnapshot as any,
-        status: 'SUBMITTED',
-        plannedVisitDate: visitDate
-      }
-    });
+    let visitPlan;
+    if (existingPlan) {
+      // Edit existing plan
+      visitPlan = await prisma.visitPlan.update({
+        where: { id: existingPlan.id },
+        data: {
+          storeIds: storeIds,
+          storesSnapshot: storesSnapshot as any,
+          status: 'SUBMITTED',
+          submittedAt: new Date() // Update submission time
+        }
+      });
+    } else {
+      // Create new plan
+      visitPlan = await prisma.visitPlan.create({
+        data: {
+          executiveId: executive.id,
+          storeIds: storeIds,
+          storesSnapshot: storesSnapshot as any,
+          status: 'SUBMITTED',
+          plannedVisitDate: visitDate
+        }
+      });
+    }
 
     // Create visit plan submission notification for each admin
     const storeNames = stores.map(store => store.storeName);
@@ -333,6 +380,7 @@ export async function GET(request: NextRequest) {
       plannedVisitDate: plan.plannedVisitDate,
       submittedAt: plan.submittedAt,
       status: plan.status,
+      pjpNotFollowedReason: plan.pjpNotFollowedReason,
       stores: plan.storeIds.map(id => storeMap.get(id)).filter(Boolean)
     }));
 

@@ -215,6 +215,15 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
         return `${y}-${m}-${d}`;
     })();
 
+    const isPastDeadline = (() => {
+        if (!plannedVisitDate) return false;
+        const parts = plannedVisitDate.split('-');
+        if (parts.length !== 3) return false;
+        const [year, month, day] = parts.map(Number);
+        const deadlineUTC = new Date(Date.UTC(year, month - 1, day, 6, 30, 0, 0));
+        return new Date() >= deadlineUTC;
+    })();
+
     const haversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
         const R = 6371;
         const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -681,8 +690,13 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
                         </div>
 
                         <div className="spjp-step3-note">
-                            💡 <strong>Note:</strong> Submitting this visit plan will notify all admins about your intended store visits.
+                            💡 <strong>Note:</strong> Submitting this visit plan will notify all admins about your intended store visits. You can edit this plan until 12:00 PM IST of the planned date.
                         </div>
+                        {isPastDeadline && (
+                            <div className="spjp-error-banner" style={{ marginTop: '12px' }}>
+                                ⚠️ <strong>Deadline Passed:</strong> You cannot submit or edit a PJP for this date after 12:00 PM IST.
+                            </div>
+                        )}
                     </div>
 
                     <div className="spjp-step3-footer">

@@ -12,15 +12,17 @@ interface SubmittedPlan {
     plannedVisitDate: string;
     submittedAt: string;
     status: string;
+    pjpNotFollowedReason?: string;
     stores: SubmittedStore[];
 }
 
 interface SubmittedPJPModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onEdit?: (plan: SubmittedPlan) => void;
 }
 
-const SubmittedPJPModal: React.FC<SubmittedPJPModalProps> = ({ isOpen, onClose }) => {
+const SubmittedPJPModal: React.FC<SubmittedPJPModalProps> = ({ isOpen, onClose, onEdit }) => {
     const [plans, setPlans] = useState<SubmittedPlan[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -73,6 +75,10 @@ const SubmittedPJPModal: React.FC<SubmittedPJPModalProps> = ({ isOpen, onClose }
             });
             if (res.ok) {
                 setDeviationSuccess(true);
+                // Update local plans state to show the reason immediately
+                setPlans(prevPlans => prevPlans.map(p => 
+                    p.id === planId ? { ...p, pjpNotFollowedReason: deviationReason } : p
+                ));
             } else {
                 alert('Failed to submit reason');
             }
@@ -108,6 +114,27 @@ const SubmittedPJPModal: React.FC<SubmittedPJPModalProps> = ({ isOpen, onClose }
             setError(err instanceof Error ? err.message : 'Failed to fetch visit plans');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeletePlan = async (planId: string) => {
+        if (!window.confirm('Are you sure you want to delete this visit plan?')) return;
+
+        try {
+            const res = await fetch(`/api/executive/visit-plan/${planId}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                setPlans(prev => prev.filter(p => p.id !== planId));
+                alert('Visit plan deleted successfully');
+            } else {
+                const data = await res.json();
+                alert(data.details || data.error || 'Failed to delete plan');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Failed to delete plan');
         }
     };
 
@@ -192,11 +219,73 @@ const SubmittedPJPModal: React.FC<SubmittedPJPModalProps> = ({ isOpen, onClose }
                                             <div style={{ fontWeight: '600', fontSize: '1rem', color: '#1e293b' }}>
                                                 📅 {new Date(plan.plannedVisitDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </div>
-                                            <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>
-                                                Submitted on {new Date(plan.submittedAt).toLocaleDateString()} · {plan.stores.length} stores
+                                            <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                <span>Submitted on {new Date(plan.submittedAt).toLocaleDateString()} · {plan.stores.length} stores</span>
+                                                {(() => {
+                                                    const d = new Date(plan.plannedVisitDate);
+                                                    const deadlineUTC = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 6, 30, 0, 0));
+                                                    if (new Date(plan.submittedAt) >= deadlineUTC) {
+                                                        return (
+                                                            <span style={{ color: '#f59e0b', fontWeight: '500' }}>
+                                                                (Excluded from PJP compliance - submitted after 12 PM)
+                                                            </span>
+                                                        );
+                                                    }
+                                                    return null;
+                                                })()}
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            {onEdit && (() => {
+                                                const d = new Date(plan.plannedVisitDate);
+                                                const deadlineUTC = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 6, 30, 0, 0));
+                                                const isPastDeadline = new Date() >= deadlineUTC;
+
+                                                return (
+                                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                if (!isPastDeadline) onEdit(plan);
+                                                            }}
+                                                            disabled={isPastDeadline}
+                                                            title={isPastDeadline ? "Cannot edit after 12:00 PM IST" : "Edit this plan"}
+                                                            style={{
+                                                                padding: '4px 12px',
+                                                                background: isPastDeadline ? '#f1f5f9' : '#e0e7ff',
+                                                                color: isPastDeadline ? '#94a3b8' : '#4f46e5',
+                                                                border: isPastDeadline ? '1px solid #e2e8f0' : '1px solid #c7d2fe',
+                                                                borderRadius: '6px',
+                                                                fontSize: '0.75rem',
+                                                                fontWeight: '600',
+                                                                cursor: isPastDeadline ? 'not-allowed' : 'pointer'
+                                                            }}
+                                                        >
+                                                            ✏️ Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeletePlan(plan.id);
+                                                            }}
+                                                            disabled={isPastDeadline}
+                                                            title={isPastDeadline ? "Cannot delete after 12:00 PM IST" : "Delete this plan"}
+                                                            style={{
+                                                                padding: '4px 12px',
+                                                                background: isPastDeadline ? '#f1f5f9' : '#fee2e2',
+                                                                color: isPastDeadline ? '#94a3b8' : '#dc2626',
+                                                                border: isPastDeadline ? '1px solid #e2e8f0' : '1px solid #fecaca',
+                                                                borderRadius: '6px',
+                                                                fontSize: '0.75rem',
+                                                                fontWeight: '600',
+                                                                cursor: isPastDeadline ? 'not-allowed' : 'pointer'
+                                                            }}
+                                                        >
+                                                            🗑️ Delete
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })()}
                                             <span style={{
                                                 padding: '4px 8px',
                                                 borderRadius: '6px',
@@ -216,7 +305,7 @@ const SubmittedPJPModal: React.FC<SubmittedPJPModalProps> = ({ isOpen, onClose }
                                         <div style={{ padding: '0 16px 16px 16px', borderTop: '1px solid #f1f5f9' }}>
                                             
                                             {/* Deviation Banner */}
-                                            {deviationData?.hasDeviation && deviationData.planId === plan.id && (
+                                            {deviationData?.hasDeviation && deviationData.planId === plan.id ? (
                                                 <div style={{ marginTop: '16px', padding: '16px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px' }}>
                                                     <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#b45309' }}>⚠️ PJP Mismatch Detected</h3>
                                                     <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: '#92400e' }}>
@@ -249,7 +338,16 @@ const SubmittedPJPModal: React.FC<SubmittedPJPModalProps> = ({ isOpen, onClose }
                                                         {submittingDeviation ? 'Saving...' : deviationSuccess ? '✓ Saved' : 'Save Reason'}
                                                     </button>
                                                 </div>
-                                            )}
+                                            ) : plan.pjpNotFollowedReason ? (
+                                                <div style={{ marginTop: '16px', padding: '12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                                                    <h3 style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                        📝 PJP Deviation Reason
+                                                    </h3>
+                                                    <p style={{ margin: 0, fontSize: '14px', color: '#334155', fontStyle: 'italic' }}>
+                                                        "{plan.pjpNotFollowedReason}"
+                                                    </p>
+                                                </div>
+                                            ) : null}
 
                                             <div style={{ marginTop: '16px' }}>
                                                 <p style={{ fontSize: '0.8rem', fontWeight: '600', color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>

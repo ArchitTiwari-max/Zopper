@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
       maxEvaluableDate = startOfIstToday;
     }
 
-    // Get the MOST RECENT evaluable PJP
-    const recentPlan = await prisma.visitPlan.findFirst({
+    // Get the MOST RECENT evaluable PJPs (limit to 5 to avoid large memory footprint)
+    const recentPlans = await prisma.visitPlan.findMany({
       where: {
         executiveId: executive.id,
         plannedVisitDate: {
@@ -50,8 +50,21 @@ export async function GET(request: NextRequest) {
       orderBy: [
         { plannedVisitDate: 'desc' },
         { submittedAt: 'desc' }
-      ]
+      ],
+      take: 5
     });
+
+    let recentPlan = null;
+    for (const plan of recentPlans) {
+      const planDate = new Date(plan.plannedVisitDate);
+      // 12:00 PM IST is 06:30 AM UTC
+      const deadlineUTC = new Date(Date.UTC(planDate.getUTCFullYear(), planDate.getUTCMonth(), planDate.getUTCDate(), 6, 30, 0, 0)); 
+      
+      if (plan.submittedAt < deadlineUTC) {
+        recentPlan = plan;
+        break;
+      }
+    }
 
     if (!recentPlan) {
       return NextResponse.json({ hasDeviation: false });
