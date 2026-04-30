@@ -313,8 +313,7 @@ const Store: React.FC = () => {
       const url = editingPlanId 
         ? `/api/executive/visit-plan/${editingPlanId}` 
         : '/api/executive/visit-plan';
-      
-      const method = editingPlanId ? 'PATCH' : 'POST';
+      const method = editingPlanId ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method: method,
