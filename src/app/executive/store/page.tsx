@@ -276,6 +276,15 @@ const Store: React.FC = () => {
     setShowPreview(true);
   };
 
+  const isPastDeadline = (() => {
+    if (!plannedVisitDate) return false;
+    const parts = plannedVisitDate.split('-');
+    if (parts.length !== 3) return false;
+    const [year, month, day] = parts.map(Number);
+    const deadlineUTC = new Date(Date.UTC(year, month - 1, day, 6, 30, 0, 0));
+    return new Date() >= deadlineUTC;
+  })();
+
   // Shared submit function — used by both Create PJP and Suggest PJP
   const submitVisitPlan = async (storeIds: string[], date: string): Promise<void> => {
     if (storeIds.length === 0) return;
@@ -795,9 +804,16 @@ const Store: React.FC = () => {
 
               <div className="exec-v-form-preview-note">
                 <p className="exec-v-form-note-text">
-                  💡 <strong>Note:</strong> Submitting this visit plan will notify all admins about your intended store visits.
-                  They will receive a notification with the list of selected stores.
+                  💡 <strong>Note:</strong> Submitting this visit plan will notify all admins about your intended store visits. You can edit this plan until 12:00 PM IST of the planned date.
                 </p>
+                {isPastDeadline && (
+                  <div className="exec-v-form-error-state" style={{ marginTop: '12px', padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px' }}>
+                    <div className="exec-v-form-error-icon" style={{ fontSize: '1.2rem' }}>⚠️</div>
+                    <p className="exec-v-form-error-text" style={{ margin: 0, color: '#991b1b', fontWeight: '500' }}>
+                      <strong>Deadline Passed:</strong> You cannot submit or edit a PJP for this date after 12:00 PM IST.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -812,7 +828,7 @@ const Store: React.FC = () => {
               <button
                 className="exec-v-form-send-plan-btn"
                 onClick={handleSubmitVisitPlan}
-                disabled={submitting}
+                disabled={submitting || !plannedVisitDate}
               >
                 {submitting ? (
                   <>
@@ -834,6 +850,18 @@ const Store: React.FC = () => {
       <SubmittedPJPModal
         isOpen={showSubmittedModal}
         onClose={() => setShowSubmittedModal(false)}
+        onEdit={(plan) => {
+          setShowSubmittedModal(false);
+          // Pre-select stores and enter create mode
+          const storeIds = plan.stores.map((s: any) => s.id);
+          setSelectedStores(storeIds);
+          
+          // Extract the YYYY-MM-DD format from the ISO string
+          const dateString = plan.plannedVisitDate.split('T')[0];
+          setPlannedVisitDate(dateString);
+          
+          setIsCreateMode(true);
+        }}
       />
 
       {/* Update Coordinates Modal */}

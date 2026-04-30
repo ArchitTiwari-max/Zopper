@@ -173,6 +173,19 @@ export async function PUT(
       return NextResponse.json({ error: 'Visit plan not found or not authorized' }, { status: 404 });
     }
 
+    // Check 12 PM IST deadline for the existing planned date
+    const now = new Date();
+    const planDate = new Date(existingPlan.plannedVisitDate);
+    // 12:00 PM IST is 06:30 AM UTC
+    const deadlineUTC = new Date(Date.UTC(planDate.getUTCFullYear(), planDate.getUTCMonth(), planDate.getUTCDate(), 6, 30, 0, 0));
+
+    if (now >= deadlineUTC) {
+      return NextResponse.json({
+        error: 'Action Blocked',
+        details: 'You cannot edit a PJP for this date after 12:00 PM IST.'
+      }, { status: 403 });
+    }
+
     // Check if this plan can be edited (only executive-created plans)
     if (existingPlan.createdByRole !== 'EXECUTIVE' || existingPlan.createdByAdminId) {
       return NextResponse.json({ 
@@ -312,5 +325,72 @@ export async function PUT(
       { error: 'Failed to update visit plan' },
       { status: 500 }
     );
+  }
+}
+
+// DELETE method to remove a visit plan
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getAuthenticatedUser(request);
+    if (!user || user.role !== 'EXECUTIVE') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id: planId } = await params;
+    
+    const executive = await prisma.executive.findUnique({
+      where: { userId: user.userId },
+      select: { id: true }
+    });
+
+    if (!executive) {
+      return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
+    }
+
+    const existingPlan = await prisma.visitPlan.findFirst({
+      where: { 
+        id: planId, 
+        executiveId: executive.id 
+      }
+    });
+
+    if (!existingPlan) {
+      return NextResponse.json({ error: 'Visit plan not found' }, { status: 404 });
+    }
+
+    // Check if this plan can be deleted (only executive-created plans)
+    if (existingPlan.createdByRole !== 'EXECUTIVE' || existingPlan.createdByAdminId) {
+      return NextResponse.json({ 
+        error: 'Cannot delete admin-assigned visit plans.' 
+      }, { status: 403 });
+    }
+
+    // Check 12 PM IST deadline
+    const now = new Date();
+    const planDate = new Date(existingPlan.plannedVisitDate);
+    // 12:00 PM IST is 06:30 AM UTC
+    const deadlineUTC = new Date(Date.UTC(planDate.getUTCFullYear(), planDate.getUTCMonth(), planDate.getUTCDate(), 6, 30, 0, 0));
+
+    if (now >= deadlineUTC) {
+      return NextResponse.json({
+        error: 'Action Blocked',
+        details: 'You cannot delete a PJP for this date after 12:00 PM IST.'
+      }, { status: 403 });
+    }
+
+    await prisma.visitPlan.delete({
+      where: { id: planId }
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Visit plan deleted successfully' 
+    });
+  } catch (error) {
+    console.error('Error deleting visit plan:', error);
+    return NextResponse.json({ error: 'Failed to delete visit plan' }, { status: 500 });
   }
 }
