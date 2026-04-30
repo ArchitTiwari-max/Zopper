@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   try {
     const prisma = new PrismaClient();
 
-    // Fetch all stores with their executives
+    // Fetch all stores with their executives and visit counts
     const stores = await prisma.store.findMany({
       include: {
         executiveStores: {
@@ -20,6 +20,9 @@ export async function GET(request: NextRequest) {
               }
             }
           }
+        },
+        _count: {
+          select: { visits: true }
         }
       },
       orderBy: {
@@ -39,7 +42,8 @@ export async function GET(request: NextRequest) {
         .join(', '),
       "POC's Name": store.executiveStores
         .map(es => es.executive.name)
-        .join(', ')
+        .join(', '),
+      'Number of Visits': store._count.visits
     }));
 
     // Create workbook
@@ -53,7 +57,8 @@ export async function GET(request: NextRequest) {
       { wch: 20 }, // partneraBrandIds
       { wch: 20 }, // partnerBrandTypes
       { wch: 40 }, // Executive_IDs
-      { wch: 40 }  // POC's Name
+      { wch: 40 }, // POC's Name
+      { wch: 20 }  // Number of Visits
     ];
     ws['!cols'] = columnWidths;
 
