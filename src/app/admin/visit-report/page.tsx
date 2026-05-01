@@ -128,6 +128,10 @@ const VisitReportPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [filterError, setFilterError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalRecords, setTotalRecords] = useState<number>(0);
+  const [pageSize] = useState<number>(50);
   const [selectedVisit, setSelectedVisit] = useState<any>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [markingReviewedId, setMarkingReviewedId] = useState<string | null>(null);
@@ -243,16 +247,13 @@ const VisitReportPage: React.FC = () => {
     }
   };
 
-  // Fetch ALL visit report data from API (no server-side filtering)
-  const fetchVisitReportData = async () => {
+  // Fetch visit report data from API with server-side pagination and filtering
+  const fetchVisitReportData = async (pageToFetch = currentPage) => {
     setIsLoading(true);
     setError(null);
     try {
-      // Prefer dateFilter from URL if present (e.g., when navigated from Stores page)
-      // Always prefer the globally selected date filter for consistency with dashboard
       const effectiveDateFilter = selectedDateFilter;
 
-      // Sync the dateFilter in the URL for shareable links
       try {
         const current = new URL(window.location.href);
         current.searchParams.set('dateFilter', effectiveDateFilter);
@@ -261,9 +262,18 @@ const VisitReportPage: React.FC = () => {
 
       const params = new URLSearchParams();
       params.append('dateFilter', effectiveDateFilter);
+      params.append('page', pageToFetch.toString());
+      params.append('limit', pageSize.toString());
 
-      // Add a cache-busting param to avoid stale cached responses and bypass browser caches
+      if (filters.partnerBrand !== 'All Brands') params.append('partnerBrand', filters.partnerBrand);
+      if (filters.city !== 'All City') params.append('city', filters.city);
+      if (filters.storeName) params.append('storeName', filters.storeName);
+      if (filters.executiveName !== 'All Executive') params.append('executiveId', filters.executiveName);
+      if (filters.visitStatus !== 'All Status') params.append('visitStatus', filters.visitStatus);
+      if (filters.issueStatus !== 'All Status') params.append('issueStatus', filters.issueStatus);
+
       params.append('_ts', String(Date.now()));
+      
       const response = await fetch(`${baseEndpoint}/data?${params.toString()}`, {
         method: 'GET',
         headers: {
@@ -275,7 +285,6 @@ const VisitReportPage: React.FC = () => {
         cache: 'no-store'
       });
 
-      // Handle 304 Not Modified gracefully (keep existing data)
       if (response.status === 304) {
         setIsLoading(false);
         return;
@@ -287,10 +296,31 @@ const VisitReportPage: React.FC = () => {
       }
 
       const data = await response.json();
-      const list: VisitReportData[] = data.visits || [];
+      const list = data.visits || [];
+      
+      // Client-side sort for current page if sortConfig is set
+      if (sortConfig.key) {
+        list.sort((a, b) => {
+          let aValue = a[sortConfig.key];
+          let bValue = b[sortConfig.key];
+          if (sortConfig.key === 'visitDate') {
+            aValue = new Date(a.visitDate).getTime();
+            bValue = new Date(b.visitDate).getTime();
+          } else {
+            aValue = String(aValue).toLowerCase();
+            bValue = String(bValue).toLowerCase();
+          }
+          if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+          if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+
       setVisitData(list);
-      // Immediately compute filtered list to avoid showing stale data between state updates
-      setFilteredVisits(computeFiltered(list));
+      setFilteredVisits(list); // They are the same now, as filtering is server-side
+      setTotalPages(data.totalPages || 1);
+      setTotalRecords(data.total || 0);
+      setCurrentPage(data.page || 1);
     } catch (error) {
       console.error('Failed to fetch visit report data:', error);
       setError(error instanceof Error ? error.message : 'Failed to load visit report data');
@@ -301,92 +331,9 @@ const VisitReportPage: React.FC = () => {
     }
   };
 
-  // Compute filtered + sorted list from a given array (pure, no state updates)
-  const computeFiltered = (visits: VisitReportData[]): VisitReportData[] => {
-    if (!visits || visits.length === 0) return [];
-
-    let filtered = visits.filter(visit => {
-      // Filter by partner brand
-      if (filters.partnerBrand !== 'All Brands') {
-        if (!visit.partnerBrand.includes(filters.partnerBrand)) return false;
-      }
-
-      // Filter by city
-      if (filters.city !== 'All City') {
-        if (visit.city !== filters.city) return false;
-      }
-
-      // Filter by store - handle URL storeId and text input independently
-      const urlStoreId = searchParams.get('storeId');
-      if (urlStoreId && urlStoreId !== 'All Store') {
-        if (visit.storeId !== urlStoreId) return false;
-      } else if (filters.storeName && filters.storeName.trim() !== '') {
-        const searchText = filters.storeName.toLowerCase().trim();
-        if (!visit.storeName.toLowerCase().includes(searchText)) return false;
-      }
-
-      // Filter by executive name
-      if (filters.executiveName !== 'All Executive') {
-        const executive = filterData.executives.find(e => e.id === filters.executiveName);
-        const executiveNameToMatch = executive ? executive.name : filters.executiveName;
-        if (visit.executiveName !== executiveNameToMatch) return false;
-      }
-
-      // Filter by visit status
-      if (filters.visitStatus !== 'All Status') {
-        if (visit.visitStatus !== filters.visitStatus) return false;
-      }
-
-      // Filter by issue status
-      if (filters.issueStatus !== 'All Status') {
-        if (!visit.issueStatus && filters.issueStatus !== 'None') return false;
-        if (filters.issueStatus === 'Pending') {
-          if (visit.issueStatus !== 'Pending' && visit.issueStatus !== 'Assigned') return false;
-        } else if (visit.issueStatus !== filters.issueStatus) {
-          return false;
-        }
-      }
-      return true;
-    });
-
-    // Sorting
-    if (sortConfig.key) {
-      filtered.sort((a, b) => {
-        let aValue: any;
-        let bValue: any;
-        switch (sortConfig.key) {
-          case 'executiveName':
-            aValue = a.executiveName.toLowerCase();
-            bValue = b.executiveName.toLowerCase();
-            break;
-          case 'storeName':
-            aValue = a.storeName.toLowerCase();
-            bValue = b.storeName.toLowerCase();
-            break;
-          case 'visitDate':
-            aValue = new Date(a.visitDate).getTime();
-            bValue = new Date(b.visitDate).getTime();
-            break;
-          default:
-            return 0;
-        }
-        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-    return filtered;
-  };
-
-  // Apply filters and sorting to existing data (client-side filtering and sorting)
-  const applyFilters = () => {
-    setFilteredVisits(computeFiltered(visitData));
-  };
-
   // Initial data fetch on mount
   useEffect(() => {
     fetchFilterData();
-    fetchVisitReportData();
   }, []);
 
   // Set initial filters from URL parameters (separate effect to avoid conflicts)
@@ -402,44 +349,34 @@ const VisitReportPage: React.FC = () => {
     const urlVisitStatus = searchParams.get('visitStatus');
     const urlIssueStatus = searchParams.get('issueStatus');
 
-    if (urlStoreId || urlStoreName || urlExecutiveId || urlPartnerBrand || urlCity || urlVisitStatus || urlIssueStatus) {
-      // Set storeName from URL if present (for text-based search)
-      let storeNameFilter = '';
-      if (urlStoreName) {
-        storeNameFilter = urlStoreName;
-      }
+    let newFilters = { ...filters };
+    let filtersChanged = false;
 
-      // Use executive ID directly
+    if (urlStoreId || urlStoreName || urlExecutiveId || urlPartnerBrand || urlCity || urlVisitStatus || urlIssueStatus) {
+      if (urlStoreName) newFilters.storeName = urlStoreName;
+
       let executiveFilter = 'All Executive';
       if (urlExecutiveId && urlExecutiveId !== 'All Executive') {
-        // Validate that the executive ID exists in filter data
         const matchingExecutive = filterData.executives.find(exec => exec.id === urlExecutiveId);
         executiveFilter = matchingExecutive ? urlExecutiveId : 'All Executive';
-        console.log('[URL DEBUG] Executive ID from URL:', urlExecutiveId, '→ Valid:', !!matchingExecutive);
       }
+      newFilters.executiveName = executiveFilter;
+      newFilters.partnerBrand = urlPartnerBrand || newFilters.partnerBrand;
+      newFilters.city = urlCity || newFilters.city;
+      newFilters.visitStatus = urlVisitStatus || newFilters.visitStatus;
+      newFilters.issueStatus = urlIssueStatus || newFilters.issueStatus;
+      filtersChanged = true;
+    }
 
-      setFilters(prevFilters => ({
-        ...prevFilters,
-        partnerBrand: urlPartnerBrand || prevFilters.partnerBrand,
-        city: urlCity || prevFilters.city,
-        storeName: storeNameFilter, // Set from URL storeName parameter
-        executiveName: executiveFilter,
-        visitStatus: urlVisitStatus || prevFilters.visitStatus,
-        issueStatus: urlIssueStatus || prevFilters.issueStatus
-      }));
+    if (filtersChanged) {
+      setFilters(newFilters);
     }
   }, [filterData.stores, filterData.executives]); // Wait for filter data to be loaded
 
-  // Apply filters and sorting to existing data when filters or sorting changes (but not on initial load)
+  // Refetch data when filters, page, sort or date filter changes
   useEffect(() => {
-    applyFilters();
-  }, [filters, visitData, sortConfig]);
-
-  // Refetch data when date filter changes (requires server-side fetch)
-  useEffect(() => {
-    // Always refetch when the global date filter changes to keep parity with dashboard
-    fetchVisitReportData();
-  }, [selectedDateFilter]);
+    fetchVisitReportData(currentPage);
+  }, [filters, currentPage, selectedDateFilter, sortConfig.key, sortConfig.direction]);
 
 
   const handleFilterChange = (filterType: keyof VisitReportFilters, value: string) => {
@@ -1262,6 +1199,29 @@ const VisitReportPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+          <button 
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1 || isLoading}
+            style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #cbd5e1', background: currentPage === 1 ? '#f1f5f9' : 'white', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: 500 }}
+          >
+            Previous
+          </button>
+          <span style={{ fontSize: '14px', fontWeight: '500', color: '#475569' }}>
+            Page {currentPage} of {totalPages} <span style={{ color: '#94a3b8', fontSize: '12px', marginLeft: '4px' }}>({totalRecords} total records)</span>
+          </span>
+          <button 
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages || isLoading}
+            style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #cbd5e1', background: currentPage === totalPages ? '#f1f5f9' : 'white', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', fontWeight: 500 }}
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {/* Visit Details Modal */}
       <VisitDetailsModal

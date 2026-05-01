@@ -9,17 +9,11 @@ export async function GET(request: NextRequest) {
     // Authenticate user and check if admin
     const user = await getAuthenticatedUser(request);
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' }, 
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     if (user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Admin access required' }, 
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
     // Get filter parameters
@@ -34,7 +28,9 @@ export async function GET(request: NextRequest) {
     const visitStatus = searchParams.get('visitStatus');
     const issueStatus = searchParams.get('issueStatus');
 
-    // Caching disabled for fresh data
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const isExport = searchParams.get('isExport') === 'true';
 
     // Calculate date range based on filter
     const now = new Date();
@@ -44,32 +40,30 @@ export async function GET(request: NextRequest) {
     switch (dateFilter) {
       case 'Today':
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        // For 'Today', include the entire day until 23:59:59
         endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-        endDate.setMilliseconds(-1); // Set to 23:59:59.999
+        endDate.setMilliseconds(-1);
         break;
       case 'Yesterday':
         const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
         startDate = yesterday;
-        // For 'Yesterday', include the entire day until 23:59:59
         endDate = new Date(yesterday.getTime() + 24 * 60 * 60 * 1000 - 1);
         break;
       case 'Last 7 Days':
         startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Add 1 day buffer for timezone issues
+        endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
         break;
       case 'Last 90 Days':
         startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Add 1 day buffer for timezone issues
+        endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
         break;
       case 'Last Year':
         startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Add 1 day buffer for timezone issues
+        endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
         break;
       case 'Last 30 Days':
       default:
         startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Add 1 day buffer for timezone issues
+        endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     }
 
     // Build where clause for visits
@@ -80,90 +74,108 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    // Add direct ID filters to the database query for better performance
-    if (storeId) {
+    if (storeId && storeId !== 'All Store') {
       whereClause.storeId = storeId;
+    } else if (storeName && storeName !== 'All Store' && storeName.trim() !== '') {
+      whereClause.store = { ...whereClause.store, storeName: { contains: storeName, mode: 'insensitive' } };
     }
 
-    if (executiveId) {
+    if (executiveId && executiveId !== 'All Executive') {
       whereClause.executiveId = executiveId;
+    } else if (executiveName && executiveName !== 'All Executive' && executiveName.trim() !== '') {
+      whereClause.executive = { ...whereClause.executive, name: { contains: executiveName, mode: 'insensitive' } };
     }
 
-    // OPTIMIZED: Get visits and brands concurrently with Promise.all - no limits, fetch all data
-    const [visits, brands] = await Promise.all([
-      // Get ALL visits with related data - no limits
-      prisma.visit.findMany({
-        where: whereClause,
-        select: {
-          id: true,
-          status: true,
-          remarks: true,
-          brandIds: true,
-          visitDate: true,
-          createdAt: true,
-          POSMchecked: true,
-          personMet: true,
-          imageUrls: true,
-          reviewedAt: true,
-          reviewedByAdmin: { select: { id: true, name: true } },
-          executive: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
-          store: {
-            select: {
-              id: true,
-              storeName: true,
-              city: true
-            }
-          },
-          issues: {
-            select: {
-              id: true,
-              details: true,
-              status: true
-            }
-          }
-        },
-        orderBy: {
-          visitDate: 'desc'
-        }
-      }),
+    if (city && city !== 'All City') {
+      whereClause.store = { ...whereClause.store, city: city };
+    }
 
-      // Get ALL brands for brand mapping - no limits
-      prisma.brand.findMany({
-        select: {
-          id: true,
-          brandName: true
-        }
-      })
-    ]);
-    const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
+    if (visitStatus && visitStatus !== 'All Status') {
+      whereClause.status = visitStatus;
+    }
 
-    // Get previous visit dates for these stores safely
-    const validStoreIds = visits.map(v => v.store?.id).filter(Boolean);
-    const storeIds = Array.from(new Set(validStoreIds));
-    let storeVisitDates = new Map();
-    
-    if (storeIds.length > 0) {
-      const previousVisitsRaw = await prisma.visit.findMany({
-        where: { storeId: { in: storeIds } },
-        select: { storeId: true, createdAt: true },
-        orderBy: { createdAt: 'desc' }
-      });
-      for (const pv of previousVisitsRaw) {
-        if (!pv.storeId) continue;
-        const existing = storeVisitDates.get(pv.storeId) || [];
-        existing.push(pv.createdAt);
-        storeVisitDates.set(pv.storeId, existing);
+    if (issueStatus && issueStatus !== 'All Status') {
+      if (issueStatus === 'Pending') {
+        whereClause.issues = { some: { status: { in: ['Pending', 'Assigned'] } } };
+      } else {
+        whereClause.issues = { some: { status: issueStatus } };
       }
     }
 
+    if (partnerBrand && partnerBrand !== 'All Brands') {
+      const brandRecord = await prisma.brand.findFirst({ where: { brandName: partnerBrand } });
+      if (brandRecord) {
+        whereClause.brandIds = { has: brandRecord.id };
+      } else {
+        // If brand not found, ensure no visits are returned
+        whereClause.id = 'invalid_id_brand_not_found';
+      }
+    }
+
+    // Pagination metrics
+    const fetchOptions: any = {
+      where: whereClause,
+      select: {
+        id: true,
+        status: true,
+        remarks: true,
+        brandIds: true,
+        visitDate: true,
+        createdAt: true,
+        POSMchecked: true,
+        personMet: true,
+        imageUrls: true,
+        reviewedAt: true,
+        reviewedByAdmin: { select: { id: true, name: true } },
+        executive: { select: { id: true, name: true } },
+        store: { select: { id: true, storeName: true, city: true } },
+        issues: { select: { id: true, details: true, status: true } }
+      },
+      orderBy: { visitDate: 'desc' }
+    };
+
+    if (!isExport) {
+      fetchOptions.skip = (page - 1) * limit;
+      fetchOptions.take = limit;
+    }
+
+    // Run count and data fetching in parallel for maximum performance
+    const [totalCount, visits, brands] = await Promise.all([
+      prisma.visit.count({ where: whereClause }),
+      prisma.visit.findMany(fetchOptions),
+      prisma.brand.findMany({ select: { id: true, brandName: true } })
+    ]);
+
+    const totalPages = isExport ? 1 : Math.ceil(totalCount / limit);
+
+    const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
+
+    // Efficiently fetch the most recent previous visit for each fetched visit
+    const prevVisitsPromises = visits.map(v => {
+      if (!v.store?.id) return Promise.resolve({ id: v.id, prevDate: null });
+      const currentVisitTime = v.visitDate || v.createdAt;
+      return prisma.visit.findFirst({
+        where: {
+          storeId: v.store.id,
+          OR: [
+            { visitDate: { lt: currentVisitTime } },
+            { visitDate: null, createdAt: { lt: currentVisitTime } }
+          ]
+        },
+        orderBy: { visitDate: 'desc' },
+        select: { visitDate: true, createdAt: true }
+      }).then(res => ({
+        id: v.id,
+        prevDate: res ? (res.visitDate || res.createdAt) : null
+      }));
+    });
+    
+    const prevVisitsResults = await Promise.all(prevVisitsPromises);
+    const prevVisitMap = new Map<string, Date | null>(prevVisitsResults.map(r => [r.id, r.prevDate]));
+
     // Process visit data
     let processedVisits = visits.map((visit) => {
-      // Get partner brands for this visit
+      // Get partner brands
       const partnerBrands = visit.brandIds
         .map(brandId => brandMap.get(brandId))
         .filter(Boolean) as string[];
@@ -177,48 +189,25 @@ export async function GET(request: NextRequest) {
         .join('')
         .toUpperCase();
 
-      // Generate consistent avatar color based on first letter of name
+      // Avatar color logic
       const colors = [
-        '#E53E3E', // A - Red
-        '#DD6B20', // B - Orange  
-        '#D69E2E', // C - Yellow
-        '#38A169', // D - Green
-        '#00A3C4', // E - Teal
-        '#3182CE', // F - Blue
-        '#553C9A', // G - Purple
-        '#805AD5', // H - Violet
-        '#D53F8C', // I - Pink
-        '#F56500', // J - Dark Orange
-        '#319795', // K - Dark Teal
-        '#2D3748', // L - Dark Gray
-        '#744210', // M - Brown
-        '#065F46', // N - Dark Green
-        '#1A365D', // O - Dark Blue
-        '#44337A', // P - Dark Purple
-        '#97266D', // Q - Dark Pink
-        '#C53030', // R - Dark Red
-        '#B7791F', // S - Golden
-        '#2F855A', // T - Forest Green
-        '#2B6CB0', // U - Steel Blue
-        '#6B46C1', // V - Royal Purple
-        '#BE185D', // W - Magenta
-        '#DC2626', // X - Crimson
-        '#059669', // Y - Emerald
-        '#7C3AED'  // Z - Indigo
+        '#E53E3E', '#DD6B20', '#D69E2E', '#38A169', '#00A3C4', '#3182CE', '#553C9A', '#805AD5',
+        '#D53F8C', '#F56500', '#319795', '#2D3748', '#744210', '#065F46', '#1A365D', '#44337A',
+        '#97266D', '#C53030', '#B7791F', '#2F855A', '#2B6CB0', '#6B46C1', '#BE185D', '#DC2626',
+        '#059669', '#7C3AED'
       ];
       const firstLetter = execName.charAt(0).toUpperCase();
-      const colorIndex = firstLetter.charCodeAt(0) - 65; // Convert A-Z to 0-25
-      const safeColorIndex = Math.max(0, Math.min(colorIndex, colors.length - 1)); // Ensure valid index
+      const colorIndex = firstLetter.charCodeAt(0) - 65;
+      const safeColorIndex = Math.max(0, Math.min(colorIndex, colors.length - 1));
 
-      // Process personMet data - handle multiple people
+      // Process personMet data
       let peopleMet: Array<{name: string, designation: string, phoneNumber?: string}> = [];
-      
       if (visit.personMet && Array.isArray(visit.personMet) && visit.personMet.length > 0) {
         peopleMet = visit.personMet.map((person: any) => ({
           name: person?.name || '',
           designation: person?.designation || '',
           phoneNumber: person?.phoneNumber
-        })).filter(person => person.name); // Filter out empty entries
+        })).filter(person => person.name);
       }
 
       // Determine issue status
@@ -227,42 +216,38 @@ export async function GET(request: NextRequest) {
       let issueId: string | undefined;
 
       if (visit.issues.length > 0) {
-        const issue = visit.issues[0]; // Take first issue
+        const issue = visit.issues[0];
         issues = issue.details;
-        issueId = issue.id; // Keep issue ID as string (ObjectId)
+        issueId = issue.id;
         issueStatusResult = issue.status as 'Pending' | 'Assigned' | 'Resolved';
       }
 
-      // Format date to dd/mm/yyyy format
+      // Format date to dd/mm/yyyy
       const visitDateObj = new Date(visit.visitDate || visit.createdAt);
       const formattedVisitDate = `${visitDateObj.getDate().toString().padStart(2, '0')}/${(visitDateObj.getMonth() + 1).toString().padStart(2, '0')}/${visitDateObj.getFullYear()}`;
 
       // Get previous visit date
       let prevVisitDateStr = null;
-      if (visit.store?.id) {
-        const dates = storeVisitDates.get(visit.store.id) || [];
-        const thisTime = (visit.visitDate || visit.createdAt).getTime();
-        const prevDates = dates.filter((d: any) => d.getTime() < thisTime);
-        if (prevDates.length > 0) {
-          const prevDate = prevDates[0];
-          prevVisitDateStr = `${prevDate.getDate().toString().padStart(2, '0')}/${(prevDate.getMonth() + 1).toString().padStart(2, '0')}/${prevDate.getFullYear()}`;
-        }
+      const prevDate = prevVisitMap.get(visit.id);
+      if (prevDate) {
+        prevVisitDateStr = `${prevDate.getDate().toString().padStart(2, '0')}/${(prevDate.getMonth() + 1).toString().padStart(2, '0')}/${prevDate.getFullYear()}`;
       }
+
       return {
-        id: visit.id, // Keep actual ObjectId for database operations
+        id: visit.id,
         executiveId: visit.executive?.id || 'unknown',
         executiveName: execName,
         executiveInitials: initials,
-        avatarColor: colors[safeColorIndex],
+        avatarColor: colors[safeColorIndex] || colors[0],
         storeName: visit.store?.storeName || 'Unknown Store',
-        storeId: visit.store?.id || 'unknown', // Add store ID for linking
+        storeId: visit.store?.id || 'unknown',
         partnerBrand: partnerBrands,
         visitDate: formattedVisitDate,
         previousVisitDate: prevVisitDateStr,
         visitStatus: visit.status as 'PENDING_REVIEW' | 'REVIEWD',
         reviewerName: visit.reviewedByAdmin?.name,
         issueStatus: issueStatusResult,
-        city: visit.store.city,
+        city: visit.store?.city || 'Unknown',
         issues: issues,
         issueId: issueId,
         feedback: visit.remarks || 'No feedback provided',
@@ -272,57 +257,14 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Apply additional filters (ID filters are already applied to the database query)
-    // These filters operate on the processed data
-    if (partnerBrand && partnerBrand !== 'All Brands') {
-      processedVisits = processedVisits.filter(visit => 
-        visit.partnerBrand.includes(partnerBrand)
-      );
-    }
-
-    if (city && city !== 'All City') {
-      processedVisits = processedVisits.filter(visit => visit.city === city);
-    }
-
-    // Only apply name-based filtering if no ID filtering was done
-    if (storeName && storeName !== 'All Store' && !storeId) {
-      processedVisits = processedVisits.filter(visit => 
-        visit.storeName.toLowerCase().includes(storeName.toLowerCase())
-      );
-    }
-
-    if (executiveName && executiveName !== 'All Executive' && !executiveId) {
-      processedVisits = processedVisits.filter(visit => 
-        visit.executiveName.toLowerCase().includes(executiveName.toLowerCase())
-      );
-    }
-
-    if (visitStatus && visitStatus !== 'All Status') {
-      processedVisits = processedVisits.filter(visit => 
-        visit.visitStatus === visitStatus
-      );
-    }
-
-    if (issueStatus && issueStatus !== 'All Status') {
-      if (issueStatus === 'Pending') {
-        // "Pending" filter includes both Pending and Assigned issues
-        processedVisits = processedVisits.filter(visit => 
-          visit.issueStatus === 'Pending' || visit.issueStatus === 'Assigned'
-        );
-      } else {
-        // Other statuses (Resolved) filter exactly
-        processedVisits = processedVisits.filter(visit => 
-          visit.issueStatus === issueStatus
-        );
-      }
-    }
-
     const response = NextResponse.json({
       visits: processedVisits,
-      total: processedVisits.length
+      total: totalCount,
+      page,
+      limit,
+      totalPages
     });
     
-    // Disable caching for this endpoint
     response.headers.set('Cache-Control', 'no-store');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');
@@ -331,12 +273,8 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Visit Report Data API Error:', error);
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace available');
     return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }, 
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' }, 
       { status: 500 }
     );
   }

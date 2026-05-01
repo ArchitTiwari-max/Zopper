@@ -64,7 +64,7 @@ function getCurrentAndPreviousMonth(): { current: number; previous: number } {
   return { current: currentMonth, previous: previousMonth };
 }
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     // Authenticate user and check if admin
     const user = await getAuthenticatedUser(request);
@@ -82,10 +82,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get query parameters
-    const { searchParams } = new URL(request.url);
-    const storeIds = searchParams.get('storeIds')?.split(',') || [];
-    const year = parseInt(searchParams.get('year') || new Date().getFullYear().toString());
+    // Get body parameters
+    const body = await request.json().catch(() => ({}));
+    const storeIds = body.storeIds || [];
+    const year = parseInt(body.year || new Date().getFullYear().toString());
 
     if (storeIds.length === 0) {
       return NextResponse.json(

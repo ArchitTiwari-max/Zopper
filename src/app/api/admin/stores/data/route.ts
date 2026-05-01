@@ -9,103 +9,33 @@ export async function GET(request: NextRequest) {
     // Authenticate user and check if admin
     const user = await getAuthenticatedUser(request);
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' }, 
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
     if (user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Admin access required' }, 
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    // Get filter parameters
+    // ── Query params ──────────────────────────────────────────────────────────
     const { searchParams } = new URL(request.url);
-    const partnerBrand = searchParams.get('partnerBrand');
-    const city = searchParams.get('city');
-    const storeFilterId = searchParams.get('storeId'); // From filter dropdown
-    const urlStoreId = searchParams.get('urlStoreId'); // From URL navigation
-    const executiveFilterId = searchParams.get('executiveId'); // From filter dropdown
-    const urlExecutiveId = searchParams.get('urlExecutiveId'); // From URL navigation
-    const visitStatus = searchParams.get('visitStatus');
-    const issueStatus = searchParams.get('issueStatus');
-    const dateFilter = searchParams.get('dateFilter') || 'Last 30 Days';
 
-    // Generate ETag for cache validation (2-minute intervals)
-    const currentTime = Math.floor(Date.now() / (2 * 60 * 1000)) * (2 * 60 * 1000);
-    const cacheKey = JSON.stringify({ 
-      partnerBrand, city, storeFilterId, urlStoreId, 
-      executiveFilterId, urlExecutiveId, visitStatus, issueStatus, dateFilter 
-    });
-    const crypto = await import('crypto');
-    const paramsHash = crypto.createHash('md5').update(cacheKey).digest('hex');
-    const etag = `"${currentTime}-admin-stores-${paramsHash}"`;
-    
-    // Check if client has cached version (conditional request)
-    const ifNoneMatch = request.headers.get('if-none-match');
-    if (ifNoneMatch === etag) {
-      return new NextResponse(null, { 
-        status: 304,
-        headers: {
-          'Cache-Control': 'private, max-age=120, stale-while-revalidate=60',
-          'ETag': etag
-        }
-      });
-    }
+    const partnerBrand        = searchParams.get('partnerBrand');        // brand name
+    const partnerBrandType    = searchParams.get('partnerBrandType');    // A+/A/B/C/D
+    const city                = searchParams.get('city');
+    const storeFilterId       = searchParams.get('storeId');
+    const executiveFilterId   = searchParams.get('executiveId');
+    const storeSearchText     = searchParams.get('storeSearchText') || '';
+    const showOnlyUnresolved  = searchParams.get('showOnlyUnresolvedIssues') === 'true';
+    const showOnlyUnreviewed  = searchParams.get('showOnlyUnreviewedVisits') === 'true';
+    const dateFilter          = searchParams.get('dateFilter') || 'Last 30 Days';
+    const isExport            = searchParams.get('isExport') === 'true';
 
-    // Build where clause for stores
-    let whereClause: any = {};
+    // Pagination
+    const page  = Math.max(1, parseInt(searchParams.get('page')  || '1',  10));
+    const limit = Math.min(200, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
+    const skip  = isExport ? 0 : (page - 1) * limit;
+    const take  = isExport ? 10_000 : limit;
 
-    // Add direct ID filters to the database query for better performance
-    if (urlStoreId || (storeFilterId && storeFilterId !== 'All Store')) {
-      whereClause.id = urlStoreId || storeFilterId;
-    }
-
-    if (city && city !== 'All City') {
-      whereClause.city = city;
-    }
-
-    // Add executive filtering to the database query for better performance
-    if (urlExecutiveId || (executiveFilterId && executiveFilterId !== 'All Executive')) {
-      const execId = urlExecutiveId || executiveFilterId;
-      
-      // Find stores assigned to this executive ID (only if execId is not null)
-      if (execId) {
-        const executiveStores = await prisma.executiveStoreAssignment.findMany({
-          where: { executiveId: execId },
-          select: { storeId: true }
-        });
-        
-        if (executiveStores.length > 0) {
-          const assignedStoreIds = executiveStores.map(es => es.storeId);
-          const currentStoreFilter = urlStoreId || storeFilterId;
-          
-          if (currentStoreFilter && currentStoreFilter !== 'All Store') {
-            // If both executive and store are specified, check if the store is assigned to the executive
-            if (assignedStoreIds.includes(currentStoreFilter)) {
-              // Keep the existing store filter as the executive is assigned to this store
-              // whereClause.id is already set above
-            } else {
-              // Store is not assigned to this executive, return no results
-              whereClause.id = 'no-stores-found';
-            }
-          } else {
-            // If only executive is specified, show all stores assigned to them
-            whereClause.id = {
-              in: assignedStoreIds
-            };
-          }
-        } else {
-          // If executive not found or has no assigned stores, return empty result
-          whereClause.id = 'no-stores-found';
-        }
-      }
-    }
-
-    // Resolve date range from dateFilter
+    // ── Date range ────────────────────────────────────────────────────────────
     const now = new Date();
     let startDate: Date;
     switch (dateFilter) {
@@ -129,262 +59,309 @@ export async function GET(request: NextRequest) {
         startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
 
-    // OPTIMIZED: Get stores, brands, and executives concurrently with Promise.all
-    const [stores, brands, allExecutives] = await Promise.all([
-      // Get stores with related data - no limits, fetch all data
+    // ── Resolve brand ID from brand name (for DB-level filter) ────────────────
+    let brandFilterId: string | null = null;
+    let brandFilterTypeValue: string | null = null;
+
+    if (partnerBrand && partnerBrand !== 'All Brands') {
+      const brand = await prisma.brand.findFirst({
+        where: { brandName: partnerBrand },
+        select: { id: true }
+      });
+      if (!brand) {
+        // Brand not found → return empty
+        return NextResponse.json({ stores: [], total: 0, totalPages: 0 });
+      }
+      brandFilterId = brand.id;
+    }
+
+    if (partnerBrandType && partnerBrandType !== 'All Category') {
+      brandFilterTypeValue = partnerBrandType === 'A+' ? 'A_PLUS' : partnerBrandType;
+    }
+
+    // ── Resolve executive → store IDs (for DB-level filter) ───────────────────
+    let execAssignedStoreIds: string[] | null = null;
+    if (executiveFilterId && executiveFilterId !== 'All Executive') {
+      const assignments = await prisma.executiveStoreAssignment.findMany({
+        where: { executiveId: executiveFilterId },
+        select: { storeId: true }
+      });
+      execAssignedStoreIds = assignments.map(a => a.storeId);
+      if (execAssignedStoreIds.length === 0) {
+        return NextResponse.json({ stores: [], total: 0, totalPages: 0 });
+      }
+    }
+
+    // ── Resolve "unresolved issues" store IDs (for DB-level filter) ───────────
+    let unresolvedIssueStoreIds: string[] | null = null;
+    if (showOnlyUnresolved) {
+      const issueRows = await prisma.issue.findMany({
+        where: {
+          status: { in: ['Pending', 'Assigned'] },
+          createdAt: { gte: startDate, lte: now }
+        },
+        select: { visit: { select: { storeId: true } } }
+      });
+      unresolvedIssueStoreIds = [...new Set(issueRows.filter(r => r.visit != null).map(r => r.visit!.storeId))];
+      if (unresolvedIssueStoreIds.length === 0) {
+        return NextResponse.json({ stores: [], total: 0, totalPages: 0 });
+      }
+    }
+
+    // ── Resolve "unreviewed visits" store IDs (for DB-level filter) ───────────
+    let unreviewedVisitStoreIds: string[] | null = null;
+    if (showOnlyUnreviewed) {
+      const visitRows = await prisma.visit.findMany({
+        where: {
+          status: 'PENDING_REVIEW',
+          visitDate: { gte: startDate, lte: now }
+        },
+        select: { storeId: true }
+      });
+      unreviewedVisitStoreIds = [...new Set(visitRows.map(r => r.storeId))];
+      if (unreviewedVisitStoreIds.length === 0) {
+        return NextResponse.json({ stores: [], total: 0, totalPages: 0 });
+      }
+    }
+
+    // ── Build final store WHERE clause ────────────────────────────────────────
+    const whereClause: any = {};
+
+    // Single store filter
+    if (storeFilterId && storeFilterId !== 'All Store') {
+      whereClause.id = storeFilterId;
+    }
+
+    // City filter
+    if (city && city !== 'All City') {
+      whereClause.city = city;
+    }
+
+    // Store name search (partial, case-insensitive)
+    if (storeSearchText.trim()) {
+      whereClause.storeName = {
+        contains: storeSearchText.trim(),
+        mode: 'insensitive'
+      };
+    }
+
+    // Brand ID filter at DB level
+    if (brandFilterId) {
+      whereClause.partnerBrandIds = {
+        has: brandFilterId
+      };
+    }
+
+    // Brand type filter at DB level
+    if (brandFilterTypeValue) {
+      // partnerBrandTypes is an array of types aligned with partnerBrandIds
+      whereClause.partnerBrandTypes = {
+        has: brandFilterTypeValue
+      };
+    }
+
+    // Intersect all store-ID-based filters
+    const storeIdSets: string[][] = [];
+    if (execAssignedStoreIds)      storeIdSets.push(execAssignedStoreIds);
+    if (unresolvedIssueStoreIds)   storeIdSets.push(unresolvedIssueStoreIds);
+    if (unreviewedVisitStoreIds)   storeIdSets.push(unreviewedVisitStoreIds);
+
+    if (storeIdSets.length > 0) {
+      // Intersect all sets
+      const intersected = storeIdSets.reduce((acc, cur) => {
+        const curSet = new Set(cur);
+        return acc.filter(id => curSet.has(id));
+      });
+      if (intersected.length === 0) {
+        return NextResponse.json({ stores: [], total: 0, totalPages: 0 });
+      }
+      // Merge with any existing id filter
+      if (whereClause.id && typeof whereClause.id === 'string') {
+        if (!intersected.includes(whereClause.id)) {
+          return NextResponse.json({ stores: [], total: 0, totalPages: 0 });
+        }
+        // whereClause.id stays as single ID (already in the set)
+      } else {
+        whereClause.id = { in: intersected };
+      }
+    }
+
+    // ── Step 1: Get all matching store IDs + names (lightweight) ─────────────
+    // We need ALL IDs to sort by last-visit globally, then paginate
+    const [allMatchingStores, lastVisitPerStore, brands, allExecutives] = await Promise.all([
       prisma.store.findMany({
         where: whereClause,
-        include: {
-          visits: {
-            orderBy: {
-              visitDate: 'desc' // Order visits by most recent first
-            },
-            select: {
-              id: true,
-              executiveId: true,
-              visitDate: true,
-              createdAt: true,
-              status: true,
-              executive: {
-                select: {
-                  id: true,
-                  name: true
-                }
-              }
-            }
-          },
-          _count: {
-            select: {
-              visits: true
-            }
-          }
-        }
+        select: { id: true, storeName: true }
       }),
 
-      // Get ALL brands for brand filtering - no limits
-      prisma.brand.findMany({
-        select: {
-          id: true,
-          brandName: true
-        }
+      // Get last visit date per store for correct sorting
+      prisma.visit.groupBy({
+        by: ['storeId'],
+        _max: { visitDate: true },
+        orderBy: { _max: { visitDate: 'desc' } }
       }),
 
-      // Get ALL executives with their store assignments - no limits
+      prisma.brand.findMany({ select: { id: true, brandName: true } }),
+
       prisma.executive.findMany({
         select: {
           id: true,
           name: true,
-          executiveStores: {
-            select: {
-              storeId: true
-            }
-          }
+          executiveStores: { select: { storeId: true } }
         }
       })
     ]);
 
-    // Create lookup maps for better performance
+    // ── Step 2: Sort store IDs — recent visit first, then alphabetical ────────
+    const visitDateMap = new Map<string, Date | null>();
+    lastVisitPerStore.forEach(v => {
+      visitDateMap.set(v.storeId, v._max.visitDate ?? null);
+    });
+
+    const total = allMatchingStores.length;
+    const sortedIds = allMatchingStores
+      .sort((a, b) => {
+        const aDate = visitDateMap.get(a.id) ?? null;
+        const bDate = visitDateMap.get(b.id) ?? null;
+        if (aDate && bDate) return bDate.getTime() - aDate.getTime();
+        if (aDate && !bDate) return -1;  // a has visits → comes first
+        if (!aDate && bDate) return 1;   // b has visits → comes first
+        return a.storeName.localeCompare(b.storeName); // both no visits → alphabetical
+      })
+      .map(s => s.id);
+
+    // ── Step 3: Slice for current page ────────────────────────────────────────
+    const paginatedIds = isExport ? sortedIds : sortedIds.slice(skip, skip + take);
+
+    if (paginatedIds.length === 0) {
+      return NextResponse.json({ stores: [], total, totalPages: Math.ceil(total / limit) });
+    }
+
+    // ── Step 4: Fetch full data ONLY for the paginated IDs ───────────────────
+    const stores = await prisma.store.findMany({
+      where: { id: { in: paginatedIds } },
+      select: {
+        id: true,
+        storeName: true,
+        city: true,
+        fullAddress: true,
+        partnerBrandIds: true,
+        partnerBrandTypes: true,
+        visits: {
+          orderBy: { visitDate: 'desc' },
+          take: 1,            // only most-recent visit needed
+          select: {
+            id: true,
+            visitDate: true,
+            createdAt: true,
+            status: true,
+            executiveId: true
+          }
+        }
+      }
+    });
+
+    // Re-order stores to match sorted paginatedIds order
+    const storeById = new Map(stores.map(s => [s.id, s]));
+    const orderedStores = paginatedIds.map(id => storeById.get(id)).filter(Boolean) as typeof stores;
+
+    // ── Build lookup maps ─────────────────────────────────────────────────────
     const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
-    const executiveMap = new Map(allExecutives.map(e => [e.id, e.name]));
-    const executiveStoreMap = new Map<string, string>(); // storeId -> executiveName
-    
-    // Build executive-store assignment map
+    const executiveStoreMap = new Map<string, string>(); // storeId → executiveName
     allExecutives.forEach(exec => {
       exec.executiveStores.forEach(es => {
         executiveStoreMap.set(es.storeId, exec.name);
       });
     });
 
-    // OPTIMIZED: Get all store statistics in bulk with Promise.all - simplified approach
-    const storeIds = stores.map(s => s.id);
-    const [allPendingIssues, allRecentVisits, visitStatusData, issueStatusData] = await Promise.all([
-      // Get pending issues within selected date range for all stores at once
+    const storeIds = orderedStores.map(s => s.id);
+
+    // ── Bulk fetch pending issues + visit counts for this page only ───────────
+    const [pendingIssueMap, recentVisitMap] = await Promise.all([
       prisma.issue.findMany({
         where: {
-          visit: {
-            storeId: { in: storeIds }
-          },
+          visit: { storeId: { in: storeIds } },
           status: { in: ['Pending', 'Assigned'] },
-          createdAt: {
-            gte: startDate,
-            lte: now
-          }
+          createdAt: { gte: startDate, lte: now }
         },
-        select: {
-          id: true,
-          visit: {
-            select: {
-              storeId: true
-            }
-          }
-        }
-      }).then(results => {
-        const issueCountMap = new Map<string, number>();
-        results.forEach(issue => {
-          const storeId = issue.visit.storeId;
-          issueCountMap.set(storeId, (issueCountMap.get(storeId) || 0) + 1);
+        select: { visit: { select: { storeId: true } } }
+      }).then(rows => {
+        const m = new Map<string, number>();
+        rows.forEach(r => {
+          if (!r.visit) return;
+          const sid = r.visit.storeId;
+          m.set(sid, (m.get(sid) || 0) + 1);
         });
-        return issueCountMap;
+        return m;
       }),
 
-      // Get total visits within selected date range for all stores at once
-      prisma.visit.findMany({
+      prisma.visit.groupBy({
+        by: ['storeId'],
         where: {
           storeId: { in: storeIds },
-          visitDate: {
-            gte: startDate,
-            lte: now
-          }
+          visitDate: { gte: startDate, lte: now }
         },
-        select: { storeId: true }
-      }).then(results => {
-        const recentVisitMap = new Map<string, number>();
-        results.forEach(visit => {
-          const storeId = visit.storeId;
-          recentVisitMap.set(storeId, (recentVisitMap.get(storeId) || 0) + 1);
-        });
-        return recentVisitMap;
-      }),
-
-      // Get visit status data if filtering - simplified
-      visitStatus && visitStatus !== 'All Status' ? prisma.visit.findMany({
-        where: {
-          storeId: { in: storeIds },
-          status: visitStatus as any
-        },
-        select: { storeId: true }
-      }).then(results => new Set(results.map(r => r.storeId))) : Promise.resolve(null),
-
-      // Get issue status data if filtering - simplified
-      issueStatus && issueStatus !== 'All Status' ? (() => {
-        let issueStatusFilter: string[];
-        if (issueStatus === 'Pending') {
-          issueStatusFilter = ['Pending', 'Assigned'];
-        } else if (issueStatus === 'Resolved') {
-          issueStatusFilter = ['Resolved'];
-        } else {
-          issueStatusFilter = [issueStatus];
-        }
-        
-        return prisma.issue.findMany({
-          where: {
-            visit: { storeId: { in: storeIds } },
-            status: { in: issueStatusFilter as any }
-          },
-          select: {
-            visit: {
-              select: { storeId: true }
-            }
-          }
-        }).then(results => new Set(results.map(r => r.visit.storeId)));
-      })() : Promise.resolve(null)
+        _count: { id: true }
+      }).then(rows => {
+        const m = new Map<string, number>();
+        rows.forEach(r => m.set(r.storeId, r._count.id));
+        return m;
+      })
     ]);
 
-    // Process stores data efficiently without individual database calls
-    const processedStores = stores.map((store) => {
-      // Get partner brands for this store
-      const partnerBrands = store.partnerBrandIds
-        .map(brandId => brandMap.get(brandId))
+    // ── Map to response shape ─────────────────────────────────────────────────
+    const responseStores = orderedStores.map(store => {
+      const partnerBrands = (store.partnerBrandIds || [])
+        .map(id => brandMap.get(id))
         .filter(Boolean) as string[];
 
-      // Apply brand filter if specified
-      if (partnerBrand && partnerBrand !== 'All Brands') {
-        if (!partnerBrands.includes(partnerBrand)) {
-          return null; // Filter out this store
-        }
-      }
-
-      // Apply visit status filter if specified
-      if (visitStatus && visitStatus !== 'All Status' && visitStatusData) {
-        if (!visitStatusData.has(store.id)) {
-          return null; // Filter out this store
-        }
-      }
-
-      // Apply issue status filter if specified
-      if (issueStatus && issueStatus !== 'All Status' && issueStatusData) {
-        if (!issueStatusData.has(store.id)) {
-          return null; // Filter out this store
-        }
-      }
-
-      // Get statistics from bulk queries
-      const pendingIssues = allPendingIssues.get(store.id) || 0;
-      const recentVisits = allRecentVisits.get(store.id) || 0;
-      const storeStatus = recentVisits > 0 ? 'Active' : 'Inactive';
-
-      // Get assigned executive from pre-built map
-      const assignedExecutive = executiveStoreMap.get(store.id) || 'Not Assigned';
-        
-      // Get last visit date from visits (already fetched with store data)
-      let lastVisitDate: Date | null = null;
-      if (store.visits.length > 0) {
-        const recentVisit = store.visits[0];
-        lastVisitDate = new Date(recentVisit.visitDate || recentVisit.createdAt);
-      }
-
-      // Build {name,type} pairs aligned by index
       const partnerBrandPairs = (store.partnerBrandIds || []).map((id, idx) => ({
         id,
         name: brandMap.get(id) || 'Unknown Brand',
         type: (store as any).partnerBrandTypes?.[idx] || null
       }));
 
+      const lastVisit = store.visits[0]
+        ? new Date(store.visits[0].visitDate || store.visits[0].createdAt).toISOString()
+        : null;
+
+      const pendingReviews = store.visits.filter(v => v.status === 'PENDING_REVIEW').length;
+
       return {
         id: store.id,
         storeName: store.storeName,
-        partnerBrands: partnerBrands,
-        partnerBrandPairs: partnerBrandPairs,
-        address: store.fullAddress || `${store.city}`,
-        contactPerson: 'Store Manager', // This info is not in schema, using placeholder
-        assignedTo: assignedExecutive,
-        pendingReviews: store.visits.filter(v => v.status === 'PENDING_REVIEW').length,
-        // Date-filtered metrics
-        pendingIssues: pendingIssues,
-        totalVisits: allRecentVisits.get(store.id) || 0,
         city: store.city,
-        status: storeStatus,
-        lastVisit: lastVisitDate ? lastVisitDate.toISOString() : null,
-        lastVisitDate: lastVisitDate // Add for sorting
+        address: store.fullAddress || store.city,
+        partnerBrands,
+        partnerBrandPairs,
+        assignedTo: executiveStoreMap.get(store.id) || 'Not Assigned',
+        pendingIssues: pendingIssueMap.get(store.id) || 0,
+        totalVisits: recentVisitMap.get(store.id) || 0,
+        pendingReviews,
+        status: (recentVisitMap.get(store.id) || 0) > 0 ? 'Active' : 'Inactive',
+        lastVisit,
+        contactPerson: 'Store Manager'
       };
     });
 
-    // Filter out null values (stores that didn't match filters)
-    let filteredStores = processedStores.filter(store => store !== null);
+    const totalPages = Math.ceil(total / limit);
 
-    // Sort stores by most recent visit first (stores with recent visits first)
-    filteredStores.sort((a, b) => {
-      // If both have visits, sort by most recent visit date
-      if (a.lastVisitDate && b.lastVisitDate) {
-        return b.lastVisitDate.getTime() - a.lastVisitDate.getTime();
-      }
-      // If only one has visits, prioritize the one with visits
-      if (a.lastVisitDate && !b.lastVisitDate) return -1;
-      if (!a.lastVisitDate && b.lastVisitDate) return 1;
-      // If neither has visits, sort alphabetically by store name
-      return a.storeName.localeCompare(b.storeName);
-    });
-
-    // Remove lastVisitDate from response as it's only used for sorting
-    const finalStores = filteredStores.map(({ lastVisitDate, ...store }) => store);
-
+    // ── Response with cache headers ───────────────────────────────────────────
     const response = NextResponse.json({
-      stores: finalStores,
-      total: finalStores.length
+      stores: responseStores,
+      total,
+      totalPages,
+      page,
+      limit
     });
-    
-    // Add secure caching headers
-    response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=60');
+
+    response.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=30');
     response.headers.set('Vary', 'Authorization');
-    response.headers.set('ETag', etag);
-    
+
     return response;
 
   } catch (error) {
     console.error('Stores Data API Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' }, 
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
