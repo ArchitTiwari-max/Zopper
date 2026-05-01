@@ -18,7 +18,8 @@
     "import-users": "tsx src/querryRunner/user/user.ts",
     "send-emails": "tsx src/querryRunner/user/emailsender/email.ts",
     "import-sales": "tsx src/querryRunner/sales/sale.ts",
-    "import-datewisesale": "tsx src/querryRunner/sales/datewisesale.ts"
+    "import-datewisesale": "tsx src/querryRunner/sales/datewisesale.ts",
+    "pjp-report": "tsx src/querryRunner/pjp-report/pjp-report.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

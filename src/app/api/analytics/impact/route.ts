@@ -218,52 +218,61 @@ export async function GET(request: NextRequest) {
     const supVisitWhere: any = { ...visitWhere, visitDate: { gte: globalBefore, lte: globalAfter } };
     const supDVisitWhere: any = { ...dVisitWhere, connectDate: { gte: globalBefore, lte: globalAfter } };
 
-    const supVisits = await prisma.visit.findMany({
-      where: supVisitWhere,
-      select: { storeId: true, visitDate: true, createdAt: true },
-      orderBy: undefined,
-    });
-    const supDigitalVisits = await prisma.digitalVisit.findMany({
-      where: supDVisitWhere,
-      select: { storeId: true, connectDate: true },
-      orderBy: undefined,
-    });
-
-    const supIssues = await prisma.issue.findMany({
-      where: {
-        AND: [
-          { OR: [ { createdAt: { gte: globalBefore, lte: globalAfter } }, { updatedAt: { gte: globalBefore, lte: globalAfter } } ] },
-          { OR: [ { visit: { storeId: { in: storeIds } } }, { digitalVisit: { storeId: { in: storeIds } } } ] },
-        ],
-      },
-      select: {
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        visit: { select: { storeId: true } },
-        digitalVisit: { select: { storeId: true } },
-      },
-      orderBy: undefined,
-    });
-
     // 4) Sales records for candidate stores and all their brandIds
     const allBrandIds = Array.from(new Set(candidate.flatMap(c => c.typeBrandIds)));
 
-    // Fetch brand names for all brand IDs
-    const brandRows = await prisma.brand.findMany({ where: { id: { in: allBrandIds } }, select: { id: true, brandName: true } });
+    // Fetch everything concurrently, AND avoid relational ORs on large arrays in Prisma
+    const [supVisits, supDigitalVisits, supIssuesRaw, brandRows, salesRecords] = await Promise.all([
+      prisma.visit.findMany({
+        where: supVisitWhere,
+        select: { storeId: true, visitDate: true, createdAt: true },
+        orderBy: undefined,
+      }),
+      prisma.digitalVisit.findMany({
+        where: supDVisitWhere,
+        select: { storeId: true, connectDate: true },
+        orderBy: undefined,
+      }),
+      prisma.issue.findMany({
+        where: {
+          OR: [ 
+            { createdAt: { gte: globalBefore, lte: globalAfter } }, 
+            { updatedAt: { gte: globalBefore, lte: globalAfter } } 
+          ]
+        },
+        select: {
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          visit: { select: { storeId: true } },
+          digitalVisit: { select: { storeId: true } },
+        },
+        orderBy: undefined,
+      }),
+      prisma.brand.findMany({ where: { id: { in: allBrandIds } }, select: { id: true, brandName: true } }),
+      prisma.salesRecord.findMany({
+        where: {
+          storeId: { in: storeIds },
+          brandId: { in: allBrandIds },
+        },
+        select: {
+          storeId: true,
+          brandId: true,
+          dailySales: true,
+        },
+      })
+    ]);
+
+    // Filter issues in memory to avoid crushing the DB with massive OR queries
+    const storeIdsSet = new Set(storeIds);
+    const supIssues = supIssuesRaw.filter(ix => 
+      (ix.visit?.storeId && storeIdsSet.has(ix.visit.storeId)) || 
+      (ix.digitalVisit?.storeId && storeIdsSet.has(ix.digitalVisit.storeId))
+    );
+
     const brandNameById = new Map<string, string>(brandRows.map(b => [b.id, b.brandName]));
 
-    const salesRecords = await prisma.salesRecord.findMany({
-      where: {
-        storeId: { in: storeIds },
-        brandId: { in: allBrandIds },
-      },
-      select: {
-        storeId: true,
-        brandId: true,
-        dailySales: true, // grouped by month { "1": [ { date: 'DD-MM-YYYY', countOfSales, revenue } ], ... }
-      },
-    });
+
 
     // Group sales by store
     const salesByStore = new Map<string, Array<{ brandId: string; dailySales: Record<string, any[]> }>>();

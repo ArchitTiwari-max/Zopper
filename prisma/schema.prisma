@@ -632,3 +632,16 @@ model StoreChainConfig {
   @@map("StoreChainConfig")
 }
 
+// ─── Distance Cache ──────────────────────────────────────────────────────────
+// Caches driving distances (in km) queried from Google Maps APIs to save costs
+// origin and destination are stored as "lat,lng" strings to avoid float precision issues
+model DistanceCache {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  origin      String   // "lat,lng"
+  destination String   // "lat,lng"
+  distanceKm  Float
+  createdAt   DateTime @default(now())
+
+  @@unique([origin, destination])
+  @@map("DistanceCache")
+}

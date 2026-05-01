@@ -45,6 +45,8 @@ const AdminStoresPage: React.FC = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 20;
+  const [totalRecords, setTotalRecords] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   // Local search text for store name (partial match)
   const [storeSearchText, setStoreSearchText] = useState<string>('');
@@ -103,12 +105,16 @@ const AdminStoresPage: React.FC = () => {
       const idsToFetch = storeIds || storeData.map(s => s.id);
       if (idsToFetch.length === 0) return;
 
-      const response = await fetch(`/api/admin/stores/rag-summary?storeIds=${idsToFetch.join(',')}&year=${new Date().getFullYear()}`, {
-        method: 'GET',
+      const response = await fetch('/api/admin/stores/rag-summary', {
+        method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          storeIds: idsToFetch,
+          year: new Date().getFullYear()
+        })
       });
 
       if (response.ok) {
@@ -137,13 +143,24 @@ const AdminStoresPage: React.FC = () => {
     }
   };
 
-  // Fetch ALL stores data from API (no server-side filtering)
+  // Fetch ALL stores data from API (with server-side pagination)
   const fetchStoreData = async () => {
     setIsLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
       params.append('dateFilter', selectedDateFilter);
+      params.append('page', currentPage.toString());
+      params.append('limit', pageSize.toString());
+      params.append('partnerBrand', filters.partnerBrand);
+      params.append('partnerBrandType', filters.partnerBrandType);
+      params.append('city', filters.city);
+      params.append('storeId', filters.storeName);
+      params.append('executiveId', filters.executiveName);
+      params.append('storeSearchText', storeSearchText);
+      params.append('showOnlyUnresolvedIssues', filters.showOnlyUnresolvedIssues.toString());
+      params.append('showOnlyUnreviewedVisits', filters.showOnlyUnreviewedVisits.toString());
+
       const response = await fetch(`/api/admin/stores/data?${params.toString()}`, {
         method: 'GET',
         headers: {
@@ -159,6 +176,9 @@ const AdminStoresPage: React.FC = () => {
 
       const data = await response.json();
       setStoreData(data.stores || []);
+      setFilteredStores(data.stores || []);
+      setTotalRecords(data.total || 0);
+      setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error('Failed to fetch store data:', error);
       setError(error instanceof Error ? error.message : 'Failed to load store data');
@@ -169,121 +189,7 @@ const AdminStoresPage: React.FC = () => {
     }
   };
 
-  // Apply filters to existing data (client-side filtering)
-  const applyFilters = () => {
-    if (!storeData.length) {
-      setFilteredStores([]);
-      setIsFilterChanging(false);
-      return;
-    }
-
-    let filtered = storeData.filter(store => {
-      // Filter by store name (exact by ID via dropdown)
-      if (filters.storeName !== 'All Store') {
-        if (store.id !== filters.storeName) {
-          return false;
-        }
-      }
-
-      // Filter by store name (partial text search)
-      if (storeSearchText.trim() !== '') {
-        const txt = storeSearchText.trim().toLowerCase();
-        if (!store.storeName.toLowerCase().includes(txt)) {
-          return false;
-        }
-      }
-
-      // Filter by partner brand
-      if (filters.partnerBrand !== 'All Brands') {
-        if (!store.partnerBrands.includes(filters.partnerBrand)) {
-          return false;
-        }
-      }
-
-      // Filter by category (partner brand type)
-      if (filters.partnerBrandType && filters.partnerBrandType !== 'All Category') {
-        const desired = filters.partnerBrandType;
-        const hasType = Array.isArray((store as any).partnerBrandPairs) && (store as any).partnerBrandPairs.some((pb: any) => {
-          const t = pb.type;
-          const mapped = t === 'A_PLUS' ? 'A+' : t; // map enum to display
-          return mapped === desired;
-        });
-        if (!hasType) return false;
-      }
-
-      // Filter by city
-      if (filters.city !== 'All City') {
-        if (store.city !== filters.city) {
-          return false;
-        }
-      }
-
-      // Filter by assigned executive
-      if (filters.executiveName !== 'All Executive') {
-        // filters.executiveName contains executive ID
-        // Need to check if this store is assigned to this executive
-        const executive = filterData.executives.find(e => e.id === filters.executiveName);
-        if (!executive) return false;
-
-        // Check if this store's ID is in the executive's assignedStoreIds array
-        if (!executive.assignedStoreIds || !executive.assignedStoreIds.includes(store.id)) {
-          return false;
-        }
-      }
-
-      // Filter: Show only stores with unresolved issues
-      if (filters.showOnlyUnresolvedIssues && store.pendingIssues === 0) {
-        return false;
-      }
-
-      // Filter: Show only stores with unreviewed visits
-      if (filters.showOnlyUnreviewedVisits && store.pendingReviews === 0) {
-        return false;
-      }
-
-      return true;
-    });
-
-    // Apply sorting if a sort column is selected
-    if (sortConfig.key) {
-      filtered.sort((a, b) => {
-        let aValue: any;
-        let bValue: any;
-
-        switch (sortConfig.key) {
-          case 'storeName':
-            aValue = a.storeName.toLowerCase();
-            bValue = b.storeName.toLowerCase();
-            break;
-          case 'city':
-            aValue = a.city.toLowerCase();
-            bValue = b.city.toLowerCase();
-            break;
-          case 'lastVisit':
-            // Handle null values for lastVisit
-            if (!a.lastVisit && !b.lastVisit) return 0;
-            if (!a.lastVisit) return 1; // Put stores with no visits at the end
-            if (!b.lastVisit) return -1; // Put stores with no visits at the end
-            aValue = new Date(a.lastVisit).getTime();
-            bValue = new Date(b.lastVisit).getTime();
-            break;
-          default:
-            return 0;
-        }
-
-        if (aValue < bValue) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-
-    setFilteredStores(filtered);
-    setIsFilterChanging(false);
-  };
+  // Server-side filtering replaces applyFilters
 
   // Function to update URL based on current filter state
   const updateUrlWithFilters = (currentFilters: StoreFilters) => {
@@ -403,45 +309,26 @@ const AdminStoresPage: React.FC = () => {
     }
   }, [searchParams, filterData]);
 
-  // OPTIMIZED LOADING: Load table, filter, and RAG data concurrently
+  // On mount: load filter dropdown data only (store data is fetched by the debounced effect below)
   useEffect(() => {
-    // Load table data first (higher priority for user experience)
-    fetchStoreData();
-
-    // Load filter data concurrently
     fetchFilterData();
   }, []);
 
-  // Fetch RAG data after store data is loaded
+  // Fetch RAG data for visible page only after store data loads
   useEffect(() => {
     if (storeData.length > 0) {
-      fetchRAGData();
+      const ids = storeData.map(s => s.id);
+      fetchRAGData(ids);
     }
   }, [storeData]);
 
-  // Refetch data when date filter changes
+  // Debounced re-fetch on any filter / pagination change
   useEffect(() => {
-    fetchStoreData();
-    // RAG data will be refetched automatically when storeData updates
-  }, [selectedDateFilter]);
-
-
-  // Apply client-side filters and sorting when filters, data, or sorting changes
-  useEffect(() => {
-    if (storeData.length > 0) {
-      applyFilters();
-    }
-  }, [filters, storeData, sortConfig, storeSearchText]);
-
-  // Reset to page 1 when filters or search text change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filters, storeSearchText]);
-
-  // Optionally refetch when search params change if needed (e.g., deep link)
-  useEffect(() => {
-    // No refetch needed since we always fetch all data; just sync filter state from URL
-  }, [searchParams]);
+    const timer = setTimeout(() => {
+      fetchStoreData();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [filters, storeSearchText, selectedDateFilter, currentPage, sortConfig]);
 
   const handleFilterChange = (filterType: keyof StoreFilters, value: string | boolean) => {
     setIsFilterChanging(true);
@@ -620,32 +507,98 @@ const AdminStoresPage: React.FC = () => {
     return [headers, ...rows];
   };
 
-  const handleExportXLS = () => {
-    const aoa = buildExportAOA();
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const handleExportXLS = async () => {
+    try {
+      setIsLoading(true);
+      const params = new URLSearchParams();
+      params.append('dateFilter', selectedDateFilter);
+      params.append('page', '1');
+      params.append('limit', '10000'); // large limit for export
+      params.append('isExport', 'true'); // bypass pagination entirely in backend
+      params.append('partnerBrand', filters.partnerBrand);
+      params.append('partnerBrandType', filters.partnerBrandType);
+      params.append('city', filters.city);
+      params.append('storeId', filters.storeName);
+      params.append('executiveId', filters.executiveName);
+      params.append('storeSearchText', storeSearchText);
+      params.append('showOnlyUnresolvedIssues', filters.showOnlyUnresolvedIssues.toString());
+      params.append('showOnlyUnreviewedVisits', filters.showOnlyUnreviewedVisits.toString());
 
-    // Column widths for readability
-    const cols = [
-      { wch: 24 }, // Store ID
-      { wch: 28 }, // Store Name
-      { wch: 16 }, // City
-      { wch: 28 }, // Partner Brands (with type)
-      { wch: 22 }, // Assigned Executive
-      { wch: 14 }, // Last Visit
-      { wch: 16 }, // Total Visits
-      { wch: 16 }, // Pending Issues
-    ];
-    (ws as any)['!cols'] = cols;
+      const response = await fetch(`/api/admin/stores/data?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
 
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Stores');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    const filename = `stores-${yyyy}-${mm}-${dd}.xls`;
-    XLSX.writeFile(wb, filename, { bookType: 'xls' });
+      const data = await response.json();
+      const exportStores: StoreData[] = data.stores || [];
+
+      const headers = [
+        'Store ID',
+        'Store Name',
+        'City',
+        'Partner Brands',
+        'Assigned Executive',
+        'Last Visit',
+        'Total Visits',
+        'Pending Issues'
+      ];
+
+      const rows = exportStores.map((s) => {
+        const pbPairs = (s as any).partnerBrandPairs as Array<{ id: string; name: string; type?: string | null }> | undefined;
+        const partnerBrandsCombined = Array.isArray(pbPairs) && pbPairs.length > 0
+          ? pbPairs.map(pb => `${pb.name} (${pb.type ? (pb.type === 'A_PLUS' ? 'A+' : pb.type) : 'Not Categorized'})`).join(', ')
+          : s.partnerBrands.join(', ');
+
+        return [
+          s.id,
+          s.storeName,
+          s.city,
+          partnerBrandsCombined,
+          s.assignedTo || '',
+          formatLastVisitDate(s.lastVisit ?? null),
+          s.totalVisits,
+          s.pendingIssues,
+        ];
+      });
+
+      const aoa = [headers, ...rows];
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+      // Column widths for readability
+      const cols = [
+        { wch: 24 }, // Store ID
+        { wch: 28 }, // Store Name
+        { wch: 16 }, // City
+        { wch: 28 }, // Partner Brands (with type)
+        { wch: 22 }, // Assigned Executive
+        { wch: 14 }, // Last Visit
+        { wch: 16 }, // Total Visits
+        { wch: 16 }, // Pending Issues
+      ];
+      (ws as any)['!cols'] = cols;
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Stores');
+
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const filename = `stores-${yyyy}-${mm}-${dd}.xls`;
+      XLSX.writeFile(wb, filename, { bookType: 'xls' });
+    } catch (err) {
+      console.error('Failed to export:', err);
+      alert('Failed to export data');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Get filter options from filter data (not store data for better performance)
@@ -702,18 +655,34 @@ const AdminStoresPage: React.FC = () => {
     return exec ? exec.name : null;
   })();
 
-  // Derived pagination values
-  const totalPages = Math.max(1, Math.ceil(filteredStores.length / pageSize));
+  // Derived pagination values from state
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const currentPageStores = filteredStores.slice(startIndex, endIndex);
-  const totalCount = filteredStores.length;
-  const rangeStart = totalCount === 0 ? 0 : startIndex + 1;
-  const rangeEnd = Math.min(endIndex, totalCount);
+  const currentPageStores = storeData; // Already paginated
+  
+  // Sort the current page stores in memory if a sort is active
+  if (sortConfig.key) {
+    currentPageStores.sort((a, b) => {
+      let aVal = a[sortConfig.key as keyof StoreData];
+      let bVal = b[sortConfig.key as keyof StoreData];
+      
+      if (sortConfig.key === 'lastVisit') {
+        aVal = aVal ? new Date(aVal as string).getTime() : 0;
+        bVal = bVal ? new Date(bVal as string).getTime() : 0;
+      }
+      
+      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
+  const rangeStart = totalRecords === 0 ? 0 : startIndex + 1;
+  const rangeEnd = Math.min(endIndex, totalRecords);
 
   // Count summary text based on selected filters
   const getCountSummary = () => {
-    const count = filteredStores.length;
+    const count = totalRecords;
     const brand = filters.partnerBrand !== 'All Brands' ? filters.partnerBrand : null;
     const city = filters.city !== 'All City' ? filters.city : null;
     const cat = filters.partnerBrandType && filters.partnerBrandType !== 'All Category' ? filters.partnerBrandType : null;
@@ -1208,7 +1177,7 @@ const AdminStoresPage: React.FC = () => {
           </button>
         </div>
         <div style={{ flex: 1, textAlign: 'center', fontWeight: 700, color: '#0f172a' }}>
-          {rangeStart}-{rangeEnd} of {totalCount} results
+          {rangeStart}-{rangeEnd} of {totalRecords} results
         </div>
         <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
           <button

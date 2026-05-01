@@ -53,13 +53,13 @@ const UpdateCoordinatesModal: React.FC<UpdateCoordinatesModalProps> = ({
   const initMap = useCallback(() => {
     if (!mapRef.current || !window.google) return;
 
-    const center =
-      currentLat != null && currentLng != null
-        ? { lat: currentLat, lng: currentLng }
-        : INDIA_CENTER;
+    const hasValidCoords =
+      currentLat != null &&
+      currentLng != null &&
+      (Math.abs(currentLat) > 0.01 || Math.abs(currentLng) > 0.01);
 
-    const zoom =
-      currentLat != null && currentLng != null ? DEFAULT_ZOOM_STORE : DEFAULT_ZOOM_INDIA;
+    const center = hasValidCoords ? { lat: currentLat!, lng: currentLng! } : INDIA_CENTER;
+    const zoom = hasValidCoords ? DEFAULT_ZOOM_STORE : DEFAULT_ZOOM_INDIA;
 
     const map = new window.google.maps.Map(mapRef.current, {
       center,
@@ -142,6 +142,7 @@ const UpdateCoordinatesModal: React.FC<UpdateCoordinatesModalProps> = ({
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey) {
       console.error('NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not set');
+      setMapLoaded(false);
       return;
     }
 
@@ -163,17 +164,21 @@ const UpdateCoordinatesModal: React.FC<UpdateCoordinatesModalProps> = ({
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}`;
       script.async = true;
       script.defer = true;
+      script.onerror = () => {
+        console.error('Failed to load Google Maps script');
+        showToast('error', 'Failed to load Google Maps. Please check your API key.');
+      };
       document.head.appendChild(script);
     } else {
-      // Script tag exists but map not yet initialized — wait for callback
-      if (window.google && window.google.maps) {
-        initMap();
-      }
+      // Script tag exists but window.google might not be ready yet
+      // The callback is already registered on window[callbackName]
     }
 
     return () => {
-      // Cleanup callback
-      delete window[callbackName];
+      // Cleanup callback but NOT the script tag (it's shared)
+      if (window[callbackName]) {
+        delete window[callbackName];
+      }
     };
   }, [initMap]);
 
@@ -273,7 +278,15 @@ const UpdateCoordinatesModal: React.FC<UpdateCoordinatesModalProps> = ({
             />
           </div>
 
-          {!mapLoaded && (
+          {!apiKey && (
+            <div className="ucm-map-error">
+              <span className="ucm-error-icon">⚠️</span>
+              <p>Google Maps API Key is missing.</p>
+              <p className="ucm-error-hint">Please ensure NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is set in your production environment variables.</p>
+            </div>
+          )}
+
+          {apiKey && !mapLoaded && (
             <div className="ucm-map-loading">
               <div className="ucm-spinner"></div>
               <span>Loading map…</span>
