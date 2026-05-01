@@ -60,7 +60,15 @@ export async function sendMail(to: string, subject: string, html: string) {
  * @param visitData Array of visit data with executive name, stores (comma-separated), and total visit count
  */
 export async function sendDailyVisitSummaryToAdmins(
-  visitData: Array<{ executiveId: string; executiveName: string; storeName: string; visitCount: number; pjpStoreNames: string }>
+  visitData: Array<{ 
+    executiveId: string; 
+    executiveName: string; 
+    visitCount: number; 
+    visitsHtml: string; 
+    pjpStoresHtml: string; 
+    hasDeviation?: boolean;
+    hasPjp: boolean;
+  }>
 ) {
   const adminEmails = [
     'vishal.shukla@zopper.com',
@@ -84,30 +92,8 @@ export async function sendDailyVisitSummaryToAdmins(
   // Create HTML table for all visits
   let tableRows = '';
   visitData.forEach((visit, index) => {
-    let storesList = '';
-    let pjpStoresList = '';
-    
-    if (visit.storeName.trim()) {
-      // Convert delimiter-separated stores to bullet list
-      const stores = visit.storeName.split('|||').map(s => s.trim());
-      storesList = stores
-        .map(store => `<li style="margin: 4px 0;">${store}</li>`)
-        .join('');
-    } else {
-      // No visits recorded
-      storesList = '<li style="margin: 4px 0; color: #999;">No visits recorded</li>';
-    }
-
-    if (visit.pjpStoreNames && visit.pjpStoreNames.trim()) {
-      // Convert delimiter-separated PJP stores to bullet list
-      const pjpStores = visit.pjpStoreNames.split('|||').map(s => s.trim());
-      pjpStoresList = pjpStores
-        .map(store => `<li style="margin: 4px 0;">${store}</li>`)
-        .join('');
-    } else {
-      // No PJP recorded
-      pjpStoresList = '<li style="margin: 4px 0; color: #999;">No PJP submitted</li>';
-    }
+    let storesList = visit.visitsHtml || '<li style="margin: 4px 0; color: #999;">No visits recorded</li>';
+    let pjpStoresList = visit.pjpStoresHtml || '<li style="margin: 4px 0; color: #999;">No PJP submitted</li>';
 
     tableRows += `
       <tr style="background-color: ${index % 2 === 0 ? '#f9f9f9' : '#ffffff'}; vertical-align: top;">
@@ -121,6 +107,17 @@ export async function sendDailyVisitSummaryToAdmins(
           <ul style="margin: 0; padding-left: 20px;">
             ${pjpStoresList}
           </ul>
+        </td>
+        <td style="padding: 12px; border: 1px solid #ddd; font-style: italic; color: #555;">
+          ${
+            visit.hasPjp === false
+              ? '<span style="color: #ccc;">-</span>'
+              : visit.hasDeviation === false
+                ? '<span style="color: #10b981; font-weight: bold; font-style: normal;">✅ PJP matches with visits</span>'
+                : (visit.pjpReason === 'Reason not provided' 
+                   ? '<span style="color: #ef4444; font-weight: bold; font-style: normal;">⚠️ Reason not provided</span>' 
+                   : visit.pjpReason)
+          }
         </td>
         <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: #667eea;">
           <a href="https://salesdost.zopper.com/admin/visit-report?executiveId=${visit.executiveId}" style="color: #667eea; text-decoration: none; cursor: pointer;">
@@ -213,7 +210,7 @@ export async function sendDailyPJPSummaryToAdmins(
     .replace('{{DATE}}', today)
     .replace('{{TABLE_ROWS}}', tableRows);
 
-  const subject = `📅 Daily PJP Summary (Planned) - ${today}`;
+  const subject = `🗓️ Daily PJP Summary (Planned) - ${today}`;
 
   for (const adminEmail of adminEmails) {
     await sendMail(adminEmail, subject, html);
@@ -233,9 +230,9 @@ export async function sendDailyPJPSummaryToAdmins(
 export async function sendVisitNotificationToExecutive(
   executiveEmail: string,
   executiveName: string,
-  storeName: string,
+  visitsHtml: string,
   todayVisitCount: number,
-  pjpStoreName: string = ''
+  pjpStoresHtml: string = ''
 ) {
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
@@ -244,22 +241,8 @@ export async function sendVisitNotificationToExecutive(
     day: 'numeric'
   });
 
-  // Parse stores from delimiter-separated string and format as HTML list
-  const formatStoresList = (stores: string, noDataText: string = 'No visits recorded'): string => {
-    if (!stores || !stores.trim()) {
-      return noDataText;
-    }
-    const storeArray = stores.split('|||').map(s => s.trim()).filter(s => s);
-    if (storeArray.length === 0) {
-      return noDataText;
-    }
-    return `<ul style="margin: 0; padding-left: 20px;">` + storeArray
-      .map(store => `<li style="margin: 6px 0; line-height: 1.5;">${store}</li>`)
-      .join('') + `</ul>`;
-  };
-
-  const storesListHtml = formatStoresList(storeName);
-  const pjpStoresListHtml = formatStoresList(pjpStoreName, 'No PJP submitted');
+  const storesListHtml = visitsHtml || '<ul style="margin: 0; padding-left: 20px;"><li style="margin: 6px 0; line-height: 1.5; color: #999;">No visits recorded</li></ul>';
+  const pjpStoresListHtml = pjpStoresHtml || '<ul style="margin: 0; padding-left: 20px;"><li style="margin: 6px 0; line-height: 1.5; color: #999;">No PJP submitted</li></ul>';
 
   let html = '';
   
@@ -267,7 +250,7 @@ export async function sendVisitNotificationToExecutive(
     // No visits - show a different message
     html = visitNotificationTemplate
       .replace('{{HEADER_TITLE}}', 'No Visits Recorded')
-      .replace('{{STATUS_MESSAGE}}', 'No visits have been recorded by you today.')
+      .replace('{{STATUS_MESSAGE}}', 'No visits have been recorded by you.')
       .replace('{{EXECUTIVE_NAME}}', executiveName)
       .replace(/{{STORE_NAME}}/g, storesListHtml)
       .replace(/{{PJP_STORES}}/g, pjpStoresListHtml)
@@ -315,11 +298,11 @@ export async function sendPJPNotificationToExecutive(
 
   const formatPJPList = (stores: string): string => {
     if (!stores || !stores.trim()) {
-      return '<p style="color: #999; font-style: italic;">No PJP submitted for today.</p>';
+      return '<p style="color: #999; font-style: italic;">No PJP submitted.</p>';
     }
     const storeArray = stores.split('|||').map(s => s.trim()).filter(s => s);
     if (storeArray.length === 0) {
-      return '<p style="color: #999; font-style: italic;">No PJP submitted for today.</p>';
+      return '<p style="color: #999; font-style: italic;">No PJP submitted.</p>';
     }
     return `<ul style="margin: 0; padding-left: 20px;">` + storeArray
       .map(store => `<li style="margin: 6px 0; line-height: 1.5;">${store}</li>`)

@@ -13,6 +13,7 @@ import {
   Users,
   X
 } from 'lucide-react';
+import Swal from 'sweetalert2';
 import SuggestPJP from './SuggestPJP';
 import SubmittedPJPModal from './SubmittedPJPModal';
 import UpdateCoordinatesModal from './UpdateCoordinatesModal';
@@ -45,6 +46,7 @@ const Store: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [coordinateStore, setCoordinateStore] = useState<StoreData | null>(null);
 
   // RAG data state
@@ -216,8 +218,43 @@ const Store: React.FC = () => {
     }
   };
 
+  const checkDeviationAndProceed = async (callback: () => void) => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/executive/pjp-deviation');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.hasDeviation) {
+          setLoading(false);
+          Swal.fire({
+            title: '⚠️ Action Blocked',
+            text: 'You cannot create a new PJP because you have not submitted a reason for your recent unfulfilled PJP. Please provide the reason first.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#6366f1',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Go to Submitted PJPs',
+            cancelButtonText: 'Close'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              setShowSubmittedModal(true);
+            }
+          });
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('Error checking deviation:', err);
+    } finally {
+      setLoading(false);
+    }
+    
+    // No deviation or error, proceed
+    callback();
+  };
+
   const handleCreateVisit = () => {
-    setIsCreateMode(true);
+    checkDeviationAndProceed(() => setIsCreateMode(true));
   };
 
   const handleCancel = () => {
@@ -239,6 +276,15 @@ const Store: React.FC = () => {
     }
     setShowPreview(true);
   };
+
+  const isPastDeadline = (() => {
+    if (!plannedVisitDate) return false;
+    const parts = plannedVisitDate.split('-');
+    if (parts.length !== 3) return false;
+    const [year, month, day] = parts.map(Number);
+    const deadlineUTC = new Date(Date.UTC(year, month - 1, day, 6, 30, 0, 0));
+    return new Date() >= deadlineUTC;
+  })();
 
   // Shared submit function — used by both Create PJP and Suggest PJP
   const submitVisitPlan = async (storeIds: string[], date: string): Promise<void> => {
@@ -264,8 +310,13 @@ const Store: React.FC = () => {
     try {
       setSubmitting(true);
 
-      const response = await fetch('/api/executive/visit-plan', {
-        method: 'POST',
+      const url = editingPlanId 
+        ? `/api/executive/visit-plan/${editingPlanId}` 
+        : '/api/executive/visit-plan';
+      const method = editingPlanId ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ storeIds, plannedVisitDate: date })
@@ -278,6 +329,7 @@ const Store: React.FC = () => {
           // Reset all modes
           setIsCreateMode(false);
           setIsSuggestMode(false);
+          setEditingPlanId(null);
           setSelectedStores([]);
           const t = new Date();
           const y = t.getFullYear();
@@ -421,7 +473,7 @@ const Store: React.FC = () => {
                     </button>
                     <button 
                       className="exec-dropdown-item"
-                      onClick={() => { setIsSuggestMode(true); setMenuOpen(false); }}
+                      onClick={() => { setMenuOpen(false); checkDeviationAndProceed(() => setIsSuggestMode(true)); }}
                     >
                       <Sparkles size={16} />
                       Suggest PJP
@@ -759,9 +811,16 @@ const Store: React.FC = () => {
 
               <div className="exec-v-form-preview-note">
                 <p className="exec-v-form-note-text">
-                  💡 <strong>Note:</strong> Submitting this visit plan will notify all admins about your intended store visits.
-                  They will receive a notification with the list of selected stores.
+                  💡 <strong>Note:</strong> Submitting this visit plan will notify all admins about your intended store visits. You can edit this plan until 12:00 PM IST of the planned date.
                 </p>
+                {isPastDeadline && (
+                  <div className="exec-v-form-error-state" style={{ marginTop: '12px', padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px' }}>
+                    <div className="exec-v-form-error-icon" style={{ fontSize: '1.2rem' }}>⚠️</div>
+                    <p className="exec-v-form-error-text" style={{ margin: 0, color: '#991b1b', fontWeight: '500' }}>
+                      <strong>Deadline Passed:</strong> You cannot submit or edit a PJP for this date after 12:00 PM IST.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -776,7 +835,7 @@ const Store: React.FC = () => {
               <button
                 className="exec-v-form-send-plan-btn"
                 onClick={handleSubmitVisitPlan}
-                disabled={submitting}
+                disabled={submitting || !plannedVisitDate}
               >
                 {submitting ? (
                   <>
@@ -798,6 +857,19 @@ const Store: React.FC = () => {
       <SubmittedPJPModal
         isOpen={showSubmittedModal}
         onClose={() => setShowSubmittedModal(false)}
+        onEdit={(plan) => {
+          setShowSubmittedModal(false);
+          // Pre-select stores and enter create mode
+          const storeIds = plan.stores.map((s: any) => s.id);
+          setSelectedStores(storeIds);
+          
+          // Extract the YYYY-MM-DD format from the ISO string
+          const dateString = plan.plannedVisitDate.split('T')[0];
+          setPlannedVisitDate(dateString);
+          
+          setEditingPlanId(plan.id);
+          setIsCreateMode(true);
+        }}
       />
 
       {/* Update Coordinates Modal */}

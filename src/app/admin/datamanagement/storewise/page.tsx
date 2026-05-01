@@ -39,6 +39,7 @@ const StorewiseExcelImport = () => {
   const [consoleLogs, setConsoleLogs] = useState<ConsoleLog[]>([]);
   const [showConsole, setShowConsole] = useState(false);
   const [progressData, setProgressData] = useState<{ current: number; total: number } | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const consoleEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new logs are added
@@ -314,6 +315,7 @@ const StorewiseExcelImport = () => {
 
   const exportStores = async () => {
     try {
+      setIsExporting(true);
       addConsoleLog('info', '📤 Starting store export...');
       
       const response = await fetch('/api/admin/excel-export/stores');
@@ -336,6 +338,8 @@ const StorewiseExcelImport = () => {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to export stores';
       addConsoleLog('error', `❌ Export failed: ${errorMessage}`);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -374,9 +378,13 @@ const StorewiseExcelImport = () => {
                 <Download size={16} />
                 <span style={{ marginLeft: '0.5rem' }}>Download Template</span>
               </button>
-              <button onClick={exportStores} className="excel-stor-sale-template-button" style={{ backgroundColor: '#0891b2', borderColor: '#0891b2' }}>
-                <Download size={16} />
-                <span style={{ marginLeft: '0.5rem' }}>Export Stores</span>
+              <button onClick={exportStores} disabled={isExporting} className="excel-stor-sale-template-button" style={{ backgroundColor: '#0891b2', borderColor: '#0891b2', opacity: isExporting ? 0.7 : 1 }}>
+                {isExporting ? (
+                  <div className="excel-stor-sale-loading-spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', borderTopColor: 'transparent', margin: 0 }} />
+                ) : (
+                  <Download size={16} />
+                )}
+                <span style={{ marginLeft: '0.5rem' }}>{isExporting ? 'Exporting...' : 'Export Stores'}</span>
               </button>
             </div>
           </div>
