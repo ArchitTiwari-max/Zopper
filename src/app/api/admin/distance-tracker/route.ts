@@ -6,6 +6,7 @@ export const runtime = 'nodejs';
 
 /**
  * Haversine formula — straight-line distance between two lat/lng points (in km).
+ * Used primarily for fast Nearest-Neighbor heuristic sorting.
  */
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
     const R = 6371;
@@ -16,6 +17,52 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
         Math.sin(dLat / 2) ** 2 +
         Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/**
+ * Gets driving distance using Google Maps Distance Matrix API.
+ * Uses a database cache (DistanceCache) to minimize API calls and costs.
+ */
+async function getDrivingDistance(lat1: number, lng1: number, lat2: number, lng2: number): Promise<number> {
+    const origin = `${lat1},${lng1}`;
+    const destination = `${lat2},${lng2}`;
+
+    try {
+        // 1. Check Cache
+        const cached = await prisma.distanceCache.findUnique({
+            where: {
+                origin_destination: { origin, destination }
+            }
+        });
+        if (cached) return cached.distanceKm;
+
+        // 2. Fetch from Google Maps API
+        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+        if (!apiKey) {
+            return haversineKm(lat1, lng1, lat2, lng2) * 1.50;
+        }
+
+        const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&key=${apiKey}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.status === 'OK' && data.rows[0].elements[0].status === 'OK') {
+            const meters = data.rows[0].elements[0].distance.value;
+            const km = meters / 1000;
+
+            // 3. Save to Cache
+            await prisma.distanceCache.create({
+                data: { origin, destination, distanceKm: km }
+            });
+
+            return km;
+        }
+        
+        return haversineKm(lat1, lng1, lat2, lng2) * 1.50;
+    } catch (e) {
+        console.error("[distance-tracker] getDrivingDistance error:", e);
+        return haversineKm(lat1, lng1, lat2, lng2) * 1.50;
+    }
 }
 
 /**
@@ -131,17 +178,58 @@ export async function GET(request: NextRequest) {
         }
 
         // Build response
-        const result = Object.entries(grouped).map(([exId, dayMap]) => {
+        const result = await Promise.all(Object.entries(grouped).map(async ([exId, dayMap]) => {
             const firstVisit = Object.values(dayMap)[0][0];
             const executiveName = firstVisit.executive?.name || 'Unknown';
 
-            const journeys = Object.entries(dayMap)
+            const journeys = await Promise.all(Object.entries(dayMap)
                 .sort(([a], [b]) => b.localeCompare(a)) // newest date first
-                .map(([_dateKey, dayVisits]) => {
+                .map(async ([_dateKey, dayVisits]) => {
                     const dateLabel = (dayVisits[0] as any)._dateLabel;
 
+                    // Nearest Neighbor Sorting based on proximity
+                    let unsortedVisits = [...dayVisits];
+                    const optimizedVisits = [];
+
+                    if (unsortedVisits.length > 0) {
+                        // Start with the chronologically first visit
+                        let currentVisit = unsortedVisits.shift()!;
+                        optimizedVisits.push(currentVisit);
+
+                        while (unsortedVisits.length > 0) {
+                            let nearestIdx = 0;
+                            let minDistance = Infinity;
+
+                            // Find the closest next store using Haversine for fast sorting
+                            for (let i = 0; i < unsortedVisits.length; i++) {
+                                const candidate = unsortedVisits[i];
+                                let distance = Infinity;
+
+                                if (currentVisit.store.latitude != null && currentVisit.store.longitude != null &&
+                                    candidate.store.latitude != null && candidate.store.longitude != null) {
+                                    distance = haversineKm(
+                                        currentVisit.store.latitude, currentVisit.store.longitude,
+                                        candidate.store.latitude, candidate.store.longitude
+                                    );
+                                }
+
+                                if (distance < minDistance) {
+                                    minDistance = distance;
+                                    nearestIdx = i;
+                                }
+                            }
+
+                            // Add nearest to the optimized list and remove from unsorted
+                            currentVisit = unsortedVisits.splice(nearestIdx, 1)[0];
+                            optimizedVisits.push(currentVisit);
+                        }
+                    }
+
                     let totalDistanceKm = 0;
-                    const storeStops = dayVisits.map((visit, idx) => {
+                    const storeStops = [];
+                    
+                    for (let idx = 0; idx < optimizedVisits.length; idx++) {
+                        const visit = optimizedVisits[idx];
                         const store = visit.store;
                         let distanceFromPrev = 0;
                         let hasCoordsError = false;
@@ -149,12 +237,12 @@ export async function GET(request: NextRequest) {
                         if (idx === 0) {
                             distanceFromPrev = 0;
                         } else {
-                            const prev = dayVisits[idx - 1].store;
+                            const prev = optimizedVisits[idx - 1].store;
                             if (
                                 prev.latitude != null && prev.longitude != null &&
                                 store.latitude != null && store.longitude != null
                             ) {
-                                const rawDistance = haversineKm(prev.latitude, prev.longitude, store.latitude, store.longitude);
+                                const rawDistance = await getDrivingDistance(prev.latitude, prev.longitude, store.latitude, store.longitude);
 
                                 // Cap at 200km: If the hop is > 200km, it's likely a phone call or mistake check-in.
                                 if (rawDistance > 200) {
@@ -168,7 +256,7 @@ export async function GET(request: NextRequest) {
                             }
                         }
 
-                        return {
+                        storeStops.push({
                             visitId: visit.id,
                             storeName: store.storeName,
                             storeId: store.id,
@@ -178,8 +266,8 @@ export async function GET(request: NextRequest) {
                             distanceFromPrev,          // km from previous stop (0 for first)
                             hasCoordsError,            // true if lat/lng missing for this or prev store
                             visitTime: visit.createdAt,
-                        };
-                    });
+                        });
+                    }
 
                     return {
                         date: dateLabel,
@@ -187,7 +275,7 @@ export async function GET(request: NextRequest) {
                         storeCount: storeStops.length,
                         stores: storeStops,
                     };
-                });
+                }));
 
             return {
                 executiveId: exId,
@@ -195,7 +283,7 @@ export async function GET(request: NextRequest) {
                 totalJourneyDays: journeys.length,
                 journeys,
             };
-        });
+        }));
 
         // Sort executives by name
         result.sort((a, b) => a.executiveName.localeCompare(b.executiveName));

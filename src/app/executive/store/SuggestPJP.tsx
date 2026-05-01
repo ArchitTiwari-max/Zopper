@@ -111,7 +111,7 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
             if (!res.ok || !data.success) {
                 throw new Error(data.error || 'Failed to fetch suggestions');
             }
-            if (data.data.startStore && data.data.startStore.latitude) {
+            if (data.data.startStore && data.data.startStore.latitude !== null && data.data.startStore.latitude !== undefined) {
                 setStartStoreCoords({ lat: data.data.startStore.latitude, lng: data.data.startStore.longitude });
             }
             setSuggestedRoute(data.data.route);
@@ -376,7 +376,7 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
                                 <span className="spjp-start-name">{startStore?.storeName}</span>
                                 <div className="spjp-city-row-fix">
                                     <span className="spjp-start-city">📍 {startStore?.city}</span>
-                                    {startStoreCoords && (
+                                    {startStore && (
                                         <button
                                             className="spjp-inline-fix-btn"
                                             onClick={(e) => {
