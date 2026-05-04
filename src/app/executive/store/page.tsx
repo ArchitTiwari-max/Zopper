@@ -62,6 +62,13 @@ const Store: React.FC = () => {
   const [storeData, setStoreData] = useState<StoreData[]>([]);
   const DEFAULT_CATEGORIES = ['All Categories', 'A++', 'A', 'B', 'C', 'D'];
   const DEFAULT_SORT = ['Recently Visited First', 'Store Name A-Z', 'Store Name Z-A', 'City A-Z'];
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
   const [filterOptions, setFilterOptions] = useState({
     cities: ['All Cities'],
     brands: ['All Brands'],
@@ -629,14 +636,16 @@ const Store: React.FC = () => {
                 <p className="exec-v-form-no-stores-text">No stores found matching your criteria</p>
               </div>
             ) : (
-              filteredStores.map((store) => (
-                <div
-                  key={store.id}
-                  className={`exec-v-form-table-row 
-                    ${isCreateMode ? 'create-mode' : ''} 
-                    ${selectedStores.includes(store.id) ? 'selected' : ''} 
-                    ${isCreateMode && selectedStores.includes(store.id) && store.isFlagged ? 'flagged-selected' : ''}
-                    ${!isCreateMode ? 'clickable' : ''}`}
+              (() => {
+                const paginatedStores = filteredStores.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+                return paginatedStores.map((store) => (
+                  <div
+                    key={store.id}
+                    className={`exec-v-form-table-row 
+                      ${isCreateMode ? 'create-mode' : ''} 
+                      ${selectedStores.includes(store.id) ? 'selected' : ''} 
+                      ${isCreateMode && selectedStores.includes(store.id) && store.isFlagged ? 'flagged-selected' : ''}
+                      ${!isCreateMode ? 'clickable' : ''}`}
                   onClick={(e) => handleStoreRowClick(store.id, e)}
                   style={isCreateMode && selectedStores.includes(store.id) && store.isFlagged ? { backgroundColor: '#fef08a' } : {}}
                 >
@@ -706,10 +715,36 @@ const Store: React.FC = () => {
                     <span className="exec-v-form-visited-text">{store.visited}</span>
                   </div>
                 </div>
-              ))
+                ));
+              })()
             )}
           </div>
         </div>
+
+        {/* Pagination Controls */}
+        {!loading && !error && filteredStores.length > itemsPerPage && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--surface)', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredStores.length)} of {filteredStores.length} stores
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', backgroundColor: currentPage === 1 ? 'var(--background)' : 'var(--surface)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(filteredStores.length / itemsPerPage)))}
+                disabled={currentPage === Math.ceil(filteredStores.length / itemsPerPage)}
+                style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', backgroundColor: currentPage === Math.ceil(filteredStores.length / itemsPerPage) ? 'var(--background)' : 'var(--surface)', cursor: currentPage === Math.ceil(filteredStores.length / itemsPerPage) ? 'not-allowed' : 'pointer' }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Suggest PJP Modal */}
