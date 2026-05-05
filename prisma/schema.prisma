@@ -170,6 +170,7 @@ model SalesRecord {
 
   // Indexes for faster analytics queries
   @@index([storeId, year])
+  @@index([storeId, brandId, year])
   @@index([brandId, categoryId, year])
 }
 
