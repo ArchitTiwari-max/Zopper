@@ -250,12 +250,15 @@ export async function GET(req: Request) {
     summaryData.sort((a, b) => a.executiveName.localeCompare(b.executiveName)); // Sort alphabetically by executive name
     await sendDailyVisitSummaryToAdmins(summaryData);
 
-    return Response.json({ 
+    const response = { 
       success: true, 
       executivesNotified: executiveVisits.size,
       totalVisits: visits.length,
       totalPJPs: visitPlans.length
-    });
+    };
+
+    console.log('Final Response:', response);
+    return Response.json(response);
   } catch (error) {
     console.error('❌ Error:', error);
     return Response.json({ error: String(error), success: false }, { status: 500 });
