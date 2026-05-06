@@ -90,8 +90,14 @@ export async function GET() {
         );
     }
 
-    // Convert map to array for the mailer
-    const pjpData = Array.from(pjpMap.values());
+    // Convert map to array for the mailer - include ALL active executives
+    const pjpData = activeExecutives.map((executive) => {
+      const plan = pjpMap.get(executive.id);
+      return {
+        executiveName: executive.name,
+        pjpStoreNames: plan ? plan.pjpStoreNames : ''
+      };
+    }).sort((a, b) => a.executiveName.localeCompare(b.executiveName));
 
     // if (pjpData.length > 0) {
       await sendDailyPJPSummaryToAdmins(pjpData);

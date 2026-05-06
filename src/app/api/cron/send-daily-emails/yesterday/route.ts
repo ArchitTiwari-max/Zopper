@@ -69,7 +69,15 @@ export async function GET(req: Request) {
       }
     });
 
-    console.log(`🔍 Found ${visits.length} visits and ${visitPlans.length} PJPs`);
+    // Fetch all brands mentioned in yesterday's visits
+    const allBrandIds = [...new Set(visits.flatMap(v => v.brandIds || []))];
+    const brands = await prisma.brand.findMany({
+      where: { id: { in: allBrandIds } },
+      select: { id: true, brandName: true }
+    });
+    const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
+
+    console.log(`🔍 Found ${visits.length} visits, ${visitPlans.length} PJPs and ${brands.length} unique brands`);
 
     // Fetch all active executives
     const allExecutives = await prisma.executive.findMany({
@@ -89,14 +97,18 @@ export async function GET(req: Request) {
     const executiveVisits = new Map();
     
     // Initialize all executives with 0 visits and empty PJP
+    // Initialize all executives
     allExecutives.forEach((exec) => {
       executiveVisits.set(exec.id, {
         executiveId: exec.id,
         executiveName: exec.name,
         executiveEmail: exec.user.email,
-        stores: [],
+        actualVisits: [] as { storeId: string, displayString: string }[],
         visitCount: 0,
-        pjpStores: [],
+        plannedVisits: [] as { storeId: string, displayString: string }[],
+        pjpReason: '',
+        hasDeviation: false,
+        hasPjp: false
       });
     });
 
@@ -106,7 +118,18 @@ export async function GET(req: Request) {
       
       if (executiveVisits.has(executiveId)) {
         const data = executiveVisits.get(executiveId);
-        data.stores.push(visit.store.storeName);
+        
+        // Format brand names
+        const visitBrands = (visit.brandIds || [])
+          .map(id => brandMap.get(id))
+          .filter(Boolean)
+          .join(', ');
+          
+        const displayString = visitBrands 
+          ? `${visit.store.storeName} - ${visitBrands}`
+          : visit.store.storeName;
+
+        data.actualVisits.push({ storeId: visit.storeId, displayString });
         data.visitCount += 1;
       }
     });
@@ -118,34 +141,114 @@ export async function GET(req: Request) {
         seenExecs.add(plan.executiveId);
         const data = executiveVisits.get(plan.executiveId);
         if (data && plan.storesSnapshot) {
+          data.hasPjp = true;
           const snapshot = plan.storesSnapshot as any[];
-          data.pjpStores = snapshot.map(s => s.storeName);
+          data.plannedVisits = snapshot.map(s => ({ storeId: s.id, displayString: s.storeName }));
+          
+          // Calculate deviation
+          const plannedStoreIds = new Set(plan.storeIds);
+          const actualStoreIds = new Set(data.actualVisits.map((v: any) => v.storeId));
+          
+          let hasDeviation = false;
+          if (plannedStoreIds.size !== actualStoreIds.size) {
+            hasDeviation = true;
+          } else {
+            for (const id of plannedStoreIds) {
+              if (!actualStoreIds.has(id)) {
+                hasDeviation = true;
+                break;
+              }
+            }
+          }
+
+          if (hasDeviation) {
+            data.pjpReason = plan.pjpNotFollowedReason || 'Reason not provided';
+            data.hasDeviation = true;
+          } else {
+            data.pjpReason = ''; 
+            data.hasDeviation = false;
+          }
         }
       }
     });
 
-    // Send to each executive
-    for (const [, executiveData] of executiveVisits) {
+    // Build categorized HTML lists and summary data
+    const summaryData = [];
+
+    for (const [, exec] of executiveVisits) {
+      const actualStoreIds = new Set(exec.actualVisits.map((v: any) => v.storeId));
+      const plannedStoreIds = new Set(exec.plannedVisits.map((v: any) => v.storeId));
+
+      const followedActual = exec.actualVisits.filter((v: any) => plannedStoreIds.has(v.storeId));
+      const unplannedActual = exec.actualVisits.filter((v: any) => !plannedStoreIds.has(v.storeId));
+
+      const followedPlanned = exec.plannedVisits.filter((v: any) => actualStoreIds.has(v.storeId));
+      const missedPlanned = exec.plannedVisits.filter((v: any) => !actualStoreIds.has(v.storeId));
+
+      // Build Actual Visits HTML
+      let visitsHtml = '';
+      if (exec.actualVisits.length > 0) {
+        if (exec.hasPjp) {
+          if (followedActual.length > 0) {
+            visitsHtml += `<div style="margin-top: 5px; font-weight: bold; color: #10b981; font-size: 13px;">✅ Followed (${followedActual.length})</div>`;
+            visitsHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
+            followedActual.forEach((v: any) => visitsHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
+            visitsHtml += `</ul>`;
+          }
+          if (unplannedActual.length > 0) {
+            visitsHtml += `<div style="margin-top: 5px; font-weight: bold; color: #f59e0b; font-size: 13px;">⚠️ Unplanned (${unplannedActual.length})</div>`;
+            visitsHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
+            unplannedActual.forEach((v: any) => visitsHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
+            visitsHtml += `</ul>`;
+          }
+        } else {
+          visitsHtml += `<div style="margin-top: 5px; font-weight: bold; color: #f59e0b; font-size: 13px;">⚠️ Unplanned (${exec.actualVisits.length})</div>`;
+          visitsHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
+          exec.actualVisits.forEach((v: any) => visitsHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
+          visitsHtml += `</ul>`;
+        }
+      }
+
+      // Build PJP HTML
+      let pjpHtml = '';
+      if (exec.hasPjp) {
+        if (followedPlanned.length > 0) {
+          pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #10b981; font-size: 13px;">✅ Followed (${followedPlanned.length})</div>`;
+          pjpHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
+          followedPlanned.forEach((v: any) => pjpHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
+          pjpHtml += `</ul>`;
+        }
+        if (missedPlanned.length > 0) {
+          pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #ef4444; font-size: 13px;">❌ Missed (${missedPlanned.length})</div>`;
+          pjpHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
+          missedPlanned.forEach((v: any) => pjpHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
+          pjpHtml += `</ul>`;
+        }
+      }
+
+      summaryData.push({
+        executiveId: exec.executiveId,
+        executiveName: exec.executiveName,
+        visitCount: exec.visitCount,
+        hasPjp: exec.hasPjp,
+        visitsHtml,
+        pjpStoresHtml: pjpHtml,
+        pjpReason: exec.pjpReason,
+        hasDeviation: exec.hasDeviation,
+      });
+
+      // Send to each executive
       await sendVisitNotificationToExecutive(
-        executiveData.executiveEmail,
-        executiveData.executiveName,
-        executiveData.stores.join('|||'),
-        executiveData.visitCount,
-        executiveData.pjpStores.join('|||')
+        exec.executiveEmail,
+        exec.executiveName,
+        visitsHtml,
+        exec.visitCount,
+        pjpHtml
       );
     }
 
     // Send admin summary
-    const summaryData = Array.from(executiveVisits.values())
-      .map((data) => ({
-        executiveId: data.executiveId,
-        executiveName: data.executiveName,
-        storeName: data.stores.join('|||'),
-        visitCount: data.visitCount,
-        pjpStoreNames: data.pjpStores.join('|||'),
-      }))
-      .sort((a, b) => b.visitCount - a.visitCount); // Sort by visitCount descending
-
+    summaryData.sort((a, b) => a.executiveName.localeCompare(b.executiveName)); // Sort alphabetically by executive name
     await sendDailyVisitSummaryToAdmins(summaryData);
 
     return Response.json({ 

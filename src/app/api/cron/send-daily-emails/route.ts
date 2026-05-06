@@ -247,7 +247,7 @@ export async function GET(req: Request) {
     }
 
     // Send admin summary
-    summaryData.sort((a, b) => b.visitCount - a.visitCount); // Sort by visitCount descending
+    summaryData.sort((a, b) => a.executiveName.localeCompare(b.executiveName)); // Sort alphabetically by executive name
     await sendDailyVisitSummaryToAdmins(summaryData);
 
     return Response.json({ 

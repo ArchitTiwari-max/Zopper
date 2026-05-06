@@ -68,6 +68,7 @@ export async function sendDailyVisitSummaryToAdmins(
     pjpStoresHtml: string; 
     hasDeviation?: boolean;
     hasPjp: boolean;
+    pjpReason?: string;
   }>
 ) {
   const adminEmails = [
