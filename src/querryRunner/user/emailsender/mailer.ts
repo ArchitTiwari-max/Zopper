@@ -69,7 +69,8 @@ export async function sendDailyVisitSummaryToAdmins(
     hasDeviation?: boolean;
     hasPjp: boolean;
     pjpReason?: string;
-  }>
+  }>,
+  dateString?: string
 ) {
   const adminEmails = [
     'vishal.shukla@zopper.com',
@@ -83,7 +84,7 @@ export async function sendDailyVisitSummaryToAdmins(
   // const adminEmails=[
   //   'harshdeep.singh@zopper.com',
   // ]
-  const today = new Date().toLocaleDateString('en-IN', {
+  const today = dateString || new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -152,7 +153,8 @@ export async function sendDailyVisitSummaryToAdmins(
  * @param pjpData Array of PJP data with executive name and planned stores
  */
 export async function sendDailyPJPSummaryToAdmins(
-  pjpData: Array<{ executiveName: string; pjpStoreNames: string }>
+  pjpData: Array<{ executiveName: string; pjpStoreNames: string }>,
+  dateString?: string
 ) {
   const adminEmails = [
     'vishal.shukla@zopper.com',
@@ -164,7 +166,7 @@ export async function sendDailyPJPSummaryToAdmins(
     'assurance.tech@zopper.com'
   ];
 
-  const today = new Date().toLocaleDateString('en-IN', {
+  const today = dateString || new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -233,9 +235,10 @@ export async function sendVisitNotificationToExecutive(
   executiveName: string,
   visitsHtml: string,
   todayVisitCount: number,
-  pjpStoresHtml: string = ''
+  pjpStoresHtml: string = '',
+  dateString?: string
 ) {
-  const today = new Date().toLocaleDateString('en-IN', {
+  const today = dateString || new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -288,9 +291,10 @@ export async function sendVisitNotificationToExecutive(
 export async function sendPJPNotificationToExecutive(
   executiveEmail: string,
   executiveName: string,
-  pjpStoreName: string = ''
+  pjpStoreName: string = '',
+  dateString?: string
 ) {
-  const today = new Date().toLocaleDateString('en-IN', {
+  const today = dateString || new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',

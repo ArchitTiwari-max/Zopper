@@ -13,6 +13,13 @@ export async function GET(req: Request) {
 
     // Logic for PJP (Visit Plan) created before 12 PM IST
     const now = new Date();
+    const formattedDate = now.toLocaleDateString('en-IN', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'Asia/Kolkata'
+    });
     // Convert current time to IST to find out what "today" is in India
     const istNow = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
     const todayStr = istNow.toISOString().split('T')[0]; // e.g., "2026-04-24"
@@ -242,13 +249,14 @@ export async function GET(req: Request) {
         exec.executiveName,
         visitsHtml,
         exec.visitCount,
-        pjpHtml
+        pjpHtml,
+        formattedDate
       );
     }
 
     // Send admin summary
     summaryData.sort((a, b) => a.executiveName.localeCompare(b.executiveName)); // Sort alphabetically by executive name
-    await sendDailyVisitSummaryToAdmins(summaryData);
+    await sendDailyVisitSummaryToAdmins(summaryData, formattedDate);
 
     const response = { 
       success: true, 
