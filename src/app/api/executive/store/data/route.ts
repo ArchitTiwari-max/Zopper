@@ -67,7 +67,15 @@ export async function GET(request: NextRequest) {
         where: {
           id: { in: executive.executiveStores.map(es => es.storeId) }
         },
-        include: {
+        select: {
+          id: true,
+          storeName: true,
+          city: true,
+          fullAddress: true,
+          latitude: true,
+          longitude: true,
+          partnerBrandIds: true,
+          partnerBrandTypes: true,
           visits: {
             where: { executiveId: executive.id },
             orderBy: { visitDate: 'desc' },
