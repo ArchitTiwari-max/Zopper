@@ -18,6 +18,7 @@ const Navigation: React.FC = () => {
     { id: 'digital-report', label: 'Digital Connect Report', icon: 'icon-call', active: pathname.includes('/admin/digital-report'), href: '/admin/digital-report' },
     { id: 'analytics-impact', label: 'Analytics & Impact', icon: 'icon-analytics', active: pathname.includes('/admin/analytics-impact'), href: '/admin/analytics-impact' },
     { id: 'attendance', label: 'Attendance Tracker', icon: 'icon-attendance', active: pathname.includes('/admin/attendance'), href: '/admin/attendance' },
+    { id: 'pjp-report', label: 'PJP Report', icon: 'icon-visit-report', active: pathname.includes('/admin/pjp-report'), href: '/admin/pjp-report' },
     { id: 'distance-tracker', label: 'Distance Tracker', icon: 'icon-distance', active: pathname.includes('/admin/distance-tracker'), href: '/admin/distance-tracker' },
     { id: 'alignment-index', label: 'Alignment Index', icon: 'icon-alignment', active: pathname.includes('/admin/alignment-index'), href: '/admin/alignment-index' },
     { id: 'sec-holiday-records', label: 'SEC Vacation Records', icon: 'icon-vacation-emoji', active: pathname.includes('/admin/sec-holiday-records'), href: '/admin/sec-holiday-records' }

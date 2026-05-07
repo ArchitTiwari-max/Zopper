@@ -163,6 +163,11 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
           title: 'Sales',
           subtitle: 'Sales monitor of stores'
         };
+      case '/admin/pjp-report':
+        return {
+          title: 'PJP Report',
+          subtitle: 'Track Permanent Journey Plans and execution details'
+        };
       case '/admin/datamanagement':
         return {
           title: 'Data Management Dashboard',
