@@ -14,7 +14,12 @@ function formatVisitStatus(status: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const recipientEmail = 'harshdeep.singh@zopper.com';
+    const recipientEmails = [
+      'amit.srivastava@zopper.com',
+      'harshdeep.singh@zopper.com',
+      'vikash.dubey@zopper.com',
+      'assurance.tech@zopper.com'
+    ];
 
     // Get Today's Date boundaries
     const startOfDay = new Date();
@@ -145,11 +150,14 @@ export async function POST(req: NextRequest) {
     // Convert PDF to Buffer
     const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
 
+    // Convert array of emails to comma-separated string for nodemailer
+    const toEmails = recipientEmails.join(', ');
+
     // Send email
-    const emailSent = await sendDailyReportEmail(recipientEmail, pdfBuffer, dateString);
+    const emailSent = await sendDailyReportEmail(toEmails, pdfBuffer, dateString);
 
     if (emailSent) {
-      return NextResponse.json({ message: `Daily report emailed successfully to ${recipientEmail}`, visits: visits.length }, { status: 200 });
+      return NextResponse.json({ message: `Daily report emailed successfully to ${toEmails}`, visits: visits.length }, { status: 200 });
     } else {
       return NextResponse.json({ message: 'Failed to send email' }, { status: 500 });
     }
