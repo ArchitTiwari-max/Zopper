@@ -20,10 +20,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { storeIds, plannedVisitDate } = body;
+    const { storeIds, plannedVisitDate, leaveReason } = body;
 
-    if (!storeIds || !Array.isArray(storeIds) || storeIds.length === 0) {
-      return NextResponse.json({ error: 'Invalid store IDs provided' }, { status: 400 });
+    if (!leaveReason && (!storeIds || !Array.isArray(storeIds) || storeIds.length === 0)) {
+      return NextResponse.json({ error: 'Invalid store IDs provided. Please select stores or provide a leave reason.' }, { status: 400 });
     }
 
     if (!plannedVisitDate) {
@@ -150,44 +150,47 @@ export async function POST(request: NextRequest) {
     }
     // --- End Block Logic ---
 
-    // Get store details for the selected stores
-    const stores = await prisma.store.findMany({
-      where: {
-        id: { in: storeIds }
-      },
-      select: {
-        id: true,
-        storeName: true,
-        city: true,
-        fullAddress: true,
-        executiveStores: {
-          where: { executiveId: executive.id },
-          select: { isFlagged: true }
-        }
-      }
-    });
-
-    if (stores.length !== storeIds.length) {
-      return NextResponse.json({ error: 'Some stores were not found' }, { status: 400 });
-    }
-
-    // Identify flagged stores
+    // Get store details for the selected stores (if any)
+    let stores: any[] = [];
+    let storesWithFlag: any[] = [];
     const flaggedStoreNames: string[] = [];
 
-    // Process stores to extract flag status and prepare snapshot
-    const storesWithFlag = stores.map(store => {
-      const isFlagged = store.executiveStores[0]?.isFlagged || false;
-      if (isFlagged) {
-        flaggedStoreNames.push(store.storeName);
+    if (storeIds && storeIds.length > 0) {
+      stores = await prisma.store.findMany({
+        where: {
+          id: { in: storeIds }
+        },
+        select: {
+          id: true,
+          storeName: true,
+          city: true,
+          fullAddress: true,
+          executiveStores: {
+            where: { executiveId: executive.id },
+            select: { isFlagged: true }
+          }
+        }
+      });
+
+      if (stores.length !== storeIds.length) {
+        return NextResponse.json({ error: 'Some stores were not found' }, { status: 400 });
       }
-      return {
-        id: store.id,
-        storeName: store.storeName,
-        city: store.city,
-        fullAddress: store.fullAddress,
-        isFlagged
-      };
-    });
+
+      // Process stores to extract flag status and prepare snapshot
+      storesWithFlag = stores.map(store => {
+        const isFlagged = store.executiveStores[0]?.isFlagged || false;
+        if (isFlagged) {
+          flaggedStoreNames.push(store.storeName);
+        }
+        return {
+          id: store.id,
+          storeName: store.storeName,
+          city: store.city,
+          fullAddress: store.fullAddress,
+          isFlagged
+        };
+      });
+    }
 
     // Get all admin users to notify
     const adminUsers = await prisma.user.findMany({
@@ -239,10 +242,11 @@ export async function POST(request: NextRequest) {
     const visitPlan = await prisma.visitPlan.create({
       data: {
         executiveId: executive.id,
-        storeIds: storeIds,
+        storeIds: storeIds || [],
         storesSnapshot: storesSnapshot as any,
         status: 'SUBMITTED',
-        plannedVisitDate: visitDate
+        plannedVisitDate: visitDate,
+        leaveReason: leaveReason || null
       }
     });
 
@@ -253,12 +257,19 @@ export async function POST(request: NextRequest) {
       ? `${storeNames.slice(0, 3).join(', ')} and ${storeNames.length - 3} more`
       : storeNames.join(', ');
 
+    const titleMsg = leaveReason 
+      ? `📋 PJP (On Leave) Submitted - ${visitDate.toLocaleDateString()}` 
+      : `📋 New Visit Plan Submitted - ${visitDate.toLocaleDateString()}`;
+    const bodyMsg = leaveReason 
+      ? `${executive.name} has submitted a PJP and will be on leave (${leaveReason}).` 
+      : `${executive.name} has submitted a visit plan for ${storeCount} ${storeCount === 1 ? 'store' : 'stores'}: ${storeList}`;
+
     const { NotificationService } = await import('@/lib/notification');
 
     const notificationPromises = adminUsers.map(admin =>
       NotificationService.createNotification({
-        title: `📋 New Visit Plan Submitted - ${visitDate.toLocaleDateString()}`,
-        message: `${executive.name} has submitted a visit plan for ${storeCount} ${storeCount === 1 ? 'store' : 'stores'}: ${storeList}`,
+        title: titleMsg,
+        message: bodyMsg,
         type: 'VISIT_PLAN_SUBMITTED',
         priority: 'MEDIUM',
         recipientId: admin.id,
@@ -270,11 +281,12 @@ export async function POST(request: NextRequest) {
           planId: visitPlan.id,
           executiveName: executive.name,
           storeCount: storeCount,
-          storeIds: storeIds,
+          storeIds: storeIds || [],
           storeNames: storeNames,
           flaggedStoreNames: flaggedStoreNames,
           plannedVisitDate: visitDate.toISOString(),
-          submissionTime: new Date().toISOString()
+          submissionTime: new Date().toISOString(),
+          leaveReason: leaveReason || null
         },
         visitPlanId: visitPlan.id
       })
@@ -374,6 +386,7 @@ export async function GET(request: NextRequest) {
       submittedAt: plan.submittedAt,
       status: plan.status,
       pjpNotFollowedReason: plan.pjpNotFollowedReason,
+      leaveReason: plan.leaveReason,
       stores: plan.storeIds.map(id => storeMap.get(id)).filter(Boolean)
     }));
 

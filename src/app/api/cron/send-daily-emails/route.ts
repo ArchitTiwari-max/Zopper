@@ -114,7 +114,8 @@ export async function GET(req: Request) {
         plannedVisits: [] as { storeId: string, displayString: string }[],
         pjpReason: '',
         hasDeviation: false,
-        hasPjp: false
+        hasPjp: false,
+        leaveReason: ''
       });
     });
 
@@ -146,33 +147,40 @@ export async function GET(req: Request) {
       if (!seenExecs.has(plan.executiveId)) {
         seenExecs.add(plan.executiveId);
         const data = executiveVisits.get(plan.executiveId);
-        if (data && plan.storesSnapshot) {
+        if (data && (plan.storesSnapshot || plan.leaveReason)) {
           data.hasPjp = true;
-          const snapshot = plan.storesSnapshot as any[];
-          data.plannedVisits = snapshot.map(s => ({ storeId: s.id, displayString: s.storeName }));
           
-          // Calculate deviation
-          const plannedStoreIds = new Set(plan.storeIds);
-          const actualStoreIds = new Set(data.actualVisits.map((v: any) => v.storeId));
-          
-          let hasDeviation = false;
-          if (plannedStoreIds.size !== actualStoreIds.size) {
-            hasDeviation = true;
+          if (plan.leaveReason) {
+            data.leaveReason = plan.leaveReason;
+            data.hasDeviation = false;
+            data.pjpReason = 'On Leave';
           } else {
-            for (const id of plannedStoreIds) {
-              if (!actualStoreIds.has(id)) {
-                hasDeviation = true;
-                break;
+            const snapshot = plan.storesSnapshot as any[];
+            data.plannedVisits = snapshot.map(s => ({ storeId: s.id, displayString: s.storeName }));
+            
+            // Calculate deviation
+            const plannedStoreIds = new Set(plan.storeIds);
+            const actualStoreIds = new Set(data.actualVisits.map((v: any) => v.storeId));
+            
+            let hasDeviation = false;
+            if (plannedStoreIds.size !== actualStoreIds.size) {
+              hasDeviation = true;
+            } else {
+              for (const id of plannedStoreIds) {
+                if (!actualStoreIds.has(id)) {
+                  hasDeviation = true;
+                  break;
+                }
               }
             }
-          }
 
-          if (hasDeviation) {
-            data.pjpReason = plan.pjpNotFollowedReason || 'Reason not provided';
-            data.hasDeviation = true;
-          } else {
-            data.pjpReason = ''; 
-            data.hasDeviation = false;
+            if (hasDeviation) {
+              data.pjpReason = plan.pjpNotFollowedReason || 'Reason not provided';
+              data.hasDeviation = true;
+            } else {
+              data.pjpReason = ''; 
+              data.hasDeviation = false;
+            }
           }
         }
       }
@@ -218,17 +226,24 @@ export async function GET(req: Request) {
       // Build PJP HTML
       let pjpHtml = '';
       if (exec.hasPjp) {
-        if (followedPlanned.length > 0) {
-          pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #10b981; font-size: 13px;">✅ Followed (${followedPlanned.length})</div>`;
+        if (exec.leaveReason) {
+          pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #f59e0b; font-size: 13px;">🏖️ On Leave / Alignment</div>`;
           pjpHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
-          followedPlanned.forEach((v: any) => pjpHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
+          pjpHtml += `<li style="margin: 2px 0;">${exec.leaveReason}</li>`;
           pjpHtml += `</ul>`;
-        }
-        if (missedPlanned.length > 0) {
-          pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #ef4444; font-size: 13px;">❌ Missed (${missedPlanned.length})</div>`;
-          pjpHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
-          missedPlanned.forEach((v: any) => pjpHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
-          pjpHtml += `</ul>`;
+        } else {
+          if (followedPlanned.length > 0) {
+            pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #10b981; font-size: 13px;">✅ Followed (${followedPlanned.length})</div>`;
+            pjpHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
+            followedPlanned.forEach((v: any) => pjpHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
+            pjpHtml += `</ul>`;
+          }
+          if (missedPlanned.length > 0) {
+            pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #ef4444; font-size: 13px;">❌ Missed (${missedPlanned.length})</div>`;
+            pjpHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
+            missedPlanned.forEach((v: any) => pjpHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
+            pjpHtml += `</ul>`;
+          }
         }
       }
 

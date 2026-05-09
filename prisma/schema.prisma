@@ -372,6 +372,9 @@ model VisitPlan {
   // Reason why PJP was not followed
   pjpNotFollowedReason String?
 
+  // Reason for being on leave (e.g., "I am on Off", "Working on Business Alignment")
+  leaveReason String?
+
   @@index([executiveId, submittedAt])
   @@index([createdByAdminId, submittedAt])
   @@map("VisitPlan")

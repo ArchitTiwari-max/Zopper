@@ -70,8 +70,13 @@ export async function GET() {
       if (!seenExecs.has(plan.executiveId)) {
         seenExecs.add(plan.executiveId);
         
-        const snapshot = plan.storesSnapshot as any[] || [];
-        const storeNames = snapshot.map(s => s.storeName).join('|||');
+        let storeNames = '';
+        if (plan.leaveReason) {
+          storeNames = `[On Leave / Alignment] ${plan.leaveReason}`;
+        } else {
+          const snapshot = plan.storesSnapshot as any[] || [];
+          storeNames = snapshot.map(s => s.storeName).join('|||');
+        }
         
         pjpMap.set(plan.executiveId, {
           executiveName: plan.executive?.name || 'Unknown Executive',
