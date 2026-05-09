@@ -6,6 +6,8 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useDateFilter } from '../contexts/DateFilterContext';
 import VisitDetailsModal from '../components/VisitDetailsModal';
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import './page.css';
 
 // Types for visit report
@@ -690,6 +692,123 @@ const VisitReportPage: React.FC = () => {
     XLSX.writeFile(wb, filename, { bookType: 'xlsx' });
   };
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF('landscape');
+    
+    // Add a title
+    doc.setFontSize(18);
+    doc.setTextColor(33, 33, 33);
+    doc.text(`${isDigital ? 'Digital Visit Reports' : 'Visit Reports'}`, 14, 20);
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 28);
+
+    // Group visits by executiveName
+    const groupedVisits: Record<string, VisitReportData[]> = {};
+    filteredVisits.forEach(visit => {
+      const name = visit.executiveName || 'Unknown Admin';
+      if (!groupedVisits[name]) groupedVisits[name] = [];
+      groupedVisits[name].push(visit);
+    });
+
+    let currentY = 35;
+
+    Object.entries(groupedVisits).forEach(([executiveName, visits], index) => {
+      if (currentY > 160) {
+        doc.addPage();
+        currentY = 20;
+      }
+      
+      doc.setFontSize(14);
+      doc.setTextColor(37, 99, 235); // Blue color for executive name
+      doc.text(`Admin: ${executiveName} (${visits.length} Visits)`, 14, currentY);
+      currentY += 8;
+
+      const headers = [
+        'Date',
+        'Store',
+        'City',
+        'Brands',
+        'Persons Met',
+        'Remarks / Feedback',
+        'Issues',
+        'Photos',
+        'Status'
+      ];
+
+      const data = visits.map(v => {
+        const persons = (v.peopleMet || [])
+          .map((p, idx) => `${idx + 1}. ${p.name}${p.designation ? ` (${p.designation})` : ''}`)
+          .join('\n');
+        
+        const remarks = v.feedback && v.feedback.trim() !== '' ? v.feedback : '-';
+        const issues = v.issues && v.issues.trim() !== 'None' ? v.issues : '-';
+        
+        const photos = (v.imageUrls || [])
+          .map((url, idx) => `Photo ${idx + 1}`)
+          .join('\n');
+
+        return [
+          formatDateForXLS(v.visitDate),
+          v.storeName,
+          v.city,
+          (v.partnerBrand || []).join(', '),
+          persons || '-',
+          remarks,
+          issues,
+          photos || '-',
+          formatVisitStatus(v.visitStatus)
+        ];
+      });
+
+      autoTable(doc, {
+        head: [headers],
+        body: data,
+        startY: currentY,
+        theme: 'grid',
+        rowPageBreak: 'avoid',
+        styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak', textColor: [50, 50, 50], valign: 'top' },
+        headStyles: { fillColor: [240, 244, 248], textColor: [37, 99, 235], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [250, 250, 250] },
+        columnStyles: {
+          0: { cellWidth: 22 }, // Date
+          1: { cellWidth: 32 }, // Store
+          2: { cellWidth: 20 }, // City
+          3: { cellWidth: 22 }, // Brands
+          4: { cellWidth: 30 }, // Persons Met
+          5: { cellWidth: 54 }, // Remarks
+          6: { cellWidth: 40 }, // Issues
+          7: { cellWidth: 18, textColor: [37, 99, 235] }, // Photos
+          8: { cellWidth: 18 }, // Status
+        },
+        didDrawCell: (dataHook) => {
+          if (dataHook.column.index === 7 && dataHook.cell.section === 'body') {
+            const rowIndex = dataHook.row.index;
+            const visit = visits[rowIndex];
+            if (visit && visit.imageUrls && visit.imageUrls.length > 0) {
+              const lineSpacing = dataHook.cell.styles.fontSize * 0.3527 * 1.5; // Approx height per line
+              let yPos = dataHook.cell.y + dataHook.cell.padding('top') / 2;
+              visit.imageUrls.forEach((url) => {
+                doc.link(dataHook.cell.x, yPos, dataHook.cell.width, lineSpacing, { url });
+                yPos += lineSpacing;
+              });
+            }
+          }
+        }
+      });
+
+      currentY = (doc as any).lastAutoTable.finalY + 15;
+    });
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const filename = `${isDigital ? 'digital-visit-reports' : 'visit-reports'}-${yyyy}-${mm}-${dd}.pdf`;
+    
+    doc.save(filename);
+  };
+
   // Get unique values from filter data (not visit data for better performance)
   const getFilterOptions = (type: 'brands' | 'cities' | 'stores' | 'executives'): string[] => {
     switch (type) {
@@ -979,25 +1098,46 @@ const VisitReportPage: React.FC = () => {
         marginTop: '12px',
         marginBottom: '12px'
       }}>
-        <button
-          onClick={handleExportXLS}
-          style={{
-            padding: '10px 16px',
-            backgroundColor: '#2563eb',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s',
-            boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)'
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563eb'; }}
-        >
-          Export XLS
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={handleExportPDF}
+            style={{
+              padding: '10px 16px',
+              backgroundColor: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s',
+              boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#dc2626'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#ef4444'; }}
+          >
+            Export PDF
+          </button>
+          <button
+            onClick={handleExportXLS}
+            style={{
+              padding: '10px 16px',
+              backgroundColor: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s',
+              boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563eb'; }}
+          >
+            Export XLS
+          </button>
+        </div>
       </div>
 
       {/* Visit Reports Table */}
