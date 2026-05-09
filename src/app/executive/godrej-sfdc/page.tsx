@@ -20,6 +20,19 @@ const GodrejSFDCPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<GodrejSFDCRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const limit = 50;
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setPage(1); // Reset to page 1 on new search
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,7 +40,13 @@ const GodrejSFDCPage: React.FC = () => {
       setError(null);
 
       try {
-        const response = await fetch("/api/executive/godrej-sfdc", {
+        const queryParams = new URLSearchParams({
+          page: page.toString(),
+          limit: limit.toString(),
+          ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
+        });
+
+        const response = await fetch(`/api/executive/godrej-sfdc?${queryParams.toString()}`, {
           method: "GET",
           credentials: "include",
         });
@@ -40,6 +59,10 @@ const GodrejSFDCPage: React.FC = () => {
 
         if (result.success) {
           setData(result.data);
+          if (result.pagination) {
+            setTotalPages(result.pagination.totalPages);
+            setTotalRecords(result.pagination.total);
+          }
         } else {
           throw new Error(
             result.message || result.error || "Failed to fetch data",
@@ -54,23 +77,7 @@ const GodrejSFDCPage: React.FC = () => {
     };
 
     fetchData();
-  }, []);
-
-  const normalizedSearch = searchTerm.trim().toLowerCase();
-  const filteredData = normalizedSearch
-    ? data.filter((record) => {
-        const planId = record.planId?.toLowerCase() ?? "";
-        const phone = record.phone ?? "";
-        const contractBookingId = record.contractBookingId?.toLowerCase() ?? "";
-        const customerName = record.customerName?.toLowerCase() ?? "";
-        return (
-          planId.includes(normalizedSearch) ||
-          phone.includes(normalizedSearch) ||
-          contractBookingId.includes(normalizedSearch) ||
-          customerName.includes(normalizedSearch)
-        );
-      })
-    : data;
+  }, [page, debouncedSearchTerm]);
 
   return (
     <div className="godrej-page-container">
@@ -150,12 +157,12 @@ const GodrejSFDCPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredData.length === 0 ? (
+                  {data.length === 0 ? (
                     <tr>
-                      <td colSpan={4}>No matching records found.</td>
+                      <td colSpan={4} style={{ textAlign: 'center', padding: '2rem' }}>No matching records found.</td>
                     </tr>
                   ) : (
-                    filteredData.map((record) => (
+                    data.map((record) => (
                       <tr key={record.id}>
                         <td>{record.planId}</td>
                         <td>{record.phone}</td>
@@ -167,6 +174,31 @@ const GodrejSFDCPage: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--surface)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                  Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalRecords)} of {totalRecords} records
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={page === 1}
+                    style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', backgroundColor: page === 1 ? 'var(--background)' : 'var(--surface)', cursor: page === 1 ? 'not-allowed' : 'pointer' }}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={page === totalPages}
+                    style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', backgroundColor: page === totalPages ? 'var(--background)' : 'var(--surface)', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

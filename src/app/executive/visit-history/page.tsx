@@ -97,6 +97,13 @@ const VisitHistory: React.FC = () => {
     sortOptions: ['Recent First', 'Store Name A-Z', 'Store Name Z-A', 'Status']
   });
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, activeTab, selectedPeriod]);
+
   // Filter handler
   const handleFilterChange = (filterType: string, value: string) => {
     setFilters(prev => ({
@@ -595,7 +602,7 @@ const VisitHistory: React.FC = () => {
                       </td>
                     </tr>
                   ) : (
-                    holidayRequests.map((req) => (
+                    holidayRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((req) => (
                       <tr key={req.id}>
                         <td data-label="Type">
                           <div className="exec-visits-store-cell">
@@ -690,7 +697,7 @@ const VisitHistory: React.FC = () => {
                       </td>
                     </tr>
                   ) : (
-                    filteredVisits.map((visit) => (
+                    filteredVisits.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((visit) => (
                       <tr key={visit.id}>
                         <td data-label="Store Name">
                           <div className="exec-visits-store-cell">
@@ -790,6 +797,31 @@ const VisitHistory: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Pagination Controls */}
+        {!loading && !error && (activeTab === 'HOLIDAY' ? holidayRequests.length : filteredVisits.length) > itemsPerPage && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--surface)', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, activeTab === 'HOLIDAY' ? holidayRequests.length : filteredVisits.length)} of {activeTab === 'HOLIDAY' ? holidayRequests.length : filteredVisits.length} records
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', backgroundColor: currentPage === 1 ? 'var(--background)' : 'var(--surface)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil((activeTab === 'HOLIDAY' ? holidayRequests.length : filteredVisits.length) / itemsPerPage)))}
+                disabled={currentPage === Math.ceil((activeTab === 'HOLIDAY' ? holidayRequests.length : filteredVisits.length) / itemsPerPage)}
+                style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', backgroundColor: currentPage === Math.ceil((activeTab === 'HOLIDAY' ? holidayRequests.length : filteredVisits.length) / itemsPerPage) ? 'var(--background)' : 'var(--surface)', cursor: currentPage === Math.ceil((activeTab === 'HOLIDAY' ? holidayRequests.length : filteredVisits.length) / itemsPerPage) ? 'not-allowed' : 'pointer' }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Visit Details Modal */}
         <VisitDetailsModal

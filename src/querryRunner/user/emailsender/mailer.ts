@@ -68,7 +68,9 @@ export async function sendDailyVisitSummaryToAdmins(
     pjpStoresHtml: string; 
     hasDeviation?: boolean;
     hasPjp: boolean;
-  }>
+    pjpReason?: string;
+  }>,
+  dateString?: string
 ) {
   const adminEmails = [
     'vishal.shukla@zopper.com',
@@ -82,7 +84,7 @@ export async function sendDailyVisitSummaryToAdmins(
   // const adminEmails=[
   //   'harshdeep.singh@zopper.com',
   // ]
-  const today = new Date().toLocaleDateString('en-IN', {
+  const today = dateString || new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -112,11 +114,13 @@ export async function sendDailyVisitSummaryToAdmins(
           ${
             visit.hasPjp === false
               ? '<span style="color: #ccc;">-</span>'
-              : visit.hasDeviation === false
-                ? '<span style="color: #10b981; font-weight: bold; font-style: normal;">✅ PJP matches with visits</span>'
-                : (visit.pjpReason === 'Reason not provided' 
-                   ? '<span style="color: #ef4444; font-weight: bold; font-style: normal;">⚠️ Reason not provided</span>' 
-                   : visit.pjpReason)
+              : visit.pjpReason === 'On Leave'
+                ? '<span style="color: #f59e0b; font-weight: bold; font-style: normal;">🏖️ On Leave</span>'
+                : visit.hasDeviation === false
+                  ? '<span style="color: #10b981; font-weight: bold; font-style: normal;">✅ PJP matches with visits</span>'
+                  : (visit.pjpReason === 'Reason not provided' 
+                     ? '<span style="color: #ef4444; font-weight: bold; font-style: normal;">⚠️ Reason not provided</span>' 
+                     : visit.pjpReason)
           }
         </td>
         <td style="padding: 12px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: #667eea;">
@@ -151,7 +155,8 @@ export async function sendDailyVisitSummaryToAdmins(
  * @param pjpData Array of PJP data with executive name and planned stores
  */
 export async function sendDailyPJPSummaryToAdmins(
-  pjpData: Array<{ executiveName: string; pjpStoreNames: string }>
+  pjpData: Array<{ executiveName: string; pjpStoreNames: string }>,
+  dateString?: string
 ) {
   const adminEmails = [
     'vishal.shukla@zopper.com',
@@ -163,7 +168,7 @@ export async function sendDailyPJPSummaryToAdmins(
     'assurance.tech@zopper.com'
   ];
 
-  const today = new Date().toLocaleDateString('en-IN', {
+  const today = dateString || new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -232,9 +237,10 @@ export async function sendVisitNotificationToExecutive(
   executiveName: string,
   visitsHtml: string,
   todayVisitCount: number,
-  pjpStoresHtml: string = ''
+  pjpStoresHtml: string = '',
+  dateString?: string
 ) {
-  const today = new Date().toLocaleDateString('en-IN', {
+  const today = dateString || new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -287,9 +293,10 @@ export async function sendVisitNotificationToExecutive(
 export async function sendPJPNotificationToExecutive(
   executiveEmail: string,
   executiveName: string,
-  pjpStoreName: string = ''
+  pjpStoreName: string = '',
+  dateString?: string
 ) {
-  const today = new Date().toLocaleDateString('en-IN', {
+  const today = dateString || new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -312,17 +319,27 @@ export async function sendPJPNotificationToExecutive(
   const pjpListHtml = formatPJPList(pjpStoreName);
   
   const hasPJP = pjpStoreName && pjpStoreName.trim().length > 0;
+  const isLeave = pjpStoreName.includes('[On Leave');
+  
+  let statusMessage = 'You haven\'t submitted a visit plan (PJP).';
+  let footerMessage = 'Planning is the first step to success. Have a great day!';
+  
+  if (hasPJP) {
+    if (isLeave) {
+      statusMessage = 'Your leave/alignment status is confirmed for today.';
+      footerMessage = 'Have a great day!';
+    } else {
+      statusMessage = 'Here is your planned visit list. Good luck with your visits!';
+      footerMessage = 'Have a productive day ahead!';
+    }
+  }
   
   const html = pjpNotificationTemplate
     .replace('{{EXECUTIVE_NAME}}', executiveName)
     .replace('{{DATE}}', today)
-    .replace('{{STATUS_MESSAGE}}', hasPJP 
-      ? 'Here is your planned visit list. Good luck with your visits!' 
-      : 'You haven\'t submitted a visit plan (PJP).')
+    .replace('{{STATUS_MESSAGE}}', statusMessage)
     .replace('{{PJP_STORES}}', pjpListHtml)
-    .replace('{{FOOTER_MESSAGE}}', hasPJP 
-      ? 'Have a productive day ahead!' 
-      : 'Planning is the first step to success. Have a great day!');
+    .replace('{{FOOTER_MESSAGE}}', footerMessage);
 
   const subject = hasPJP 
     ? `🎯Visit Plan (PJP) - ${today}`

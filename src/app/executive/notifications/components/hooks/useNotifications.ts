@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export interface Notification {
   id: number;
@@ -80,48 +80,6 @@ export const useNotifications = () => {
 
   const unreadCount = notifications.filter(notification => !notification.isRead).length;
 
-  // Simulate real-time notifications (optional)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // This is just for demo - in real app, you'd listen to WebSocket or polling
-      const shouldAddNotification = Math.random() < 0.1; // 10% chance every 30 seconds
-      
-      if (shouldAddNotification && notifications.length < 10) {
-        const randomNotifications = [
-          {
-            type: 'task' as const,
-            title: 'New task assigned by Admin',
-            timeAgo: 'Just now',
-            isRead: false,
-            icon: '📋'
-          },
-          {
-            type: 'approval' as const,
-            title: 'Visit report approved',
-            description: 'Your visit report has been reviewed and approved',
-            timeAgo: 'Just now',
-            isRead: false,
-            icon: '✅'
-          },
-          {
-            type: 'system' as const,
-            title: 'System update available',
-            timeAgo: 'Just now',
-            isRead: false,
-            icon: '🔄'
-          }
-        ];
-        
-        const randomNotification = randomNotifications[
-          Math.floor(Math.random() * randomNotifications.length)
-        ];
-        
-        addNotification(randomNotification);
-      }
-    }, 30000); // Check every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [notifications.length]);
 
   return {
     notifications,

@@ -48,6 +48,8 @@ const Store: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [coordinateStore, setCoordinateStore] = useState<StoreData | null>(null);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [leaveReason, setLeaveReason] = useState<string>('I am on Off');
 
   // RAG data state
   const [ragData, setRagData] = useState<Map<string, string>>(new Map()); // Map of storeId -> RAG status
@@ -62,6 +64,13 @@ const Store: React.FC = () => {
   const [storeData, setStoreData] = useState<StoreData[]>([]);
   const DEFAULT_CATEGORIES = ['All Categories', 'A++', 'A', 'B', 'C', 'D'];
   const DEFAULT_SORT = ['Recently Visited First', 'Store Name A-Z', 'Store Name Z-A', 'City A-Z'];
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
   const [filterOptions, setFilterOptions] = useState({
     cities: ['All Cities'],
     brands: ['All Brands'],
@@ -287,8 +296,8 @@ const Store: React.FC = () => {
   })();
 
   // Shared submit function — used by both Create PJP and Suggest PJP
-  const submitVisitPlan = async (storeIds: string[], date: string): Promise<void> => {
-    if (storeIds.length === 0) return;
+  const submitVisitPlan = async (storeIds: string[], date: string, pjpLeaveReason?: string): Promise<void> => {
+    if (!pjpLeaveReason && storeIds.length === 0) return;
 
     if (!date) {
       alert('Please select a planned visit date before submitting.');
@@ -319,7 +328,7 @@ const Store: React.FC = () => {
         method: method,
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ storeIds, plannedVisitDate: date })
+        body: JSON.stringify({ storeIds, plannedVisitDate: date, leaveReason: pjpLeaveReason })
       });
 
       if (response.ok) {
@@ -337,6 +346,8 @@ const Store: React.FC = () => {
           const d = String(t.getDate()).padStart(2, '0');
           setPlannedVisitDate(`${y}-${mo}-${d}`);
           setShowPreview(false);
+          setShowLeaveModal(false);
+          setLeaveReason('I am on Off');
         } else {
           const msg = result.details ? `${result.error}: ${result.details}` : (result.error || 'Failed to submit visit plan');
           throw new Error(msg);
@@ -355,6 +366,10 @@ const Store: React.FC = () => {
 
   const handleSubmitVisitPlan = async () => {
     await submitVisitPlan(selectedStores, plannedVisitDate);
+  };
+
+  const handleSubmitLeavePlan = async () => {
+    await submitVisitPlan([], plannedVisitDate, leaveReason);
   };
 
   const getSelectedStoreDetails = () => {
@@ -501,6 +516,9 @@ const Store: React.FC = () => {
             </div>
           ) : (
             <div className="exec-v-form-action-buttons">
+              <button className="exec-v-form-preview-send-btn" onClick={() => setShowLeaveModal(true)} disabled={loading} style={{ backgroundColor: '#f59e0b', marginRight: '10px' }}>
+                On Leave
+              </button>
               <button className="exec-v-form-preview-send-btn" onClick={handlePreviewAndSend} disabled={loading}>
                 Preview And Send
               </button>
@@ -629,14 +647,16 @@ const Store: React.FC = () => {
                 <p className="exec-v-form-no-stores-text">No stores found matching your criteria</p>
               </div>
             ) : (
-              filteredStores.map((store) => (
-                <div
-                  key={store.id}
-                  className={`exec-v-form-table-row 
-                    ${isCreateMode ? 'create-mode' : ''} 
-                    ${selectedStores.includes(store.id) ? 'selected' : ''} 
-                    ${isCreateMode && selectedStores.includes(store.id) && store.isFlagged ? 'flagged-selected' : ''}
-                    ${!isCreateMode ? 'clickable' : ''}`}
+              (() => {
+                const paginatedStores = filteredStores.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+                return paginatedStores.map((store) => (
+                  <div
+                    key={store.id}
+                    className={`exec-v-form-table-row 
+                      ${isCreateMode ? 'create-mode' : ''} 
+                      ${selectedStores.includes(store.id) ? 'selected' : ''} 
+                      ${isCreateMode && selectedStores.includes(store.id) && store.isFlagged ? 'flagged-selected' : ''}
+                      ${!isCreateMode ? 'clickable' : ''}`}
                   onClick={(e) => handleStoreRowClick(store.id, e)}
                   style={isCreateMode && selectedStores.includes(store.id) && store.isFlagged ? { backgroundColor: '#fef08a' } : {}}
                 >
@@ -706,10 +726,36 @@ const Store: React.FC = () => {
                     <span className="exec-v-form-visited-text">{store.visited}</span>
                   </div>
                 </div>
-              ))
+                ));
+              })()
             )}
           </div>
         </div>
+
+        {/* Pagination Controls */}
+        {!loading && !error && filteredStores.length > itemsPerPage && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--surface)', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredStores.length)} of {filteredStores.length} stores
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', backgroundColor: currentPage === 1 ? 'var(--background)' : 'var(--surface)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(filteredStores.length / itemsPerPage)))}
+                disabled={currentPage === Math.ceil(filteredStores.length / itemsPerPage)}
+                style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', backgroundColor: currentPage === Math.ceil(filteredStores.length / itemsPerPage) ? 'var(--background)' : 'var(--surface)', cursor: currentPage === Math.ceil(filteredStores.length / itemsPerPage) ? 'not-allowed' : 'pointer' }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Suggest PJP Modal */}
@@ -845,6 +891,128 @@ const Store: React.FC = () => {
                 ) : (
                   <>
                     📤 Send Visit Plan
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Leave Modal */}
+      {showLeaveModal && (
+        <div className="exec-v-form-modal-overlay">
+          <div className="exec-v-form-preview-modal">
+            <div className="exec-v-form-modal-header">
+              <h2 className="exec-v-form-modal-title">🏖️ Leave Application</h2>
+              <button
+                className="exec-v-form-modal-close-btn"
+                onClick={() => setShowLeaveModal(false)}
+                disabled={submitting}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="exec-v-form-modal-body">
+              <div className="exec-v-form-preview-summary">
+                <p className="exec-v-form-summary-text">
+                  You are submitting a PJP for being on leave or doing business alignment.
+                </p>
+              </div>
+
+              {/* Planned Visit Date Section */}
+              <div className="exec-v-form-date-section">
+                <label className="exec-v-form-date-label">
+                  📅 <strong>Planned Visit Date</strong> <span className="exec-v-form-required">*</span>
+                </label>
+                <input
+                  type="date"
+                  className="exec-v-form-date-input"
+                  value={plannedVisitDate}
+                  onChange={(e) => setPlannedVisitDate(e.target.value)}
+                  min={(() => {
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                  })()} // Prevent past dates using local date
+                  disabled={submitting}
+                  required
+                />
+                {plannedVisitDate && (
+                  <p className="exec-v-form-date-preview">
+                    🗓️ Scheduled for: <strong>
+                      {(() => {
+                        const date = new Date(plannedVisitDate);
+                        if (isNaN(date.getTime())) return 'Invalid Date';
+                        const day = date.getDate().toString().padStart(2, '0');
+                        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                        const year = date.getFullYear();
+                        const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+                        return `${weekday}, ${day}/${month}/${year}`;
+                      })()
+                      }
+                    </strong>
+                  </p>
+                )}
+              </div>
+
+              {/* Leave Reason Section */}
+              <div className="exec-v-form-date-section" style={{ marginTop: '16px' }}>
+                <label className="exec-v-form-date-label">
+                  📝 <strong>Reason</strong> <span className="exec-v-form-required">*</span>
+                </label>
+                <select
+                  className="exec-v-form-filter-select"
+                  value={leaveReason}
+                  onChange={(e) => setLeaveReason(e.target.value)}
+                  disabled={submitting}
+                  style={{ width: '100%', marginTop: '8px', padding: '10px' }}
+                >
+                  <option value="I am on Off">I am on Off</option>
+                  <option value="Working on Business Alignment">Working on Business Alignment</option>
+                </select>
+              </div>
+
+              <div className="exec-v-form-preview-note">
+                <p className="exec-v-form-note-text">
+                  💡 <strong>Note:</strong> Submitting this will notify all admins about your leave/alignment. You can edit this plan until 12:00 PM IST of the planned date.
+                </p>
+                {isPastDeadline && (
+                  <div className="exec-v-form-error-state" style={{ marginTop: '12px', padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px' }}>
+                    <div className="exec-v-form-error-icon" style={{ fontSize: '1.2rem' }}>⚠️</div>
+                    <p className="exec-v-form-error-text" style={{ margin: 0, color: '#991b1b', fontWeight: '500' }}>
+                      <strong>Deadline Passed:</strong> You cannot submit or edit a PJP for this date after 12:00 PM IST.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="exec-v-form-modal-footer">
+              <button
+                className="exec-v-form-cancel-modal-btn"
+                onClick={() => setShowLeaveModal(false)}
+                disabled={submitting}
+              >
+                Cancel
+              </button>
+              <button
+                className="exec-v-form-send-plan-btn"
+                onClick={handleSubmitLeavePlan}
+                disabled={submitting || !plannedVisitDate}
+                style={{ backgroundColor: '#f59e0b' }}
+              >
+                {submitting ? (
+                  <>
+                    <span className="loading-spinner"></span>
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    📤 Send Leave Plan
                   </>
                 )}
               </button>

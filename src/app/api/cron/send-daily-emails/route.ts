@@ -13,6 +13,13 @@ export async function GET(req: Request) {
 
     // Logic for PJP (Visit Plan) created before 12 PM IST
     const now = new Date();
+    const formattedDate = now.toLocaleDateString('en-IN', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'Asia/Kolkata'
+    });
     // Convert current time to IST to find out what "today" is in India
     const istNow = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
     const todayStr = istNow.toISOString().split('T')[0]; // e.g., "2026-04-24"
@@ -107,7 +114,8 @@ export async function GET(req: Request) {
         plannedVisits: [] as { storeId: string, displayString: string }[],
         pjpReason: '',
         hasDeviation: false,
-        hasPjp: false
+        hasPjp: false,
+        leaveReason: ''
       });
     });
 
@@ -139,33 +147,40 @@ export async function GET(req: Request) {
       if (!seenExecs.has(plan.executiveId)) {
         seenExecs.add(plan.executiveId);
         const data = executiveVisits.get(plan.executiveId);
-        if (data && plan.storesSnapshot) {
+        if (data && (plan.storesSnapshot || plan.leaveReason)) {
           data.hasPjp = true;
-          const snapshot = plan.storesSnapshot as any[];
-          data.plannedVisits = snapshot.map(s => ({ storeId: s.id, displayString: s.storeName }));
           
-          // Calculate deviation
-          const plannedStoreIds = new Set(plan.storeIds);
-          const actualStoreIds = new Set(data.actualVisits.map((v: any) => v.storeId));
-          
-          let hasDeviation = false;
-          if (plannedStoreIds.size !== actualStoreIds.size) {
-            hasDeviation = true;
+          if (plan.leaveReason) {
+            data.leaveReason = plan.leaveReason;
+            data.hasDeviation = false;
+            data.pjpReason = 'On Leave';
           } else {
-            for (const id of plannedStoreIds) {
-              if (!actualStoreIds.has(id)) {
-                hasDeviation = true;
-                break;
+            const snapshot = plan.storesSnapshot as any[];
+            data.plannedVisits = snapshot.map(s => ({ storeId: s.id, displayString: s.storeName }));
+            
+            // Calculate deviation
+            const plannedStoreIds = new Set(plan.storeIds);
+            const actualStoreIds = new Set(data.actualVisits.map((v: any) => v.storeId));
+            
+            let hasDeviation = false;
+            if (plannedStoreIds.size !== actualStoreIds.size) {
+              hasDeviation = true;
+            } else {
+              for (const id of plannedStoreIds) {
+                if (!actualStoreIds.has(id)) {
+                  hasDeviation = true;
+                  break;
+                }
               }
             }
-          }
 
-          if (hasDeviation) {
-            data.pjpReason = plan.pjpNotFollowedReason || 'Reason not provided';
-            data.hasDeviation = true;
-          } else {
-            data.pjpReason = ''; 
-            data.hasDeviation = false;
+            if (hasDeviation) {
+              data.pjpReason = plan.pjpNotFollowedReason || 'Reason not provided';
+              data.hasDeviation = true;
+            } else {
+              data.pjpReason = ''; 
+              data.hasDeviation = false;
+            }
           }
         }
       }
@@ -211,17 +226,24 @@ export async function GET(req: Request) {
       // Build PJP HTML
       let pjpHtml = '';
       if (exec.hasPjp) {
-        if (followedPlanned.length > 0) {
-          pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #10b981; font-size: 13px;">✅ Followed (${followedPlanned.length})</div>`;
+        if (exec.leaveReason) {
+          pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #f59e0b; font-size: 13px;">🏖️ On Leave / Alignment</div>`;
           pjpHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
-          followedPlanned.forEach((v: any) => pjpHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
+          pjpHtml += `<li style="margin: 2px 0;">${exec.leaveReason}</li>`;
           pjpHtml += `</ul>`;
-        }
-        if (missedPlanned.length > 0) {
-          pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #ef4444; font-size: 13px;">❌ Missed (${missedPlanned.length})</div>`;
-          pjpHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
-          missedPlanned.forEach((v: any) => pjpHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
-          pjpHtml += `</ul>`;
+        } else {
+          if (followedPlanned.length > 0) {
+            pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #10b981; font-size: 13px;">✅ Followed (${followedPlanned.length})</div>`;
+            pjpHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
+            followedPlanned.forEach((v: any) => pjpHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
+            pjpHtml += `</ul>`;
+          }
+          if (missedPlanned.length > 0) {
+            pjpHtml += `<div style="margin-top: 5px; font-weight: bold; color: #ef4444; font-size: 13px;">❌ Missed (${missedPlanned.length})</div>`;
+            pjpHtml += `<ul style="margin: 4px 0 10px 0; padding-left: 20px;">`;
+            missedPlanned.forEach((v: any) => pjpHtml += `<li style="margin: 2px 0;">${v.displayString}</li>`);
+            pjpHtml += `</ul>`;
+          }
         }
       }
 
@@ -242,20 +264,24 @@ export async function GET(req: Request) {
         exec.executiveName,
         visitsHtml,
         exec.visitCount,
-        pjpHtml
+        pjpHtml,
+        formattedDate
       );
     }
 
     // Send admin summary
-    summaryData.sort((a, b) => b.visitCount - a.visitCount); // Sort by visitCount descending
-    await sendDailyVisitSummaryToAdmins(summaryData);
+    summaryData.sort((a, b) => a.executiveName.localeCompare(b.executiveName)); // Sort alphabetically by executive name
+    await sendDailyVisitSummaryToAdmins(summaryData, formattedDate);
 
-    return Response.json({ 
+    const response = { 
       success: true, 
       executivesNotified: executiveVisits.size,
       totalVisits: visits.length,
       totalPJPs: visitPlans.length
-    });
+    };
+
+    console.log('Final Response:', response);
+    return Response.json(response);
   } catch (error) {
     console.error('❌ Error:', error);
     return Response.json({ error: String(error), success: false }, { status: 500 });

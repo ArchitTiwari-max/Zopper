@@ -202,16 +202,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }
   };
 
-  // Initial load and periodic refresh
+  // Initial load disabled as requested
   useEffect(() => {
-    refreshNotifications();
-    
-    // Set up periodic refresh every 30 seconds
-    const interval = setInterval(() => {
-      fetchUnreadCount();
-    }, 30000);
-
-    return () => clearInterval(interval);
+    // refreshNotifications();
   }, []);
 
   const value = {

@@ -20,6 +20,9 @@ export async function GET(request: NextRequest) {
     const executiveId = searchParams.get('executiveId');
     const visitStatus = searchParams.get('visitStatus');
     const issueStatus = searchParams.get('issueStatus');
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const isExport = searchParams.get('isExport') === 'true';
 
     // Date range
     const now = new Date();
@@ -47,41 +50,68 @@ export async function GET(request: NextRequest) {
 
     const whereClause: any = { connectDate: { gte: startDate, lte: endDate } };
     if (storeId) whereClause.storeId = storeId;
+    else if (storeName && storeName !== 'All Store') whereClause.store = { ...whereClause.store, storeName: { contains: storeName, mode: 'insensitive' } };
     if (executiveId) whereClause.executiveId = executiveId;
+    else if (executiveName && executiveName !== 'All Executive') whereClause.executive = { ...whereClause.executive, name: { contains: executiveName, mode: 'insensitive' } };
+    if (city && city !== 'All City') whereClause.store = { ...whereClause.store, city: city };
+    if (visitStatus && visitStatus !== 'All Status') whereClause.status = visitStatus;
+    if (issueStatus && issueStatus !== 'All Status') {
+      if (issueStatus === 'Pending') whereClause.issues = { some: { status: { in: ['Pending', 'Assigned'] } } };
+      else whereClause.issues = { some: { status: issueStatus } };
+    }
+    
+    if (partnerBrand && partnerBrand !== 'All Brands') {
+      const brandRecord = await prisma.brand.findFirst({ where: { brandName: partnerBrand } });
+      if (brandRecord) {
+        whereClause.store = { ...whereClause.store, partnerBrandIds: { has: brandRecord.id } };
+      } else {
+        whereClause.id = 'invalid_id_brand_not_found';
+      }
+    }
 
-    const [digitalVisits, brands] = await Promise.all([
-      prisma.digitalVisit.findMany({
-        where: whereClause,
-        select: {
-          id: true,
-          status: true,
-          remarks: true,
-          connectDate: true,
-          personMet: true,
-          reviewedByAdmin: { select: { id: true, name: true } },
-          executive: { select: { id: true, name: true } },
-          store: { select: { id: true, storeName: true, city: true, partnerBrandIds: true } },
-          issues: { select: { id: true, details: true, status: true } },
-        },
-        orderBy: { connectDate: 'desc' },
-      }),
+    const fetchOptions: any = {
+      where: whereClause,
+      select: {
+        id: true,
+        status: true,
+        remarks: true,
+        connectDate: true,
+        personMet: true,
+        reviewedByAdmin: { select: { id: true, name: true } },
+        executive: { select: { id: true, name: true } },
+        store: { select: { id: true, storeName: true, city: true, partnerBrandIds: true } },
+        issues: { select: { id: true, details: true, status: true } },
+      },
+      orderBy: { connectDate: 'desc' },
+    };
+
+    if (!isExport) {
+      fetchOptions.skip = (page - 1) * limit;
+      fetchOptions.take = limit;
+    }
+
+    // Run count and data fetching in parallel for maximum performance
+    const [totalCount, digitalVisits, brands] = await Promise.all([
+      prisma.digitalVisit.count({ where: whereClause }),
+      prisma.digitalVisit.findMany(fetchOptions),
       prisma.brand.findMany({ select: { id: true, brandName: true } }),
     ]);
+
+    const totalPages = isExport ? 1 : Math.ceil(totalCount / limit);
 
     const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
 
     let processed = digitalVisits.map((v) => {
-      const partnerBrands = (v.store.partnerBrandIds || []).map((id: string) => brandMap.get(id)).filter(Boolean) as string[];
-      const initials = v.executive.name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+      const partnerBrands = (v.store?.partnerBrandIds || []).map((id: string) => brandMap.get(id)).filter(Boolean) as string[];
+      const execName = v.executive?.name || 'Unknown Executive';
+      const initials = execName.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
       const avatarColor = '#2563eb';
 
-      // People met
       let peopleMet: Array<{name: string, designation: string, phoneNumber?: string}> = [];
       if (Array.isArray(v.personMet)) {
         peopleMet = (v.personMet as any[]).map(p => ({ name: p?.name || '', designation: p?.designation || '', phoneNumber: p?.phoneNumber })).filter(p => p.name);
       }
 
-      // Issues
       let issueStatus: 'Pending' | 'Assigned' | 'Resolved' | null = null;
       let issues = 'None';
       let issueId: string | undefined;
@@ -90,7 +120,7 @@ export async function GET(request: NextRequest) {
         issues = issue.details; issueId = issue.id; issueStatus = issue.status as any;
       }
 
-      const d = v.connectDate;
+      const d = new Date(v.connectDate);
       const dd = String(d.getDate()).padStart(2, '0');
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const yyyy = d.getFullYear();
@@ -98,18 +128,18 @@ export async function GET(request: NextRequest) {
 
       return {
         id: v.id,
-        executiveId: v.executive.id,
-        executiveName: v.executive.name,
+        executiveId: v.executive?.id || 'unknown',
+        executiveName: execName,
         executiveInitials: initials,
         avatarColor,
-        storeName: v.store.storeName,
-        storeId: v.store.id,
+        storeName: v.store?.storeName || 'Unknown Store',
+        storeId: v.store?.id || 'unknown',
         partnerBrand: partnerBrands,
         visitDate: formattedDate,
         visitStatus: v.status as 'PENDING_REVIEW' | 'REVIEWD',
         reviewerName: v.reviewedByAdmin?.name,
         issueStatus,
-        city: v.store.city,
+        city: v.store?.city || 'Unknown City',
         issues,
         issueId,
         feedback: v.remarks || 'No feedback provided',
@@ -119,17 +149,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Extra filters on processed
-    if (partnerBrand && partnerBrand !== 'All Brands') processed = processed.filter(v => v.partnerBrand.includes(partnerBrand));
-    if (city && city !== 'All City') processed = processed.filter(v => v.city === city);
-    if (storeName && storeName !== 'All Store' && !storeId) processed = processed.filter(v => v.storeName.toLowerCase().includes(storeName.toLowerCase()));
-    if (executiveName && executiveName !== 'All Executive' && !executiveId) processed = processed.filter(v => v.executiveName.toLowerCase().includes(executiveName.toLowerCase()));
-    if (visitStatus && visitStatus !== 'All Status') processed = processed.filter(v => v.visitStatus === visitStatus);
-    if (issueStatus && issueStatus !== 'All Status') {
-      processed = processed.filter(v => issueStatus === 'Pending' ? (v.issueStatus === 'Pending' || v.issueStatus === 'Assigned') : v.issueStatus === issueStatus);
-    }
-
-    const res = NextResponse.json({ visits: processed, total: processed.length });
+    const res = NextResponse.json({ visits: processed, total: totalCount, page, limit, totalPages });
     res.headers.set('Cache-Control', 'no-store');
     res.headers.set('Pragma', 'no-cache');
     res.headers.set('Expires', '0');

@@ -39,20 +39,43 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch all Godrej SFDC records (sorted by most recent first)
-    const godrejSfdcRecords = await prisma.godrejSfdc.findMany({
-      orderBy: {
-        uploadedAt: "desc",
-      },
-      select: {
-        id: true,
-        planId: true,
-        phone: true,
-        contractBookingId: true,
-        customerName: true,
-        uploadedAt: true,
-      },
-    });
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get("page") || "1", 10);
+    const limit = parseInt(url.searchParams.get("limit") || "50", 10);
+    const search = url.searchParams.get("search") || "";
+
+    const skip = (page - 1) * limit;
+
+    const whereClause: any = {};
+    if (search) {
+      whereClause.OR = [
+        { planId: { contains: search, mode: "insensitive" } },
+        { phone: { contains: search, mode: "insensitive" } },
+        { contractBookingId: { contains: search, mode: "insensitive" } },
+        { customerName: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    // Fetch Godrej SFDC records (sorted by most recent first) with pagination
+    const [godrejSfdcRecords, totalCount] = await Promise.all([
+      prisma.godrejSfdc.findMany({
+        where: whereClause,
+        orderBy: {
+          uploadedAt: "desc",
+        },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          planId: true,
+          phone: true,
+          contractBookingId: true,
+          customerName: true,
+          uploadedAt: true,
+        },
+      }),
+      prisma.godrejSfdc.count({ where: whereClause }),
+    ]);
 
     // Format the data for the frontend
     const formattedData = godrejSfdcRecords.map((record) => ({
@@ -70,6 +93,12 @@ export async function GET(request: NextRequest) {
       {
         success: true,
         data: formattedData,
+        pagination: {
+          total: totalCount,
+          page,
+          limit,
+          totalPages: Math.ceil(totalCount / limit),
+        },
       },
       { status: 200 },
     );

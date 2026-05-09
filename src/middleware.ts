@@ -4,13 +4,15 @@ import type { NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   const start = Date.now()
   
+  const dateTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: true });
+  
   // Log incoming request
-  console.log(`[MIDDLEWARE] ${request.method} ${request.nextUrl.pathname}`)
+  console.log(`[MIDDLEWARE] [${dateTime}] ${request.method} ${request.nextUrl.pathname}`)
   
   const response = NextResponse.next()
   
   const duration = Date.now() - start
-  console.log(`[MIDDLEWARE] Completed ${request.method} ${request.nextUrl.pathname} (${duration}ms)`)
+  console.log(`[MIDDLEWARE] [${dateTime}] Completed ${request.method} ${request.nextUrl.pathname} (${duration}ms)`)
   
   return response
 }
