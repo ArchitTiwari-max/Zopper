@@ -99,7 +99,8 @@ const AdminNotifications: React.FC = () => {
         executiveName: metadata.executiveName,
         storeCount: metadata.storeCount,
         storeNames: metadata.storeNames || [],
-        flaggedStoreNames: metadata.flaggedStoreNames || [] // Get flagged stores
+        flaggedStoreNames: metadata.flaggedStoreNames || [], // Get flagged stores
+        rescheduledStores: metadata.rescheduledStores || [] // Get rescheduled stores
       };
     } catch {
       return null;
@@ -119,11 +120,20 @@ const AdminNotifications: React.FC = () => {
     });
   };
 
-  const renderStoreName = (name: string, flaggedNames: string[]) => {
+  const renderStoreName = (name: string, flaggedNames: string[], rescheduledStores: string[] = []) => {
     const isFlagged = flaggedNames.includes(name);
+    const isRescheduled = rescheduledStores.includes(name);
+    
+    let style: React.CSSProperties = {};
+    if (isRescheduled) {
+      style = { backgroundColor: '#fee2e2', color: '#dc2626', padding: '0 4px', borderRadius: '4px', fontWeight: '500' };
+    } else if (isFlagged) {
+      style = { backgroundColor: '#fef08a', padding: '0 4px', borderRadius: '4px', fontWeight: '500' };
+    }
+
     return (
-      <span key={name} style={isFlagged ? { backgroundColor: '#fef08a', padding: '0 4px', borderRadius: '4px', fontWeight: '500' } : {}}>
-        {name} {isFlagged && '⭐'}
+      <span key={name} style={style}>
+        {name} {isFlagged && !isRescheduled && '⭐'} {isRescheduled && '🔴 (Rescheduled)'}
       </span>
     );
   };
@@ -247,7 +257,7 @@ const AdminNotifications: React.FC = () => {
                                             {visitPlanMeta.storeNames.map((name: string, idx: number) => (
                                               <React.Fragment key={idx}>
                                                 {idx > 0 && ', '}
-                                                {renderStoreName(name, visitPlanMeta.flaggedStoreNames)}
+                                                {renderStoreName(name, visitPlanMeta.flaggedStoreNames, visitPlanMeta.rescheduledStores)}
                                               </React.Fragment>
                                             ))}
                                           </span>
@@ -258,7 +268,7 @@ const AdminNotifications: React.FC = () => {
                                             {visitPlanMeta.storeNames.slice(0, 2).map((name: string, idx: number) => (
                                               <React.Fragment key={idx}>
                                                 {idx > 0 && ', '}
-                                                {renderStoreName(name, visitPlanMeta.flaggedStoreNames)}
+                                                {renderStoreName(name, visitPlanMeta.flaggedStoreNames, visitPlanMeta.rescheduledStores)}
                                               </React.Fragment>
                                             ))}
                                             <button
@@ -278,7 +288,7 @@ const AdminNotifications: React.FC = () => {
                                             {visitPlanMeta.storeNames.map((name: string, idx: number) => (
                                               <React.Fragment key={idx}>
                                                 {idx > 0 && ', '}
-                                                {renderStoreName(name, visitPlanMeta.flaggedStoreNames)}
+                                                {renderStoreName(name, visitPlanMeta.flaggedStoreNames, visitPlanMeta.rescheduledStores)}
                                               </React.Fragment>
                                             ))}
                                             <button

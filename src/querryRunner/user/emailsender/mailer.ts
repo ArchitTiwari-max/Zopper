@@ -192,7 +192,13 @@ export async function sendDailyPJPSummaryToAdmins(
       if (pjp.pjpStoreNames && pjp.pjpStoreNames.trim()) {
         const pjpStores = pjp.pjpStoreNames.split('|||').map(s => s.trim());
         pjpStoresList = pjpStores
-          .map(store => `<li style="margin: 4px 0;">${store}</li>`)
+          .map(store => {
+            if (store.includes('(RESCHEDULED)')) {
+              const name = store.replace(' (RESCHEDULED)', '');
+              return `<li style="margin: 4px 0; color: #ef4444; font-weight: bold;">🔴 ${name} (Rescheduled)</li>`;
+            }
+            return `<li style="margin: 4px 0;">${store}</li>`;
+          })
           .join('');
       } else {
         pjpStoresList = '<li style="margin: 4px 0; color: #999;">No PJP submitted</li>';
@@ -312,7 +318,13 @@ export async function sendPJPNotificationToExecutive(
       return '<p style="color: #999; font-style: italic;">No PJP submitted.</p>';
     }
     return `<ul style="margin: 0; padding-left: 20px;">` + storeArray
-      .map(store => `<li style="margin: 6px 0; line-height: 1.5;">${store}</li>`)
+      .map(store => {
+        if (store.includes('(RESCHEDULED)')) {
+          const name = store.replace(' (RESCHEDULED)', '');
+          return `<li style="margin: 6px 0; line-height: 1.5; color: #ef4444; font-weight: bold;">🔴 ${name} (Rescheduled)</li>`;
+        }
+        return `<li style="margin: 6px 0; line-height: 1.5;">${store}</li>`;
+      })
       .join('') + `</ul>`;
   };
 

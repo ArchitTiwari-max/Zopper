@@ -139,8 +139,8 @@
 .admin-visit-report-table .admin-visit-report-table-header {
   background: #6b7280;
   display: grid;
-  grid-template-columns: 40px 1.6fr 1.5fr 1.2fr 1.1fr 1.3fr 1.2fr 1.8fr;
-  gap: 2rem;
+  grid-template-columns: 40px 1.5fr 1.5fr 1fr 1.2fr 1.2fr 1fr 1fr 1.5fr;
+  gap: 1rem;
   padding: 1rem;
   width: 100%;
 }
@@ -179,8 +179,8 @@
 
 .admin-visit-report-table .admin-visit-report-table-row {
   display: grid;
-  grid-template-columns: 40px 1.6fr 1.5fr 1.2fr 1.1fr 1.3fr 1.2fr 1.8fr;
-  gap: 2rem;
+  grid-template-columns: 40px 1.5fr 1.5fr 1fr 1.2fr 1.2fr 1fr 1fr 1.5fr;
+  gap: 1rem;
   padding: 1rem;
   border-bottom: 1px solid #f1f5f9;
   align-items: center;

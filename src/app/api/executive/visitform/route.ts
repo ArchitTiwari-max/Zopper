@@ -217,7 +217,8 @@ export async function POST(request: NextRequest) {
       issuesRaised,
       brandsVisited,
       remarks,
-      imageUrls
+      imageUrls,
+      nextScheduledDate
     } = await request.json();
 
     if (!storeId || !personMet || personMet.length === 0) {
@@ -291,7 +292,8 @@ export async function POST(request: NextRequest) {
         executiveId: executive.id,
         storeId,
         brandIds,
-        visitDate: visitDateTime
+        visitDate: visitDateTime,
+        ...(nextScheduledDate ? { nextScheduledDate: new Date(nextScheduledDate + 'T00:00:00.000Z') } : {})
       },
       include: {
         store: true,
@@ -318,6 +320,54 @@ export async function POST(request: NextRequest) {
             status: createdIssue.status
           });
         }
+      }
+    }
+
+    if (nextScheduledDate) {
+      const nextDate = new Date(nextScheduledDate + 'T00:00:00.000Z');
+      
+      const existingPlan = await prisma.visitPlan.findFirst({
+        where: {
+          executiveId: executive.id,
+          plannedVisitDate: nextDate
+        }
+      });
+
+      const storeSnapshotInfo = {
+        id: visit.store.id,
+        storeName: visit.store.storeName,
+        isRescheduled: true,
+        rescheduledFromVisitId: visit.id
+      };
+
+      if (existingPlan) {
+        if (!existingPlan.storeIds.includes(storeId)) {
+          let updatedSnapshots: any[] = [];
+          if (existingPlan.storesSnapshot && Array.isArray(existingPlan.storesSnapshot)) {
+            updatedSnapshots = [...existingPlan.storesSnapshot];
+          }
+          updatedSnapshots.push(storeSnapshotInfo);
+
+          await prisma.visitPlan.update({
+            where: { id: existingPlan.id },
+            data: {
+              storeIds: { push: storeId },
+              storesSnapshot: updatedSnapshots
+            }
+          });
+        }
+      } else {
+        await prisma.visitPlan.create({
+          data: {
+            executiveId: executive.id,
+            plannedVisitDate: nextDate,
+            storeIds: [storeId],
+            storesSnapshot: [storeSnapshotInfo],
+            createdByRole: 'EXECUTIVE',
+            adminComment: "Auto-added from physical visit rescheduling",
+            status: 'SUBMITTED'
+          }
+        });
       }
     }
 

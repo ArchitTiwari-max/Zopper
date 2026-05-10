@@ -5,6 +5,7 @@ interface SubmittedStore {
     id: string;
     storeName: string;
     city: string;
+    isRescheduled?: boolean;
 }
 
 interface SubmittedPlan {
@@ -378,7 +379,9 @@ const SubmittedPJPModal: React.FC<SubmittedPJPModalProps> = ({ isOpen, onClose, 
                                                                 {idx + 1}
                                                             </div>
                                                             <div>
-                                                                <div style={{ fontSize: '0.9rem', fontWeight: '500', color: '#334155' }}>{store.storeName}</div>
+                                                                <div style={{ fontSize: '0.9rem', fontWeight: '500', color: store.isRescheduled ? '#ef4444' : '#334155' }}>
+                                                                    {store.storeName} {store.isRescheduled && '(Rescheduled)'}
+                                                                </div>
                                                                 <div style={{ fontSize: '0.75rem', color: '#64748b' }}>📍 {store.city}</div>
                                                             </div>
                                                         </div>

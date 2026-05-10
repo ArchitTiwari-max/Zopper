@@ -190,6 +190,7 @@ model Visit {
   remarks           String?
   imageUrls         String[] // Array of image URLs
   visitDate         DateTime?  // Actual date when visit occurred (nullable for backward compatibility during migration)
+  nextScheduledDate DateTime?  // Optional rescheduled/next visit date
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
   status            viststatus @default(PENDING_REVIEW)

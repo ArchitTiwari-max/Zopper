@@ -21,6 +21,7 @@ interface VisitReportData {
   partnerBrand: string[];
   visitDate: string;
   previousVisitDate?: string | null;
+  nextScheduledDate?: string | null;
   visitStatus: 'PENDING_REVIEW' | 'REVIEWD';
   reviewerName?: string;
   issueStatus: 'Pending' | 'Assigned' | 'Resolved' | null;
@@ -595,6 +596,7 @@ const VisitReportPage: React.FC = () => {
       isDigital ? 'Connect Date' : 'Visit Date',
       'Persons Met',
       'POSM Available',
+      'Next Schedule',
       'Remarks',
       'Issues',
       'Visit Status',
@@ -623,6 +625,7 @@ const VisitReportPage: React.FC = () => {
         formatDateForXLS(v.visitDate),
         persons,
         posm,
+        v.nextScheduledDate || '',
         v.feedback || 'No feedback provided',
         v.issues,
         formatVisitStatus(v.visitStatus),
@@ -670,6 +673,7 @@ const VisitReportPage: React.FC = () => {
       { wch: 12 }, // Date
       { wch: 40 }, // Persons Met
       { wch: 14 }, // POSM
+      { wch: 16 }, // Next Schedule
       { wch: 40 }, // Remarks
       { wch: 40 }, // Issues
       { wch: 16 }, // Visit Status
@@ -1193,8 +1197,9 @@ const VisitReportPage: React.FC = () => {
             >
               {isDigital ? 'Connect Date' : 'Visit Date'} <span className="sort-icon">{getSortIcon('visitDate')}</span>
             </div>
+            <div className="admin-visit-report-header-cell">Next Schedule</div>
             <div className="admin-visit-report-header-cell">Issues</div>
-            <div className="admin-visit-report-header-cell">Sales</div>
+            <div className="admin-visit-report-header-cell" style={{ justifyContent: 'center' }}>Sales</div>
             <div className="admin-visit-report-header-cell">Actions</div>
           </div>
 
@@ -1252,6 +1257,16 @@ const VisitReportPage: React.FC = () => {
                       <div className="admin-visit-report-prev-date" style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
                         Prev: {visit.previousVisitDate}
                       </div>
+                    )}
+                  </div>
+
+                  <div className="admin-visit-report-cell admin-visit-report-next-schedule-cell" style={{ display: 'flex', alignItems: 'center' }}>
+                    {visit.nextScheduledDate ? (
+                      <span style={{ fontWeight: '500', color: '#0f172a', whiteSpace: 'nowrap' }}>
+                        📅 {visit.nextScheduledDate}
+                      </span>
+                    ) : (
+                      <span style={{ color: '#94a3b8' }}>—</span>
                     )}
                   </div>
 

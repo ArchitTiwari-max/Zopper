@@ -380,15 +380,25 @@ export async function GET(request: NextRequest) {
     const storeMap = new Map(storesData.map(s => [s.id, s]));
 
     // Format plans and preserve the order of storeIds
-    const formattedPlans = visitPlans.map(plan => ({
-      id: plan.id,
-      plannedVisitDate: plan.plannedVisitDate,
-      submittedAt: plan.submittedAt,
-      status: plan.status,
-      pjpNotFollowedReason: plan.pjpNotFollowedReason,
-      leaveReason: plan.leaveReason,
-      stores: plan.storeIds.map(id => storeMap.get(id)).filter(Boolean)
-    }));
+    const formattedPlans = visitPlans.map(plan => {
+      const storesSnapshot = (plan.storesSnapshot as any[]) || [];
+      return {
+        id: plan.id,
+        plannedVisitDate: plan.plannedVisitDate,
+        submittedAt: plan.submittedAt,
+        status: plan.status,
+        pjpNotFollowedReason: plan.pjpNotFollowedReason,
+        leaveReason: plan.leaveReason,
+        stores: plan.storeIds.map(id => {
+          const store = storeMap.get(id);
+          const snapshot = storesSnapshot.find(s => s.id === id);
+          if (store) {
+            return { ...store, isRescheduled: snapshot?.isRescheduled || false };
+          }
+          return null;
+        }).filter(Boolean)
+      };
+    });
 
     return NextResponse.json({
       success: true,
