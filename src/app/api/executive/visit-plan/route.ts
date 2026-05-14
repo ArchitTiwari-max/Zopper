@@ -150,15 +150,37 @@ export async function POST(request: NextRequest) {
     }
     // --- End Block Logic ---
 
-    // Get store details for the selected stores (if any)
+    // --- Rescheduled Stores Logic ---
+    // Fetch rescheduled visits for this date to auto-add them
+    const startOfTargetDay = new Date(Date.UTC(visitDate.getUTCFullYear(), visitDate.getUTCMonth(), visitDate.getUTCDate(), 0, 0, 0, 0));
+    const endOfTargetDay = new Date(Date.UTC(visitDate.getUTCFullYear(), visitDate.getUTCMonth(), visitDate.getUTCDate(), 23, 59, 59, 999));
+
+    const rescheduledVisits = await prisma.visit.findMany({
+      where: {
+        executiveId: executive.id,
+        nextScheduledDate: {
+          gte: startOfTargetDay,
+          lte: endOfTargetDay
+        }
+      },
+      select: { storeId: true }
+    });
+
+    const rescheduledStoreIds = [...new Set(rescheduledVisits.map(v => v.storeId))];
+    
+    // Combine with requested storeIds, ensuring rescheduled stores are always included
+    const requestedStoreIds = storeIds || [];
+    const combinedStoreIds = [...new Set([...requestedStoreIds, ...rescheduledStoreIds])];
+    
+    // Get store details for the combined stores
     let stores: any[] = [];
     let storesWithFlag: any[] = [];
     const flaggedStoreNames: string[] = [];
 
-    if (storeIds && storeIds.length > 0) {
+    if (combinedStoreIds.length > 0) {
       stores = await prisma.store.findMany({
         where: {
-          id: { in: storeIds }
+          id: { in: combinedStoreIds }
         },
         select: {
           id: true,
@@ -172,25 +194,30 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      if (stores.length !== storeIds.length) {
-        return NextResponse.json({ error: 'Some stores were not found' }, { status: 400 });
-      }
-
       // Process stores to extract flag status and prepare snapshot
       storesWithFlag = stores.map(store => {
         const isFlagged = store.executiveStores[0]?.isFlagged || false;
         if (isFlagged) {
           flaggedStoreNames.push(store.storeName);
         }
+        
+        // Mark if this store is a rescheduled one
+        const isRescheduled = rescheduledStoreIds.includes(store.id);
+
         return {
           id: store.id,
           storeName: store.storeName,
           city: store.city,
           fullAddress: store.fullAddress,
-          isFlagged
+          isFlagged,
+          isRescheduled
         };
       });
     }
+
+    // Update storeIds to the combined list for creation
+    const finalStoreIds = combinedStoreIds;
+
 
     // Get all admin users to notify
     const adminUsers = await prisma.user.findMany({
@@ -235,14 +262,15 @@ export async function POST(request: NextRequest) {
       city: s.city,
       fullAddress: s.fullAddress,
       status: 'SUBMITTED', // Default status for each store
-      isFlagged: s.isFlagged
+      isFlagged: s.isFlagged,
+      isRescheduled: s.isRescheduled || false
     }));
 
     // Create new plan
     const visitPlan = await prisma.visitPlan.create({
       data: {
         executiveId: executive.id,
-        storeIds: storeIds || [],
+        storeIds: finalStoreIds || [],
         storesSnapshot: storesSnapshot as any,
         status: 'SUBMITTED',
         plannedVisitDate: visitDate,
