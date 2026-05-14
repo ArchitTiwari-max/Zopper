@@ -638,59 +638,98 @@ const VisitReportPage: React.FC = () => {
     return [headers, ...rows];
   };
 
-  const handleExportXLS = () => {
-    // Build sheet data first
-    const aoa = buildExportAOA();
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const [isExporting, setIsExporting] = useState(false);
 
-    // Add hyperlinks to each photo URL cell
-    // Find how many photo columns were added by looking at header row
-    const header = aoa[0];
-    const photoStartIdx = header.findIndex(h => String(h).startsWith('Photo '));
-    const photoCount = photoStartIdx === -1 ? 0 : header.length - photoStartIdx;
+  const handleExportXLS = async () => {
+    setIsExporting(true);
+    try {
+      // ── Fetch ALL records matching current filters (bypass pagination) ────────
+      const params = new URLSearchParams();
+      params.append('dateFilter', selectedDateFilter);
+      params.append('isExport', 'true');
+      if (filters.partnerBrand !== 'All Brands') params.append('partnerBrand', filters.partnerBrand);
+      if (filters.city !== 'All City') params.append('city', filters.city);
+      if (filters.storeName) params.append('storeName', filters.storeName);
+      if (filters.executiveName !== 'All Executive') params.append('executiveId', filters.executiveName);
+      if (filters.visitStatus !== 'All Status') params.append('visitStatus', filters.visitStatus);
+      if (filters.issueStatus !== 'All Status') params.append('issueStatus', filters.issueStatus);
 
-    if (photoCount > 0) {
-      filteredVisits.forEach((v, rowIdx) => {
-        for (let j = 0; j < photoCount; j++) {
+      const response = await fetch(`${baseEndpoint}/data?${params.toString()}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+        credentials: 'include',
+        cache: 'no-store'
+      });
+      if (!response.ok) throw new Error(`Export fetch failed: ${response.status}`);
+      const data = await response.json();
+      const allVisits: VisitReportData[] = data.visits || [];
+
+      if (allVisits.length === 0) {
+        alert('No records found for the selected filters.');
+        return;
+      }
+
+      // ── Build sheet ──────────────────────────────────────────────────────────
+      const maxPhotos = Math.min(3, Math.max(0, ...allVisits.map(v => v.imageUrls?.length || 0)));
+      const baseHeaders = [
+        'Executive Name', 'Store Name', 'City', 'Partner Brands',
+        isDigital ? 'Connect Date' : 'Visit Date',
+        'Persons Met', 'POSM Available', 'Next Schedule', 'Remarks',
+        'Issues', 'Visit Status', 'Reviewer', 'Issue Status'
+      ];
+      const headers = [...baseHeaders, ...Array.from({ length: maxPhotos }, (_, i) => `Photo ${i + 1}`)];
+
+      const rows = allVisits.map(v => {
+        const persons = (v.peopleMet || [])
+          .map((p, idx) => `${idx + 1}. ${p.name}${p.designation ? ` (${p.designation})` : ''}${p.phoneNumber ? ` [${p.phoneNumber}]` : ''}`)
+          .join('; ');
+        const posm = v.POSMchecked == null ? 'Not specified' : v.POSMchecked ? 'Yes' : 'No';
+        return [
+          v.executiveName, v.storeName, v.city, (v.partnerBrand || []).join(', '),
+          formatDateForXLS(v.visitDate), persons, posm,
+          v.nextScheduledDate || '', v.feedback || 'No feedback provided',
+          v.issues, formatVisitStatus(v.visitStatus), v.reviewerName || '',
+          formatIssueStatus(v.issueStatus),
+          ...Array.from({ length: maxPhotos }, (_, i) => v.imageUrls?.[i] || '')
+        ];
+      });
+
+      const aoa = [headers, ...rows];
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+      // ── Hyperlink photo cells ─────────────────────────────────────────────────
+      const photoStartIdx = baseHeaders.length;
+      allVisits.forEach((v, rowIdx) => {
+        for (let j = 0; j < maxPhotos; j++) {
           const url = v.imageUrls?.[j];
           if (!url) continue;
-          const cellAddr = XLSX.utils.encode_cell({ c: photoStartIdx + j, r: rowIdx + 1 }); // +1 to skip header
+          const cellAddr = XLSX.utils.encode_cell({ c: photoStartIdx + j, r: rowIdx + 1 });
           const cell = (ws as any)[cellAddr] || { t: 's', v: url };
-          // Display URL text and make it clickable
           cell.v = url;
           cell.l = { Target: url, Tooltip: `Open Photo ${j + 1}` };
           (ws as any)[cellAddr] = cell;
         }
       });
+
+      // ── Column widths ─────────────────────────────────────────────────────────
+      (ws as any)['!cols'] = [
+        { wch: 22 }, { wch: 28 }, { wch: 14 }, { wch: 24 }, { wch: 12 },
+        { wch: 40 }, { wch: 14 }, { wch: 16 }, { wch: 40 }, { wch: 40 },
+        { wch: 16 }, { wch: 18 }, { wch: 16 },
+        ...Array.from({ length: maxPhotos }, () => ({ wch: 50 }))
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, isDigital ? 'DigitalVisitReports' : 'VisitReports');
+      const today = new Date();
+      const filename = `${isDigital ? 'digital-visit-reports' : 'visit-reports'}-${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}.xlsx`;
+      XLSX.writeFile(wb, filename, { bookType: 'xlsx' });
+    } catch (err) {
+      console.error('Export failed:', err);
+      alert('Failed to export data. Please try again.');
+    } finally {
+      setIsExporting(false);
     }
-
-    // Column widths for readability
-    (ws as any)['!cols'] = [
-      { wch: 22 }, // Executive
-      { wch: 28 }, // Store
-      { wch: 14 }, // City
-      { wch: 24 }, // Brands
-      { wch: 12 }, // Date
-      { wch: 40 }, // Persons Met
-      { wch: 14 }, // POSM
-      { wch: 16 }, // Next Schedule
-      { wch: 40 }, // Remarks
-      { wch: 40 }, // Issues
-      { wch: 16 }, // Visit Status
-      { wch: 18 }, // Reviewer
-      { wch: 16 }, // Issue Status
-      ...Array.from({ length: photoCount }, () => ({ wch: 50 })) // Photo columns
-    ];
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, isDigital ? 'DigitalVisitReports' : 'VisitReports');
-
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    const filename = `${isDigital ? 'digital-visit-reports' : 'visit-reports'}-${yyyy}-${mm}-${dd}.xlsx`;
-    XLSX.writeFile(wb, filename, { bookType: 'xlsx' });
   };
 
   const handleExportPDF = () => {
@@ -1145,22 +1184,23 @@ const VisitReportPage: React.FC = () => {
           </button>
           <button
             onClick={handleExportXLS}
+            disabled={isExporting}
             style={{
               padding: '10px 16px',
-              backgroundColor: '#2563eb',
+              backgroundColor: isExporting ? '#93c5fd' : '#2563eb',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
               fontSize: '14px',
               fontWeight: '600',
-              cursor: 'pointer',
+              cursor: isExporting ? 'not-allowed' : 'pointer',
               transition: 'background-color 0.2s',
               boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)'
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563eb'; }}
+            onMouseEnter={(e) => { if (!isExporting) e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
+            onMouseLeave={(e) => { if (!isExporting) e.currentTarget.style.backgroundColor = '#2563eb'; }}
           >
-            Export XLS
+            {isExporting ? 'Exporting...' : 'Export XLS'}
           </button>
         </div>
       </div>

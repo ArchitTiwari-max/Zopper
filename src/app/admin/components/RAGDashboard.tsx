@@ -42,7 +42,8 @@ const AdminRAGDashboard: React.FC = () => {
         dateRange: filters.dateRange,
         storeType: filters.storeType,
         ragFilter: filters.ragFilter,
-        brandFilter: filters.brandFilter
+        brandFilter: filters.brandFilter,
+        summaryOnly: 'true'  // Dashboard only needs summary cards, not full store list
       });
 
       const response = await fetch(`/api/admin/rag-analytics?${params}`, {

@@ -33,6 +33,7 @@ interface SuggestedStore {
     wasInLastPJP: boolean;
     lastPJPDate: string | null;
     lastVisit: LastVisit | null;
+    isRescheduled?: boolean;
 }
 
 interface StoreOption {
@@ -66,6 +67,7 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
     const [plannedVisitDate, setPlannedVisitDate] = useState<string>('');
     const [addMoreOpen, setAddMoreOpen] = useState(false);
     const [addMoreSearch, setAddMoreSearch] = useState('');
+    const [rescheduledIds, setRescheduledIds] = useState<Set<string>>(new Set());
 
     const [coordModalStore, setCoordModalStore] = useState<{ id: string; storeName: string; city: string; lat?: number | null; lng?: number | null; index: number | 'start' } | null>(null);
 
@@ -193,6 +195,50 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
         setAddMoreOpen(false);
         setAddMoreSearch('');
     };
+
+    const fetchRescheduledVisits = useCallback(async (date: string) => {
+        if (!date) return;
+        try {
+            const res = await fetch(`/api/executive/rescheduled-visits?date=${date}`);
+            const data = await res.json();
+            if (data.success && data.data) {
+                const rescheduledStores: SuggestedStore[] = data.data;
+                const newReschedIds = new Set(rescheduledStores.map(s => s.id));
+                setRescheduledIds(newReschedIds);
+                
+                setSuggestedRoute(prev => {
+                    const startStoreId = startStore?.id;
+                    
+                    // Remove old rescheduled visits that don't belong to the new date
+                    const filteredPrev = prev.filter(s => {
+                        if (s.isRescheduled) {
+                            return newReschedIds.has(s.id);
+                        }
+                        return true;
+                    });
+
+                    const currentIds = new Set(filteredPrev.map(s => s.id));
+                    
+                    // Filter out stores already in route or the starting store
+                    const newRescheduled = rescheduledStores.filter(s => 
+                        !currentIds.has(s.id) && s.id !== startStoreId
+                    );
+                    
+                    if (newRescheduled.length === 0 && filteredPrev.length === prev.length) return prev;
+                    return [...filteredPrev, ...newRescheduled];
+                });
+            }
+        } catch (e) {
+            console.error('Failed to fetch rescheduled visits:', e);
+        }
+    }, [startStore]);
+
+    // Fetch rescheduled visits when date changes
+    useEffect(() => {
+        if (plannedVisitDate) {
+            fetchRescheduledVisits(plannedVisitDate);
+        }
+    }, [plannedVisitDate, fetchRescheduledVisits]);
 
     const handleSubmit = async () => {
         if (!startStore) return;
@@ -382,7 +428,10 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
                             <span className="spjp-start-dot" />
                             <div>
                                 <span className="spjp-start-label">Starting Point</span>
-                                <span className="spjp-start-name">{startStore?.storeName}</span>
+                                <span className="spjp-start-name">
+                                    {startStore?.storeName}
+                                    {startStore && rescheduledIds.has(startStore.id) && <span className="spjp-rescheduled-tag" title="Rescheduled Visit">🔴</span>}
+                                </span>
                                 <div className="spjp-city-row-fix">
                                     <span className="spjp-start-city">📍 {startStore?.city}</span>
                                     {startStore && (
@@ -426,7 +475,10 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
                                             <div className="spjp-route-card-top">
                                                 <div className="spjp-route-number">{index + 1}</div>
                                                 <div className="spjp-route-card-info">
-                                                    <span className="spjp-route-store-name">{store.storeName}</span>
+                                                    <span className="spjp-route-store-name">
+                                                        {store.storeName}
+                                                        {store.isRescheduled && <span className="spjp-rescheduled-tag" title="Rescheduled Visit">🔴</span>}
+                                                    </span>
                                                     <div className="spjp-city-row-fix">
                                                         <span className="spjp-route-store-city">📍 {store.city}</span>
                                                         <button
@@ -461,11 +513,13 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
                                                         disabled={index === suggestedRoute.length - 1}
                                                         title="Move down"
                                                     >↓</button>
-                                                    <button
-                                                        className="spjp-remove-btn"
-                                                        onClick={() => removeStore(store.id)}
-                                                        title="Remove from route"
-                                                    >✕</button>
+                                                    {!store.isRescheduled && (
+                                                        <button
+                                                            className="spjp-remove-btn"
+                                                            onClick={() => removeStore(store.id)}
+                                                            title="Remove from route"
+                                                        >✕</button>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -644,7 +698,10 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
                             <div className="spjp-step3-store-row">
                                 <div className="spjp-step3-num start">🚩</div>
                                 <div className="spjp-step3-store-info">
-                                    <span className="spjp-step3-store-name">{startStore?.storeName}</span>
+                                    <span className="spjp-step3-store-name">
+                                        {startStore?.storeName}
+                                        {startStore && rescheduledIds.has(startStore.id) && <span className="spjp-rescheduled-tag" title="Rescheduled Visit">🔴</span>}
+                                    </span>
                                     <span className="spjp-step3-store-city">{startStore?.city}</span>
                                 </div>
                             </div>
