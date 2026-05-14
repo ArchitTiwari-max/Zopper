@@ -139,8 +139,9 @@ export async function GET(request: NextRequest) {
 
     // Store name search (partial, case-insensitive)
     if (storeSearchText.trim()) {
+      const escapedSearch = storeSearchText.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       whereClause.storeName = {
-        contains: storeSearchText.trim(),
+        contains: escapedSearch,
         mode: 'insensitive'
       };
     }

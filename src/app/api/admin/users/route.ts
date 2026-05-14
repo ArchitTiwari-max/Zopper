@@ -86,17 +86,18 @@ export async function GET(request: NextRequest) {
     
     // Add search filter (name, email, username)
     if (search) {
+      const escapedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       whereClause.OR = [
-        { username: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
+        { username: { contains: escapedSearch, mode: 'insensitive' } },
+        { email: { contains: escapedSearch, mode: 'insensitive' } },
         {
           admin: {
-            name: { contains: search, mode: 'insensitive' }
+            name: { contains: escapedSearch, mode: 'insensitive' }
           }
         },
         {
           executive: {
-            name: { contains: search, mode: 'insensitive' }
+            name: { contains: escapedSearch, mode: 'insensitive' }
           }
         }
       ];

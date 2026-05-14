@@ -77,13 +77,15 @@ export async function GET(request: NextRequest) {
     if (storeId && storeId !== 'All Store') {
       whereClause.storeId = storeId;
     } else if (storeName && storeName !== 'All Store' && storeName.trim() !== '') {
-      whereClause.store = { ...whereClause.store, storeName: { contains: storeName, mode: 'insensitive' } };
+      const escapedStoreName = storeName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      whereClause.store = { ...whereClause.store, storeName: { contains: escapedStoreName, mode: 'insensitive' } };
     }
 
     if (executiveId && executiveId !== 'All Executive') {
       whereClause.executiveId = executiveId;
     } else if (executiveName && executiveName !== 'All Executive' && executiveName.trim() !== '') {
-      whereClause.executive = { ...whereClause.executive, name: { contains: executiveName, mode: 'insensitive' } };
+      const escapedExecName = executiveName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      whereClause.executive = { ...whereClause.executive, name: { contains: escapedExecName, mode: 'insensitive' } };
     }
 
     if (city && city !== 'All City') {

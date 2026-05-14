@@ -50,9 +50,15 @@ export async function GET(request: NextRequest) {
 
     const whereClause: any = { connectDate: { gte: startDate, lte: endDate } };
     if (storeId) whereClause.storeId = storeId;
-    else if (storeName && storeName !== 'All Store') whereClause.store = { ...whereClause.store, storeName: { contains: storeName, mode: 'insensitive' } };
+    else if (storeName && storeName !== 'All Store') {
+      const escapedStoreName = storeName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      whereClause.store = { ...whereClause.store, storeName: { contains: escapedStoreName, mode: 'insensitive' } };
+    }
     if (executiveId) whereClause.executiveId = executiveId;
-    else if (executiveName && executiveName !== 'All Executive') whereClause.executive = { ...whereClause.executive, name: { contains: executiveName, mode: 'insensitive' } };
+    else if (executiveName && executiveName !== 'All Executive') {
+      const escapedExecName = executiveName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      whereClause.executive = { ...whereClause.executive, name: { contains: escapedExecName, mode: 'insensitive' } };
+    }
     if (city && city !== 'All City') whereClause.store = { ...whereClause.store, city: city };
     if (visitStatus && visitStatus !== 'All Status') whereClause.status = visitStatus;
     if (issueStatus && issueStatus !== 'All Status') {
