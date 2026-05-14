@@ -124,7 +124,12 @@ export async function GET(request: NextRequest) {
       data: result,
       meta: { brandId: brandId || null, range: range || '30d', generatedAt: new Date().toISOString() }
     }, {
-      headers: { 'Cache-Control': 'private, max-age=180, stale-while-revalidate=300' }
+      headers: { 
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Vary': 'Cookie'
+      }
     });
 
   } catch (e) {

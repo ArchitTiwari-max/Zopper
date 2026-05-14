@@ -170,13 +170,26 @@ export async function GET(request: NextRequest) {
       // Brand filter
       if (brandIdFilter && !store.partnerBrandIds.includes(brandIdFilter)) continue;
 
-      // Use the brand-specific type when a brand filter is active
+      // Use the brand-specific type when a brand filter is active, 
+      // or pick the "best" type among all brands if no filter is applied.
       let storeType: string;
       if (brandIdFilter) {
         const brandIdx = store.partnerBrandIds.indexOf(brandIdFilter);
         storeType = (brandIdx >= 0 ? store.partnerBrandTypes[brandIdx] : store.partnerBrandTypes[0]) as string || 'D';
       } else {
-        storeType = (store.partnerBrandTypes[0] as string) || 'D';
+        // Find the "highest" type (A+ > A > B > C > D)
+        const priorityOrder: Record<string, number> = { 'A_PLUS': 5, 'A': 4, 'B': 3, 'C': 2, 'D': 1 };
+        let bestType = 'D';
+        let bestScore = 0;
+        
+        for (const t of store.partnerBrandTypes) {
+          const score = priorityOrder[t as string] || 0;
+          if (score > bestScore) {
+            bestScore = score;
+            bestType = t as string;
+          }
+        }
+        storeType = bestType;
       }
       const storeMonths = salesMap.get(store.id);
 
@@ -290,7 +303,12 @@ export async function GET(request: NextRequest) {
         }
       }
     }, {
-      headers: { 'Cache-Control': 'private, max-age=180, stale-while-revalidate=300' }
+      headers: { 
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Vary': 'Cookie'
+      }
     });
 
   } catch (error) {

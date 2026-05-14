@@ -44,7 +44,11 @@ export async function GET(request: NextRequest) {
     if (ifNoneMatch === etag) {
       return new NextResponse(null, {
         status: 304,
-        headers: { 'Cache-Control': 'private, max-age=120, stale-while-revalidate=60', 'ETag': etag }
+        headers: { 
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'ETag': etag,
+          'Vary': 'Cookie'
+        }
       });
     }
 
@@ -178,7 +182,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=60');
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     response.headers.set('ETag', etag);
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('X-Cache-Status', 'MISS');

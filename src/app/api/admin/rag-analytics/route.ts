@@ -135,13 +135,26 @@ export async function GET(request: NextRequest) {
     const ragPerformances: RAGStorePerformance[] = [];
 
     for (const store of stores) {
-      // Use the brand-specific type when a brand filter is active
+      // Use the brand-specific type when a brand filter is active,
+      // or pick the "best" type among all brands if no filter is applied.
       let storeType: string;
       if (brandIdFilter) {
         const brandIdx = store.partnerBrandIds.indexOf(brandIdFilter);
         storeType = (brandIdx >= 0 ? store.partnerBrandTypes[brandIdx] : store.partnerBrandTypes[0]) as string || 'D';
       } else {
-        storeType = (store.partnerBrandTypes[0] as string) || 'D';
+        // Find the "highest" type (A+ > A > B > C > D)
+        const priorityOrder: Record<string, number> = { 'A_PLUS': 5, 'A': 4, 'B': 3, 'C': 2, 'D': 1 };
+        let bestType = 'D';
+        let bestScore = 0;
+        
+        for (const t of store.partnerBrandTypes) {
+          const score = priorityOrder[t as string] || 0;
+          if (score > bestScore) {
+            bestScore = score;
+            bestType = t as string;
+          }
+        }
+        storeType = bestType;
       }
       if (storeTypeFilter !== 'all' && storeType !== storeTypeFilter) continue;
 

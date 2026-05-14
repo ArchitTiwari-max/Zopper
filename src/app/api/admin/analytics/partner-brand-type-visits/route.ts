@@ -107,80 +107,54 @@ export async function GET(request: NextRequest) {
 
     console.log(`📊 Fetched ${storesWithVisits.length} stores with visit data`);
 
-    // OPTIMIZED: Build groups with O(n) complexity instead of O(n²)
-    const groups: Record<PartnerBrandType, { 
-      stores: { id: string; name: string }[]; 
-      visitedStores: Set<string>;
-    }> = {
-      A_PLUS: { stores: [], visitedStores: new Set() },
-      A: { stores: [], visitedStores: new Set() },
-      B: { stores: [], visitedStores: new Set() },
-      C: { stores: [], visitedStores: new Set() },
-      D: { stores: [], visitedStores: new Set() },
-    };
+    // ── Build a visited-store set from count data ─────────────────────────────
+    const visitedStoreIds = new Set<string>();
+    visitCounts.forEach(v => { if (v._count.id > 0) visitedStoreIds.add(v.storeId); });
+    digitalVisitCounts.forEach(dv => { if (dv._count.id > 0) visitedStoreIds.add(dv.storeId); });
 
-    // OPTIMIZED: Single pass through stores with efficient mapping
+    // ── Build groups using two Sets per type: seen (dedup) + visited ──────────
+    const typeOrder: (PartnerBrandType)[] = ['A_PLUS', 'A', 'B', 'C', 'D'];
+
+    const groupStores:  Record<string, { id: string; name: string }[]> = { A_PLUS: [], A: [], B: [], C: [], D: [] };
+    const groupSeenIds: Record<string, Set<string>>                     = { A_PLUS: new Set(), A: new Set(), B: new Set(), C: new Set(), D: new Set() };
+
     for (const store of storesWithVisits) {
-      const hasVisits = store.visitCount > 0;
-      
+      const brandIds   = Array.isArray(store.partnerBrandIds)   ? store.partnerBrandIds   : [];
+      const brandTypes = Array.isArray(store.partnerBrandTypes) ? store.partnerBrandTypes : [];
+
       if (!brandId) {
-        // If no brandId filter, include store once per type it has
-        const brandIds = Array.isArray(store.partnerBrandIds) ? store.partnerBrandIds : [];
-        const brandTypes = Array.isArray(store.partnerBrandTypes) ? store.partnerBrandTypes : [];
-        
+        // No filter → place the store in every type it carries (deduplicated per type)
         const len = Math.min(brandIds.length, brandTypes.length);
         for (let i = 0; i < len; i++) {
           const type = brandTypes[i] as PartnerBrandType;
-          if (type && groups[type]) {
-            // Use Set for O(1) duplicate checking instead of array.some()
-            const storeKey = store.id;
-            if (!groups[type].visitedStores.has(storeKey)) {
-              groups[type].stores.push({ id: store.id, name: store.storeName });
-              groups[type].visitedStores.add(storeKey);
-              if (hasVisits) {
-                groups[type].visitedStores.add(`visited:${storeKey}`);
-              }
-            }
+          if (type && groupStores[type] && !groupSeenIds[type].has(store.id)) {
+            groupSeenIds[type].add(store.id);
+            groupStores[type].push({ id: store.id, name: store.storeName });
           }
         }
       } else {
-        // With brand filter: find index of brandId and map to single type
-        const brandIds = Array.isArray(store.partnerBrandIds) ? store.partnerBrandIds : [];
-        const brandTypes = Array.isArray(store.partnerBrandTypes) ? store.partnerBrandTypes : [];
-        
+        // Brand filter → find the matching brand index, use its type
         const idx = brandIds.indexOf(brandId);
         if (idx >= 0 && idx < brandTypes.length) {
           const type = brandTypes[idx] as PartnerBrandType;
-          if (type && groups[type]) {
-            const storeKey = store.id;
-            if (!groups[type].visitedStores.has(storeKey)) {
-              groups[type].stores.push({ id: store.id, name: store.storeName });
-              groups[type].visitedStores.add(storeKey);
-              if (hasVisits) {
-                groups[type].visitedStores.add(`visited:${storeKey}`);
-              }
-            }
+          if (type && groupStores[type] && !groupSeenIds[type].has(store.id)) {
+            groupSeenIds[type].add(store.id);
+            groupStores[type].push({ id: store.id, name: store.storeName });
           }
         }
       }
     }
 
     // OPTIMIZED: Build response with pre-calculated visit data
-    const typeOrder: (keyof typeof groups)[] = ['A_PLUS', 'A', 'B', 'C', 'D'];
     const result = typeOrder.map((typeKey) => {
-      const group = groups[typeKey];
-      const stores = group.stores;
+      const stores = groupStores[typeKey];
       const total = stores.length;
       
       // Count visited stores efficiently using Set
-      const visitedCount = stores.filter(s => 
-        group.visitedStores.has(`visited:${s.id}`)
-      ).length;
+      const visitedCount = stores.filter(s => visitedStoreIds.has(s.id)).length;
       
       // Get unvisited stores
-      const unvisited = stores.filter(s => 
-        !group.visitedStores.has(`visited:${s.id}`)
-      );
+      const unvisited = stores.filter(s => !visitedStoreIds.has(s.id));
       
       return {
         type: typeKey,

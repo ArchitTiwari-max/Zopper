@@ -47,73 +47,30 @@ const RAGPerformancePage: React.FC = () => {
     dateRange: searchParams.get('dateRange') || '7days',
     storeType: searchParams.get('storeType') || 'all',
     ragFilter: searchParams.get('ragFilter') || 'all',
-    brandFilter: 'Samsung' // Filter to show only Samsung brand stores
+    brandFilter: searchParams.get('brandFilter') || 'all'
   });
 
   const fetchRAGData = async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
-        city: 'All',
-        partnerBrand: filters.brandFilter, // Use Samsung filter instead of 'All'
-        ragStatus: filters.ragFilter,
-        year: new Date().getFullYear().toString()
+        dateRange: filters.dateRange,
+        storeType: filters.storeType,
+        ragFilter: filters.ragFilter,
+        brandFilter: filters.brandFilter,
       });
 
-      const response = await fetch(`/api/admin/stores/rag-status?${params}`, {
+      const response = await fetch(`/api/admin/rag-analytics?${params}`, {
         method: 'GET',
         credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-      const data = await response.json();
-      
-      if (data.stores && data.summary) {
-        // Transform our API response to match expected format
-        const transformedData: RAGAnalyticsResponse = {
-          success: true,
-          data: {
-            performances: data.stores.map((store: any) => ({
-              storeId: store.id,
-              storeName: store.storeName,
-              storeType: store.brandRAGDetails[0]?.brandType || 'A',
-              attachRate: store.brandRAGDetails[0]?.currentAttachRate || 0,
-              attachRAG: store.ragStatus === 'green' ? 'Green' : 
-                        store.ragStatus === 'amber' ? 'Amber' : 'Red',
-              previousMonthAttach: store.brandRAGDetails[0]?.previousAttachRate || 0,
-              monthlyTrendRAG: store.brandRAGDetails[0]?.performanceChange === 'improved' ? 'Green' :
-                              store.brandRAGDetails[0]?.performanceChange === 'declined' ? 'Red' : 'Amber',
-              planSales: 0, // Not available in current API
-              deviceSales: 0, // Not available in current API
-              city: store.city,
-              totalRevenue: 0 // Not available in current API
-            })),
-            summary: {
-              totalStores: data.summary.total,
-              greenStores: data.summary.green,
-              amberStores: data.summary.amber,
-              redStores: data.summary.red,
-              averageAttachRate: 0, // Calculate from stores if needed
-              improvementStores: data.summary.improving || 0,
-              decliningStores: data.summary.declining || 0
-            },
-            insights: [], // Generate insights if needed
-            metadata: {
-              dateRange: filters.dateRange,
-              storeTypeFilter: filters.storeType,
-              ragFilter: filters.ragFilter,
-              totalStoresAnalyzed: data.summary.total,
-              filteredCount: data.stores.length
-            }
-          }
-        };
-        setAnalytics(transformedData);
+      const data: RAGAnalyticsResponse = await response.json();
+      if (data.success) {
+        setAnalytics(data);
         setError(null);
       } else {
         setError(data.error || 'Failed to fetch RAG data');

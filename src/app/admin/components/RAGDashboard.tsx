@@ -32,7 +32,7 @@ const AdminRAGDashboard: React.FC = () => {
     dateRange: '7days',
     storeType: 'all',
     ragFilter: 'all',
-    brandFilter: 'Samsung' // Filter to show only Samsung brand stores
+    brandFilter: 'all'
   });
 
   const fetchRAGData = async () => {
@@ -88,7 +88,7 @@ const AdminRAGDashboard: React.FC = () => {
       dateRange: filters.dateRange,
       storeType: storeType || filters.storeType,
       ragFilter: ragFilter || filters.ragFilter,
-      brandFilter: filters.brandFilter // Pass Samsung brand filter
+      brandFilter: filters.brandFilter
     });
     router.push(`/admin/rag-performance?${params.toString()}`);
   };
