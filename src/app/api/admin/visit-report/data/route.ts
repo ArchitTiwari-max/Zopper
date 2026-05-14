@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
 
     const totalPages = isExport ? 1 : Math.ceil(totalCount / limit);
 
-    const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
+    const brandMap = new Map<string, string>(brands.map(b => [b.id, b.brandName] as [string, string]));
 
     // Efficiently fetch the most recent previous visit for each fetched visit
     const prevVisitsPromises = visits.map(v => {
@@ -174,7 +174,7 @@ export async function GET(request: NextRequest) {
     });
     
     const prevVisitsResults = await Promise.all(prevVisitsPromises);
-    const prevVisitMap = new Map<string, Date | null>(prevVisitsResults.map(r => [r.id, r.prevDate]));
+    const prevVisitMap = new Map<string, Date | null>(prevVisitsResults.map(r => [r.id, r.prevDate] as [string, Date | null]));
 
     // Process visit data
     let processedVisits = visits.map((visit) => {

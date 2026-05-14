@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Fix the working directory warning
   outputFileTracingRoot: __dirname,
+  output: "standalone",
   
   // Build optimizations
   compiler: {
