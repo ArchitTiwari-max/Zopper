@@ -57,6 +57,30 @@ export async function sendOTPEmail(email: string, otp: string): Promise<boolean>
   }
 }
 
+export async function sendDailyReportEmail(to: string, pdfBuffer: Buffer, dateString: string): Promise<boolean> {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to,
+      subject: `Daily Visit Report - ${dateString}`,
+      text: `Please find attached the daily visit report for ${dateString}.`,
+      attachments: [
+        {
+          filename: `visit-reports-${dateString}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        }
+      ]
+    };
+    
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('Error sending daily report email:', error);
+    return false;
+  }
+}
+
 // Generate a 6-digit OTP
 export function generateOTP(): string {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();

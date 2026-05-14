@@ -104,6 +104,7 @@ const ExecutiveFormContent: React.FC = () => {
     issuesRaised: [] as string[],
     brandsVisited: [] as string[],
     remarks: '',
+    nextScheduledDate: '',
     uploadedImages: [] as UploadedImage[]
   });
   // Digital visit lightweight state
@@ -416,6 +417,7 @@ const ExecutiveFormContent: React.FC = () => {
           imageUrls: formData.uploadedImages.map(img => img.url),
           brandsVisited: formData.brandsVisited,
           remarks: formData.remarks,
+          ...(formData.nextScheduledDate ? { nextScheduledDate: formData.nextScheduledDate } : {}),
           ...(formData.issuesRaised.length > 0 ? { issuesRaised: formData.issuesRaised } : {})
         };
 
@@ -982,6 +984,29 @@ const ExecutiveFormContent: React.FC = () => {
                   value={formData.remarks}
                   onChange={(e) => handleInputChange('remarks', e.target.value)}
                   rows={3}
+                />
+              </div>
+
+              <div className="exec-f-sub-form-group">
+                <label className="exec-f-sub-form-label">
+                  Next Scheduled Visit (Optional)
+                  <span className="exec-f-sub-info-text" style={{display: 'block', fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal', marginTop: '4px'}}>
+                    ℹ️ If filled, store will be auto-added to your PJP for this date
+                  </span>
+                </label>
+                <input
+                  type="date"
+                  className="exec-f-sub-form-input exec-f-sub-form-date"
+                  value={formData.nextScheduledDate}
+                  onChange={(e) => handleInputChange('nextScheduledDate', e.target.value)}
+                  min={(() => {
+                    const today = new Date();
+                    const istOffset = 5.5 * 60 * 60 * 1000;
+                    const istDate = new Date(today.getTime() + istOffset);
+                    // Next scheduled visit should be in the future (tomorrow onwards)
+                    istDate.setDate(istDate.getDate() + 1);
+                    return istDate.toISOString().split('T')[0];
+                  })()}
                 />
               </div>
 

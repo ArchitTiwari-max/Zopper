@@ -123,6 +123,7 @@ export async function GET(request: NextRequest) {
         remarks: true,
         brandIds: true,
         visitDate: true,
+        nextScheduledDate: true,
         createdAt: true,
         POSMchecked: true,
         personMet: true,
@@ -235,6 +236,13 @@ export async function GET(request: NextRequest) {
         prevVisitDateStr = `${prevDate.getDate().toString().padStart(2, '0')}/${(prevDate.getMonth() + 1).toString().padStart(2, '0')}/${prevDate.getFullYear()}`;
       }
 
+      // Get next scheduled visit date
+      let nextScheduledDateStr = null;
+      if (visit.nextScheduledDate) {
+        const nextDate = new Date(visit.nextScheduledDate);
+        nextScheduledDateStr = `${nextDate.getDate().toString().padStart(2, '0')}/${(nextDate.getMonth() + 1).toString().padStart(2, '0')}/${nextDate.getFullYear()}`;
+      }
+
       return {
         id: visit.id,
         executiveId: visit.executive?.id || 'unknown',
@@ -246,6 +254,7 @@ export async function GET(request: NextRequest) {
         partnerBrand: partnerBrands,
         visitDate: formattedVisitDate,
         previousVisitDate: prevVisitDateStr,
+        nextScheduledDate: nextScheduledDateStr,
         visitStatus: visit.status as 'PENDING_REVIEW' | 'REVIEWD',
         reviewerName: visit.reviewedByAdmin?.name,
         issueStatus: issueStatusResult,
