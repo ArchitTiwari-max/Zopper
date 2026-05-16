@@ -43,8 +43,7 @@ const PartnerBrandTypeVisitsExec: React.FC = () => {
         if (!ignore) {
           setBrands(list);
           if (!brandId && list.length > 0) {
-            const samsung = list.find((b) => b.name?.toLowerCase() === "samsung");
-            setBrandId(samsung?.id || list[0].id);
+            setBrandId(list[0].id);
           }
         }
       } catch (e: any) {

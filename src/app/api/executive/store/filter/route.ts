@@ -4,176 +4,119 @@ import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
 
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
 export async function GET(request: NextRequest) {
   try {
-    // Get authenticated user from token
     const user = await getAuthenticatedUser(request);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is an executive
-    if (user.role !== 'EXECUTIVE') {
-      return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
-    }
-
-    // Get executive data using userId from token
+    // ── 1) Get executive + assigned store IDs ─────────────────────────────────
     const executive = await prisma.executive.findUnique({
       where: { userId: user.userId },
-      include: {
-        executiveStores: {
-          select: {
-            storeId: true
-          }
-        }
+      select: {
+        id: true,
+        executiveStores: { select: { storeId: true } }
       }
     });
+    if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
 
-    if (!executive) {
-      return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
-    }
+    const assignedStoreIds = executive.executiveStores.map(es => es.storeId);
 
-    // Generate ETag for cache validation (longer cache for filter data - 10 minutes)
-    const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
-    const apiVersion = 'v2-store-filter-only';
-    const etag = `"${currentTime}-${executive.id}-${user.userId}-${apiVersion}"`;
-    
-    // Check if client has cached version (conditional request)
+    // ── ETag ──────────────────────────────────────────────────────────────────
+    const currentTime = Math.floor(Date.now() / (10 * 60 * 1000)) * (10 * 60 * 1000); // 10-min buckets
+    const etag = `"${currentTime}-${executive.id}-v2-filter"`;
     const ifNoneMatch = request.headers.get('if-none-match');
     if (ifNoneMatch === etag) {
-      // Return 304 Not Modified if ETag matches
-      return new NextResponse(null, { 
+      return new NextResponse(null, {
         status: 304,
-        headers: {
-          'Cache-Control': 'private, max-age=600, stale-while-revalidate=300',
-          'ETag': etag,
-          'X-Cache-Status': 'HIT'
+        headers: { 
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'ETag': etag, 
+          'X-Cache-Status': 'HIT',
+          'Vary': 'Cookie'
         }
       });
     }
 
-    // Get comprehensive filter data in parallel
-    const [allStores, allBrands] = await Promise.all([
-      // Get all stores assigned to this executive (just basic info for filtering)
-      prisma.store.findMany({
-        where: {
-          id: {
-            in: executive.executiveStores.map(es => es.storeId)
-          }
-        },
-        select: {
-          id: true,
-          storeName: true,
-          city: true,
-          partnerBrandIds: true
-        }
-      }),
-      
-      // Get ALL brands from the system (not just used ones)
-      prisma.brand.findMany({
-        select: {
-          id: true,
-          brandName: true,
-          // category field removed - using CategoryBrand relation
-        },
-        orderBy: {
-          brandName: 'asc'
-        }
-      })
+    const CHUNK = 500;
+    const storeChunks = chunk(assignedStoreIds, CHUNK);
+
+    // ── 2) Fetch stores + all brands IN PARALLEL ──────────────────────────────
+    const [storesNested, allBrands] = await Promise.all([
+      Promise.all(storeChunks.map(ids =>
+        prisma.store.findMany({
+          where: { id: { in: ids } },
+          select: { id: true, storeName: true, city: true, partnerBrandIds: true }
+        })
+      )),
+      prisma.brand.findMany({ select: { id: true, brandName: true }, orderBy: { brandName: 'asc' } })
     ]);
 
-    // Get all unique cities from assigned stores
-    const allCities = Array.from(new Set(allStores.map(store => store.city))).sort();
-    const cities = ['All Cities', ...allCities];
+    const allStores = storesNested.flat();
 
-    // Get all brands (regardless of whether they're used in visits or stores)
-    const allBrandNames = allBrands.map(brand => brand.brandName).sort();
-    const brands = ['All Brands', ...allBrandNames];
+    // ── 3) Derive filter options (pure in-memory) ─────────────────────────────
+    const allCities = Array.from(new Set(allStores.map(s => s.city))).sort();
 
-    // Get brands currently used by assigned stores
-    const usedBrandIds = new Set(allStores.flatMap(store => store.partnerBrandIds));
-    const usedBrands = allBrands
-      .filter(brand => usedBrandIds.has(brand.id))
-      .map(brand => brand.brandName)
-      .sort();
-    const currentlyUsedBrands = ['All Brands', ...usedBrands];
+    const usedBrandIds = new Set(allStores.flatMap(s => s.partnerBrandIds));
+    const usedBrands   = allBrands.filter(b => usedBrandIds.has(b.id)).map(b => b.brandName);
+    const allBrandNames = allBrands.map(b => b.brandName);
 
-    // Get brand categories for advanced filtering
-    const categories = Array.from(new Set(
-      allBrands
-        .map(brand => 'General') // TODO: Implement category lookup via CategoryBrand relation
-        .filter(category => category && category.trim() !== '')
-    )).sort();
-    const brandCategories = ['All Categories', ...categories];
-
-    // Sort options
     const sortOptions = [
       'Recently Visited First',
-      'Store Name A-Z', 
-      'Store Name Z-A', 
+      'Store Name A-Z',
+      'Store Name Z-A',
       'City A-Z',
       'City Z-A'
     ];
 
-    // Status options for visit filtering
     const statusOptions = [
       'All Status',
       'Visited Today',
-      'Visited This Week', 
+      'Visited This Week',
       'Visited This Month',
       'Not Visited',
       'Overdue Visit'
     ];
 
-    // Create response with comprehensive filter data
     const response = NextResponse.json({
       success: true,
       data: {
         filterOptions: {
-          // Basic filters
-          cities,
-          brands,
+          cities:              ['All Cities', ...allCities],
+          brands:              ['All Brands', ...allBrandNames],
           sortOptions,
           statusOptions,
-          
-          // Advanced filters
-          currentlyUsedBrands, // Only brands actually used by assigned stores
-          brandCategories,     // Categories for brand grouping
-          
-          // Additional metadata
-          totalStores: allStores.length,
-          totalCities: allCities.length,
-          totalBrands: allBrands.length,
-          totalUsedBrands: usedBrands.length
+          currentlyUsedBrands: ['All Brands', ...usedBrands],
+          brandCategories:     ['All Categories', 'General'],
+          totalStores:         allStores.length,
+          totalCities:         allCities.length,
+          totalBrands:         allBrands.length,
+          totalUsedBrands:     usedBrands.length
         },
         metadata: {
-          executiveId: executive.id,
-          assignedStoresCount: executive.executiveStores.length,
-          generatedAt: new Date().toISOString()
+          executiveId:          executive.id,
+          assignedStoresCount:  assignedStoreIds.length,
+          generatedAt:          new Date().toISOString()
         }
       }
     });
 
-    // Add caching headers - PRIVATE cache to prevent data leakage between executives
-    response.headers.set('Cache-Control', 'private, max-age=600, stale-while-revalidate=300');
-    response.headers.set('Vary', 'Cookie'); // Cache varies by cookies (user session)
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Vary', 'Cookie');
     response.headers.set('ETag', etag);
-    
-    // Add performance headers
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('X-Cache-Status', 'MISS');
-    
-    // Add immutability hint for longer caching
-    response.headers.set('Cache-Tag', 'store-filters');
-    
+
     return response;
 
   } catch (error) {
     console.error('Error fetching filter data:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch filter data' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch filter data' }, { status: 500 });
   }
 }

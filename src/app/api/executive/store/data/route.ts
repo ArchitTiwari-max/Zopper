@@ -5,123 +5,120 @@ import { extractChainPrefix, getAllChainConfigs } from '@/lib/chainConfig';
 
 export const runtime = 'nodejs';
 
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
 export async function GET(request: NextRequest) {
   try {
-    // Get authenticated user from token
     const user = await getAuthenticatedUser(request);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is an executive
-    if (user.role !== 'EXECUTIVE') {
-      return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
-    }
-
-    // Get executive data
-    let executive;
-    try {
-      executive = await prisma.executive.findUnique({
-        where: { userId: user.userId },
-        include: {
-          user: true,
-          executiveStores: {
-            select: { storeId: true, isFlagged: true }
-          }
-        }
-      });
-    } catch (dbError) {
-      console.error('Database error fetching executive:', dbError);
-      return NextResponse.json({ error: 'Database error fetching executive profile' }, { status: 500 });
-    }
-
-    if (!executive) {
-      return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
-    }
-
-    // Create a map for quick lookup of flagged status
-    const flaggedMap = new Map<string, boolean>();
-    executive.executiveStores.forEach(es => {
-      flaggedMap.set(es.storeId, es.isFlagged);
+    // ── 1) Get executive + store IDs + flagged map ────────────────────────────
+    const executive = await prisma.executive.findUnique({
+      where: { userId: user.userId },
+      select: {
+        id: true,
+        name: true,
+        region: true,
+        executiveStores: { select: { storeId: true, isFlagged: true } }
+      }
     });
+    if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
 
-    // ETag for cache validation (includes user ID for security)
+    const flaggedMap = new Map<string, boolean>(
+      executive.executiveStores.map(es => [es.storeId, es.isFlagged])
+    );
+    const assignedStoreIds = executive.executiveStores.map(es => es.storeId);
+    if (assignedStoreIds.length === 0) {
+      return NextResponse.json({ success: true, data: { stores: [], executive: { id: executive.id, name: executive.name, region: executive.region } } });
+    }
+
+    // ── ETag for cache validation ────────────────────────────────────────────
     const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
-    const apiVersion = 'v2-data-only';
-    const etag = `"${currentTime}-${executive.id}-${user.userId}-${apiVersion}"`;
+    const etag = `"${currentTime}-${executive.id}-${user.userId}-v3"`;
     const ifNoneMatch = request.headers.get('if-none-match');
     if (ifNoneMatch === etag) {
       return new NextResponse(null, {
         status: 304,
-        headers: {
-          'Cache-Control': 'private, max-age=120, stale-while-revalidate=60',
-          'ETag': etag
+        headers: { 
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'ETag': etag,
+          'Vary': 'Cookie'
         }
       });
     }
 
-    // Fetch stores, brands, and alignments in parallel
-    const [stores, allBrands, alignments] = await Promise.all([
-      prisma.store.findMany({
-        where: {
-          id: { in: executive.executiveStores.map(es => es.storeId) }
-        },
-        select: {
-          id: true,
-          storeName: true,
-          city: true,
-          fullAddress: true,
-          latitude: true,
-          longitude: true,
-          partnerBrandIds: true,
-          partnerBrandTypes: true,
-          visits: {
-            where: { executiveId: executive.id },
-            orderBy: { visitDate: 'desc' },
-            take: 1
+    const CHUNK = 500;
+    const storeChunks = chunk(assignedStoreIds, CHUNK);
+
+    // ── 2) Fetch stores + last visit per store + brands + alignments + chainConfigs IN PARALLEL ──
+    const [storesNested, lastVisitsNested, allBrands, alignments, chainConfigs] = await Promise.all([
+      // Store details — NO nested visits (fetched separately via groupBy)
+      Promise.all(storeChunks.map(ids =>
+        prisma.store.findMany({
+          where: { id: { in: ids } },
+          select: {
+            id: true,
+            storeName: true,
+            city: true,
+            fullAddress: true,
+            latitude: true,
+            longitude: true,
+            partnerBrandIds: true,
+            partnerBrandTypes: true,
           }
-        }
-      }),
+        })
+      )),
+
+      // Last visit date per store (groupBy is far more efficient than nested include)
+      Promise.all(storeChunks.map(ids =>
+        prisma.visit.groupBy({
+          by: ['storeId'],
+          where: { storeId: { in: ids }, executiveId: executive.id },
+          _max: { visitDate: true }
+        })
+      )),
+
       prisma.brand.findMany({ select: { id: true, brandName: true } }),
-      prisma.storeAlignment.findMany({
-        where: { storeId: { in: executive.executiveStores.map(es => es.storeId) } }
-      })
+      prisma.storeAlignment.findMany({ where: { storeId: { in: assignedStoreIds } } }),
+      getAllChainConfigs(),
     ]);
 
-    const brandMap = new Map(allBrands.map(brand => [brand.id, brand]));
+    const stores       = storesNested.flat();
+    const lastVisits   = lastVisitsNested.flat();
+    const brandMap     = new Map(allBrands.map(b => [b.id, b.brandName]));
     const alignmentMap = new Map(alignments.map(a => [a.storeId, a]));
 
-    // Load all chain configs once for efficient score calculation
-    const chainConfigs = await getAllChainConfigs();
+    // Build O(1) last-visit lookup
+    const lastVisitMap = new Map<string, Date | null>(
+      lastVisits.map(v => [v.storeId, v._max.visitDate ?? null])
+    );
+
+    const now = new Date();
 
     const transformedStores = stores.map(store => {
       const partnerBrands = store.partnerBrandIds
-        .map(brandId => brandMap.get(brandId))
-        .filter(Boolean)
-        .map(b => b!.brandName);
+        .map(bid => brandMap.get(bid))
+        .filter(Boolean) as string[];
 
-      // Get partner brand types - ensure we have the same length as brand IDs
       const partnerBrandTypes = Array.isArray((store as any).partnerBrandTypes)
-        ? (store as any).partnerBrandTypes
-        : [];
+        ? (store as any).partnerBrandTypes : [];
 
+      // Last visit status
       let visitStatus = 'No visit';
-      let lastVisitDate: Date | null = null;
-
-      if (store.visits.length > 0) {
-        const lastVisit = store.visits[0];
-        lastVisitDate = lastVisit.visitDate || lastVisit.createdAt;
-        const now = new Date();
-        const visitDate = new Date(lastVisit.visitDate || lastVisit.createdAt);
-        const diffDays = Math.floor(Math.abs(now.getTime() - visitDate.getTime()) / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 0) visitStatus = 'Today';
+      const lastVisitDate = lastVisitMap.get(store.id) ?? null;
+      if (lastVisitDate) {
+        const diffDays = Math.floor((now.getTime() - new Date(lastVisitDate).getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays === 0)      visitStatus = 'Today';
         else if (diffDays === 1) visitStatus = '1 day ago';
-        else visitStatus = `${diffDays} days ago`;
+        else                     visitStatus = `${diffDays} days ago`;
       }
 
-      // Calculate Alignment Score using chain config
+      // Alignment score
       let alignmentScore = 0;
       const alignment = alignmentMap.get(store.id);
       if (alignment) {
@@ -132,7 +129,7 @@ export async function GET(request: NextRequest) {
         ) || null;
 
         if (chainConfig) {
-          const storeLevel = Array.isArray(alignment.storeLevel) ? alignment.storeLevel : [];
+          const storeLevel       = Array.isArray(alignment.storeLevel)       ? alignment.storeLevel       : [];
           const stakeholderLevel = Array.isArray(alignment.stakeholderLevel) ? alignment.stakeholderLevel : [];
 
           const isRoleAligned = (roleName: string, levelData: any[]) => {
@@ -177,25 +174,19 @@ export async function GET(request: NextRequest) {
       return b.sortOrder - a.sortOrder;
     });
 
-    // Create response
     const response = NextResponse.json({
       success: true,
       data: {
         stores: transformedStores,
-        executive: {
-          id: executive.id,
-          name: executive.name,
-          region: executive.region
-        }
+        executive: { id: executive.id, name: executive.name, region: executive.region }
       }
     });
 
-    // ===== SAFE HEADERS =====
-    response.headers.set('Cache-Control', 'private, max-age=120, stale-while-revalidate=60'); // Browser-only cache
-    response.headers.set('ETag', etag); // Conditional requests
-    response.headers.set('X-Content-Type-Options', 'nosniff'); // Security
-    response.headers.set('X-Cache-Status', 'MISS'); // Debug info
-    response.headers.set('Vary', 'Cookie'); // Cache varies by cookies (user session)
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('ETag', etag);
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('X-Cache-Status', 'MISS');
+    response.headers.set('Vary', 'Cookie');
 
     return response;
 
@@ -205,45 +196,24 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PUT endpoint to update store partner brands
+// PUT endpoint to update store partner brands — unchanged
 export async function PUT(request: NextRequest) {
   try {
-    // Get authenticated user from token
     const user = await getAuthenticatedUser(request);
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is an executive
-    if (user.role !== 'EXECUTIVE') {
-      return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
-    }
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
 
     const { storeId, brandIds } = await request.json();
+    if (!storeId || !brandIds) return NextResponse.json({ error: 'Store ID and brand IDs are required' }, { status: 400 });
 
-    if (!storeId || !brandIds) {
-      return NextResponse.json({ error: 'Store ID and brand IDs are required' }, { status: 400 });
-    }
-
-    // Update store with new partner brand IDs
     const updatedStore = await prisma.store.update({
       where: { id: storeId },
-      data: {
-        partnerBrandIds: brandIds
-      }
+      data: { partnerBrandIds: brandIds }
     });
 
-    return NextResponse.json({
-      success: true,
-      data: updatedStore
-    });
-
+    return NextResponse.json({ success: true, data: updatedStore });
   } catch (error) {
     console.error('Error updating store:', error);
-    return NextResponse.json(
-      { error: 'Failed to update store' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to update store' }, { status: 500 });
   }
 }

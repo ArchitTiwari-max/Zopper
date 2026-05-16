@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser, validateAndRefreshToken } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { AssignedStatus } from '@prisma/client';
 
@@ -71,17 +71,17 @@ export async function GET(request: NextRequest) {
     // Generate ETag for cache validation (1-minute intervals)
     const currentTime = Math.floor(Date.now() / (1 * 60 * 1000)) * (1 * 60 * 1000);
     const apiVersion = 'v2-data-only';
-    const etag = `"${currentTime}-${executive.id}-${user.userId}-${apiVersion}"`; // CRITICAL: Include executive ID
+    const etag = `"${currentTime}-${executive.id}-${user.userId}-${apiVersion}"`; 
     
     // Check if client has cached version (conditional request)
     const ifNoneMatch = request.headers.get('if-none-match');
     if (ifNoneMatch === etag) {
-      // Return 304 Not Modified if ETag matches
       return new NextResponse(null, { 
         status: 304,
         headers: {
-          'Cache-Control': 'private, max-age=60',
-          'ETag': etag
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'ETag': etag,
+          'Vary': 'Cookie'
         }
       });
     }
@@ -98,9 +98,11 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Add caching headers - PRIVATE cache to prevent data leakage between executives
-    response.headers.set('Cache-Control', 'private, max-age=60');
-    response.headers.set('Vary', 'Cookie'); // Cache varies by cookies (user session)
+    // Add caching headers - DISABLE cache to prevent data leakage between executives
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    response.headers.set('Vary', 'Cookie');
     response.headers.set('ETag', etag);
     
     return response;

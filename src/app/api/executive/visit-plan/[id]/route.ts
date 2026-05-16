@@ -193,23 +193,6 @@ export async function PUT(
       }, { status: 403 });
     }
 
-    // Validate store IDs exist
-    const stores = await prisma.store.findMany({
-      where: {
-        id: { in: storeIds }
-      },
-      select: {
-        id: true,
-        storeName: true,
-        city: true,
-        fullAddress: true
-      }
-    });
-
-    if (stores.length !== storeIds.length) {
-      return NextResponse.json({ error: 'Some stores were not found' }, { status: 400 });
-    }
-
     // Validate planned visit date if provided
     let visitDate = existingPlan.plannedVisitDate;
     if (plannedVisitDate) {
@@ -234,20 +217,55 @@ export async function PUT(
       }
     }
 
-    // Create updated stores snapshot
+    // --- Rescheduled Stores Logic ---
+    // Fetch rescheduled visits for this date to auto-add them
+    const startOfTargetDay = new Date(Date.UTC(visitDate.getUTCFullYear(), visitDate.getUTCMonth(), visitDate.getUTCDate(), 0, 0, 0, 0));
+    const endOfTargetDay = new Date(Date.UTC(visitDate.getUTCFullYear(), visitDate.getUTCMonth(), visitDate.getUTCDate(), 23, 59, 59, 999));
+
+    const rescheduledVisits = await prisma.visit.findMany({
+      where: {
+        executiveId: executive.id,
+        nextScheduledDate: {
+          gte: startOfTargetDay,
+          lte: endOfTargetDay
+        }
+      },
+      select: { storeId: true }
+    });
+
+    const rescheduledStoreIds = [...new Set(rescheduledVisits.map(v => v.storeId))];
+    
+    // Combine with requested storeIds, ensuring rescheduled stores are always included
+    const finalStoreIds = [...new Set([...(storeIds || []), ...rescheduledStoreIds])];
+
+    // Validate ALL store IDs exist (including rescheduled ones)
+    const stores = await prisma.store.findMany({
+      where: {
+        id: { in: finalStoreIds }
+      },
+      select: {
+        id: true,
+        storeName: true,
+        city: true,
+        fullAddress: true
+      }
+    });
+
+    // Create updated stores snapshot with isRescheduled flag
     const storesSnapshot = stores.map(s => ({ 
       id: s.id, 
       storeName: s.storeName, 
       city: s.city, 
       fullAddress: s.fullAddress,
-      status: 'SUBMITTED' // Reset status when editing
+      status: 'SUBMITTED', // Reset status when editing
+      isRescheduled: rescheduledStoreIds.includes(s.id)
     }));
 
     // Update the visit plan
     const updatedPlan = await prisma.visitPlan.update({
       where: { id: planId },
       data: {
-        storeIds: storeIds,
+        storeIds: finalStoreIds,
         storesSnapshot: storesSnapshot as any,
         plannedVisitDate: visitDate,
         // Reset to SUBMITTED status when edited
