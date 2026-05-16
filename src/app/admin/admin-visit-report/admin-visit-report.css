@@ -1,6 +1,6 @@
 /* Visit Report Page Styles */
 
-.admin-visit-report-overview {
+.avr-overview {
   padding: 1rem;
   background-color: #f8fafc;
   min-height: calc(100vh - 80px);
@@ -10,7 +10,7 @@
 }
 
 /* Filters Section */
-.admin-visit-report-filters-section {
+.avr-filters-section {
   background: white;
   border-radius: 12px;
   padding: 1.5rem;
@@ -19,7 +19,7 @@
   border: 1px solid #e2e8f0;
 }
 
-.admin-visit-report-filters-header {
+.avr-filters-header {
   margin-bottom: 1rem;
   cursor: pointer;
   user-select: none;
@@ -29,11 +29,11 @@
   margin: -0.5rem -0.5rem 1rem -0.5rem;
 }
 
-.admin-visit-report-filters-header:hover {
+.avr-filters-header:hover {
   background-color: #f1f5f9;
 }
 
-.admin-visit-report-filters-header h3 {
+.avr-filters-header h3 {
   font-size: 1.125rem;
   font-weight: 600;
   color: #1e293b;
@@ -42,12 +42,12 @@
   transition: color 0.15s ease-in-out;
 }
 
-.admin-visit-report-filters-header:hover h3 {
+.avr-filters-header:hover h3 {
   color: #0f172a;
 }
 
 /* Filter content transition */
-.admin-visit-report-filters-grid {
+.avr-filters-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
@@ -59,27 +59,26 @@
     opacity: 0;
     transform: translateY(-10px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.admin-visit-report-filter-group {
+.avr-filter-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.admin-visit-report-filter-group label {
+.avr-filter-group label {
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
 }
 
-.admin-visit-report-filter-select,
-.admin-visit-report-filter-input {
+.avr-filter-select,
+.avr-filter-input {
   padding: 0.5rem 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -89,20 +88,20 @@
   transition: border-color 0.15s ease-in-out;
 }
 
-.admin-visit-report-filter-select:focus,
-.admin-visit-report-filter-input:focus {
+.avr-filter-select:focus,
+.avr-filter-input:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.admin-visit-report-filter-input::placeholder {
+.avr-filter-input::placeholder {
   color: #9ca3af;
   font-style: italic;
 }
 
 /* Visit Reports Table */
-.admin-visit-report-table-section {
+.avr-table-section {
   background: white;
   border-radius: 12px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
@@ -113,39 +112,39 @@
   position: relative;
 }
 
-.admin-visit-report-table-section::-webkit-scrollbar {
+.avr-table-section::-webkit-scrollbar {
   height: 8px;
 }
 
-.admin-visit-report-table-section::-webkit-scrollbar-track {
+.avr-table-section::-webkit-scrollbar-track {
   background: #f1f5f9;
   border-radius: 4px;
 }
 
-.admin-visit-report-table-section::-webkit-scrollbar-thumb {
+.avr-table-section::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
 }
 
-.admin-visit-report-table-section::-webkit-scrollbar-thumb:hover {
+.avr-table-section::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
-.admin-visit-report-table {
+.avr-table {
   width: 100%;
   min-width: 1050px;
 }
 
-.admin-visit-report-table .admin-visit-report-table-header {
+.avr-table .avr-table-header {
   background: #6b7280;
   display: grid;
-  grid-template-columns: 40px 1.5fr 1.5fr 1fr 1.2fr 1.2fr 1fr 1fr 1.5fr;
-  gap: 1rem;
+  grid-template-columns: 1.6fr 1.5fr 1.2fr 1.1fr 1.3fr 1.5fr 1.8fr;
+  gap: 2rem;
   padding: 1rem;
   width: 100%;
 }
 
-.admin-visit-report-table .admin-visit-report-header-cell {
+.avr-table .avr-header-cell {
   font-size: 0.875rem;
   font-weight: 600;
   color: white;
@@ -156,31 +155,31 @@
 }
 
 /* Sortable header styling */
-.admin-visit-report-table .sortable-header {
+.avr-table .sortable-header {
   cursor: pointer;
   user-select: none;
   transition: background-color 0.15s ease-in-out;
 }
 
-.admin-visit-report-table .sortable-header:hover {
+.avr-table .sortable-header:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.admin-visit-report-table .sort-icon {
+.avr-table .sort-icon {
   font-size: 0.75rem;
   margin-left: 0.25rem;
   opacity: 0.8;
 }
 
-.admin-visit-report-table .admin-visit-report-table-body {
+.avr-table .avr-table-body {
   display: flex;
   flex-direction: column;
 }
 
-.admin-visit-report-table .admin-visit-report-table-row {
+.avr-table .avr-table-row {
   display: grid;
-  grid-template-columns: 40px 1.5fr 1.5fr 1fr 1.2fr 1.2fr 1fr 1fr 1.5fr;
-  gap: 1rem;
+  grid-template-columns: 1.6fr 1.5fr 1.2fr 1.1fr 1.3fr 1.5fr 1.8fr;
+  gap: 2rem;
   padding: 1rem;
   border-bottom: 1px solid #f1f5f9;
   align-items: center;
@@ -188,15 +187,15 @@
   width: 100%;
 }
 
-.admin-visit-report-table .admin-visit-report-table-row:hover {
+.avr-table .avr-table-row:hover {
   background-color: #f8fafc;
 }
 
-.admin-visit-report-table .admin-visit-report-table-row:last-child {
+.avr-table .avr-table-row:last-child {
   border-bottom: none;
 }
 
-.admin-visit-report-table .admin-visit-report-cell {
+.avr-table .avr-cell {
   font-size: 0.875rem;
   color: #374151;
   display: flex;
@@ -207,13 +206,13 @@
 }
 
 /* Executive Cell */
-.admin-visit-report-executive-cell {
+.avr-executive-cell {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.admin-visit-report-executive-avatar {
+.avr-executive-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -225,7 +224,7 @@
   justify-content: center;
 }
 
-.admin-visit-report-executive-name {
+.avr-executive-name {
   font-weight: 500;
   color: #1e293b;
   min-width: 0;
@@ -235,12 +234,12 @@
 }
 
 /* Store Name Cell */
-.admin-visit-report-store-name-cell {
+.avr-store-name-cell {
   display: flex;
   align-items: center;
 }
 
-.admin-visit-report-store-name-link {
+.avr-store-name-link {
   color: #3b82f6;
   text-decoration: none;
   font-weight: 500;
@@ -251,20 +250,20 @@
   overflow-wrap: break-word;
 }
 
-.admin-visit-report-store-name-link:hover {
+.avr-store-name-link:hover {
   color: #2563eb;
   text-decoration: underline;
 }
 
 /* Partner Brands Cell */
-.admin-visit-report-partner-brands-cell {
+.avr-partner-brands-cell {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
   align-items: center;
 }
 
-.admin-visit-report-brand-tag {
+.avr-brand-tag {
   color: white;
   font-size: 0.75rem;
   font-weight: 500;
@@ -279,29 +278,25 @@
 }
 
 /* Date Cell */
-.admin-visit-report-date-cell {
+.avr-date-cell {
   font-size: 0.875rem;
   color: #6b7280;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
 }
 
-.admin-visit-report-issue-date {
+.avr-issue-date {
   font-size: 0.875rem;
   color: #6b7280;
 }
 
 /* Status Cell */
-.admin-visit-report-status-cell {
+.avr-status-cell {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   align-items: flex-start;
 }
 
-.admin-visit-report-status-badges {
+.avr-status-badges {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -309,7 +304,7 @@
   width: 100%;
 }
 
-.admin-visit-report-status-badge {
+.avr-status-badge {
   font-size: 0.75rem;
   font-weight: 500;
   padding: 0.25rem 0.5rem;
@@ -319,76 +314,76 @@
 }
 
 /* Visit Status Badges */
-.visit-status-pending {
+.avr-visit-status-pending {
   background-color: #fef3c7;
   color: #d97706;
 }
 
-.visit-status-reviewed {
+.avr-visit-status-reviewed {
   background-color: #dcfce7;
   color: #16a34a;
 }
 
 /* Issue Status Badges */
-.issue-status-pending {
+.avr-issue-status-pending {
   background-color: #fee2e2;
   color: #dc2626;
 }
 
-.issue-status-assigned {
+.avr-issue-status-assigned {
   background-color: #fef3c7;
   color: #d97706;
 }
 
-.issue-status-resolved {
+.avr-issue-status-resolved {
   background-color: #dbeafe;
   color: #2563eb;
 }
 
 /* Legacy status badges for backwards compatibility */
-.status-pending-review {
+.avr-status-pending-review {
   background-color: #fef3c7;
   color: #d97706;
 }
 
-.status-reviewed {
+.avr-status-reviewed {
   background-color: #dcfce7;
   color: #16a34a;
 }
 
-.status-pending-issue {
+.avr-status-pending-issue {
   background-color: #fee2e2;
   color: #dc2626;
 }
 
-.status-resolved {
+.avr-status-resolved {
   background-color: #dbeafe;
   color: #2563eb;
 }
 
 /* Visit Date Cell */
-.admin-visit-report-visit-date {
+.avr-visit-date {
   font-size: 0.875rem;
   color: #6b7280;
 }
 
 /* Actions Cell */
-.admin-visit-report-actions-cell {
+.avr-actions-cell {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
 }
 
-.admin-visit-report-action-buttons-group {
+.avr-action-buttons-group {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.admin-visit-report-view-details-btn,
-.admin-visit-report-view-issue-btn,
-.admin-visit-report-mark-reviewed-btn {
+.avr-view-details-btn,
+.avr-view-issue-btn,
+.avr-mark-reviewed-btn {
   padding: 0.25rem 0.75rem;
   border: none;
   border-radius: 4px;
@@ -402,43 +397,43 @@
   justify-content: center;
 }
 
-.admin-visit-report-view-details-btn {
+.avr-view-details-btn {
   background: transparent;
   color: #3b82f6;
   border: 1px solid #3b82f6;
 }
 
-.admin-visit-report-view-details-btn:hover {
+.avr-view-details-btn:hover {
   background: #3b82f6;
   color: white;
 }
 
-.admin-visit-report-view-issue-btn {
+.avr-view-issue-btn {
   background: #f59e0b;
   color: white;
 }
 
-.admin-visit-report-view-issue-btn:hover {
+.avr-view-issue-btn:hover {
   background: #d97706;
   text-decoration: none;
 }
 
-.admin-visit-report-mark-reviewed-btn {
+.avr-mark-reviewed-btn {
   background: #10b981;
   color: white;
 }
 
-.admin-visit-report-mark-reviewed-btn:hover {
+.avr-mark-reviewed-btn:hover {
   background: #059669;
 }
 
 /* Issues Cell */
-.admin-visit-report-issues-cell {
+.avr-issues-cell {
   display: flex;
   align-items: flex-start;
 }
 
-.admin-visit-report-issues-content {
+.avr-issues-content {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
@@ -446,40 +441,40 @@
   min-width: 0;
 }
 
-.admin-visit-report-issue-link-container {
+.avr-issue-link-container {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.admin-visit-report-issue-icon {
+.avr-issue-icon {
   font-size: 1rem;
 }
 
-.admin-visit-report-issue-link {
+.avr-issue-link {
   color: #ef4444;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.15s ease-in-out;
 }
 
-.admin-visit-report-issue-link:hover {
+.avr-issue-link:hover {
   color: #dc2626;
   text-decoration: underline;
 }
 
-.admin-visit-report-has-issues {
+.avr-has-issues {
   color: #ef4444;
   font-weight: 500;
 }
 
-.admin-visit-report-no-issues {
+.avr-no-issues {
   color: #10b981;
   font-weight: 500;
 }
 
 /* No Data Message */
-.no-data-message {
+.avr-no-data-message {
   padding: 3rem;
   text-align: center;
   color: #6b7280;
@@ -487,57 +482,57 @@
   border-top: 1px solid #f1f5f9;
 }
 
-.no-data-message p {
+.avr-no-data-message p {
   font-size: 1rem;
   margin: 0;
 }
 
 /* Responsive Design */
 @media (max-width: 1200px) {
-  .admin-visit-report-overview {
+  .avr-overview {
     padding: 0.5rem;
   }
-
-  .admin-visit-report-table-section {
+  
+  .avr-table-section {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-
-  .admin-visit-report-table .admin-visit-report-table-header,
-  .admin-visit-report-table .admin-visit-report-table-row {
+  
+  .avr-table .avr-table-header,
+  .avr-table .avr-table-row {
     gap: 1rem;
   }
 }
 
 @media (max-width: 1024px) {
-  .admin-visit-report-filters-grid {
+  .avr-filters-grid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
-
-  .admin-visit-report-table-section {
+  
+  .avr-table-section {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 }
 
 @media (max-width: 768px) {
-  .admin-visit-report-overview {
+  .avr-overview {
     padding: 1rem;
   }
-
-  .admin-visit-report-filters-section {
+  
+  .avr-filters-section {
     padding: 1rem;
   }
-
-  .admin-visit-report-filters-grid {
+  
+  .avr-filters-grid {
     grid-template-columns: 1fr;
   }
-
-  .admin-visit-report-table .admin-visit-report-table-header {
+  
+  .avr-table .avr-table-header {
     display: none;
   }
-
-  .admin-visit-report-table .admin-visit-report-table-row {
+  
+  .avr-table .avr-table-row {
     grid-template-columns: 1fr;
     gap: 0.5rem;
     padding: 1rem;
@@ -546,49 +541,49 @@
     margin-bottom: 1rem;
     background: #f9fafb;
   }
-
-  .admin-visit-report-table .admin-visit-report-cell {
+  
+  .avr-table .avr-cell {
     padding: 0.5rem 0;
     border-bottom: 1px solid #f1f5f9;
   }
-
-  .admin-visit-report-table .admin-visit-report-cell:last-child {
+  
+  .avr-table .avr-cell:last-child {
     border-bottom: none;
   }
-
-  .admin-visit-report-table .admin-visit-report-cell:before {
+  
+  .avr-table .avr-cell:before {
     content: attr(data-label) ': ';
     font-weight: 600;
     color: #374151;
     display: inline-block;
     width: 120px;
   }
-
-  .admin-visit-report-action-buttons-group {
+  
+  .avr-action-buttons-group {
     flex-direction: column;
     width: 100%;
   }
-
-  .admin-visit-report-view-details-btn,
-  .admin-visit-report-view-issue-btn,
-  .admin-visit-report-mark-reviewed-btn {
+  
+  .avr-view-details-btn,
+  .avr-view-issue-btn,
+  .avr-mark-reviewed-btn {
     width: 100%;
     justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
-  .admin-visit-report-title h2 {
+  .avr-title h2 {
     font-size: 1.5rem;
   }
-
-  .admin-visit-report-executive-cell {
+  
+  .avr-executive-cell {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-
-  .admin-visit-report-partner-brands-cell {
+  
+  .avr-partner-brands-cell {
     flex-direction: column;
     align-items: flex-start;
   }

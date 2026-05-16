@@ -6,9 +6,9 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useDateFilter } from '../contexts/DateFilterContext';
 import VisitDetailsModal from '../components/VisitDetailsModal';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import './page.css';
+import './visit-report.css';
 
 // Types for visit report
 interface VisitReportData {
@@ -941,7 +941,7 @@ const VisitReportPage: React.FC = () => {
   // Show critical errors immediately
   if (error) {
     return (
-      <div className="admin-visit-report-overview">
+      <div className="evr-overview">
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '400px', gap: '1rem' }}>
           <div style={{ fontSize: '1.2rem', color: '#ef4444' }}>Error loading visit reports</div>
           <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{error}</div>
@@ -959,10 +959,10 @@ const VisitReportPage: React.FC = () => {
   // OPTIMIZED: Show UI immediately, use separate loading states
 
   return (
-    <div className="admin-visit-report-overview">
+    <div className="evr-overview">
       {/* Filters Section */}
-      <div className="admin-visit-report-filters-section">
-        <div className="admin-visit-report-filters-header" onClick={() => setShowFilters(!showFilters)}>
+      <div className="evr-filters-section">
+        <div className="evr-filters-header" onClick={() => setShowFilters(!showFilters)}>
           <h3>Filters {showFilters ? '▼' : '▶'}</h3>
         </div>
         {showFilters && (
@@ -977,15 +977,15 @@ const VisitReportPage: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="admin-visit-report-filters-grid">
+            <div className="evr-filters-grid">
               {/* Store filter first */}
-              <div className="admin-visit-report-filter-group">
+              <div className="evr-filter-group">
                 <label>Filter by Store Name</label>
                 <input
                   type="text"
                   value={filters.storeName}
                   onChange={(e) => handleFilterChange('storeName', e.target.value)}
-                  className="admin-visit-report-filter-input"
+                  className="evr-filter-input"
                   placeholder="Type store name to search..."
                   disabled={isLoadingFilters}
                 />
@@ -997,12 +997,12 @@ const VisitReportPage: React.FC = () => {
               </div>
 
               {/* Then Partner Brand */}
-              <div className="admin-visit-report-filter-group">
+              <div className="evr-filter-group">
                 <label>Filter by Partner Brand</label>
                 <select
                   value={filters.partnerBrand}
                   onChange={(e) => handleFilterChange('partnerBrand', e.target.value)}
-                  className="admin-visit-report-filter-select"
+                  className="evr-filter-select"
                   disabled={isLoadingFilters}
                 >
                   <option value="All Brands">{isLoadingFilters ? 'Loading brands...' : 'All Brands'}</option>
@@ -1018,12 +1018,12 @@ const VisitReportPage: React.FC = () => {
               </div>
 
               {/* Then City */}
-              <div className="admin-visit-report-filter-group">
+              <div className="evr-filter-group">
                 <label>Filter by City</label>
                 <select
                   value={filters.city}
                   onChange={(e) => handleFilterChange('city', e.target.value)}
-                  className="admin-visit-report-filter-select"
+                  className="evr-filter-select"
                   disabled={isLoadingFilters}
                 >
                   <option value="All City">{isLoadingFilters ? 'Loading cities...' : 'All City'}</option>
@@ -1039,12 +1039,12 @@ const VisitReportPage: React.FC = () => {
               </div>
 
               {/* Then Executive */}
-              <div className="admin-visit-report-filter-group">
+              <div className="evr-filter-group">
                 <label>Filter by Executive Name</label>
                 <select
                   value={filters.executiveName}
                   onChange={(e) => handleFilterChange('executiveName', e.target.value)}
-                  className="admin-visit-report-filter-select"
+                  className="evr-filter-select"
                   disabled={isLoadingFilters}
                 >
                   <option value="All Executive">{isLoadingFilters ? 'Loading executives...' : 'All Executive'}</option>
@@ -1060,12 +1060,12 @@ const VisitReportPage: React.FC = () => {
               </div>
 
               {/* Then other filters */}
-              <div className="admin-visit-report-filter-group">
+              <div className="evr-filter-group">
                 <label>Filter by Review Status</label>
                 <select
                   value={filters.visitStatus}
                   onChange={(e) => handleFilterChange('visitStatus', e.target.value)}
-                  className="admin-visit-report-filter-select"
+                  className="evr-filter-select"
                 >
                   <option value="All Status">All Status</option>
                   {getAllVisitStatusOptions().map(option => (
@@ -1074,12 +1074,12 @@ const VisitReportPage: React.FC = () => {
                 </select>
               </div>
 
-              <div className="admin-visit-report-filter-group">
+              <div className="evr-filter-group">
                 <label>Filter by Issue Status</label>
                 <select
                   value={filters.issueStatus}
                   onChange={(e) => handleFilterChange('issueStatus', e.target.value)}
-                  className="admin-visit-report-filter-select"
+                  className="evr-filter-select"
                 >
                   <option value="All Status">All Status</option>
                   {getAllIssueStatusOptions().map(option => (
@@ -1166,11 +1166,11 @@ const VisitReportPage: React.FC = () => {
       </div>
 
       {/* Visit Reports Table */}
-      <div className="admin-visit-report-table-section">
-        <div className="admin-visit-report-table">
+      <div className="evr-table-section">
+        <div className="evr-table">
           {/* Always show table header for context */}
-          <div className="admin-visit-report-table-header">
-            <div className="admin-visit-report-header-cell checkbox-cell" style={{ width: '40px', padding: '0 10px' }}>
+          <div className="evr-table-header">
+            <div className="evr-header-cell checkbox-cell" style={{ width: '40px', padding: '0 10px' }}>
               <input
                 type="checkbox"
                 onChange={handleSelectAll}
@@ -1179,32 +1179,32 @@ const VisitReportPage: React.FC = () => {
               />
             </div>
             <div
-              className="admin-visit-report-header-cell sortable-header"
+              className="evr-header-cell sortable-header"
               onClick={() => handleSort('executiveName')}
             >
               Executive Name <span className="sort-icon">{getSortIcon('executiveName')}</span>
             </div>
             <div
-              className="admin-visit-report-header-cell sortable-header"
+              className="evr-header-cell sortable-header"
               onClick={() => handleSort('storeName')}
             >
               Store Name <span className="sort-icon">{getSortIcon('storeName')}</span>
             </div>
-            <div className="admin-visit-report-header-cell">Partner Brand</div>
+            <div className="evr-header-cell">Partner Brand</div>
             <div
-              className="admin-visit-report-header-cell sortable-header"
+              className="evr-header-cell sortable-header"
               onClick={() => handleSort('visitDate')}
             >
               {isDigital ? 'Connect Date' : 'Visit Date'} <span className="sort-icon">{getSortIcon('visitDate')}</span>
             </div>
-            <div className="admin-visit-report-header-cell">Next Schedule</div>
-            <div className="admin-visit-report-header-cell">Issues</div>
-            <div className="admin-visit-report-header-cell" style={{ justifyContent: 'center' }}>Sales</div>
-            <div className="admin-visit-report-header-cell">Actions</div>
+            <div className="evr-header-cell">Next Schedule</div>
+            <div className="evr-header-cell">Issues</div>
+            <div className="evr-header-cell" style={{ justifyContent: 'center' }}>Sales</div>
+            <div className="evr-header-cell">Actions</div>
           </div>
 
           {/* Table body with loading state */}
-          <div className="admin-visit-report-table-body">
+          <div className="evr-table-body">
             {isLoading ? (
               <div className="table-loading">
                 <div className="loading-spinner-large"></div>
@@ -1212,8 +1212,8 @@ const VisitReportPage: React.FC = () => {
               </div>
             ) : filteredVisits.length > 0 ? (
               filteredVisits.map(visit => (
-                <div key={visit.id} className="admin-visit-report-table-row">
-                  <div className="admin-visit-report-cell checkbox-cell" style={{ width: '40px', padding: '0 10px', display: 'flex', alignItems: 'center' }}>
+                <div key={visit.id} className="evr-table-row">
+                  <div className="evr-cell checkbox-cell" style={{ width: '40px', padding: '0 10px', display: 'flex', alignItems: 'center' }}>
                     {visit.visitStatus === 'PENDING_REVIEW' && (
                       <input
                         type="checkbox"
@@ -1222,45 +1222,45 @@ const VisitReportPage: React.FC = () => {
                       />
                     )}
                   </div>
-                  <div className="admin-visit-report-cell admin-visit-report-executive-cell">
+                  <div className="evr-cell evr-executive-cell">
                     <div
-                      className="admin-visit-report-executive-avatar"
+                      className="evr-executive-avatar"
                       style={{ backgroundColor: visit.avatarColor }}
                     >
                       {visit.executiveInitials}
                     </div>
-                    <span className="admin-visit-report-executive-name">{visit.executiveName}</span>
+                    <span className="evr-executive-name">{visit.executiveName}</span>
                   </div>
 
-                  <div className="admin-visit-report-cell admin-visit-report-store-name-cell">
-                    <Link href={`/admin/stores?storeId=${visit.storeId}`} className="admin-visit-report-store-name-link">
+                  <div className="evr-cell evr-store-name-cell">
+                    <Link href={`/admin/stores?storeId=${visit.storeId}`} className="evr-store-name-link">
                       {visit.storeName}
                     </Link>
                   </div>
 
-                  <div className="admin-visit-report-cell admin-visit-report-partner-brands-cell">
+                  <div className="evr-cell evr-partner-brands-cell">
                     {visit.partnerBrand.map((brand, index) => (
                       <span
                         key={index}
-                        className="admin-visit-report-brand-tag"
+                        className="evr-brand-tag"
                         style={{ backgroundColor: getBrandColor(brand) }}
                       >
                         {brand}
                       </span>
                     ))}
                   </div>
-                  <div className="admin-visit-report-cell admin-visit-report-date-cell">
-                    <div className="admin-visit-report-visit-date" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div className="evr-cell evr-date-cell">
+                    <div className="evr-visit-date" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       📅 {formatVisitDate(visit.visitDate)}
                     </div>
                     {visit.previousVisitDate && (
-                      <div className="admin-visit-report-prev-date" style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                      <div className="evr-prev-date" style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
                         Prev: {visit.previousVisitDate}
                       </div>
                     )}
                   </div>
 
-                  <div className="admin-visit-report-cell admin-visit-report-next-schedule-cell" style={{ display: 'flex', alignItems: 'center' }}>
+                  <div className="evr-cell evr-next-schedule-cell" style={{ display: 'flex', alignItems: 'center' }}>
                     {visit.nextScheduledDate ? (
                       <span style={{ fontWeight: '500', color: '#0f172a', whiteSpace: 'nowrap' }}>
                         📅 {visit.nextScheduledDate}
@@ -1270,17 +1270,17 @@ const VisitReportPage: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="admin-visit-report-cell admin-visit-report-issues-cell">
-                    <div className="admin-visit-report-issues-content">
+                  <div className="evr-cell evr-issues-cell">
+                    <div className="evr-issues-content">
                       {visit.issues === 'None' ? (
-                        <span className="admin-visit-report-no-issues">⚠️ {visit.issues}</span>
+                        <span className="evr-no-issues">⚠️ {visit.issues}</span>
                       ) : (
-                        <div className="admin-visit-report-issue-link-container">
-                          <span className="admin-visit-report-issue-icon">⚠️</span>
+                        <div className="evr-issue-link-container">
+                          <span className="evr-issue-icon">⚠️</span>
                           {visit.issueId ? (
                             <Link
                               href={`/admin/issues/${visit.issueId}`}
-                              className="admin-visit-report-issue-link"
+                              className="evr-issue-link"
                               title={`View issue: ${visit.issues}`}
                             >
                               <ExpandableText
@@ -1293,7 +1293,7 @@ const VisitReportPage: React.FC = () => {
                             <ExpandableText
                               text={visit.issues}
                               maxHeight={40}
-                              className="admin-visit-report-has-issues issue-expandable-text"
+                              className="evr-has-issues issue-expandable-text"
                             />
                           )}
                         </div>
@@ -1301,13 +1301,13 @@ const VisitReportPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="admin-visit-report-cell admin-visit-report-status-cell" style={{ display: 'flex', justifyContent: 'center' }}>
+                  <div className="evr-cell evr-status-cell" style={{ display: 'flex', justifyContent: 'center' }}>
                     <Link
                       href={`/admin/sales?storeId=${visit.storeId}&storeName=${encodeURIComponent(visit.storeName)}`}
                       target="_blank"
                     >
                       <button
-                        className="admin-visit-report-view-details-btn"
+                        className="evr-view-details-btn"
                         style={{ backgroundColor: '#8b5cf6', borderColor: '#7c3aed', color: 'white' }}
                       >
                         View Sales
@@ -1315,17 +1315,17 @@ const VisitReportPage: React.FC = () => {
                     </Link>
                   </div>
 
-                  <div className="admin-visit-report-cell admin-visit-report-actions-cell">
-                    <div className="admin-visit-report-action-buttons-group">
+                  <div className="evr-cell evr-actions-cell">
+                    <div className="evr-action-buttons-group">
                       <button
-                        className="admin-visit-report-view-details-btn"
+                        className="evr-view-details-btn"
                         onClick={() => openVisitModal(visit)}
                       >
                         View Details
                       </button>
                       {visit.visitStatus === 'PENDING_REVIEW' && (
                         <button
-                          className="admin-visit-report-mark-reviewed-btn"
+                          className="evr-mark-reviewed-btn"
                           onClick={() => markAsReviewed(visit.id, false)}
                           disabled={markingReviewedId === visit.id}
                           style={{

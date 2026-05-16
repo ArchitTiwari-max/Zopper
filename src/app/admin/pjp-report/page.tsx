@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import './page.css';
+import styles from './page.module.css';
 
 interface PJPData {
   id: string;
@@ -115,19 +115,19 @@ const PJPReportPage = () => {
   };
 
   return (
-    <div className="pjp-report-container">
-      <div className="report-header">
+    <div className={styles['pjp-report-container']}>
+      <div className={styles['report-header']}>
         <h1>PJP Report</h1>
-        <p className="subtitle">Track Permanent Journey Plans and execution details</p>
+        <p className={styles.subtitle}>Track Permanent Journey Plans and execution details</p>
       </div>
 
-      <div className="filters-section">
-        <div className="filter-group">
+      <div className={styles['filters-section']}>
+        <div className={styles['filter-group']}>
           <label>Executive</label>
           <select 
             value={selectedExecutive} 
             onChange={(e) => setSelectedExecutive(e.target.value)}
-            className="filter-select"
+            className={styles['filter-select']}
           >
             <option value="All Executive">All Executives</option>
             {executives.map(exec => (
@@ -136,13 +136,13 @@ const PJPReportPage = () => {
           </select>
         </div>
 
-        <div className="filter-group">
+        <div className={styles['filter-group']}>
           <label>From Date</label>
           <input 
             type="date" 
             value={fromDate} 
             onChange={(e) => setFromDate(e.target.value)}
-            className="filter-date"
+            className={styles['filter-date']}
           />
         </div>
 
@@ -156,26 +156,26 @@ const PJPReportPage = () => {
           />
         </div>
 
-        <div className="filter-actions">
-          <button onClick={handleExportXLS} className="export-btn">
+        <div className={styles['filter-actions']}>
+          <button onClick={handleExportXLS} className={styles['export-btn']}>
             <span className="icon-download"></span> Export Excel
           </button>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="loading-state">
-          <div className="spinner"></div>
+        <div className={styles['loading-state']}>
+          <div className={styles.spinner}></div>
           <p>Loading report data...</p>
         </div>
       ) : error ? (
-        <div className="error-state">
+        <div className={styles['error-state']}>
           <p>{error}</p>
-          <button onClick={fetchData} className="retry-btn">Retry</button>
+          <button onClick={fetchData} className={styles['retry-btn']}>Retry</button>
         </div>
       ) : (
-        <div className="table-wrapper">
-          <table className="pjp-table">
+        <div className={styles['table-wrapper']}>
+          <table className={styles['pjp-table']}>
             <thead>
               <tr>
                 <th>Executive Name</th>
@@ -188,23 +188,23 @@ const PJPReportPage = () => {
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="no-data">No PJP records found for the selected filters.</td>
+                  <td colSpan={5} className={styles['no-data']}>No PJP records found for the selected filters.</td>
                 </tr>
               ) : (
                 data.map((item) => (
                   <tr key={item.id}>
-                    <td className="font-medium">{item.executiveName}</td>
+                    <td className={styles['font-medium']}>{item.executiveName}</td>
                     <td>{formatIST(item.submittedAt)}</td>
                     <td>{formatDateOnlyIST(item.plannedVisitDate)}</td>
                     <td>
-                      <ul className="store-list">
+                      <ul className={styles['store-list']}>
                         {item.storeNames.map((store, index) => (
                           <li key={index}>{store}</li>
                         ))}
                       </ul>
                     </td>
                     <td>
-                      <span className={`reason-tag ${item.pjpNotFollowedReason === 'N/A' ? 'none' : 'active'}`}>
+                      <span className={`${styles['reason-tag']} ${item.pjpNotFollowedReason === 'N/A' ? styles.none : styles.active}`}>
                         {item.pjpNotFollowedReason}
                       </span>
                     </td>

@@ -1,6 +1,6 @@
 /* Visit Report Page Styles */
 
-.admin-visit-report-overview {
+.evr-overview {
   padding: 1rem;
   background-color: #f8fafc;
   min-height: calc(100vh - 80px);
@@ -10,7 +10,7 @@
 }
 
 /* Filters Section */
-.admin-visit-report-filters-section {
+.evr-filters-section {
   background: white;
   border-radius: 12px;
   padding: 1.5rem;
@@ -19,7 +19,7 @@
   border: 1px solid #e2e8f0;
 }
 
-.admin-visit-report-filters-header {
+.evr-filters-header {
   margin-bottom: 1rem;
   cursor: pointer;
   user-select: none;
@@ -29,11 +29,11 @@
   margin: -0.5rem -0.5rem 1rem -0.5rem;
 }
 
-.admin-visit-report-filters-header:hover {
+.evr-filters-header:hover {
   background-color: #f1f5f9;
 }
 
-.admin-visit-report-filters-header h3 {
+.evr-filters-header h3 {
   font-size: 1.125rem;
   font-weight: 600;
   color: #1e293b;
@@ -42,12 +42,12 @@
   transition: color 0.15s ease-in-out;
 }
 
-.admin-visit-report-filters-header:hover h3 {
+.evr-filters-header:hover h3 {
   color: #0f172a;
 }
 
 /* Filter content transition */
-.admin-visit-report-filters-grid {
+.evr-filters-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
@@ -59,26 +59,27 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.admin-visit-report-filter-group {
+.evr-filter-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.admin-visit-report-filter-group label {
+.evr-filter-group label {
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
 }
 
-.admin-visit-report-filter-select,
-.admin-visit-report-filter-input {
+.evr-filter-select,
+.evr-filter-input {
   padding: 0.5rem 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -88,20 +89,20 @@
   transition: border-color 0.15s ease-in-out;
 }
 
-.admin-visit-report-filter-select:focus,
-.admin-visit-report-filter-input:focus {
+.evr-filter-select:focus,
+.evr-filter-input:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.admin-visit-report-filter-input::placeholder {
+.evr-filter-input::placeholder {
   color: #9ca3af;
   font-style: italic;
 }
 
 /* Visit Reports Table */
-.admin-visit-report-table-section {
+.evr-table-section {
   background: white;
   border-radius: 12px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
@@ -112,39 +113,39 @@
   position: relative;
 }
 
-.admin-visit-report-table-section::-webkit-scrollbar {
+.evr-table-section::-webkit-scrollbar {
   height: 8px;
 }
 
-.admin-visit-report-table-section::-webkit-scrollbar-track {
+.evr-table-section::-webkit-scrollbar-track {
   background: #f1f5f9;
   border-radius: 4px;
 }
 
-.admin-visit-report-table-section::-webkit-scrollbar-thumb {
+.evr-table-section::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
 }
 
-.admin-visit-report-table-section::-webkit-scrollbar-thumb:hover {
+.evr-table-section::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
-.admin-visit-report-table {
+.evr-table {
   width: 100%;
   min-width: 1050px;
 }
 
-.admin-visit-report-table .admin-visit-report-table-header {
+.evr-table .evr-table-header {
   background: #6b7280;
   display: grid;
-  grid-template-columns: 1.6fr 1.5fr 1.2fr 1.1fr 1.3fr 1.5fr 1.8fr;
-  gap: 2rem;
+  grid-template-columns: 40px 1.5fr 1.5fr 1fr 1.2fr 1.2fr 1fr 1fr 1.5fr;
+  gap: 1rem;
   padding: 1rem;
   width: 100%;
 }
 
-.admin-visit-report-table .admin-visit-report-header-cell {
+.evr-table .evr-header-cell {
   font-size: 0.875rem;
   font-weight: 600;
   color: white;
@@ -155,31 +156,31 @@
 }
 
 /* Sortable header styling */
-.admin-visit-report-table .sortable-header {
+.evr-table .sortable-header {
   cursor: pointer;
   user-select: none;
   transition: background-color 0.15s ease-in-out;
 }
 
-.admin-visit-report-table .sortable-header:hover {
+.evr-table .sortable-header:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.admin-visit-report-table .sort-icon {
+.evr-table .sort-icon {
   font-size: 0.75rem;
   margin-left: 0.25rem;
   opacity: 0.8;
 }
 
-.admin-visit-report-table .admin-visit-report-table-body {
+.evr-table .evr-table-body {
   display: flex;
   flex-direction: column;
 }
 
-.admin-visit-report-table .admin-visit-report-table-row {
+.evr-table .evr-table-row {
   display: grid;
-  grid-template-columns: 1.6fr 1.5fr 1.2fr 1.1fr 1.3fr 1.5fr 1.8fr;
-  gap: 2rem;
+  grid-template-columns: 40px 1.5fr 1.5fr 1fr 1.2fr 1.2fr 1fr 1fr 1.5fr;
+  gap: 1rem;
   padding: 1rem;
   border-bottom: 1px solid #f1f5f9;
   align-items: center;
@@ -187,15 +188,15 @@
   width: 100%;
 }
 
-.admin-visit-report-table .admin-visit-report-table-row:hover {
+.evr-table .evr-table-row:hover {
   background-color: #f8fafc;
 }
 
-.admin-visit-report-table .admin-visit-report-table-row:last-child {
+.evr-table .evr-table-row:last-child {
   border-bottom: none;
 }
 
-.admin-visit-report-table .admin-visit-report-cell {
+.evr-table .evr-cell {
   font-size: 0.875rem;
   color: #374151;
   display: flex;
@@ -206,13 +207,13 @@
 }
 
 /* Executive Cell */
-.admin-visit-report-executive-cell {
+.evr-executive-cell {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.admin-visit-report-executive-avatar {
+.evr-executive-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -224,7 +225,7 @@
   justify-content: center;
 }
 
-.admin-visit-report-executive-name {
+.evr-executive-name {
   font-weight: 500;
   color: #1e293b;
   min-width: 0;
@@ -234,12 +235,12 @@
 }
 
 /* Store Name Cell */
-.admin-visit-report-store-name-cell {
+.evr-store-name-cell {
   display: flex;
   align-items: center;
 }
 
-.admin-visit-report-store-name-link {
+.evr-store-name-link {
   color: #3b82f6;
   text-decoration: none;
   font-weight: 500;
@@ -250,20 +251,20 @@
   overflow-wrap: break-word;
 }
 
-.admin-visit-report-store-name-link:hover {
+.evr-store-name-link:hover {
   color: #2563eb;
   text-decoration: underline;
 }
 
 /* Partner Brands Cell */
-.admin-visit-report-partner-brands-cell {
+.evr-partner-brands-cell {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
   align-items: center;
 }
 
-.admin-visit-report-brand-tag {
+.evr-brand-tag {
   color: white;
   font-size: 0.75rem;
   font-weight: 500;
@@ -278,25 +279,29 @@
 }
 
 /* Date Cell */
-.admin-visit-report-date-cell {
+.evr-date-cell {
   font-size: 0.875rem;
   color: #6b7280;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
 }
 
-.admin-visit-report-issue-date {
+.evr-issue-date {
   font-size: 0.875rem;
   color: #6b7280;
 }
 
 /* Status Cell */
-.admin-visit-report-status-cell {
+.evr-status-cell {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   align-items: flex-start;
 }
 
-.admin-visit-report-status-badges {
+.evr-status-badges {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -304,7 +309,7 @@
   width: 100%;
 }
 
-.admin-visit-report-status-badge {
+.evr-status-badge {
   font-size: 0.75rem;
   font-weight: 500;
   padding: 0.25rem 0.5rem;
@@ -314,76 +319,76 @@
 }
 
 /* Visit Status Badges */
-.visit-status-pending {
+.evr-visit-status-pending {
   background-color: #fef3c7;
   color: #d97706;
 }
 
-.visit-status-reviewed {
+.evr-visit-status-reviewed {
   background-color: #dcfce7;
   color: #16a34a;
 }
 
 /* Issue Status Badges */
-.issue-status-pending {
+.evr-issue-status-pending {
   background-color: #fee2e2;
   color: #dc2626;
 }
 
-.issue-status-assigned {
+.evr-issue-status-assigned {
   background-color: #fef3c7;
   color: #d97706;
 }
 
-.issue-status-resolved {
+.evr-issue-status-resolved {
   background-color: #dbeafe;
   color: #2563eb;
 }
 
 /* Legacy status badges for backwards compatibility */
-.status-pending-review {
+.evr-status-pending-review {
   background-color: #fef3c7;
   color: #d97706;
 }
 
-.status-reviewed {
+.evr-status-reviewed {
   background-color: #dcfce7;
   color: #16a34a;
 }
 
-.status-pending-issue {
+.evr-status-pending-issue {
   background-color: #fee2e2;
   color: #dc2626;
 }
 
-.status-resolved {
+.evr-status-resolved {
   background-color: #dbeafe;
   color: #2563eb;
 }
 
 /* Visit Date Cell */
-.admin-visit-report-visit-date {
+.evr-visit-date {
   font-size: 0.875rem;
   color: #6b7280;
 }
 
 /* Actions Cell */
-.admin-visit-report-actions-cell {
+.evr-actions-cell {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
 }
 
-.admin-visit-report-action-buttons-group {
+.evr-action-buttons-group {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.admin-visit-report-view-details-btn,
-.admin-visit-report-view-issue-btn,
-.admin-visit-report-mark-reviewed-btn {
+.evr-view-details-btn,
+.evr-view-issue-btn,
+.evr-mark-reviewed-btn {
   padding: 0.25rem 0.75rem;
   border: none;
   border-radius: 4px;
@@ -397,43 +402,43 @@
   justify-content: center;
 }
 
-.admin-visit-report-view-details-btn {
+.evr-view-details-btn {
   background: transparent;
   color: #3b82f6;
   border: 1px solid #3b82f6;
 }
 
-.admin-visit-report-view-details-btn:hover {
+.evr-view-details-btn:hover {
   background: #3b82f6;
   color: white;
 }
 
-.admin-visit-report-view-issue-btn {
+.evr-view-issue-btn {
   background: #f59e0b;
   color: white;
 }
 
-.admin-visit-report-view-issue-btn:hover {
+.evr-view-issue-btn:hover {
   background: #d97706;
   text-decoration: none;
 }
 
-.admin-visit-report-mark-reviewed-btn {
+.evr-mark-reviewed-btn {
   background: #10b981;
   color: white;
 }
 
-.admin-visit-report-mark-reviewed-btn:hover {
+.evr-mark-reviewed-btn:hover {
   background: #059669;
 }
 
 /* Issues Cell */
-.admin-visit-report-issues-cell {
+.evr-issues-cell {
   display: flex;
   align-items: flex-start;
 }
 
-.admin-visit-report-issues-content {
+.evr-issues-content {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
@@ -441,40 +446,40 @@
   min-width: 0;
 }
 
-.admin-visit-report-issue-link-container {
+.evr-issue-link-container {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.admin-visit-report-issue-icon {
+.evr-issue-icon {
   font-size: 1rem;
 }
 
-.admin-visit-report-issue-link {
+.evr-issue-link {
   color: #ef4444;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.15s ease-in-out;
 }
 
-.admin-visit-report-issue-link:hover {
+.evr-issue-link:hover {
   color: #dc2626;
   text-decoration: underline;
 }
 
-.admin-visit-report-has-issues {
+.evr-has-issues {
   color: #ef4444;
   font-weight: 500;
 }
 
-.admin-visit-report-no-issues {
+.evr-no-issues {
   color: #10b981;
   font-weight: 500;
 }
 
 /* No Data Message */
-.no-data-message {
+.evr-no-data-message {
   padding: 3rem;
   text-align: center;
   color: #6b7280;
@@ -482,57 +487,57 @@
   border-top: 1px solid #f1f5f9;
 }
 
-.no-data-message p {
+.evr-no-data-message p {
   font-size: 1rem;
   margin: 0;
 }
 
 /* Responsive Design */
 @media (max-width: 1200px) {
-  .admin-visit-report-overview {
+  .evr-overview {
     padding: 0.5rem;
   }
-  
-  .admin-visit-report-table-section {
+
+  .evr-table-section {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
-  .admin-visit-report-table .admin-visit-report-table-header,
-  .admin-visit-report-table .admin-visit-report-table-row {
+
+  .evr-table .evr-table-header,
+  .evr-table .evr-table-row {
     gap: 1rem;
   }
 }
 
 @media (max-width: 1024px) {
-  .admin-visit-report-filters-grid {
+  .evr-filters-grid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
-  
-  .admin-visit-report-table-section {
+
+  .evr-table-section {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 }
 
 @media (max-width: 768px) {
-  .admin-visit-report-overview {
+  .evr-overview {
     padding: 1rem;
   }
-  
-  .admin-visit-report-filters-section {
+
+  .evr-filters-section {
     padding: 1rem;
   }
-  
-  .admin-visit-report-filters-grid {
+
+  .evr-filters-grid {
     grid-template-columns: 1fr;
   }
-  
-  .admin-visit-report-table .admin-visit-report-table-header {
+
+  .evr-table .evr-table-header {
     display: none;
   }
-  
-  .admin-visit-report-table .admin-visit-report-table-row {
+
+  .evr-table .evr-table-row {
     grid-template-columns: 1fr;
     gap: 0.5rem;
     padding: 1rem;
@@ -541,49 +546,49 @@
     margin-bottom: 1rem;
     background: #f9fafb;
   }
-  
-  .admin-visit-report-table .admin-visit-report-cell {
+
+  .evr-table .evr-cell {
     padding: 0.5rem 0;
     border-bottom: 1px solid #f1f5f9;
   }
-  
-  .admin-visit-report-table .admin-visit-report-cell:last-child {
+
+  .evr-table .evr-cell:last-child {
     border-bottom: none;
   }
-  
-  .admin-visit-report-table .admin-visit-report-cell:before {
+
+  .evr-table .evr-cell:before {
     content: attr(data-label) ': ';
     font-weight: 600;
     color: #374151;
     display: inline-block;
     width: 120px;
   }
-  
-  .admin-visit-report-action-buttons-group {
+
+  .evr-action-buttons-group {
     flex-direction: column;
     width: 100%;
   }
-  
-  .admin-visit-report-view-details-btn,
-  .admin-visit-report-view-issue-btn,
-  .admin-visit-report-mark-reviewed-btn {
+
+  .evr-view-details-btn,
+  .evr-view-issue-btn,
+  .evr-mark-reviewed-btn {
     width: 100%;
     justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
-  .admin-visit-report-title h2 {
+  .evr-title h2 {
     font-size: 1.5rem;
   }
-  
-  .admin-visit-report-executive-cell {
+
+  .evr-executive-cell {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
-  .admin-visit-report-partner-brands-cell {
+
+  .evr-partner-brands-cell {
     flex-direction: column;
     align-items: flex-start;
   }

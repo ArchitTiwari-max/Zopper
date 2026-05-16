@@ -79,7 +79,8 @@ export async function sendDailyVisitSummaryToAdmins(
    'amit.srivastava@zopper.com',
    'archit.tiwari@zopper.com',
    'harshdeep.singh@zopper.com',
-   'assurance.tech@zopper.com'
+   'assurance.tech@zopper.com',
+   'rohan.saxena@zopper.com',
   ];
   // const adminEmails=[
   //   'harshdeep.singh@zopper.com',
