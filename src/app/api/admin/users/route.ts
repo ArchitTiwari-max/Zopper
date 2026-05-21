@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { sendCredentialsEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
 
@@ -268,9 +269,23 @@ export async function POST(request: NextRequest) {
       } : null
     };
     
+    // Send email with credentials
+    let emailSent = false;
+    try {
+      emailSent = await sendCredentialsEmail(
+        email.trim(),
+        username.trim(),
+        role.toUpperCase(),
+        name.trim(),
+        password
+      );
+    } catch (mailError) {
+      console.error('Failed to send welcome credentials email:', mailError);
+    }
+    
     return NextResponse.json({
       success: true,
-      message: `${role} user created successfully`,
+      message: `${role} user created successfully${emailSent ? ' and credentials email sent' : ' (email send failed)'}`,
       user: responseUser
     });
     
