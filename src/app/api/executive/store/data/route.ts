@@ -15,7 +15,63 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
+    
+    // Allow both EXECUTIVE and ADMIN roles
+    if (user.role !== 'EXECUTIVE' && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Access denied. Executive or Admin role required.' }, { status: 403 });
+    }
+
+    // If ADMIN, fetch all stores instead of executive-specific stores
+    if (user.role === 'ADMIN') {
+      const stores = await prisma.store.findMany({
+        select: {
+          id: true,
+          storeName: true,
+          city: true,
+          fullAddress: true,
+          latitude: true,
+          longitude: true,
+          partnerBrandIds: true,
+          partnerBrandTypes: true,
+        },
+        orderBy: {
+          storeName: 'asc'
+        }
+      });
+
+      const allBrands = await prisma.brand.findMany({ select: { id: true, brandName: true } });
+      const brandMap = new Map(allBrands.map(b => [b.id, b.brandName]));
+
+      const transformedStores = stores.map(store => {
+        const partnerBrands = store.partnerBrandIds
+          .map(bid => brandMap.get(bid))
+          .filter(Boolean) as string[];
+
+        const partnerBrandTypes = Array.isArray((store as any).partnerBrandTypes)
+          ? (store as any).partnerBrandTypes : [];
+
+        return {
+          id: store.id,
+          storeName: store.storeName,
+          city: store.city,
+          fullAddress: store.fullAddress,
+          latitude: store.latitude ?? null,
+          longitude: store.longitude ?? null,
+          partnerBrands,
+          partnerBrandTypes,
+          visited: 'N/A',
+          lastVisitDate: null,
+          isFlagged: false,
+          sortOrder: 0,
+          alignmentScore: 0
+        };
+      });
+
+      return NextResponse.json({
+        success: true,
+        stores: transformedStores
+      });
+    }
 
     // ── 1) Get executive + store IDs + flagged map ────────────────────────────
     const executive = await prisma.executive.findUnique({

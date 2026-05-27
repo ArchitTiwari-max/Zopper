@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import styles from './page.module.css';
+import EditStoresModal from './EditStoresModal';
 
 interface PJPData {
   id: string;
   executiveName: string;
   submittedAt: string;
   plannedVisitDate: string;
+  storeIds: string[];
   storeNames: string[];
   pjpNotFollowedReason: string;
 }
@@ -23,6 +25,7 @@ const PJPReportPage = () => {
   const [executives, setExecutives] = useState<ExecutiveOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingPlan, setEditingPlan] = useState<PJPData | null>(null);
 
   // Filters
   const todayStr = new Date().toISOString().split('T')[0];
@@ -114,6 +117,18 @@ const PJPReportPage = () => {
     XLSX.writeFile(wb, `PJP_Report_${fromDate}_to_${toDate}.xlsx`);
   };
 
+  const handleEditPlan = (plan: PJPData) => {
+    setEditingPlan(plan);
+  };
+
+  const handleCloseModal = () => {
+    setEditingPlan(null);
+  };
+
+  const handleSaveSuccess = () => {
+    fetchData(); // Refresh data after save
+  };
+
   return (
     <div className={styles['pjp-report-container']}>
       <div className={styles['report-header']}>
@@ -146,13 +161,13 @@ const PJPReportPage = () => {
           />
         </div>
 
-        <div className="filter-group">
+        <div className={styles['filter-group']}>
           <label>To Date</label>
           <input 
             type="date" 
             value={toDate} 
             onChange={(e) => setToDate(e.target.value)}
-            className="filter-date"
+            className={styles['filter-date']}
           />
         </div>
 
@@ -183,12 +198,13 @@ const PJPReportPage = () => {
                 <th>Visit Plan Date (IST)</th>
                 <th>Store Names</th>
                 <th>PJP Not Followed Reason</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className={styles['no-data']}>No PJP records found for the selected filters.</td>
+                  <td colSpan={6} className={styles['no-data']}>No PJP records found for the selected filters.</td>
                 </tr>
               ) : (
                 data.map((item) => (
@@ -208,12 +224,32 @@ const PJPReportPage = () => {
                         {item.pjpNotFollowedReason}
                       </span>
                     </td>
+                    <td>
+                      <button 
+                        onClick={() => handleEditPlan(item)}
+                        className={styles['edit-btn']}
+                      >
+                        ✏️ Edit
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Edit Stores Modal */}
+      {editingPlan && (
+        <EditStoresModal
+          isOpen={true}
+          onClose={handleCloseModal}
+          planId={editingPlan.id}
+          executiveName={editingPlan.executiveName}
+          currentStoreIds={editingPlan.storeIds}
+          onSave={handleSaveSuccess}
+        />
       )}
     </div>
   );
