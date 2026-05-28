@@ -93,6 +93,9 @@ model Store {
   salesRecords      SalesRecord[]
   adminVisits       AdminVisit[]
   alignment         StoreAlignment?
+
+  @@index([partnerBrandTypes])
+  @@index([partnerBrandIds])
 }
 
 model ExecutiveStoreAssignment {
