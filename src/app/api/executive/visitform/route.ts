@@ -122,6 +122,7 @@ export async function GET(request: NextRequest) {
             imageUrls: visit.imageUrls,
             adminComment: visit.adminComment,
             storeName: visit.store?.storeName || 'Unknown Store',
+            brandVisitDetails: visit.brandVisitDetails || null,
             issues: visit.issues
               .filter((issue: any) =>
                 issue.assigned.some((assignment: any) =>
@@ -165,6 +166,7 @@ export async function GET(request: NextRequest) {
             imageUrls: [],
             adminComment: null,
             storeName: visit.store?.storeName || 'Unknown Store',
+            brandVisitDetails: visit.brandVisitDetails || null,
             issues: (visit.issues || []).map((issue: any) => ({
               id: issue.id,
               details: issue.details,
@@ -216,6 +218,7 @@ export async function POST(request: NextRequest) {
       POSMchecked,
       issuesRaised,
       brandsVisited,
+      brandVisitDetails,
       remarks,
       imageUrls,
       nextScheduledDate
@@ -271,11 +274,15 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Get brand IDs from brand names
+    // Get brand IDs from brand names (either from brandsVisited or brandVisitDetails)
     const brandIds: string[] = [];
-    if (brandsVisited && brandsVisited.length > 0) {
+    const brandsToLookup = brandsVisited && brandsVisited.length > 0 
+      ? brandsVisited 
+      : (brandVisitDetails ? brandVisitDetails.map((b: any) => b.brandName) : []);
+      
+    if (brandsToLookup.length > 0) {
       const brands = await prisma.brand.findMany({
-        where: { brandName: { in: brandsVisited } }
+        where: { brandName: { in: brandsToLookup } }
       });
       brandIds.push(...brands.map(brand => brand.id));
     }
@@ -292,6 +299,7 @@ export async function POST(request: NextRequest) {
         executiveId: executive.id,
         storeId,
         brandIds,
+        brandVisitDetails: brandVisitDetails || null,
         visitDate: visitDateTime,
         ...(nextScheduledDate ? { nextScheduledDate: new Date(nextScheduledDate + 'T00:00:00.000Z') } : {})
       },
@@ -302,6 +310,8 @@ export async function POST(request: NextRequest) {
     });
 
     let createdIssues: any[] = [];
+    
+    // Process top-level issues
     if (issuesRaised && Array.isArray(issuesRaised) && issuesRaised.length > 0) {
       for (const issueDetail of issuesRaised) {
         if (issueDetail && issueDetail.trim() !== '') {
@@ -319,6 +329,32 @@ export async function POST(request: NextRequest) {
             details: createdIssue.details,
             status: createdIssue.status
           });
+        }
+      }
+    }
+
+    // Process per-brand issues
+    if (brandVisitDetails && Array.isArray(brandVisitDetails)) {
+      for (const brandData of brandVisitDetails) {
+        if (brandData.issuesRaised && Array.isArray(brandData.issuesRaised) && brandData.issuesRaised.length > 0) {
+          for (const issueDetail of brandData.issuesRaised) {
+            if (issueDetail && issueDetail.trim() !== '') {
+              const uniqueIssueId = await generateUniqueIssueId();
+              const createdIssue = await prisma.issue.create({
+                data: {
+                  id: uniqueIssueId,
+                  details: `[${brandData.brandName}] ${issueDetail.trim()}`,
+                  visitId: visit.id,
+                  status: 'Pending'
+                }
+              });
+              createdIssues.push({
+                id: createdIssue.id,
+                details: createdIssue.details,
+                status: createdIssue.status
+              });
+            }
+          }
         }
       }
     }

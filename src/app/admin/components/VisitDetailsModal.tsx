@@ -21,6 +21,7 @@ interface AdminVisitData {
   POSMchecked: boolean | null;
   peopleMet?: Array<{name: string, designation: string, phoneNumber?: string}>;
   imageUrls?: string[];
+  brandVisitDetails?: any[];
 }
 
 interface VisitDetailsModalProps {
@@ -44,6 +45,7 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
   const [showFollowUpForm, setShowFollowUpForm] = React.useState(false);
   const [adminComment, setAdminComment] = React.useState('');
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [activeBrandTab, setActiveBrandTab] = React.useState<string>('');
 
   const handleMarkReviewWithFollow = () => {
     setShowFollowUpForm(true);
@@ -103,6 +105,7 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
 
   React.useEffect(() => {
     if (isOpen) {
+      if (visit?.partnerBrand && visit.partnerBrand.length > 0) setActiveBrandTab(visit.partnerBrand[0]);
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           onClose();
@@ -210,141 +213,172 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
               </div>
               <div className="admin-visit-info-card">
                 <div className="admin-visit-info-label">Partner Brands:</div>
-                <div className="admin-visit-brands-inline">
+                <div className="admin-visit-brands-inline" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {visit.partnerBrand.map((brand, index) => (
-                    <span 
+                    <button 
                       key={index} 
                       className="admin-visit-brand-tag-compact"
-                      style={{ backgroundColor: getBrandColor(brand) }}
+                      style={{ 
+                        backgroundColor: getBrandColor(brand),
+                        border: activeBrandTab === brand ? '2px solid #000' : '2px solid transparent',
+                        opacity: activeBrandTab === brand ? 1 : 0.5,
+                        cursor: 'pointer',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        fontSize: '0.75rem'
+                      }}
+                      onClick={() => setActiveBrandTab(brand)}
                     >
                       {brand}
-                    </span>
+                    </button>
                   ))}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="admin-visit-detail-section">
-            <h3 className="admin-visit-detail-section-title-compact">POSM Check</h3>
-            <div style={{ maxWidth: '200px' }}>
-              <div className="admin-visit-info-card">
-                <div className="admin-visit-info-label">POSM Available:</div>
-                <div className="admin-visit-info-value">
-                  {visit.POSMchecked === null ? 'Not specified' : (visit.POSMchecked ? 'Yes' : 'No')}
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Active Brand Details Logic */}
+          {(() => {
+            const activeBrandDetails = visit.brandVisitDetails?.find(b => b.brandName === activeBrandTab);
+            const posmVal = activeBrandDetails && activeBrandDetails.POSMchecked !== undefined && activeBrandDetails.POSMchecked !== null ? activeBrandDetails.POSMchecked : visit.POSMchecked;
+            const peopleMetVal = activeBrandDetails && activeBrandDetails.peopleMet && activeBrandDetails.peopleMet.length > 0 ? activeBrandDetails.peopleMet : visit.peopleMet;
+            const imagesVal = activeBrandDetails && activeBrandDetails.imageUrls && activeBrandDetails.imageUrls.length > 0 ? activeBrandDetails.imageUrls : visit.imageUrls;
+            const remarksVal = activeBrandDetails && activeBrandDetails.remarks ? activeBrandDetails.remarks : visit.feedback;
+            const issuesVal = activeBrandDetails && activeBrandDetails.issuesRaised && activeBrandDetails.issuesRaised.length > 0 ? activeBrandDetails.issuesRaised : [];
 
-          {(visit.peopleMet && visit.peopleMet.length > 0) && (
-            <div className="admin-visit-detail-section">
-              <h3 className="admin-visit-detail-section-title-compact">People Met</h3>
-              <div style={{ maxWidth: '400px' }}>
-                <div className="admin-visit-info-card">
-                  {visit.peopleMet.map((person, index) => (
-                    <div key={index} style={{ marginBottom: index < visit.peopleMet.length - 1 ? '12px' : '0' }}>
-                      <div className="admin-visit-person-name-bold">{person.name}</div>
-                      <div className="admin-visit-person-details-muted">
-                        ({person.designation})
-                        {person.phoneNumber && (
-                          <span>
-                            {' • '}
-                            <a 
-                              href={`tel:${person.phoneNumber}`} 
-                              className="admin-visit-phone-link"
-                            >
-                              📞 {person.phoneNumber}
-                            </a>
-                          </span>
-                        )}
+            return (
+              <>
+                <div className="admin-visit-detail-section">
+                  <h3 className="admin-visit-detail-section-title-compact">POSM Check</h3>
+                  <div style={{ maxWidth: '200px' }}>
+                    <div className="admin-visit-info-card">
+                      <div className="admin-visit-info-label">POSM Available:</div>
+                      <div className="admin-visit-info-value">
+                        {posmVal === null || posmVal === undefined ? 'Not specified' : (posmVal ? 'Yes' : 'No')}
                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
 
-          {visit.imageUrls && visit.imageUrls.length > 0 && (
-            <div className="admin-visit-detail-section">
-              <h3 className="admin-visit-detail-section-title-compact">Images</h3>
-              <div className="admin-visit-images-grid" style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', 
-                gap: '12px',
-                marginTop: '12px'
-              }}>
-                {visit.imageUrls.map((imageUrl, index) => (
-                  <div key={index} className="admin-visit-image-item" style={{
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    backgroundColor: '#f9fafb'
-                  }}>
-                    <img 
-                      src={imageUrl} 
-                      alt={`Visit image ${index + 1}`}
-                      className="admin-visit-detail-image"
-                      style={{
-                        width: '100%',
-                        height: '120px',
-                        objectFit: 'cover',
-                        cursor: 'pointer',
-                        transition: 'transform 0.2s ease'
-                      }}
-                      onClick={() => window.open(imageUrl, '_blank')}
-                      onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
-                      onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
-                    />
-                    <div style={{
-                      padding: '8px',
-                      fontSize: '0.75rem',
-                      color: '#6b7280',
-                      textAlign: 'center'
-                    }}>
-                      Image {index + 1}
+                {(peopleMetVal && peopleMetVal.length > 0) && (
+                  <div className="admin-visit-detail-section">
+                    <h3 className="admin-visit-detail-section-title-compact">People Met</h3>
+                    <div style={{ maxWidth: '400px' }}>
+                      <div className="admin-visit-info-card">
+                        {peopleMetVal.map((person: any, index: number) => (
+                          <div key={index} style={{ marginBottom: index < peopleMetVal.length - 1 ? '12px' : '0' }}>
+                            <div className="admin-visit-person-name-bold">{person.name}</div>
+                            <div className="admin-visit-person-details-muted">
+                              ({person.designation})
+                              {person.phoneNumber && (
+                                <span>
+                                  {' • '}
+                                  <a 
+                                    href={`tel:${person.phoneNumber}`} 
+                                    className="admin-visit-phone-link"
+                                  >
+                                    📞 {person.phoneNumber}
+                                  </a>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                )}
 
-          {visit.feedback && visit.feedback !== 'No feedback provided' && (
-            <div className="admin-visit-detail-section">
-              <h3 className="admin-visit-detail-section-title-compact">Remarks</h3>
-              <div className="admin-visit-info-card">
-                <p className="admin-visit-remarks-content">{visit.feedback}</p>
-              </div>
-            </div>
-          )}
-
-          <div className="admin-visit-detail-section">
-            <h3 className="admin-visit-detail-section-title-compact">Issues Reported</h3>
-            {visit.issues && visit.issues !== 'None' ? (
-              <div className="admin-visit-info-card">
-                <div className="admin-visit-issues-header">
-                  <span className="admin-visit-issue-text">{visit.issues}</span>
-                  <span 
-                    className="admin-visit-issue-status-badge-compact"
-                    style={{ backgroundColor: getStatusColor(visit.issueStatus) }}
-                  >
-                    {visit.issueStatus}
-                  </span>
-                </div>
-                {visit.issueId && (
-                  <div className="admin-visit-issue-id-compact">
-                    Issue ID: #{visit.issueId}
+                {(imagesVal && imagesVal.length > 0) && (
+                  <div className="admin-visit-detail-section">
+                    <h3 className="admin-visit-detail-section-title-compact">Images</h3>
+                    <div className="admin-visit-images-grid" style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', 
+                      gap: '12px',
+                      marginTop: '12px'
+                    }}>
+                      {imagesVal.map((imageUrl: string, index: number) => (
+                        <div key={index} className="admin-visit-image-item" style={{
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          backgroundColor: '#f9fafb'
+                        }}>
+                          <img 
+                            src={imageUrl} 
+                            alt={`Visit image ${index + 1}`}
+                            className="admin-visit-detail-image"
+                            style={{
+                              width: '100%',
+                              height: '120px',
+                              objectFit: 'cover',
+                              cursor: 'pointer',
+                              transition: 'transform 0.2s ease'
+                            }}
+                            onClick={() => window.open(imageUrl, '_blank')}
+                            onMouseOver={(e) => (e.target as any).style.transform = 'scale(1.05)'}
+                            onMouseOut={(e) => (e.target as any).style.transform = 'scale(1)'}
+                          />
+                          <div style={{
+                            padding: '8px',
+                            fontSize: '0.75rem',
+                            color: '#6b7280',
+                            textAlign: 'center'
+                          }}>
+                            Image {index + 1}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-              </div>
-            ) : (
-              <div className="admin-visit-info-card">
-                <p className="admin-visit-no-issues-compact">No issues reported for this visit.</p>
-              </div>
-            )}
-          </div>
+
+                {(remarksVal && remarksVal !== 'No feedback provided') && (
+                  <div className="admin-visit-detail-section">
+                    <h3 className="admin-visit-detail-section-title-compact">Remarks</h3>
+                    <div className="admin-visit-info-card">
+                      <p className="admin-visit-remarks-content">{remarksVal}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="admin-visit-detail-section">
+                  <h3 className="admin-visit-detail-section-title-compact">Issues Reported</h3>
+                  {issuesVal && issuesVal.length > 0 ? (
+                    <div className="admin-visit-info-card">
+                      <ul style={{ margin: 0, paddingLeft: '20px', color: '#dc2626' }}>
+                        {issuesVal.map((iss: string, i: number) => <li key={i}>{iss}</li>)}
+                      </ul>
+                    </div>
+                  ) : visit.issues && visit.issues !== 'None' ? (
+                    <div className="admin-visit-info-card">
+                      <div className="admin-visit-issues-header">
+                        <span className="admin-visit-issue-text">{visit.issues}</span>
+                        <span 
+                          className="admin-visit-issue-status-badge-compact"
+                          style={{ backgroundColor: getStatusColor(visit.issueStatus) }}
+                        >
+                          {visit.issueStatus}
+                        </span>
+                      </div>
+                      {visit.issueId && (
+                        <div className="admin-visit-issue-id-compact">
+                          Issue ID: #{visit.issueId}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="admin-visit-info-card">
+                      <p className="admin-visit-no-issues-compact">No issues reported for this visit.</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            );
+          })()}
 
           {/* Action Buttons - only show if visit is pending review */}
           {visit.visitStatus === 'PENDING_REVIEW' && onMarkReviewed && (

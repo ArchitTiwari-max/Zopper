@@ -132,7 +132,8 @@ export async function GET(request: NextRequest) {
         reviewedByAdmin: { select: { id: true, name: true } },
         executive: { select: { id: true, name: true } },
         store: { select: { id: true, storeName: true, city: true } },
-        issues: { select: { id: true, details: true, status: true } }
+        issues: { select: { id: true, details: true, status: true } },
+        brandVisitDetails: true
       },
       orderBy: { visitDate: 'desc' }
     };
@@ -264,7 +265,8 @@ export async function GET(request: NextRequest) {
         feedback: visit.remarks || 'No feedback provided',
         POSMchecked: visit.POSMchecked,
         peopleMet: peopleMet,
-        imageUrls: visit.imageUrls || []
+        imageUrls: visit.imageUrls || [],
+        brandVisitDetails: visit.brandVisitDetails || []
       };
     });
 

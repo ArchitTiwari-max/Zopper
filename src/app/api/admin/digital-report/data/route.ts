@@ -87,6 +87,7 @@ export async function GET(request: NextRequest) {
         executive: { select: { id: true, name: true } },
         store: { select: { id: true, storeName: true, city: true, partnerBrandIds: true } },
         issues: { select: { id: true, details: true, status: true } },
+        brandVisitDetails: true,
       },
       orderBy: { connectDate: 'desc' },
     };
@@ -152,6 +153,7 @@ export async function GET(request: NextRequest) {
         POSMchecked: null,
         peopleMet,
         imageUrls: [],
+        brandVisitDetails: (v as any).brandVisitDetails || []
       };
     });
 

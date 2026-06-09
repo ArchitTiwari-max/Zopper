@@ -19,7 +19,8 @@ interface PastVisit {
   createdAt: string;
   updatedAt: string;
   storeName: string;
-  reviewerName?: string; // Name of the admin who marked the visit as reviewed (optional)
+  reviewerName?: string;
+  brandVisitDetails?: any[];
 }
 
 interface VisitIssue {
@@ -208,129 +209,148 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
             </div>
           </div>
 
-          <div className="visit-detail-section">
-            <h3 className="visit-detail-section-title">POSM Check</h3>
-            <div className="visit-detail-grid">
-              <div className="visit-detail-item">
-                <span className="visit-detail-label">POSM Available:</span>
-                <span className="visit-detail-value">
-                  {visit.POSMchecked === null ? 'Not specified' : (visit.POSMchecked ? 'Yes' : 'No')}
-                </span>
-              </div>
-            </div>
-          </div>
+          
+          {visit.brandVisitDetails && visit.brandVisitDetails.length > 0 ? (
+            visit.brandVisitDetails.map((brandInfo: any, index: number) => (
+              <div key={index} style={{ border: '1px solid #e2e8f0', padding: '16px', borderRadius: '8px', marginBottom: '16px', backgroundColor: '#f8fafc' }}>
+                <h3 style={{ margin: '0 0 16px 0', color: '#0f172a', fontSize: '1.2rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>{brandInfo.brandName}</h3>
+                
+                {brandInfo.POSMchecked !== null && brandInfo.POSMchecked !== undefined && (
+                  <div className="visit-detail-section" style={{ marginBottom: '12px', borderBottom: 'none' }}>
+                    <span className="visit-detail-label">POSM Available: </span>
+                    <span className="visit-detail-value">{brandInfo.POSMchecked ? 'Yes' : 'No'}</span>
+                  </div>
+                )}
 
-          {visit.personMet && visit.personMet.length > 0 && (
-            <div className="visit-detail-section">
-              <h3 className="visit-detail-section-title">People Met</h3>
-              <div className="visit-people-met-compact-list">
-                {visit.personMet.map((person, index) => (
-                  <div key={index} className="visit-person-met-compact-item" style={{ marginBottom: '8px' }}>
-                    <span className="visit-person-name">
-                      <strong>{person.name}</strong>
-                    </span>
-                    <span className="visit-person-details">
-                      {' '}({person.designation})
-                      {person.phoneNumber && (
-                        <>
-                          {' • '}
-                          <a
-                            href={`tel:${person.phoneNumber}`}
-                            className="visit-phone-link"
-                            style={{
-                              color: '#3b82f6',
-                              textDecoration: 'none',
-                              fontSize: '0.875rem'
-                            }}
-                            onMouseOver={(e) => (e.target as HTMLElement).style.textDecoration = 'underline'}
-                            onMouseOut={(e) => (e.target as HTMLElement).style.textDecoration = 'none'}
-                          >
-                            📞 {person.phoneNumber}
-                          </a>
-                        </>
-                      )}
+                {brandInfo.peopleMet && brandInfo.peopleMet.length > 0 && (
+                  <div className="visit-detail-section" style={{ marginBottom: '12px', borderBottom: 'none' }}>
+                    <h4 className="visit-detail-section-title" style={{ fontSize: '1rem', marginTop: '8px' }}>People Met</h4>
+                    <div className="visit-people-met-compact-list">
+                      {brandInfo.peopleMet.map((person: any, i: number) => (
+                        <div key={i} className="visit-person-met-compact-item" style={{ marginBottom: '4px' }}>
+                          <span className="visit-person-name"><strong>{person.name === 'SEC' ? person.designation : person.name}</strong></span>
+                          <span className="visit-person-details"> ({person.name === 'SEC' ? 'SEC' : person.designation}) {person.phoneNumber && ` • 📞 ${person.phoneNumber}`}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {brandInfo.remarks && (
+                  <div className="visit-detail-section" style={{ marginBottom: '12px', borderBottom: 'none' }}>
+                    <h4 className="visit-detail-section-title" style={{ fontSize: '1rem', marginTop: '8px' }}>Remarks</h4>
+                    <p className="visit-detail-text">{brandInfo.remarks}</p>
+                  </div>
+                )}
+
+                {brandInfo.imageUrls && brandInfo.imageUrls.length > 0 && (
+                  <div className="visit-detail-section" style={{ marginBottom: '12px', borderBottom: 'none' }}>
+                    <h4 className="visit-detail-section-title" style={{ fontSize: '1rem', marginTop: '8px' }}>Images</h4>
+                    <div className="visit-images-grid">
+                      {brandInfo.imageUrls.map((imageUrl: string, i: number) => (
+                        <div key={i} className="visit-image-item">
+                          <img src={imageUrl} alt={`Visit image ${i + 1}`} className="visit-detail-image" onClick={() => window.open(imageUrl, '_blank')} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {brandInfo.issuesRaised && brandInfo.issuesRaised.length > 0 && (
+                  <div className="visit-detail-section" style={{ marginBottom: '12px', borderBottom: 'none' }}>
+                    <h4 className="visit-detail-section-title" style={{ fontSize: '1rem', marginTop: '8px' }}>Issues Raised</h4>
+                    <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                      {brandInfo.issuesRaised.map((iss: string, i: number) => (
+                        <li key={i} style={{ color: '#dc2626' }}>{iss}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <>
+              {/* Fallback for legacy visits without brandVisitDetails */}
+              <div className="visit-detail-section">
+                <h3 className="visit-detail-section-title">POSM Check</h3>
+                <div className="visit-detail-grid">
+                  <div className="visit-detail-item">
+                    <span className="visit-detail-label">POSM Available:</span>
+                    <span className="visit-detail-value">
+                      {visit.POSMchecked === null ? 'Not specified' : (visit.POSMchecked ? 'Yes' : 'No')}
                     </span>
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-          )}
 
-          {visit.remarks && (
-            <div className="visit-detail-section">
-              <h3 className="visit-detail-section-title">Remarks</h3>
-              <p className="visit-detail-text">{visit.remarks}</p>
-            </div>
-          )}
-
-          {visit.adminComment && (
-            <div className="visit-detail-section">
-              <h3 className="visit-detail-section-title">Admin Comment</h3>
-              <p className="visit-detail-text visit-admin-comment">{visit.adminComment}</p>
-            </div>
-          )}
-
-          {visit.imageUrls && visit.imageUrls.length > 0 && (
-            <div className="visit-detail-section">
-              <h3 className="visit-detail-section-title">Images</h3>
-              <div className="visit-images-grid">
-                {visit.imageUrls.map((imageUrl, index) => (
-                  <div key={index} className="visit-image-item">
-                    <img
-                      src={imageUrl}
-                      alt={`Visit image ${index + 1}`}
-                      className="visit-detail-image"
-                      onClick={() => window.open(imageUrl, '_blank')}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {visit.issues && visit.issues.length > 0 && (
-            <div className="visit-detail-section">
-              <h3 className="visit-detail-section-title">Issues Reported</h3>
-              <div className="visit-issues-list">
-                {visit.issues.map((issue) => (
-                  <div key={issue.id} className="visit-issue-detail-item">
-                    <div className="visit-issue-header">
-                      <span className="visit-issue-details">{issue.details}</span>
-                      <span
-                        className="visit-issue-status-badge"
-                        style={{ color: getStatusColor(issue.status) }}
-                      >
-                        {issue.status}
-                      </span>
-                    </div>
-                    <div className="visit-issue-date">
-                      Created: {formatDate(issue.createdAt)}
-                    </div>
-                    {issue.assigned && issue.assigned.length > 0 && (
-                      <div className="visit-issue-assignments">
-                        <h4>Assignments:</h4>
-                        {issue.assigned.map((assignment) => (
-                          <div key={assignment.id} className="visit-assignment-item">
-                            <div className="visit-assignment-header">
-                              <span className="visit-assignment-executive">{assignment.executiveName}</span>
-                              <span className="visit-assignment-status">({assignment.status})</span>
-                            </div>
-                            {assignment.adminComment && (
-                              <div className="visit-assignment-comment">
-                                <strong>Admin Comment:</strong> {assignment.adminComment}
-                              </div>
-                            )}
-                            <div className="visit-assignment-date">
-                              Assigned: {formatDate(assignment.createdAt)}
-                            </div>
-                          </div>
-                        ))}
+              {visit.personMet && visit.personMet.length > 0 && (
+                <div className="visit-detail-section">
+                  <h3 className="visit-detail-section-title">People Met</h3>
+                  <div className="visit-people-met-compact-list">
+                    {visit.personMet.map((person, index) => (
+                      <div key={index} className="visit-person-met-compact-item" style={{ marginBottom: '8px' }}>
+                        <span className="visit-person-name">
+                          <strong>{person.name === 'SEC' ? person.designation : person.name}</strong>
+                        </span>
+                        <span className="visit-person-details">
+                          {' '}({person.name === 'SEC' ? 'SEC' : person.designation})
+                          {person.phoneNumber && ` • 📞 ${person.phoneNumber}`}
+                        </span>
                       </div>
-                    )}
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              )}
+
+              {visit.remarks && (
+                <div className="visit-detail-section">
+                  <h3 className="visit-detail-section-title">Remarks</h3>
+                  <p className="visit-detail-text">{visit.remarks}</p>
+                </div>
+              )}
+
+              {visit.imageUrls && visit.imageUrls.length > 0 && (
+                <div className="visit-detail-section">
+                  <h3 className="visit-detail-section-title">Images</h3>
+                  <div className="visit-images-grid">
+                    {visit.imageUrls.map((imageUrl, index) => (
+                      <div key={index} className="visit-image-item">
+                        <img
+                          src={imageUrl}
+                          alt={`Visit image ${index + 1}`}
+                          className="visit-detail-image"
+                          onClick={() => window.open(imageUrl, '_blank')}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {visit.issues && visit.issues.length > 0 && (
+                <div className="visit-detail-section">
+                  <h3 className="visit-detail-section-title">Issues Reported</h3>
+                  <div className="visit-issues-list">
+                    {visit.issues.map((issue) => (
+                      <div key={issue.id} className="visit-issue-detail-item">
+                        <div className="visit-issue-header">
+                          <span className="visit-issue-details">{issue.details}</span>
+                          <span
+                            className="visit-issue-status-badge"
+                            style={{ color: getStatusColor(issue.status) }}
+                          >
+                            {issue.status}
+                          </span>
+                        </div>
+                        <div className="visit-issue-date">
+                          Created: {formatDate(issue.createdAt)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
