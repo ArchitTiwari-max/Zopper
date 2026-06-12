@@ -86,7 +86,7 @@ enum Priority {
 model Store {
   id                String                     @id @map("_id")
   storeName         String
-  city              String
+  city              String?
   fullAddress       String?
   latitude          Float? // Geocoded latitude (Google Places API)
   longitude         Float? // Geocoded longitude (Google Places API)
