@@ -311,8 +311,9 @@ const ExecutiveFormContent: React.FC = () => {
         alert('Visit date cannot be more than 90 days ago. Please select a more recent date.');
         return;
       }
-      if (formData.peopleMet.length === 0) {
-        alert('Please add at least one person met');
+      const missingPeopleMet = storeData?.partnerBrands.some(brand => !(brandVisitDetails[brand]?.peopleMet?.length > 0));
+      if (missingPeopleMet) {
+        alert('Please add at least one person met for each brand');
         return;
       }
       
@@ -330,8 +331,9 @@ const ExecutiveFormContent: React.FC = () => {
         alert('Connect date cannot be more than 90 days ago.');
         return;
       }
-      if (digitalPeople.length === 0) {
-        alert('Please add at least one person spoken');
+      const missingPeopleMet = storeData?.partnerBrands.some(brand => !(brandVisitDetails[brand]?.peopleMet?.length > 0));
+      if (missingPeopleMet) {
+        alert('Please add at least one person spoken for each brand');
         return;
       }
       // Check if all brands have remarks
