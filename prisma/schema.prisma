@@ -98,7 +98,7 @@ model Store {
   salesRecords      SalesRecord[]
   adminVisits       AdminVisit[]
   alignment         StoreAlignment?
-  storeType         String?
+  storeCategory     String?
   storeChannel      String?
   cityTier          String?
   state             String?

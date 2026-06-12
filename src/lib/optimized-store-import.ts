@@ -130,6 +130,23 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
       }
     }
 
+    // Parse new fields: storeCategory, storeChannel, cityTier, state, priority
+    const storeCategory = (rowObj.storeCategory || rowObj['Store Category'] || rowObj.Store_Category || rowObj.store_category)?.toString().trim() || '';
+    const storeChannel = (rowObj.storeChannel || rowObj['Store Channel'] || rowObj.Store_Channel || rowObj.store_channel)?.toString().trim() || '';
+    const cityTier = (rowObj.cityTier || rowObj['City Tier'] || rowObj.City_Tier || rowObj.city_tier)?.toString().trim() || '';
+    const state = (rowObj.state || rowObj.State || rowObj.STATE)?.toString().trim() || '';
+    const rawPriority = (rowObj.priority || rowObj.Priority || rowObj.PRIORITY)?.toString().trim() || '';
+
+    let priorityMapped: 'p1' | 'p2' | 'p3' | null = null;
+    if (rawPriority) {
+      const p = rawPriority.toLowerCase();
+      if (p === 'p1' || p === 'p2' || p === 'p3') {
+        priorityMapped = p as 'p1' | 'p2' | 'p3';
+      } else {
+        return `❌ Invalid Priority value '${rawPriority}'. Must be p1, p2, or p3. ${context}`;
+      }
+    }
+
     // Parse executive IDs
     const executiveIds = executiveIdsString
       .split(',')
@@ -171,7 +188,12 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
         executiveIds,
         executivesToAdd,
         executivesToRemove,
-        context
+        context,
+        storeCategory: storeCategory || null,
+        storeChannel: storeChannel || null,
+        cityTier: cityTier || null,
+        state: state || null,
+        priority: priorityMapped
       }
     });
     
@@ -221,7 +243,12 @@ export async function batchProcessStoreRecords(
             fullAddress: storeData.fullAddress,
             partnerBrandIds: storeData.partnerBrandIds,
             // Only set types if provided; otherwise keep existing or set to empty when ids empty
-            ...(storeData.partnerBrandTypes ? { partnerBrandTypes: storeData.partnerBrandTypes } : {})
+            ...(storeData.partnerBrandTypes ? { partnerBrandTypes: storeData.partnerBrandTypes } : {}),
+            storeCategory: storeData.storeCategory,
+            storeChannel: storeData.storeChannel,
+            cityTier: storeData.cityTier,
+            state: storeData.state,
+            priority: storeData.priority
           },
           create: {
             id: storeData.storeId,
@@ -229,7 +256,12 @@ export async function batchProcessStoreRecords(
             city: storeData.city,
             fullAddress: storeData.fullAddress,
             partnerBrandIds: storeData.partnerBrandIds,
-            partnerBrandTypes: storeData.partnerBrandTypes ?? []
+            partnerBrandTypes: storeData.partnerBrandTypes ?? [],
+            storeCategory: storeData.storeCategory,
+            storeChannel: storeData.storeChannel,
+            cityTier: storeData.cityTier,
+            state: storeData.state,
+            priority: storeData.priority
           }
         });
 

@@ -37,6 +37,11 @@ export async function GET(request: NextRequest) {
       City: store.city || '',
       partneraBrandIds: store.partnerBrandIds?.join(', ') || '',
       partnerBrandTypes: store.partnerBrandTypes?.join(', ') || '',
+      'Store Category': store.storeCategory || '',
+      'Store Channel': store.storeChannel || '',
+      'City Tier': store.cityTier || '',
+      State: store.state || '',
+      Priority: store.priority || '',
       Executive_IDs: store.executiveStores
         .map(es => es.executive.id)
         .join(', '),
@@ -56,6 +61,11 @@ export async function GET(request: NextRequest) {
       { wch: 20 }, // City
       { wch: 20 }, // partneraBrandIds
       { wch: 20 }, // partnerBrandTypes
+      { wch: 15 }, // Store Category
+      { wch: 15 }, // Store Channel
+      { wch: 15 }, // City Tier
+      { wch: 15 }, // State
+      { wch: 15 }, // Priority
       { wch: 40 }, // Executive_IDs
       { wch: 40 }, // POC's Name
       { wch: 20 }  // Number of Visits
