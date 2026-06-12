@@ -35,6 +35,9 @@ export async function GET(request: NextRequest) {
       Store_ID: store.id,
       'Store Name': store.storeName,
       City: store.city || '',
+      'Full Address': store.fullAddress || '',
+      Latitude: store.latitude !== null && store.latitude !== undefined ? store.latitude : '',
+      Longitude: store.longitude !== null && store.longitude !== undefined ? store.longitude : '',
       partneraBrandIds: store.partnerBrandIds?.join(', ') || '',
       partnerBrandTypes: store.partnerBrandTypes?.join(', ') || '',
       'Store Category': store.storeCategory || '',
@@ -59,6 +62,9 @@ export async function GET(request: NextRequest) {
       { wch: 15 }, // Store_ID
       { wch: 35 }, // Store Name
       { wch: 20 }, // City
+      { wch: 30 }, // Full Address
+      { wch: 15 }, // Latitude
+      { wch: 15 }, // Longitude
       { wch: 20 }, // partneraBrandIds
       { wch: 20 }, // partnerBrandTypes
       { wch: 15 }, // Store Category

@@ -87,7 +87,7 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
     // Parse partner brand IDs
     const partnerBrandIds = partnerBrandIdsString
       .split(',')
-      .map(id => id.trim())
+      .map((id: string) => id.trim())
       .filter(Boolean);
 
     // Parse partner brand types, if provided
@@ -121,7 +121,7 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
     // If types were provided, map them and filter out nulls/blanks to keep Prisma happy
     let partnerBrandTypes: PartnerBrandType[] | undefined = undefined;
     if (rawTypes.length > 0 && partnerBrandTypesString.trim() !== '') {
-      const mapped = rawTypes.map(mapType).filter((m): m is PartnerBrandType => m !== null);
+      const mapped = rawTypes.map(mapType).filter((m: PartnerBrandType | null): m is PartnerBrandType => m !== null);
       partnerBrandTypes = mapped;
       
       // Log a warning if counts don't match but don't block the import
@@ -147,10 +147,25 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
       }
     }
 
+    // Parse fullAddress, latitude, longitude
+    const fullAddress = (rowObj.fullAddress || rowObj['Full Address'] || rowObj.Full_Address || rowObj.full_address || rowObj.address || rowObj.Address || rowObj.ADDRESS)?.toString().trim() || '';
+    
+    const rawLatitude = rowObj.latitude || rowObj.Latitude || rowObj.LATITUDE || '';
+    const latitude = rawLatitude ? parseFloat(rawLatitude.toString().trim()) : null;
+    if (latitude !== null && isNaN(latitude)) {
+      return `❌ Invalid Latitude value '${rawLatitude}'. Must be a number. ${context}`;
+    }
+
+    const rawLongitude = rowObj.longitude || rowObj.Longitude || rowObj.LONGITUDE || '';
+    const longitude = rawLongitude ? parseFloat(rawLongitude.toString().trim()) : null;
+    if (longitude !== null && isNaN(longitude)) {
+      return `❌ Invalid Longitude value '${rawLongitude}'. Must be a number. ${context}`;
+    }
+
     // Parse executive IDs
     const executiveIds = executiveIdsString
       .split(',')
-      .map(id => id.trim())
+      .map((id: string) => id.trim())
       .filter(Boolean);
 
     // Validate executive IDs using cache
@@ -165,8 +180,8 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
     const currentExecutives = currentStore?.currentExecutives || [];
     const newExecutives = executiveIds;
     
-    const executivesToAdd = newExecutives.filter(id => !currentExecutives.includes(id));
-    const executivesToRemove = currentExecutives.filter(id => !newExecutives.includes(id));
+    const executivesToAdd = newExecutives.filter((id: string) => !currentExecutives.includes(id));
+    const executivesToRemove = currentExecutives.filter((id: string) => !newExecutives.includes(id));
 
     // Update cache with new executive assignments
     cache.stores.set(storeId, {
@@ -182,7 +197,9 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
         storeId,
         storeName,
         city,
-        fullAddress: '',
+        fullAddress: fullAddress || null,
+        latitude,
+        longitude,
         partnerBrandIds,
         partnerBrandTypes, // may be undefined if column not provided
         executiveIds,
@@ -241,6 +258,8 @@ export async function batchProcessStoreRecords(
             storeName: storeData.storeName,
             city: storeData.city,
             fullAddress: storeData.fullAddress,
+            latitude: storeData.latitude,
+            longitude: storeData.longitude,
             partnerBrandIds: storeData.partnerBrandIds,
             // Only set types if provided; otherwise keep existing or set to empty when ids empty
             ...(storeData.partnerBrandTypes ? { partnerBrandTypes: storeData.partnerBrandTypes } : {}),
@@ -255,6 +274,8 @@ export async function batchProcessStoreRecords(
             storeName: storeData.storeName,
             city: storeData.city,
             fullAddress: storeData.fullAddress,
+            latitude: storeData.latitude,
+            longitude: storeData.longitude,
             partnerBrandIds: storeData.partnerBrandIds,
             partnerBrandTypes: storeData.partnerBrandTypes ?? [],
             storeCategory: storeData.storeCategory,
