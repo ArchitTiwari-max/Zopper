@@ -952,29 +952,6 @@ const AdminStoresPage: React.FC = () => {
           {getCountSummary()}
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            onClick={handleExportXLS}
-            style={{
-              padding: '10px 16px',
-              backgroundColor: '#2563eb',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'background-color 0.2s',
-              boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#1d4ed8';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#2563eb';
-            }}
-          >
-            Export XLS
-          </button>
           {!isCreatingVisitPlan && (
             <button
               onClick={handleCreateVisitPlan}
