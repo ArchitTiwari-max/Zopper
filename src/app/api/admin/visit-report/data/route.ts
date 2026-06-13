@@ -244,25 +244,40 @@ export async function GET(request: NextRequest) {
         nextScheduledDateStr = `${nextDate.getDate().toString().padStart(2, '0')}/${(nextDate.getMonth() + 1).toString().padStart(2, '0')}/${nextDate.getFullYear()}`;
       }
 
-      return {
-        id: visit.id,
-        executiveId: visit.executive?.id || 'unknown',
-        executiveName: execName,
-        executiveInitials: initials,
-        avatarColor: colors[safeColorIndex] || colors[0],
-        storeName: visit.store?.storeName || 'Unknown Store',
-        storeId: visit.store?.id || 'unknown',
-        partnerBrand: partnerBrands,
-        visitDate: formattedVisitDate,
-        previousVisitDate: prevVisitDateStr,
-        nextScheduledDate: nextScheduledDateStr,
-        visitStatus: visit.status as 'PENDING_REVIEW' | 'REVIEWD',
-        reviewerName: visit.reviewedByAdmin?.name,
-        issueStatus: issueStatusResult,
-        city: visit.store?.city || 'Unknown',
-        issues: issues,
-        issueId: issueId,
-        feedback: visit.remarks || 'No feedback provided',
+        let feedbackText = '';
+        if (visit.brandVisitDetails && Array.isArray(visit.brandVisitDetails) && visit.brandVisitDetails.length > 0) {
+          const brandFeedbacks = visit.brandVisitDetails
+            .filter((bvd: any) => bvd.remarks && bvd.remarks.trim() !== '')
+            .map((bvd: any) => `${bvd.brandName}:\n${bvd.remarks}`);
+          
+          if (brandFeedbacks.length > 0) {
+            feedbackText = brandFeedbacks.join('\n\n');
+          }
+        }
+        
+        if (!feedbackText) {
+          feedbackText = visit.remarks || 'No feedback provided';
+        }
+
+        return {
+          id: visit.id,
+          executiveId: visit.executive?.id || 'unknown',
+          executiveName: execName,
+          executiveInitials: initials,
+          avatarColor: colors[safeColorIndex] || colors[0],
+          storeName: visit.store?.storeName || 'Unknown Store',
+          storeId: visit.store?.id || 'unknown',
+          partnerBrand: partnerBrands,
+          visitDate: formattedVisitDate,
+          previousVisitDate: prevVisitDateStr,
+          nextScheduledDate: nextScheduledDateStr,
+          visitStatus: visit.status as 'PENDING_REVIEW' | 'REVIEWD',
+          reviewerName: visit.reviewedByAdmin?.name,
+          issueStatus: issueStatusResult,
+          city: visit.store?.city || 'Unknown',
+          issues: issues,
+          issueId: issueId,
+          feedback: feedbackText,
         POSMchecked: visit.POSMchecked,
         peopleMet: peopleMet,
         imageUrls: visit.imageUrls || [],

@@ -1037,13 +1037,28 @@ const ExecutiveFormContent: React.FC = () => {
                 <button className="exec-f-sub-save-draft-btn" onClick={handleSaveDraft} disabled={submitting}>
                   Save Draft
                 </button>
-                <button
-                  className="exec-f-sub-submit-visit-btn"
-                  onClick={handleSubmitVisit}
-                  disabled={submitting || storeData?.partnerBrands.some(brand => !(brandVisitDetails[brand]?.peopleMet?.length > 0))}
-                >
-                  {submitting ? 'Submitting...' : 'Submit Visit'}
-                </button>
+                {storeData && storeData.partnerBrands.indexOf(activeBrandTab) < storeData.partnerBrands.length - 1 ? (
+                  <button
+                    className="exec-f-sub-submit-visit-btn"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const currentIndex = storeData.partnerBrands.indexOf(activeBrandTab);
+                      setActiveBrandTab(storeData.partnerBrands[currentIndex + 1]);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    style={{ backgroundColor: '#3b82f6', color: 'white' }}
+                  >
+                    Next Brand
+                  </button>
+                ) : (
+                  <button
+                    className="exec-f-sub-submit-visit-btn"
+                    onClick={handleSubmitVisit}
+                    disabled={submitting || storeData?.partnerBrands.some(brand => !(brandVisitDetails[brand]?.peopleMet?.length > 0))}
+                  >
+                    {submitting ? 'Submitting...' : 'Submit Visit'}
+                  </button>
+                )}
               </div>
             </>
           )}
@@ -1300,177 +1315,32 @@ const ExecutiveFormContent: React.FC = () => {
                 <button className="exec-f-sub-save-draft-btn" onClick={handleSaveDraft} disabled={submitting}>
                   Save Draft
                 </button>
-                <button
-                  className="exec-f-sub-submit-visit-btn"
-                  onClick={handleSubmitVisit}
-                  disabled={submitting || storeData?.partnerBrands.some(brand => !(brandVisitDetails[brand]?.peopleMet?.length > 0))}
-                >
-                  {submitting ? 'Submitting...' : 'Submit Visit'}
-                </button>
-              </div>
-            </>
-          )}
-
-          {visitType === 'DIGITAL' && (
-            <>
-              {/* Digital Visit Form */}
-              <div className="exec-f-sub-form-group">
-                <label className="exec-f-sub-form-label">
-                  Connect Date <span className="exec-f-sub-required">*</span>
-                </label>
-                <input
-                  type="date"
-                  className="exec-f-sub-form-input exec-f-sub-form-date"
-                  value={digitalForm.connectDate}
-                  onChange={(e) => setDigitalForm(prev => ({ ...prev, connectDate: e.target.value }))}
-                  max={(() => {
-                    const today = new Date();
-                    const istOffset = 5.5 * 60 * 60 * 1000;
-                    const istDate = new Date(today.getTime() + istOffset);
-                    return istDate.toISOString().split('T')[0];
-                  })()}
-                  min={(() => {
-                    const today = new Date();
-                    const istOffset = 5.5 * 60 * 60 * 1000;
-                    const istDate = new Date(today.getTime() + istOffset);
-                    const ninetyDaysAgo = new Date(istDate.getTime() - (90 * 24 * 60 * 60 * 1000));
-                    return ninetyDaysAgo.toISOString().split('T')[0];
-                  })()}
-                />
-              </div>
-
-              <div className="exec-f-sub-form-group">
-                <label className="exec-f-sub-form-label">
-                  Person Spoken <span className="exec-f-sub-required">*</span>
-                </label>
-                <div className="exec-f-sub-person-input-wrapper">
-                  <input
-                    type="text"
-                    className="exec-f-sub-form-input exec-f-sub-person-name-input"
-                    placeholder="Enter person's name"
-                    value={currentDigitalPerson.name}
-                    onChange={(e) => setCurrentDigitalPerson(prev => ({ ...prev, name: e.target.value }))}
-                  />
-                  <input
-                    type="text"
-                    className="exec-f-sub-form-input exec-f-sub-person-designation-input"
-                    placeholder="Enter designation"
-                    value={currentDigitalPerson.designation}
-                    onChange={(e) => setCurrentDigitalPerson(prev => ({ ...prev, designation: e.target.value }))}
-                  />
-                  <input
-                    type="tel"
-                    className="exec-f-sub-form-input exec-f-sub-person-phone-input"
-                    placeholder="Enter phone number"
-                    value={currentDigitalPerson.phoneNumber}
-                    onChange={(e) => setCurrentDigitalPerson(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                  />
+                {storeData && storeData.partnerBrands.indexOf(activeBrandTab) < storeData.partnerBrands.length - 1 ? (
                   <button
-                    type="button"
-                    className="exec-f-sub-add-person-btn"
-                    onClick={() => {
-                      const { name, designation, phoneNumber } = currentDigitalPerson;
-                      if (!name.trim() || !designation.trim() || !phoneNumber.trim()) return;
-                      if (!/^\d{7,15}$/.test(phoneNumber.trim())) { alert('Please enter a valid phone number (7-15 digits)'); return; }
-                      setDigitalPeople(prev => ([...prev, { name: name.trim(), designation: designation.trim(), phoneNumber: phoneNumber.trim() }]));
-                      setCurrentDigitalPerson({ name: '', designation: '', phoneNumber: '' });
+                    className="exec-f-sub-submit-visit-btn"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const currentIndex = storeData.partnerBrands.indexOf(activeBrandTab);
+                      setActiveBrandTab(storeData.partnerBrands[currentIndex + 1]);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    disabled={!currentDigitalPerson.name.trim() || !currentDigitalPerson.designation.trim() || !currentDigitalPerson.phoneNumber.trim()}
+                    style={{ backgroundColor: '#3b82f6', color: 'white' }}
                   >
-                    Add
+                    Next Brand
                   </button>
-                </div>
-                {digitalPeople.length > 0 && (
-                  <div className="exec-f-sub-people-list">
-                    {digitalPeople.map((person, index) => (
-                      <div key={index} className="exec-f-sub-person-item">
-                        <div className="exec-f-sub-person-details">
-                          <span className="exec-f-sub-person-name">{person.name}</span>
-                          <span className="exec-f-sub-person-designation">({person.designation})</span>
-                          {person.phoneNumber && (
-                            <span className="exec-f-sub-person-phone"> - {person.phoneNumber}</span>
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          className="exec-f-sub-remove-person-btn"
-                          onClick={() => setDigitalPeople(prev => prev.filter((_, i) => i !== index))}
-                          title="Remove person"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="exec-f-sub-form-group">
-                <label className="exec-f-sub-form-label">Raise Issues if</label>
-                <div className="exec-f-sub-issue-input-wrapper">
-                  <input
-                    type="text"
-                    className="exec-f-sub-form-input exec-f-sub-issue-input"
-                    placeholder="Describe an issue encountered"
-                    value={digitalIssueText}
-                    onChange={(e) => setDigitalIssueText(e.target.value)}
-                    onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (digitalIssueText.trim()) { setDigitalIssues(prev => [...prev, digitalIssueText.trim()]); setDigitalIssueText(''); } } }}
-                  />
+                ) : (
                   <button
-                    type="button"
-                    className="exec-f-sub-add-issue-btn"
-                    onClick={() => { if (digitalIssueText.trim()) { setDigitalIssues(prev => [...prev, digitalIssueText.trim()]); setDigitalIssueText(''); } }}
-                    disabled={!digitalIssueText.trim()}
+                    className="exec-f-sub-submit-visit-btn"
+                    onClick={handleSubmitVisit}
+                    disabled={submitting || storeData?.partnerBrands.some(brand => !(brandVisitDetails[brand]?.peopleMet?.length > 0) || !brandVisitDetails[brand]?.remarks?.trim())}
                   >
-                    Add Issue
+                    {submitting ? 'Submitting...' : 'Submit Visit'}
                   </button>
-                </div>
-                {digitalIssues.length > 0 && (
-                  <div className="exec-f-sub-issues-list">
-                    {digitalIssues.map((issue, index) => (
-                      <div key={index} className="exec-f-sub-issue-item">
-                        <span className="exec-f-sub-issue-text">{issue}</span>
-                        <button
-                          type="button"
-                          className="exec-f-sub-remove-issue-btn"
-                          onClick={() => setDigitalIssues(prev => prev.filter((_, i) => i !== index))}
-                          title="Remove issue"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
                 )}
-              </div>
-
-              <div className="exec-f-sub-form-group">
-                <label className="exec-f-sub-form-label">
-                  Remarks <span className="exec-f-sub-required">*</span>
-                </label>
-                <textarea
-                  className="exec-f-sub-form-textarea"
-                  placeholder="Add remarks for the digital connect (required)"
-                  value={digitalForm.remarks}
-                  onChange={(e) => setDigitalForm(prev => ({ ...prev, remarks: e.target.value }))}
-                  rows={3}
-                />
-              </div>
-
-              <div className="exec-f-sub-form-actions">
-                <button className="exec-f-sub-save-draft-btn" onClick={handleSaveDraft} disabled={submitting}>
-                  Save Draft
-                </button>
-                <button
-                  className="exec-f-sub-submit-visit-btn"
-                  onClick={handleSubmitVisit}
-                  disabled={submitting || storeData?.partnerBrands.some(brand => !(brandVisitDetails[brand]?.peopleMet?.length > 0) || !brandVisitDetails[brand]?.remarks?.trim())}
-                >
-                  {submitting ? 'Submitting...' : 'Submit Visit'}
-                </button>
               </div>
             </>
           )}
+
 
           {visitType === 'HOLIDAY' && (
             <>

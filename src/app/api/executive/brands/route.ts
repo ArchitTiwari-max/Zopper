@@ -18,11 +18,7 @@ export async function GET(request: NextRequest) {
       select: {
         executiveStores: {
           select: {
-            store: {
-              select: {
-                partnerBrandIds: true
-              }
-            }
+            storeId: true
           }
         }
       }
@@ -32,10 +28,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
+    const storeIds = executive.executiveStores.map(es => es.storeId);
+
+    const stores = await prisma.store.findMany({
+      where: {
+        id: { in: storeIds }
+      },
+      select: {
+        partnerBrandIds: true
+      }
+    });
+
     // Extract all unique brand IDs from the executive's assigned stores
     const assignedBrandIds = new Set<string>();
-    for (const assignment of executive.executiveStores) {
-      const storeBrandIds = assignment.store.partnerBrandIds;
+    for (const store of stores) {
+      const storeBrandIds = store.partnerBrandIds;
       if (Array.isArray(storeBrandIds)) {
         for (const brandId of storeBrandIds) {
           if (typeof brandId === 'string') {
