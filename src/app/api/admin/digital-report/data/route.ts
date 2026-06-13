@@ -26,9 +26,11 @@ export async function GET(request: NextRequest) {
 
     // Date range
     const now = new Date();
-    let startDate: Date;
-    let endDate: Date;
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
     switch (dateFilter) {
+      case 'All Time':
+        break;
       case 'Today':
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
@@ -48,7 +50,10 @@ export async function GET(request: NextRequest) {
         startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); break;
     }
 
-    const whereClause: any = { connectDate: { gte: startDate, lte: endDate } };
+    const whereClause: any = {};
+    if (startDate && endDate) {
+      whereClause.connectDate = { gte: startDate, lte: endDate };
+    }
     if (storeId) whereClause.storeId = storeId;
     else if (storeName && storeName !== 'All Store') {
       const escapedStoreName = storeName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
