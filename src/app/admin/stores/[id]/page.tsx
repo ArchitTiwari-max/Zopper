@@ -60,14 +60,14 @@ const StoreVisitsPage: React.FC = () => {
     setError(null);
     try {
       const qs = new URLSearchParams();
-      qs.append("dateFilter", "Last 90 Days");
+      qs.append("dateFilter", "All Time");
       qs.append("storeId", storeId);
 
       // Fetch digital and physical in parallel
       const [digRes, phyRes, issuesRes] = await Promise.all([
         fetch(`/api/admin/digital-report/data?${qs.toString()}`, { credentials: "include" }),
         fetch(`/api/admin/visit-report/data?${qs.toString()}`, { credentials: "include" }),
-        fetch(`/api/admin/issues/data?${new URLSearchParams({ dateFilter: 'Last 90 Days', storeId, status: 'Pending' }).toString()}`, { credentials: 'include' }),
+        fetch(`/api/admin/issues/data?${new URLSearchParams({ dateFilter: 'All Time', storeId, status: 'Pending' }).toString()}`, { credentials: 'include' }),
       ]);
 
       if (!digRes.ok) {

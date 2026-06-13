@@ -34,10 +34,12 @@ export async function GET(request: NextRequest) {
 
     // Calculate date range based on filter
     const now = new Date();
-    let startDate: Date;
-    let endDate: Date;
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
 
     switch (dateFilter) {
+      case 'All Time':
+        break;
       case 'Today':
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
@@ -67,12 +69,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Build where clause for visits
-    let whereClause: any = {
-      visitDate: {
+    let whereClause: any = {};
+    if (startDate && endDate) {
+      whereClause.visitDate = {
         gte: startDate,
         lte: endDate
-      }
-    };
+      };
+    }
 
     if (storeId && storeId !== 'All Store') {
       whereClause.storeId = storeId;
