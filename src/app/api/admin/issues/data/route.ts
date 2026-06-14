@@ -59,9 +59,11 @@ export async function GET(request: NextRequest) {
 
     // Calculate date range based on filter
     const now = new Date();
-    let startDate: Date;
+    let startDate: Date | undefined;
 
     switch (dateFilter) {
+      case 'All Time':
+        break;
       case 'Today':
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         break;
@@ -83,12 +85,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Build where clause for issues (support both Visit and DigitalVisit relations)
-    let whereClause: any = {
-      createdAt: {
+    let whereClause: any = {};
+    if (startDate) {
+      whereClause.createdAt = {
         gte: startDate,
         lte: now
-      }
-    };
+      };
+    }
 
     const andConds: any[] = [];
     if (storeId) {
