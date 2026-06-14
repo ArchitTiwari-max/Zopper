@@ -166,6 +166,19 @@ model CategoryBrand {
   @@unique([brandId, categoryId])
 }
 
+model StoreBrand {
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  storeId      String
+  brandId      String
+  storeBrandId String?
+
+  store Store @relation(fields: [storeId], references: [id])
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([storeId, brandId])
+  @@map("StoreBrand")
+}
+
 model SalesRecord {
   id         String @id @default(auto()) @map("_id") @db.ObjectId
   storeId    String
@@ -681,15 +694,3 @@ model DistanceCache {
   @@map("DistanceCache")
 }
 
-model StoreBrand {
-  id           String  @id @default(auto()) @map("_id") @db.ObjectId
-  storeId      String
-  brandId      String
-  storeBrandId String?
-
-  store Store @relation(fields: [storeId], references: [id])
-  brand Brand @relation(fields: [brandId], references: [id])
-
-  @@unique([storeId, brandId])
-  @@map("StoreBrand")
-}

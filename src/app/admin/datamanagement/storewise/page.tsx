@@ -301,16 +301,26 @@ const StorewiseExcelImport = () => {
     addConsoleLog('info', '🗑️ File cleared');
   };
 
-  const downloadTemplate = () => {
-    // Create a link to download the Excel template
-    const link = document.createElement('a');
-    link.href = '/templates/store-import-template.xlsx';
-    link.download = 'store-import-template.xlsx';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    addConsoleLog('info', '📅 Excel template downloaded successfully');
+  const downloadTemplate = async () => {
+    try {
+      addConsoleLog('info', '📥 Generating store import template...');
+      const response = await fetch('/api/admin/excel-export/store-template');
+      if (!response.ok) throw new Error('Failed to generate template');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `store-import-template-${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      addConsoleLog('success', '✅ Template downloaded successfully!');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Failed to download template';
+      addConsoleLog('error', `❌ Template download failed: ${msg}`);
+    }
   };
 
   const exportStores = async () => {

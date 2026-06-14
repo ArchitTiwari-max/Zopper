@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   try {
     const prisma = new PrismaClient();
 
-    // Fetch all stores with their executives and visit counts
+    // Fetch all stores with their executives, storeBrands and visit counts
     const stores = await prisma.store.findMany({
       include: {
         executiveStores: {
@@ -21,6 +21,12 @@ export async function GET(request: NextRequest) {
             }
           }
         },
+        storeBrands: {
+          select: {
+            brandId: true,
+            storeBrandId: true
+          }
+        },
         _count: {
           select: { visits: true }
         }
@@ -30,29 +36,44 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    // Fetch all brands to map IDs to Names
+    const brands = await prisma.brand.findMany({
+      select: { id: true, brandName: true }
+    });
+    const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
+
     // Transform data to match template format
-    const exportData = stores.map(store => ({
-      Store_ID: store.id,
-      'Store Name': store.storeName,
-      City: store.city || '',
-      'Full Address': store.fullAddress || '',
-      Latitude: store.latitude !== null && store.latitude !== undefined ? store.latitude : '',
-      Longitude: store.longitude !== null && store.longitude !== undefined ? store.longitude : '',
-      partneraBrandIds: store.partnerBrandIds?.join(', ') || '',
-      partnerBrandTypes: store.partnerBrandTypes?.join(', ') || '',
-      'Store Category': store.storeCategory || '',
-      'Store Channel': store.storeChannel || '',
-      'City Tier': store.cityTier || '',
-      State: store.state || '',
-      Priority: store.priority || '',
-      Executive_IDs: store.executiveStores
-        .map(es => es.executive.id)
-        .join(', '),
-      "POC's Name": store.executiveStores
-        .map(es => es.executive.name)
-        .join(', '),
-      'Number of Visits': store._count.visits
-    }));
+    const exportData = stores.map(store => {
+      // Build a map of brandId -> storeBrandId for this specific store
+      const storeBrandIdMap = new Map(
+        store.storeBrands.map(sb => [sb.brandId, sb.storeBrandId || ''])
+      );
+
+      return {
+        Store_ID: store.id,
+        'Store Name': store.storeName,
+        City: store.city || '',
+        'Full Address': store.fullAddress || '',
+        Latitude: store.latitude !== null && store.latitude !== undefined ? store.latitude : '',
+        Longitude: store.longitude !== null && store.longitude !== undefined ? store.longitude : '',
+        partneraBrandIds: store.partnerBrandIds?.join(', ') || '',
+        partnerBrandNames: store.partnerBrandIds?.map(id => brandMap.get(id) || id).join(', ') || '',
+        storeBrandIds: store.partnerBrandIds?.map(id => storeBrandIdMap.get(id) || '').join(', ') || '',
+        partnerBrandTypes: store.partnerBrandTypes?.join(', ') || '',
+        'Store Category': store.storeCategory || '',
+        'Store Channel': store.storeChannel || '',
+        'City Tier': store.cityTier || '',
+        State: store.state || '',
+        Priority: store.priority || '',
+        Executive_IDs: store.executiveStores
+          .map(es => es.executive.id)
+          .join(', '),
+        "POC's Name": store.executiveStores
+          .map(es => es.executive.name)
+          .join(', '),
+        'Number of Visits': store._count.visits
+      };
+    });
 
     // Create workbook
     const ws = XLSX.utils.json_to_sheet(exportData);
@@ -66,6 +87,8 @@ export async function GET(request: NextRequest) {
       { wch: 15 }, // Latitude
       { wch: 15 }, // Longitude
       { wch: 20 }, // partneraBrandIds
+      { wch: 25 }, // partnerBrandNames
+      { wch: 25 }, // storeBrandIds
       { wch: 20 }, // partnerBrandTypes
       { wch: 15 }, // Store Category
       { wch: 15 }, // Store Channel
