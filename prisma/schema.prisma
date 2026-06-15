@@ -75,6 +75,7 @@ enum PartnerBrandType {
   B
   C
   D
+  NONE
 }
 
 enum Priority {

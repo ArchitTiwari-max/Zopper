@@ -71,15 +71,16 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
     const storeId = rowObj.Store_ID?.toString().trim() || '';
     const storeName = rowObj['Store Name']?.toString().trim() || '';
     const city = rowObj.City?.toString().trim() || '';
+    const context = `Store: ${storeId} | ${storeName} | ${city}`;
     // Helper: map string to enum value
-    const mapType = (val: string): PartnerBrandType | null => {
+    const mapType = (val: string): PartnerBrandType => {
       const v = val.toUpperCase().replace(/\s+/g, '');
       if (v === 'A+' || v === 'A_PLUS') return PartnerBrandType.A_PLUS;
       if (v === 'A') return PartnerBrandType.A;
       if (v === 'B') return PartnerBrandType.B;
       if (v === 'C') return PartnerBrandType.C;
       if (v === 'D') return PartnerBrandType.D;
-      return null;
+      return PartnerBrandType.NONE;
     };
 
     const partnerBrandIds: string[] = [];
@@ -109,13 +110,9 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
 
         const brandTypeStr = rowObj[`${brandName} [BrandType]`]?.toString().trim() || '';
         const mappedType = mapType(brandTypeStr);
-        if (mappedType) {
-          partnerBrandTypes.push(mappedType);
-        }
+        partnerBrandTypes.push(mappedType);
       }
     }
-
-    const context = `Store: ${storeId} | ${storeName} | ${city}`;
 
     // Validate required fields
     if (!storeId || !storeName) {
