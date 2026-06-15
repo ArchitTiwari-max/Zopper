@@ -94,6 +94,7 @@ export async function GET(request: NextRequest) {
         imageUrls: true,
         adminComment: true,
         brandIds: true,
+        brandVisitDetails: true,
         visitDate: true,
         createdAt: true,
         updatedAt: true,
@@ -177,6 +178,7 @@ export async function GET(request: NextRequest) {
       remarks: visit.remarks,
       imageUrls: visit.imageUrls,
       adminComment: visit.adminComment,
+      brandVisitDetails: visit.brandVisitDetails || null,
       date: (visit.visitDate || visit.createdAt).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',

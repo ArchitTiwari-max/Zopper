@@ -22,6 +22,7 @@ interface PastVisit {
   createdAt: string;
   updatedAt: string;
   storeName: string;
+  brandVisitDetails?: any[];
 }
 
 interface VisitIssue {
@@ -101,6 +102,8 @@ const ExecutiveFormContent: React.FC = () => {
     visitDate: '',
     peopleMet: [] as PersonMet[],
     nextScheduledDate: '',
+    brandsVisited: [] as string[],
+    issuesRaised: [] as string[],
   });
 
   const [brandVisitDetails, setBrandVisitDetails] = useState<Record<string, { POSMchecked: boolean | null, remarks: string, uploadedImages: UploadedImage[], issuesRaised: string[], currentIssue: string, peopleMet: PersonMet[], currentPersonName: string, currentPersonDesig: string, currentPersonPhone: string, contactType: 'SEC' | 'OTHER' }>>({});
@@ -135,6 +138,7 @@ const ExecutiveFormContent: React.FC = () => {
   const [storeData, setStoreData] = useState<StoreData | null>(null);
   const [pastVisits, setPastVisits] = useState<PastVisit[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState<PastVisit | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -271,11 +275,47 @@ const ExecutiveFormContent: React.FC = () => {
     fetchDigitalVisits();
   }, [storeId, searchParams]);
 
+  const checkDuplicateVisit = (selectedDate: string) => {
+    if (!selectedDate) return false;
+    
+    // Check in pastVisits (physical visits)
+    const hasPhysical = pastVisits.some(visit => {
+      if (visit.visitDate && visit.visitDate === selectedDate) return true;
+      if (visit.createdAt) {
+        const createdDateStr = new Date(visit.createdAt).toISOString().split('T')[0];
+        if (createdDateStr === selectedDate) return true;
+      }
+      return false;
+    });
+
+    // Check in digitalVisits (digital connects)
+    const hasDigital = digitalVisits.some(visit => {
+      if (visit.date) {
+        const connectDateStr = new Date(visit.date).toISOString().split('T')[0];
+        if (connectDateStr === selectedDate) return true;
+      }
+      if (visit.createdAt) {
+        const createdDateStr = new Date(visit.createdAt).toISOString().split('T')[0];
+        if (createdDateStr === selectedDate) return true;
+      }
+      return false;
+    });
+
+    return hasPhysical || hasDigital;
+  };
+
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+    if (errors[field]) {
+      setErrors(prev => {
+        const copy = { ...prev };
+        delete copy[field];
+        return copy;
+      });
+    }
   };
 
   const handleSaveDraft = () => {
@@ -289,6 +329,16 @@ const ExecutiveFormContent: React.FC = () => {
       return;
     }
 
+    const isDigital = visitType === 'DIGITAL';
+    const selectedDate = isDigital ? digitalForm.connectDate : (visitType === 'PHYSICAL' ? formData.visitDate : '');
+    if (selectedDate && checkDuplicateVisit(selectedDate)) {
+      alert(isDigital 
+        ? 'A connect has already been registered for this store on this date if you want to update the visit please delete the connect first and then create new connect' 
+        : 'A visit has already been submitted for this store on this date if you want to update the visit please Delete the visit first and then create new visit'
+      );
+      return;
+    }
+
     // Validate date ranges in IST
     const today = new Date();
     const istOffset = 5.5 * 60 * 60 * 1000;
@@ -297,77 +347,103 @@ const ExecutiveFormContent: React.FC = () => {
     const ninetyDaysAgo = new Date(istToday.getTime() - (90 * 24 * 60 * 60 * 1000));
     const ninetyDaysAgoStr = ninetyDaysAgo.toISOString().split('T')[0];
 
+    const newErrors: Record<string, string> = {};
+
     if (visitType === 'PHYSICAL') {
       // Basic validation for physical visit
       if (!formData.visitDate) {
-        alert('Please select a visit date');
-        return;
+        newErrors.visitDate = 'Please select a visit date';
+      } else if (formData.visitDate > todayStr) {
+        newErrors.visitDate = 'Visit date cannot be in the future. Please select today or a past date.';
+      } else if (formData.visitDate < ninetyDaysAgoStr) {
+        newErrors.visitDate = 'Visit date cannot be more than 90 days ago. Please select a more recent date.';
       }
-      if (formData.visitDate > todayStr) {
-        alert('Visit date cannot be in the future. Please select today or a past date.');
-        return;
-      }
-      if (formData.visitDate < ninetyDaysAgoStr) {
-        alert('Visit date cannot be more than 90 days ago. Please select a more recent date.');
-        return;
-      }
-      const missingPeopleMet = storeData?.partnerBrands.some(brand => !(brandVisitDetails[brand]?.peopleMet?.length > 0));
-      if (missingPeopleMet) {
-        alert('Please add at least one person met for each brand');
-        return;
-      }
+      
+      storeData?.partnerBrands.forEach(brand => {
+        if (!(brandVisitDetails[brand]?.peopleMet?.length > 0)) {
+          newErrors[`peopleMet-${brand}`] = 'Please add contact person by clicking the Add button';
+        }
+      });
       
     } else if (visitType === 'DIGITAL') {
       // Digital validation
       if (!digitalForm.connectDate) {
-        alert('Please select a connect date');
-        return;
+        newErrors.connectDate = 'Please select a connect date';
+      } else if (digitalForm.connectDate > todayStr) {
+        newErrors.connectDate = 'Connect date cannot be in the future.';
+      } else if (digitalForm.connectDate < ninetyDaysAgoStr) {
+        newErrors.connectDate = 'Connect date cannot be more than 90 days ago.';
       }
-      if (digitalForm.connectDate > todayStr) {
-        alert('Connect date cannot be in the future.');
-        return;
-      }
-      if (digitalForm.connectDate < ninetyDaysAgoStr) {
-        alert('Connect date cannot be more than 90 days ago.');
-        return;
-      }
-      const missingPeopleMet = storeData?.partnerBrands.some(brand => !(brandVisitDetails[brand]?.peopleMet?.length > 0));
-      if (missingPeopleMet) {
-        alert('Please add at least one person spoken for each brand');
-        return;
-      }
-      // Check if all brands have remarks
-      const anyMissingRemarks = storeData?.partnerBrands.some(brand => !brandVisitDetails[brand]?.remarks?.trim());
-      if (anyMissingRemarks) {
-        alert('Remarks are required for all brands in digital visit');
-        return;
-      }
+      
+      storeData?.partnerBrands.forEach(brand => {
+        if (!(brandVisitDetails[brand]?.peopleMet?.length > 0)) {
+          newErrors[`peopleMet-${brand}`] = 'Please add contact person by clicking the Add button';
+        }
+        if (!brandVisitDetails[brand]?.remarks?.trim()) {
+          newErrors[`remarks-${brand}`] = 'Remarks are required for this brand';
+        }
+      });
+      
     } else if (visitType === 'HOLIDAY') {
       // Holiday validation
       if (holidaySecNames.length === 0) {
-        alert('Please add at least one SEC name');
-        return;
+        newErrors.holidaySecNames = 'Please add at least one SEC name';
       }
       if (!holidayForm.reason.trim()) {
-        alert('Please enter reason for absence');
-        return;
+        newErrors.holidayReason = 'Please enter reason for absence';
       }
       if (!holidayForm.startDate) {
-        alert('Please select start date');
-        return;
+        newErrors.holidayStartDate = 'Please select start date';
       }
       if (!holidayForm.endDate) {
-        alert('Please select end date');
-        return;
-      }
-      if (holidayForm.startDate > holidayForm.endDate) {
-        alert('Start date cannot be after end date');
-        return;
+        newErrors.holidayEndDate = 'Please select end date';
+      } else if (holidayForm.startDate && holidayForm.startDate > holidayForm.endDate) {
+        newErrors.holidayEndDate = 'Start date cannot be after end date';
       }
       if (holidayForm.replacementAvailable === null) {
-        alert('Please indicate if a replacement request is available');
-        return;
+        newErrors.replacementAvailable = 'Please indicate if a replacement request is available';
       }
+    } else if (visitType === 'WEEK_OFF') {
+      // Week off validation
+      if (!holidayForm.startDate) {
+        newErrors.holidayStartDate = 'Please select week off date';
+      }
+      if (holidaySecNames.length === 0) {
+        newErrors.holidaySecNames = 'Please add at least one SEC name';
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      
+      // Auto-switch to the first brand tab with validation errors
+      if (storeData) {
+        const brandWithError = storeData.partnerBrands.find(brand => newErrors[`peopleMet-${brand}`] || newErrors[`remarks-${brand}`]);
+        if (brandWithError && brandWithError !== activeBrandTab) {
+          setActiveBrandTab(brandWithError);
+        }
+      }
+
+      // Scroll to the first error field
+      const firstErrorKey = Object.keys(newErrors)[0];
+      let elementId = firstErrorKey;
+      if (firstErrorKey.startsWith('peopleMet-')) {
+        elementId = 'group-peopleMet';
+      } else if (firstErrorKey.startsWith('remarks-')) {
+        elementId = 'group-remarks';
+      } else {
+        elementId = `group-${firstErrorKey}`;
+      }
+
+      setTimeout(() => {
+        const el = document.getElementById(elementId);
+        if (el) {
+          const y = el.getBoundingClientRect().top + window.scrollY - 120;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }, 100);
+
+      return;
     }
 
     setSubmitting(true);
@@ -520,6 +596,13 @@ const ExecutiveFormContent: React.FC = () => {
       setHolidaySecNames(prev => [...prev, { name: currentSecName.trim(), phoneNumber: currentSecPhone.trim() }]);
       setCurrentSecName('');
       setCurrentSecPhone('');
+      if (errors.holidaySecNames) {
+        setErrors(prev => {
+          const copy = { ...prev };
+          delete copy.holidaySecNames;
+          return copy;
+        });
+      }
     }
   };
 
@@ -660,30 +743,7 @@ const ExecutiveFormContent: React.FC = () => {
                   </button>
                 </div>
               </div>
-              <div className="exec-f-sub-partner-brands" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
-                {storeData.partnerBrands.map((brand, index) => {
-                  const isComplete = visitType === 'DIGITAL' 
-                    ? brandVisitDetails[brand]?.peopleMet?.length > 0 && brandVisitDetails[brand]?.remarks?.trim()
-                    : brandVisitDetails[brand]?.peopleMet?.length > 0;
-                  return (
-                    <button 
-                      key={index} 
-                      onClick={() => setActiveBrandTab(brand)}
-                      className="exec-f-sub-brand-tag"
-                      style={{ 
-                        border: activeBrandTab === brand ? '2px solid #3b82f6' : '1px solid transparent',
-                        opacity: activeBrandTab === brand ? 1 : 0.7,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}
-                    >
-                      {brand} {isComplete && <span style={{ color: '#22c55e' }}>✓</span>}
-                    </button>
-                  );
-                })}
-              </div>
+
               <div className="exec-f-sub-store-details">
                 <div className="exec-f-sub-detail-item">
                   <span className="exec-f-sub-location-icon">📍</span>
@@ -715,7 +775,7 @@ const ExecutiveFormContent: React.FC = () => {
           {visitType === 'PHYSICAL' && (
             <>
               {/* Visit Date Field */}
-              <div className="exec-f-sub-form-group">
+              <div id="group-visitDate" className="exec-f-sub-form-group">
                 <label className="exec-f-sub-form-label">
                   Visit Date <span className="exec-f-sub-required">*</span>
                 </label>
@@ -740,6 +800,11 @@ const ExecutiveFormContent: React.FC = () => {
                     return ninetyDaysAgo.toISOString().split('T')[0];
                   })()}
                 />
+                {errors.visitDate && (
+                  <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                    {errors.visitDate}
+                  </span>
+                )}
               </div>
 
               
@@ -747,14 +812,42 @@ const ExecutiveFormContent: React.FC = () => {
               
               {/* Per Brand Physical Form */}
               {storeData && activeBrandTab && [activeBrandTab].map((brand) => (
-                <div key={brand} className="exec-f-sub-brand-card" style={{ border: '1px solid #e2e8f0', padding: '16px', borderRadius: '8px', marginBottom: '16px', backgroundColor: '#f8fafc' }}>
+                <div id="brand-card-section" key={brand} className="exec-f-sub-brand-card" style={{ border: '1px solid #e2e8f0', padding: '16px', borderRadius: '8px', marginBottom: '16px', backgroundColor: '#f8fafc' }}>
                   <h4 style={{ margin: '0 0 16px 0', color: '#0f172a', fontSize: '1.1rem' }}>{brand} Details</h4>
+                  
+                  <div className="exec-f-sub-partner-brands" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '16px' }}>
+                    {storeData.partnerBrands.map((tabBrand, index) => {
+                      const isComplete = brandVisitDetails[tabBrand]?.peopleMet?.length > 0;
+                      return (
+                        <button 
+                          key={index} 
+                          onClick={() => setActiveBrandTab(tabBrand)}
+                          className="exec-f-sub-brand-tag"
+                          style={{ 
+                            border: activeBrandTab === tabBrand ? '2px solid #3b82f6' : '1px solid transparent',
+                            opacity: activeBrandTab === tabBrand ? 1 : 0.7,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          {tabBrand} {isComplete && <span style={{ color: '#22c55e' }}>✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
 
                   {/* Contact Person for Brand */}
-                  <div className="exec-f-sub-form-group">
+                  <div id="group-peopleMet" className="exec-f-sub-form-group">
                     <label className="exec-f-sub-form-label">
                       Contact Person <span className="exec-f-sub-required">*</span>
                     </label>
+                    {errors[`peopleMet-${brand}`] && (
+                      <span style={{ color: '#ef4444', fontSize: '0.875rem', display: 'block', marginBottom: '8px' }}>
+                        {errors[`peopleMet-${brand}`]}
+                      </span>
+                    )}
                     <div className="exec-f-sub-people-input-container">
                       <div className="exec-f-sub-person-input-wrapper">
                         <div className="exec-f-sub-person-name-select">
@@ -829,6 +922,11 @@ const ExecutiveFormContent: React.FC = () => {
                                 currentPersonPhone: ''
                               }
                             }));
+                            setErrors(prev => {
+                              const copy = { ...prev };
+                              delete copy[`peopleMet-${brand}`];
+                              return copy;
+                            });
                           }}
                           disabled={
                             brandVisitDetails[brand]?.contactType === 'SEC'
@@ -1034,8 +1132,26 @@ const ExecutiveFormContent: React.FC = () => {
               </div>
 
               <div className="exec-f-sub-form-actions">
-                <button className="exec-f-sub-save-draft-btn" onClick={handleSaveDraft} disabled={submitting}>
-                  Save Draft
+                <button
+                  className="exec-f-sub-save-draft-btn"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (storeData && storeData.partnerBrands.indexOf(activeBrandTab) > 0) {
+                      const currentIndex = storeData.partnerBrands.indexOf(activeBrandTab);
+                      setActiveBrandTab(storeData.partnerBrands[currentIndex - 1]);
+                      setTimeout(() => {
+                        const el = document.getElementById('brand-card-section');
+                        if (el) {
+                          const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                          window.scrollTo({ top: y, behavior: 'smooth' });
+                        }
+                      }, 50);
+                    }
+                  }}
+                  disabled={submitting || !!(storeData && storeData.partnerBrands.indexOf(activeBrandTab) === 0)}
+                  style={{ opacity: (storeData && storeData.partnerBrands.indexOf(activeBrandTab) === 0) ? 0.5 : 1, cursor: (storeData && storeData.partnerBrands.indexOf(activeBrandTab) === 0) ? 'not-allowed' : 'pointer' }}
+                >
+                  Back
                 </button>
                 {storeData && storeData.partnerBrands.indexOf(activeBrandTab) < storeData.partnerBrands.length - 1 ? (
                   <button
@@ -1044,7 +1160,13 @@ const ExecutiveFormContent: React.FC = () => {
                       e.preventDefault();
                       const currentIndex = storeData.partnerBrands.indexOf(activeBrandTab);
                       setActiveBrandTab(storeData.partnerBrands[currentIndex + 1]);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      setTimeout(() => {
+                        const el = document.getElementById('brand-card-section');
+                        if (el) {
+                          const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                          window.scrollTo({ top: y, behavior: 'smooth' });
+                        }
+                      }, 50);
                     }}
                     style={{ backgroundColor: '#3b82f6', color: 'white' }}
                   >
@@ -1054,7 +1176,7 @@ const ExecutiveFormContent: React.FC = () => {
                   <button
                     className="exec-f-sub-submit-visit-btn"
                     onClick={handleSubmitVisit}
-                    disabled={submitting || storeData?.partnerBrands.some(brand => !(brandVisitDetails[brand]?.peopleMet?.length > 0))}
+                    disabled={submitting}
                   >
                     {submitting ? 'Submitting...' : 'Submit Visit'}
                   </button>
@@ -1066,7 +1188,7 @@ const ExecutiveFormContent: React.FC = () => {
           {visitType === 'DIGITAL' && (
             <>
               {/* Digital Visit Form */}
-              <div className="exec-f-sub-form-group">
+              <div id="group-connectDate" className="exec-f-sub-form-group">
                 <label className="exec-f-sub-form-label">
                   Connect Date <span className="exec-f-sub-required">*</span>
                 </label>
@@ -1074,7 +1196,17 @@ const ExecutiveFormContent: React.FC = () => {
                   type="date"
                   className="exec-f-sub-form-input exec-f-sub-form-date"
                   value={digitalForm.connectDate}
-                  onChange={(e) => setDigitalForm(prev => ({ ...prev, connectDate: e.target.value }))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setDigitalForm(prev => ({ ...prev, connectDate: val }));
+                    if (errors.connectDate) {
+                      setErrors(prev => {
+                        const copy = { ...prev };
+                        delete copy.connectDate;
+                        return copy;
+                      });
+                    }
+                  }}
                   max={(() => {
                     const today = new Date();
                     const istOffset = 5.5 * 60 * 60 * 1000;
@@ -1089,6 +1221,11 @@ const ExecutiveFormContent: React.FC = () => {
                     return ninetyDaysAgo.toISOString().split('T')[0];
                   })()}
                 />
+                {errors.connectDate && (
+                  <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                    {errors.connectDate}
+                  </span>
+                )}
               </div>
 
               
@@ -1096,14 +1233,42 @@ const ExecutiveFormContent: React.FC = () => {
               
               {/* Per Brand Digital Form */}
               {storeData && activeBrandTab && [activeBrandTab].map((brand) => (
-                <div key={brand} className="exec-f-sub-brand-card" style={{ border: '1px solid #e2e8f0', padding: '16px', borderRadius: '8px', marginBottom: '16px', backgroundColor: '#f8fafc' }}>
+                <div id="brand-card-section" key={brand} className="exec-f-sub-brand-card" style={{ border: '1px solid #e2e8f0', padding: '16px', borderRadius: '8px', marginBottom: '16px', backgroundColor: '#f8fafc' }}>
                   <h4 style={{ margin: '0 0 16px 0', color: '#0f172a', fontSize: '1.1rem' }}>{brand} Details</h4>
+                  
+                  <div className="exec-f-sub-partner-brands" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '16px' }}>
+                    {storeData.partnerBrands.map((tabBrand, index) => {
+                      const isComplete = brandVisitDetails[tabBrand]?.peopleMet?.length > 0 && brandVisitDetails[tabBrand]?.remarks?.trim();
+                      return (
+                        <button 
+                          key={index} 
+                          onClick={() => setActiveBrandTab(tabBrand)}
+                          className="exec-f-sub-brand-tag"
+                          style={{ 
+                            border: activeBrandTab === tabBrand ? '2px solid #3b82f6' : '1px solid transparent',
+                            opacity: activeBrandTab === tabBrand ? 1 : 0.7,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          {tabBrand} {isComplete && <span style={{ color: '#22c55e' }}>✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
 
                   {/* Contact Person for Brand */}
-                  <div className="exec-f-sub-form-group">
+                  <div id="group-peopleMet" className="exec-f-sub-form-group">
                     <label className="exec-f-sub-form-label">
                       Contact Person <span className="exec-f-sub-required">*</span>
                     </label>
+                    {errors[`peopleMet-${brand}`] && (
+                      <span style={{ color: '#ef4444', fontSize: '0.875rem', display: 'block', marginBottom: '8px' }}>
+                        {errors[`peopleMet-${brand}`]}
+                      </span>
+                    )}
                     <div className="exec-f-sub-people-input-container">
                       <div className="exec-f-sub-person-input-wrapper">
                         <div className="exec-f-sub-person-name-select">
@@ -1178,6 +1343,11 @@ const ExecutiveFormContent: React.FC = () => {
                                 currentPersonPhone: ''
                               }
                             }));
+                            setErrors(prev => {
+                              const copy = { ...prev };
+                              delete copy[`peopleMet-${brand}`];
+                              return copy;
+                            });
                           }}
                           disabled={
                             brandVisitDetails[brand]?.contactType === 'SEC'
@@ -1299,7 +1469,7 @@ const ExecutiveFormContent: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="exec-f-sub-form-group">
+                  <div id="group-remarks" className="exec-f-sub-form-group">
                     <label className="exec-f-sub-form-label">Remarks <span className="exec-f-sub-required">*</span></label>
                     <textarea
                       className="exec-f-sub-form-textarea"
@@ -1308,12 +1478,35 @@ const ExecutiveFormContent: React.FC = () => {
                       onChange={(e) => setBrandVisitDetails(prev => ({...prev, [brand]: {...prev[brand], remarks: e.target.value}}))}
                       rows={2}
                     />
+                    {errors[`remarks-${brand}`] && (
+                      <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                        {errors[`remarks-${brand}`]}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
               <div className="exec-f-sub-form-actions">
-                <button className="exec-f-sub-save-draft-btn" onClick={handleSaveDraft} disabled={submitting}>
-                  Save Draft
+                <button
+                  className="exec-f-sub-save-draft-btn"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (storeData && storeData.partnerBrands.indexOf(activeBrandTab) > 0) {
+                      const currentIndex = storeData.partnerBrands.indexOf(activeBrandTab);
+                      setActiveBrandTab(storeData.partnerBrands[currentIndex - 1]);
+                      setTimeout(() => {
+                        const el = document.getElementById('brand-card-section');
+                        if (el) {
+                          const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                          window.scrollTo({ top: y, behavior: 'smooth' });
+                        }
+                      }, 50);
+                    }
+                  }}
+                  disabled={submitting || !!(storeData && storeData.partnerBrands.indexOf(activeBrandTab) === 0)}
+                  style={{ opacity: (storeData && storeData.partnerBrands.indexOf(activeBrandTab) === 0) ? 0.5 : 1, cursor: (storeData && storeData.partnerBrands.indexOf(activeBrandTab) === 0) ? 'not-allowed' : 'pointer' }}
+                >
+                  Back
                 </button>
                 {storeData && storeData.partnerBrands.indexOf(activeBrandTab) < storeData.partnerBrands.length - 1 ? (
                   <button
@@ -1322,7 +1515,13 @@ const ExecutiveFormContent: React.FC = () => {
                       e.preventDefault();
                       const currentIndex = storeData.partnerBrands.indexOf(activeBrandTab);
                       setActiveBrandTab(storeData.partnerBrands[currentIndex + 1]);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      setTimeout(() => {
+                        const el = document.getElementById('brand-card-section');
+                        if (el) {
+                          const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                          window.scrollTo({ top: y, behavior: 'smooth' });
+                        }
+                      }, 50);
                     }}
                     style={{ backgroundColor: '#3b82f6', color: 'white' }}
                   >
@@ -1332,7 +1531,7 @@ const ExecutiveFormContent: React.FC = () => {
                   <button
                     className="exec-f-sub-submit-visit-btn"
                     onClick={handleSubmitVisit}
-                    disabled={submitting || storeData?.partnerBrands.some(brand => !(brandVisitDetails[brand]?.peopleMet?.length > 0) || !brandVisitDetails[brand]?.remarks?.trim())}
+                    disabled={submitting}
                   >
                     {submitting ? 'Submitting...' : 'Submit Visit'}
                   </button>
@@ -1350,13 +1549,23 @@ const ExecutiveFormContent: React.FC = () => {
                   Vacation Period <span className="exec-f-sub-required">*</span>
                 </label>
                 <div className="exec-f-sub-date-range-container">
-                  <div className="exec-f-sub-date-input-group">
+                  <div id="group-holidayStartDate" className="exec-f-sub-date-input-group">
                     <label className="exec-f-sub-date-label">From Date</label>
                     <input
                       type="date"
                       className="exec-f-sub-form-input exec-f-sub-form-date"
                       value={holidayForm.startDate}
-                      onChange={(e) => setHolidayForm(prev => ({ ...prev, startDate: e.target.value }))}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setHolidayForm(prev => ({ ...prev, startDate: val }));
+                        if (errors.holidayStartDate) {
+                          setErrors(prev => {
+                            const copy = { ...prev };
+                            delete copy.holidayStartDate;
+                            return copy;
+                          });
+                        }
+                      }}
                       min={(() => {
                         // Allow holidays from today onwards
                         const today = new Date();
@@ -1365,14 +1574,29 @@ const ExecutiveFormContent: React.FC = () => {
                         return istDate.toISOString().split('T')[0];
                       })()}
                     />
+                    {errors.holidayStartDate && (
+                      <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                        {errors.holidayStartDate}
+                      </span>
+                    )}
                   </div>
-                  <div className="exec-f-sub-date-input-group">
+                  <div id="group-holidayEndDate" className="exec-f-sub-date-input-group">
                     <label className="exec-f-sub-date-label">To Date</label>
                     <input
                       type="date"
                       className="exec-f-sub-form-input exec-f-sub-form-date"
                       value={holidayForm.endDate}
-                      onChange={(e) => setHolidayForm(prev => ({ ...prev, endDate: e.target.value }))}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setHolidayForm(prev => ({ ...prev, endDate: val }));
+                        if (errors.holidayEndDate) {
+                          setErrors(prev => {
+                            const copy = { ...prev };
+                            delete copy.holidayEndDate;
+                            return copy;
+                          });
+                        }
+                      }}
                       min={holidayForm.startDate || (() => {
                         const today = new Date();
                         const istOffset = 5.5 * 60 * 60 * 1000;
@@ -1380,14 +1604,24 @@ const ExecutiveFormContent: React.FC = () => {
                         return istDate.toISOString().split('T')[0];
                       })()}
                     />
+                    {errors.holidayEndDate && (
+                      <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                        {errors.holidayEndDate}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
 
-              <div className="exec-f-sub-form-group">
+              <div id="group-holidaySecNames" className="exec-f-sub-form-group">
                 <label className="exec-f-sub-form-label">
                   SEC Names <span className="exec-f-sub-required">*</span>
                 </label>
+                {errors.holidaySecNames && (
+                  <span style={{ color: '#ef4444', fontSize: '0.875rem', display: 'block', marginBottom: '8px' }}>
+                    {errors.holidaySecNames}
+                  </span>
+                )}
                 <div className="exec-f-sub-sec-names-input-container">
                   <div className="exec-f-sub-sec-name-input-wrapper">
                     <input
@@ -1435,10 +1669,15 @@ const ExecutiveFormContent: React.FC = () => {
                 </div>
               </div>
 
-              <div className="exec-f-sub-form-group">
+              <div id="group-replacementAvailable" className="exec-f-sub-form-group">
                 <label className="exec-f-sub-form-label">
                   Is a replacement staff available during this period? <span className="exec-f-sub-required">*</span>
                 </label>
+                {errors.replacementAvailable && (
+                  <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                    {errors.replacementAvailable}
+                  </span>
+                )}
                 <div className="exec-f-sub-radio-group">
                   <label className="exec-f-sub-radio-option">
                     <input
@@ -1446,7 +1685,16 @@ const ExecutiveFormContent: React.FC = () => {
                       name="replacementAvailable"
                       value="true"
                       checked={holidayForm.replacementAvailable === true}
-                      onChange={() => setHolidayForm(prev => ({ ...prev, replacementAvailable: true }))}
+                      onChange={() => {
+                        setHolidayForm(prev => ({ ...prev, replacementAvailable: true }));
+                        if (errors.replacementAvailable) {
+                          setErrors(prev => {
+                            const copy = { ...prev };
+                            delete copy.replacementAvailable;
+                            return copy;
+                          });
+                        }
+                      }}
                       className="exec-f-sub-radio-input"
                     />
                     <span className="exec-f-sub-radio-custom"></span>
@@ -1458,7 +1706,16 @@ const ExecutiveFormContent: React.FC = () => {
                       name="replacementAvailable"
                       value="false"
                       checked={holidayForm.replacementAvailable === false}
-                      onChange={() => setHolidayForm(prev => ({ ...prev, replacementAvailable: false }))}
+                      onChange={() => {
+                        setHolidayForm(prev => ({ ...prev, replacementAvailable: false }));
+                        if (errors.replacementAvailable) {
+                          setErrors(prev => {
+                            const copy = { ...prev };
+                            delete copy.replacementAvailable;
+                            return copy;
+                          });
+                        }
+                      }}
                       className="exec-f-sub-radio-input"
                     />
                     <span className="exec-f-sub-radio-custom"></span>
@@ -1467,7 +1724,7 @@ const ExecutiveFormContent: React.FC = () => {
                 </div>
               </div>
 
-              <div className="exec-f-sub-form-group">
+              <div id="group-holidayReason" className="exec-f-sub-form-group">
                 <label className="exec-f-sub-form-label">
                   Reason for Absence <span className="exec-f-sub-required">*</span>
                 </label>
@@ -1475,16 +1732,31 @@ const ExecutiveFormContent: React.FC = () => {
                   className="exec-f-sub-form-textarea"
                   placeholder="Enter reason for absence (e.g., Personal leave, Medical leave, Family function, etc.)"
                   value={holidayForm.reason}
-                  onChange={(e) => setHolidayForm(prev => ({ ...prev, reason: e.target.value }))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setHolidayForm(prev => ({ ...prev, reason: val }));
+                    if (errors.holidayReason) {
+                      setErrors(prev => {
+                        const copy = { ...prev };
+                        delete copy.holidayReason;
+                        return copy;
+                      });
+                    }
+                  }}
                   rows={3}
                 />
+                {errors.holidayReason && (
+                  <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                    {errors.holidayReason}
+                  </span>
+                )}
               </div>
 
               <div className="exec-f-sub-form-actions">
                 <button
                   className="exec-f-sub-submit-visit-btn"
                   onClick={handleSubmitVisit}
-                  disabled={submitting || holidaySecNames.length === 0 || !holidayForm.reason.trim() || !holidayForm.startDate || !holidayForm.endDate || holidayForm.replacementAvailable === null}
+                  disabled={submitting}
                 >
                   {submitting ? 'Submitting...' : 'Submit Vacation Info'}
                 </button>
@@ -1495,7 +1767,7 @@ const ExecutiveFormContent: React.FC = () => {
           {visitType === 'WEEK_OFF' && (
             <>
               {/* Week Off Form */}
-              <div className="exec-f-sub-form-group">
+              <div id="group-holidayStartDate" className="exec-f-sub-form-group">
                 <label className="exec-f-sub-form-label">
                   Week Off Date <span className="exec-f-sub-required">*</span>
                 </label>
@@ -1503,7 +1775,17 @@ const ExecutiveFormContent: React.FC = () => {
                   type="date"
                   className="exec-f-sub-form-input exec-f-sub-form-date"
                   value={holidayForm.startDate}
-                  onChange={(e) => setHolidayForm(prev => ({ ...prev, startDate: e.target.value, endDate: e.target.value }))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setHolidayForm(prev => ({ ...prev, startDate: val, endDate: val }));
+                    if (errors.holidayStartDate) {
+                      setErrors(prev => {
+                        const copy = { ...prev };
+                        delete copy.holidayStartDate;
+                        return copy;
+                      });
+                    }
+                  }}
                   min={(() => {
                     // Allow week off from today onwards
                     const today = new Date();
@@ -1512,12 +1794,22 @@ const ExecutiveFormContent: React.FC = () => {
                     return istDate.toISOString().split('T')[0];
                   })()}
                 />
+                {errors.holidayStartDate && (
+                  <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                    {errors.holidayStartDate}
+                  </span>
+                )}
               </div>
 
-              <div className="exec-f-sub-form-group">
+              <div id="group-holidaySecNames" className="exec-f-sub-form-group">
                 <label className="exec-f-sub-form-label">
                   SEC Names <span className="exec-f-sub-required">*</span>
                 </label>
+                {errors.holidaySecNames && (
+                  <span style={{ color: '#ef4444', fontSize: '0.875rem', display: 'block', marginBottom: '8px' }}>
+                    {errors.holidaySecNames}
+                  </span>
+                )}
                 <div className="exec-f-sub-sec-names-input-container">
                   <div className="exec-f-sub-sec-name-input-wrapper">
                     <input
@@ -1572,7 +1864,7 @@ const ExecutiveFormContent: React.FC = () => {
                 <button
                   className="exec-f-sub-submit-visit-btn"
                   onClick={handleSubmitVisit}
-                  disabled={submitting || holidaySecNames.length === 0 || !holidayForm.startDate}
+                  disabled={submitting}
                 >
                   {submitting ? 'Submitting...' : 'Submit Week Off'}
                 </button>
@@ -1580,86 +1872,6 @@ const ExecutiveFormContent: React.FC = () => {
             </>
           )}
         </div>
-
-        {/* Digital Visits */}
-        {visitType !== 'HOLIDAY' && visitType !== 'WEEK_OFF' && (
-          <div className="exec-f-sub-past-visits-card">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-              <h3 className="exec-f-sub-section-title" style={{ margin: 0 }}>Last 5 Digital Visits</h3>
-              {storeData && storeData.partnerBrands.length > 0 && (
-                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-                  
-                  {storeData.partnerBrands.map(brand => (
-                    <button
-                      key={brand}
-                      onClick={() => setSelectedSummaryBrand(brand)}
-                      style={{ padding: '4px 12px', borderRadius: '16px', border: '1px solid #cbd5e1', backgroundColor: selectedSummaryBrand === brand ? '#3b82f6' : '#fff', color: selectedSummaryBrand === brand ? '#fff' : '#334155', fontSize: '0.875rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                    >
-                      {brand}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="exec-f-sub-visits-list">
-              {digitalVisitsLoading ? (
-                <div className="loading-text">Loading digital visits...</div>
-              ) : digitalVisits.length === 0 ? (
-                <div className="exec-f-sub-no-visits">
-                  <p>No previous digital visits found for this store.</p>
-                </div>
-              ) : (
-                digitalVisits.map((visit) => (
-                  <div key={visit.id} className="exec-f-sub-visit-item">
-                    <div className="exec-f-sub-visit-header">
-                      <div className="exec-f-sub-visit-date-status">
-                        <span className="exec-f-sub-visit-date">{formatDate(visit.visitDate || visit.createdAt)}</span>
-                        <span
-                          className="exec-f-sub-visit-status"
-                          style={{ backgroundColor: getStatusColor(visit.status) }}
-                        >
-                          {formatStatusLabel(visit.status as any)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="exec-f-sub-visit-representative">
-                      <span className="exec-f-sub-person-icon">👤</span>
-                      <span>{visit.representative}</span>
-                    </div>
-                    {visit.remarks && (
-                      <div className="exec-f-sub-visit-description">{visit.remarks}</div>
-                    )}
-                    {visit.issues && visit.issues.length > 0 && (
-                      <div className="exec-f-sub-visit-issues">
-                        <strong>Issues Reported:</strong>
-                        {visit.issues.map((issue: any) => (
-                          <div key={issue.id} className="exec-f-sub-issue-item">
-                            <span className="exec-f-sub-issue-details">{issue.details}</span>
-                            <span className="exec-f-sub-issue-status" style={{ color: getStatusColor(issue.status) }}>
-                              ({issue.status})
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {visit.personMet && visit.personMet.length > 0 && (
-                      <div className="exec-f-sub-visit-people">
-                        <strong>Contact Person:</strong>
-                        {visit.personMet.map((person: any, index: number) => (
-                          <span key={index} className="exec-f-sub-person-met">
-                            {person.name === 'SEC' ? person.designation : person.name} ({person.name === 'SEC' ? 'SEC' : person.designation})
-                            {person.phoneNumber && ` - ${person.phoneNumber}`}
-                            {index < visit.personMet.length - 1 && ', '}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Past Visits */}
         {visitType !== 'HOLIDAY' && visitType !== 'WEEK_OFF' && (
@@ -1751,6 +1963,86 @@ const ExecutiveFormContent: React.FC = () => {
                       <div className="exec-f-sub-visit-people">
                         <strong>Contact Person:</strong>
                         {visit.personMet.map((person, index) => (
+                          <span key={index} className="exec-f-sub-person-met">
+                            {person.name === 'SEC' ? person.designation : person.name} ({person.name === 'SEC' ? 'SEC' : person.designation})
+                            {person.phoneNumber && ` - ${person.phoneNumber}`}
+                            {index < visit.personMet.length - 1 && ', '}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Digital Visits */}
+        {visitType !== 'HOLIDAY' && visitType !== 'WEEK_OFF' && (
+          <div className="exec-f-sub-past-visits-card">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+              <h3 className="exec-f-sub-section-title" style={{ margin: 0 }}>Last 5 Digital Visits</h3>
+              {storeData && storeData.partnerBrands.length > 0 && (
+                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+                  
+                  {storeData.partnerBrands.map(brand => (
+                    <button
+                      key={brand}
+                      onClick={() => setSelectedSummaryBrand(brand)}
+                      style={{ padding: '4px 12px', borderRadius: '16px', border: '1px solid #cbd5e1', backgroundColor: selectedSummaryBrand === brand ? '#3b82f6' : '#fff', color: selectedSummaryBrand === brand ? '#fff' : '#334155', fontSize: '0.875rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      {brand}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="exec-f-sub-visits-list">
+              {digitalVisitsLoading ? (
+                <div className="loading-text">Loading digital visits...</div>
+              ) : digitalVisits.length === 0 ? (
+                <div className="exec-f-sub-no-visits">
+                  <p>No previous digital visits found for this store.</p>
+                </div>
+              ) : (
+                digitalVisits.map((visit) => (
+                  <div key={visit.id} className="exec-f-sub-visit-item">
+                    <div className="exec-f-sub-visit-header">
+                      <div className="exec-f-sub-visit-date-status">
+                        <span className="exec-f-sub-visit-date">{formatDate(visit.visitDate || visit.createdAt)}</span>
+                        <span
+                          className="exec-f-sub-visit-status"
+                          style={{ backgroundColor: getStatusColor(visit.status) }}
+                        >
+                          {formatStatusLabel(visit.status as any)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="exec-f-sub-visit-representative">
+                      <span className="exec-f-sub-person-icon">👤</span>
+                      <span>{visit.representative}</span>
+                    </div>
+                    {visit.remarks && (
+                      <div className="exec-f-sub-visit-description">{visit.remarks}</div>
+                    )}
+                    {visit.issues && visit.issues.length > 0 && (
+                      <div className="exec-f-sub-visit-issues">
+                        <strong>Issues Reported:</strong>
+                        {visit.issues.map((issue: any) => (
+                          <div key={issue.id} className="exec-f-sub-issue-item">
+                            <span className="exec-f-sub-issue-details">{issue.details}</span>
+                            <span className="exec-f-sub-issue-status" style={{ color: getStatusColor(issue.status) }}>
+                              ({issue.status})
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {visit.personMet && visit.personMet.length > 0 && (
+                      <div className="exec-f-sub-visit-people">
+                        <strong>Contact Person:</strong>
+                        {visit.personMet.map((person: any, index: number) => (
                           <span key={index} className="exec-f-sub-person-met">
                             {person.name === 'SEC' ? person.designation : person.name} ({person.name === 'SEC' ? 'SEC' : person.designation})
                             {person.phoneNumber && ` - ${person.phoneNumber}`}

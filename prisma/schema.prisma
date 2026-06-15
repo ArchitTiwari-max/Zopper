@@ -247,7 +247,7 @@ model Visit {
   storeId  String
   store    Store    @relation(fields: [storeId], references: [id])
   brandIds String[]
-  brandVisitDetails Json? // [{ brandName, POSMchecked, remarks, imageUrls, issues }]
+  brandVisitDetails Json? // [{ brandId, brandName, POSMchecked, remarks, imageUrls, issues }]
 
   issues        Issue[] // One Visit can have multiple Issues or none
   notifications Notification[] // Notifications related to this visit
@@ -372,7 +372,7 @@ model DigitalVisit {
   store   Store  @relation(fields: [storeId], references: [id])
 
   issues  Issue[]
-  brandVisitDetails Json? // [{ brandName, remarks, issues }]
+  brandVisitDetails Json? // [{ brandId, brandName, remarks, issues }]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

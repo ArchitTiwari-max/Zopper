@@ -123,6 +123,7 @@ export async function GET(request: NextRequest) {
             adminComment: visit.adminComment,
             storeName: visit.store?.storeName || 'Unknown Store',
             brandVisitDetails: visit.brandVisitDetails || null,
+            visitDate: visit.visitDate ? visit.visitDate.toISOString().split('T')[0] : null,
             issues: visit.issues
               .filter((issue: any) =>
                 issue.assigned.some((assignment: any) =>
@@ -167,6 +168,7 @@ export async function GET(request: NextRequest) {
             adminComment: null,
             storeName: visit.store?.storeName || 'Unknown Store',
             brandVisitDetails: visit.brandVisitDetails || null,
+            visitDate: visit.visitDate ? visit.visitDate.toISOString().split('T')[0] : null,
             issues: (visit.issues || []).map((issue: any) => ({
               id: issue.id,
               details: issue.details,
@@ -274,18 +276,70 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
+    // Check for duplicate visits (physical or digital) on this day for this store
+    const startOfDay = new Date(visitDate + 'T00:00:00.000Z');
+    const endOfDay = new Date(visitDate + 'T23:59:59.999Z');
+
+    const [existingPhysicalVisit, existingDigitalVisit] = await Promise.all([
+      prisma.visit.findFirst({
+        where: {
+          storeId,
+          visitDate: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        }
+      }),
+      prisma.digitalVisit.findFirst({
+        where: {
+          storeId,
+          connectDate: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        }
+      })
+    ]);
+
+    if (existingPhysicalVisit || existingDigitalVisit) {
+      return NextResponse.json({
+        error: 'A visit has already been submitted for this store on this date',
+        code: 'DUPLICATE_VISIT'
+      }, { status: 400 });
+    }
+
     // Get brand IDs from brand names (either from brandsVisited or brandVisitDetails)
     const brandIds: string[] = [];
     const brandsToLookup = brandsVisited && brandsVisited.length > 0 
       ? brandsVisited 
       : (brandVisitDetails ? brandVisitDetails.map((b: any) => b.brandName) : []);
       
+    const brandMap: Record<string, string> = {};
     if (brandsToLookup.length > 0) {
       const brands = await prisma.brand.findMany({
         where: { brandName: { in: brandsToLookup } }
       });
+      brands.forEach(brand => {
+        brandMap[brand.brandName] = brand.id;
+      });
       brandIds.push(...brands.map(brand => brand.id));
     }
+
+    // Inject brandId inside brandVisitDetails JSON array
+    const updatedBrandVisitDetails = brandVisitDetails && Array.isArray(brandVisitDetails)
+      ? brandVisitDetails.map((b: any) => ({
+          ...b,
+          brandId: brandMap[b.brandName] || null
+        }))
+      : null;
+
+    // Aggregate brand remarks into root remarks field
+    const combinedRemarks = brandVisitDetails && Array.isArray(brandVisitDetails)
+      ? brandVisitDetails
+          .filter((b: any) => b.remarks && b.remarks.trim() !== '')
+          .map((b: any) => `${b.brandName}\n${b.remarks.trim()}`)
+          .join('\n\n')
+      : '';
 
     const visitDateTime = new Date(visitDate + 'T00:00:00.000Z');
 
@@ -293,13 +347,13 @@ export async function POST(request: NextRequest) {
       data: {
         personMet,
         POSMchecked,
-        remarks: remarks || '',
+        remarks: combinedRemarks || remarks || '',
         imageUrls: imageUrls || [],
         status: 'PENDING_REVIEW' as any,
         executiveId: executive.id,
         storeId,
         brandIds,
-        brandVisitDetails: brandVisitDetails || null,
+        brandVisitDetails: updatedBrandVisitDetails,
         visitDate: visitDateTime,
         ...(nextScheduledDate ? { nextScheduledDate: new Date(nextScheduledDate + 'T00:00:00.000Z') } : {})
       },
