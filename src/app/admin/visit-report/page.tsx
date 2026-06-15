@@ -140,6 +140,7 @@ const VisitReportPage: React.FC = () => {
   const [markingReviewedId, setMarkingReviewedId] = useState<string | null>(null);
   const [selectedVisits, setSelectedVisits] = useState<Set<string>>(new Set());
   const [isBulkApproving, setIsBulkApproving] = useState<boolean>(false);
+  const latestRequestIdRef = useRef<number>(0);
 
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -252,6 +253,7 @@ const VisitReportPage: React.FC = () => {
 
   // Fetch visit report data from API with server-side pagination and filtering
   const fetchVisitReportData = async (pageToFetch = currentPage) => {
+    const requestId = ++latestRequestIdRef.current;
     setIsLoading(true);
     setError(null);
     try {
@@ -288,6 +290,10 @@ const VisitReportPage: React.FC = () => {
         cache: 'no-store'
       });
 
+      if (requestId !== latestRequestIdRef.current) {
+        return;
+      }
+
       if (response.status === 304) {
         setIsLoading(false);
         return;
@@ -300,6 +306,10 @@ const VisitReportPage: React.FC = () => {
 
       const data = await response.json();
       const list = data.visits || [];
+      
+      if (requestId !== latestRequestIdRef.current) {
+        return;
+      }
       
       // Client-side sort for current page if sortConfig is set
       if (sortConfig.key) {
@@ -325,12 +335,16 @@ const VisitReportPage: React.FC = () => {
       setTotalRecords(data.total || 0);
       setCurrentPage(data.page || 1);
     } catch (error) {
-      console.error('Failed to fetch visit report data:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load visit report data');
-      setVisitData([]);
-      setFilteredVisits([]);
+      if (requestId === latestRequestIdRef.current) {
+        console.error('Failed to fetch visit report data:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load visit report data');
+        setVisitData([]);
+        setFilteredVisits([]);
+      }
     } finally {
-      setIsLoading(false);
+      if (requestId === latestRequestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -352,29 +366,43 @@ const VisitReportPage: React.FC = () => {
     const urlVisitStatus = searchParams.get('visitStatus');
     const urlIssueStatus = searchParams.get('issueStatus');
 
-    let newFilters = { ...filters };
-    let filtersChanged = false;
-
-    if (urlStoreId || urlStoreName || urlExecutiveId || urlPartnerBrand || urlCity || urlVisitStatus || urlIssueStatus) {
-      if (urlStoreName) newFilters.storeName = urlStoreName;
-
-      let executiveFilter = 'All Executive';
-      if (urlExecutiveId && urlExecutiveId !== 'All Executive') {
-        const matchingExecutive = filterData.executives.find(exec => exec.id === urlExecutiveId);
-        executiveFilter = matchingExecutive ? urlExecutiveId : 'All Executive';
-      }
-      newFilters.executiveName = executiveFilter;
-      newFilters.partnerBrand = urlPartnerBrand || newFilters.partnerBrand;
-      newFilters.city = urlCity || newFilters.city;
-      newFilters.visitStatus = urlVisitStatus || newFilters.visitStatus;
-      newFilters.issueStatus = urlIssueStatus || newFilters.issueStatus;
-      filtersChanged = true;
+    let storeNameFilter = urlStoreName || '';
+    if (!storeNameFilter && urlStoreId && urlStoreId !== 'All Store') {
+      const matchingStore = filterData.stores.find(store => store.id === urlStoreId);
+      storeNameFilter = matchingStore ? matchingStore.name : '';
     }
 
-    if (filtersChanged) {
-      setFilters(newFilters);
+    let executiveFilter = 'All Executive';
+    if (urlExecutiveId && urlExecutiveId !== 'All Executive') {
+      const matchingExecutive = filterData.executives.find(exec => exec.id === urlExecutiveId);
+      executiveFilter = matchingExecutive ? urlExecutiveId : 'All Executive';
     }
-  }, [filterData.stores, filterData.executives]); // Wait for filter data to be loaded
+
+    const targetStoreName = storeNameFilter;
+    const targetPartnerBrand = urlPartnerBrand || 'All Brands';
+    const targetCity = urlCity || 'All City';
+    const targetVisitStatus = urlVisitStatus || 'All Status';
+    const targetIssueStatus = urlIssueStatus || 'All Status';
+
+    const hasChanged = 
+      filters.storeName !== targetStoreName ||
+      filters.executiveName !== executiveFilter ||
+      filters.partnerBrand !== targetPartnerBrand ||
+      filters.city !== targetCity ||
+      filters.visitStatus !== targetVisitStatus ||
+      filters.issueStatus !== targetIssueStatus;
+
+    if (hasChanged) {
+      setFilters({
+        storeName: targetStoreName,
+        executiveName: executiveFilter,
+        partnerBrand: targetPartnerBrand,
+        city: targetCity,
+        visitStatus: targetVisitStatus,
+        issueStatus: targetIssueStatus
+      });
+    }
+  }, [filterData.stores, filterData.executives, searchParams, filters]); // Wait for filter data to be loaded
 
   // Refetch data when filters, page, sort or date filter changes
   useEffect(() => {

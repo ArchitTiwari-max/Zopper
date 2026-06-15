@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 export type DateFilterOption = 'Today' | 'Yesterday' | 'Last 7 Days' | 'Last 30 Days' | 'Last 90 Days' | 'Last Year';
 
@@ -29,12 +30,12 @@ interface DateFilterProviderProps {
 
 export const DateFilterProvider: React.FC<DateFilterProviderProps> = ({ children }) => {
   const [selectedDateFilter, _setSelectedDateFilter] = useState<DateFilterOption>('Today');
+  const searchParams = useSearchParams();
 
   // Initialize from URL param (?dateFilter=) or localStorage, fallback to Today
   useEffect(() => {
     try {
-      const url = new URL(window.location.href);
-      const urlVal = url.searchParams.get('dateFilter');
+      const urlVal = searchParams.get('dateFilter');
       if (urlVal && (allowed as string[]).includes(urlVal)) {
         _setSelectedDateFilter(urlVal as DateFilterOption);
         localStorage.setItem(STORAGE_KEY, urlVal);
@@ -45,7 +46,7 @@ export const DateFilterProvider: React.FC<DateFilterProviderProps> = ({ children
         _setSelectedDateFilter(saved as DateFilterOption);
       }
     } catch {}
-  }, []);
+  }, [searchParams]);
 
   // Persist to localStorage
   useEffect(() => {
