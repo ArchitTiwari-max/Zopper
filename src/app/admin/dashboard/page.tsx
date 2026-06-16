@@ -158,8 +158,8 @@ const AdminDashboardPage: React.FC = () => {
         </Link>
       </div>
 
-      {/* RAG Store Performance Analytics */}
-      <AdminRAGDashboard />
+      {/* RAG Store Performance Analytics (Commented out) */}
+      {/* <AdminRAGDashboard /> */}
 
       {/* Partner Brand Type Visits (A+, A, B, C) */}
       <PartnerBrandTypeVisits />
