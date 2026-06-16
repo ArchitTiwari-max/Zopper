@@ -43,10 +43,14 @@ async function main() {
 
     console.log('📦 Fetching Reliance stores from database...\n');
     
-    // Fetch only Reliance stores
+    // Fetch only Reliance stores missing lat/long
     const relianceStores = await prisma.store.findMany({
         where: {
-            storeName: { contains: 'reliance', mode: 'insensitive' }
+            storeName: { contains: 'reliance', mode: 'insensitive' },
+            OR: [
+                { latitude: null },
+                { longitude: null }
+            ]
         },
         select: { id: true, storeName: true, city: true, latitude: true, longitude: true },
     });

@@ -7,7 +7,7 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(4px);
-  z-index: 2000;
+  z-index: 11000; /* sits on top of bottom-navigation (z-index 10000) */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -47,6 +47,7 @@
   padding: 18px 20px 14px;
   border-bottom: 1px solid #f0f0f0;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .ucm-header-info {
@@ -107,6 +108,7 @@
   font-size: 13px;
   color: #1d4ed8;
   line-height: 1.4;
+  flex-shrink: 0;
 }
 
 .ucm-instruction-icon {
@@ -118,7 +120,7 @@
 /* ---- Map ---- */
 .ucm-map-wrapper {
   position: relative;
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 340px;
 }
 
@@ -166,7 +168,7 @@
 
 /* Ensure Google Maps autocomplete pac-container is above the modal */
 .pac-container {
-  z-index: 2000 !important;
+  z-index: 12000 !important;
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
   border: none !important;
@@ -282,6 +284,7 @@
   background: #f9fafb;
   border-top: 1px solid #e5e7eb;
   border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
 }
 
 .ucm-coords-header {
@@ -363,6 +366,7 @@
   gap: 10px;
   padding: 14px 20px;
   background: #fff;
+  flex-shrink: 0;
 }
 
 .ucm-cancel-btn {
@@ -461,8 +465,38 @@
     padding: 0;
   }
 
+  .ucm-instructions {
+    display: none;
+  }
+
+  .ucm-header {
+    padding: 12px 16px;
+  }
+
   .ucm-map-wrapper,
   .ucm-map {
-    min-height: 260px;
+    min-height: 200px;
+  }
+
+  .ucm-coords-header {
+    padding: 8px 12px;
+  }
+
+  .ucm-address-row {
+    padding: 8px 12px;
+  }
+
+  .ucm-footer {
+    padding: 10px 16px;
+    justify-content: space-between;
+  }
+
+  .ucm-cancel-btn,
+  .ucm-save-btn {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+    padding: 12px;
+    font-size: 14px;
   }
 }

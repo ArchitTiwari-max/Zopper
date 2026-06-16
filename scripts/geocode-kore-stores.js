@@ -10,10 +10,12 @@ function sleep(ms) {
 }
 
 function cleanStoreName(storeName) {
-    // Replace hyphens and parentheses with spaces
-    let cleanName = storeName.replace(/[-\(\)]/g, ' ');
-    // Remove "M/S" 
-    cleanName = cleanName.replace(/M\/S/ig, '');
+    // Remove state suffix like " | Gj" or " | Up" at the end of the string
+    let cleanName = storeName.replace(/\|\s*[a-zA-Z]{2}\s*$/i, '');
+    
+    // Replace "@" and other symbols like hyphens/parentheses with space
+    cleanName = cleanName.replace(/[@\-\(\)]/g, ' ');
+    
     // Clean up extra spaces
     cleanName = cleanName.replace(/\s+/g, ' ').trim();
     return cleanName;
@@ -37,12 +39,12 @@ async function main() {
         process.exit(1);
     }
 
-    console.log('📦 Fetching Value Plus stores from database...\n');
+    console.log('📦 Fetching Kore stores from database...\n');
     
-    // Fetch only Value Plus stores missing lat/long
-    const vpStores = await prisma.store.findMany({
+    // Fetch only Kore stores missing lat/long
+    const koreStores = await prisma.store.findMany({
         where: {
-            storeName: { contains: 'value plus', mode: 'insensitive' },
+            storeName: { contains: 'kore', mode: 'insensitive' },
             OR: [
                 { latitude: null },
                 { longitude: null }
@@ -51,22 +53,22 @@ async function main() {
         select: { id: true, storeName: true, city: true, latitude: true, longitude: true },
     });
 
-    console.log(`Found ${vpStores.length} Value Plus stores missing coordinates.\n`);
+    console.log(`Found ${koreStores.length} Kore stores missing coordinates.\n`);
     
     let updated = 0;
     let failed = 0;
 
-    for (let i = 0; i < vpStores.length; i++) {
-        const store = vpStores[i];
+    for (let i = 0; i < koreStores.length; i++) {
+        const store = koreStores[i];
         const cleanedName = cleanStoreName(store.storeName);
         
-        // Use clean name + city + India as the primary query for precise geocoding
+        // Use clean name + city + India as primary search query
         let query = store.city ? `${cleanedName}, ${store.city}, India` : `${cleanedName}, India`;
-        process.stdout.write(`[${i + 1}/${vpStores.length}] Attempt 1: "${query}" ... `);
+        process.stdout.write(`[${i + 1}/${koreStores.length}] Attempt 1: "${query}" ... `);
         
         let geo = await geocode(query);
         
-        // Fallback to name + India if the city search returned nothing
+        // Fallback to name + India if city-specific query failed
         if (geo.status !== 'Found' && store.city) {
             console.log(`✗ Not found. Falling back to Attempt 2 (without city)...`);
             await sleep(200);
@@ -94,7 +96,7 @@ async function main() {
         await sleep(200);
     }
 
-    console.log(`\n✅ Finished Processing Value Plus Stores!`);
+    console.log(`\n✅ Finished Processing Kore Stores!`);
     console.log(`Successfully updated: ${updated}`);
     console.log(`Failed / Not Found: ${failed}`);
 }
