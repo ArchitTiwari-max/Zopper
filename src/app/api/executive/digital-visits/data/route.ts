@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
         executive: { select: { id: true, name: true } },
         store: { select: { id: true, storeName: true, partnerBrandIds: true } },
         issues: { select: { id: true, details: true, status: true, createdAt: true } },
+        brandVisitDetails: true,
       },
       orderBy: { connectDate: 'desc' },
     });
@@ -73,6 +74,7 @@ export async function GET(request: NextRequest) {
       remarks: v.remarks || '',
       imageUrls: [],
       adminComment: v.adminComment || '',
+      brandVisitDetails: v.brandVisitDetails || null,
       date: v.connectDate?.toISOString?.() || v.connectDate,
       issues: (v.issues || []).map(i => ({ 
         id: i.id, 

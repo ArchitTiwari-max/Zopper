@@ -26,7 +26,7 @@ interface StoreData {
   latitude?: number | null;
   longitude?: number | null;
   partnerBrands: string[];
-  partnerBrandTypes: ('A_PLUS' | 'A' | 'B' | 'C' | 'D')[];
+  partnerBrandTypes: ('A_PLUS' | 'A' | 'B' | 'C' | 'D' | 'NONE')[];
   visited: string;
   lastVisitDate: string | null;
   isFlagged: boolean;
@@ -92,12 +92,13 @@ const Store: React.FC = () => {
   };
 
   // Helper function to format brands with types
-  const formatBrandsWithTypes = (brands: string[], types: ('A_PLUS' | 'A' | 'B' | 'C' | 'D')[]): string => {
+  const formatBrandsWithTypes = (brands: string[], types: ('A_PLUS' | 'A' | 'B' | 'C' | 'D' | 'NONE')[]): string => {
     if (brands.length === 0) return 'No brands';
 
     return brands.map((brand, index) => {
       const type = types[index];
-      return type ? `${brand} (${formatBrandType(type)})` : brand;
+      const formatted = type ? formatBrandType(type) : '';
+      return formatted ? `${brand} (${formatted})` : brand;
     }).join(', ');
   };
 

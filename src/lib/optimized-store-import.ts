@@ -71,64 +71,56 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
     const storeId = rowObj.Store_ID?.toString().trim() || '';
     const storeName = rowObj['Store Name']?.toString().trim() || '';
     const city = rowObj.City?.toString().trim() || '';
-    // Handle both partnerBrandIds and partneraBrandIds (common typo)
-    const partnerBrandIdsString = (rowObj.partnerBrandIds || rowObj.partneraBrandIds)?.toString() || '';
-    // New: accept partnerBrandTypes column to align with partnerBrandIds (comma-separated)
-    const partnerBrandTypesString = (rowObj.partnerBrandTypes || rowObj.partnerBrandType || rowObj['PartnerBrandTypes'] || rowObj['Partner Brand Types'])?.toString() || '';
-    const executiveIdsString = rowObj.Executive_IDs?.toString() || '';
-
     const context = `Store: ${storeId} | ${storeName} | ${city}`;
-
-    // Validate required fields
-    if (!storeId || !storeName) {
-      return `❌ Missing Store_ID or Store Name. ${context}`;
-    }
-
-    // Parse partner brand IDs
-    const partnerBrandIds = partnerBrandIdsString
-      .split(',')
-      .map((id: string) => id.trim())
-      .filter(Boolean);
-
-    // Parse partner brand types, if provided
-    const rawTypes = partnerBrandTypesString
-      .split(',')
-      .map((t: string) => t.trim()); 
-      // Do NOT filter(Boolean) yet, we need to preserve indices for mapping if possible, 
-      // but since Prisma rejects null, we will eventually filter them out.
-      // However, the user's request is to treat null/empty as "Not Categorized".
-      // In the current parallel array setup, the only way to be "Not Categorized" is 
-      // to have NO entry at that index. 
-
     // Helper: map string to enum value
-    const mapType = (val: string): PartnerBrandType | null => {
+    const mapType = (val: string): PartnerBrandType => {
       const v = val.toUpperCase().replace(/\s+/g, '');
       if (v === 'A+' || v === 'A_PLUS') return PartnerBrandType.A_PLUS;
       if (v === 'A') return PartnerBrandType.A;
       if (v === 'B') return PartnerBrandType.B;
       if (v === 'C') return PartnerBrandType.C;
       if (v === 'D') return PartnerBrandType.D;
-      return null;
+      return PartnerBrandType.NONE;
     };
 
-    // Validate partner brand IDs using cache
-    for (const brandId of partnerBrandIds) {
-      if (brandId && !cache.brands.has(brandId)) {
-        return `❌ Brand ID '${brandId}' not found. ${context}`;
+    const partnerBrandIds: string[] = [];
+    const partnerBrandTypes: PartnerBrandType[] = [];
+    const storeBrandsData: { brandId: string; storeBrandId: string | null }[] = [];
+
+    // Identify brand columns based on the new format
+    const brandNames = new Set<string>();
+    for (const key of Object.keys(rowObj)) {
+      if (key.endsWith(' [ZopperBrandId]')) {
+        brandNames.add(key.replace(' [ZopperBrandId]', ''));
       }
     }
 
-    // If types were provided, map them and filter out nulls/blanks to keep Prisma happy
-    let partnerBrandTypes: PartnerBrandType[] | undefined = undefined;
-    if (rawTypes.length > 0 && partnerBrandTypesString.trim() !== '') {
-      const mapped = rawTypes.map(mapType).filter((m: PartnerBrandType | null): m is PartnerBrandType => m !== null);
-      partnerBrandTypes = mapped;
-      
-      // Log a warning if counts don't match but don't block the import
-      if (mapped.length !== partnerBrandIds.length) {
-        console.warn(`⚠️  partnerBrandTypes count (${mapped.length}) mismatch with brands (${partnerBrandIds.length}) for store ${storeId}. Some brands will show as 'Not Categorized'.`);
+    // Process each brand found in the row
+    for (const brandName of brandNames) {
+      const brandId = rowObj[`${brandName} [ZopperBrandId]`]?.toString().trim();
+      if (brandId) {
+        // Validate partner brand IDs using cache
+        if (!cache.brands.has(brandId)) {
+          return `❌ Brand ID '${brandId}' not found. ${context}`;
+        }
+        partnerBrandIds.push(brandId);
+        
+        const storeBrandId = rowObj[`${brandName} [StoreBrandId]`]?.toString().trim() || null;
+        storeBrandsData.push({ brandId, storeBrandId });
+
+        const brandTypeStr = rowObj[`${brandName} [BrandType]`]?.toString().trim() || '';
+        const mappedType = mapType(brandTypeStr);
+        partnerBrandTypes.push(mappedType);
       }
     }
+
+    // Validate required fields
+    if (!storeId || !storeName) {
+      return `❌ Missing Store_ID or Store Name. ${context}`;
+    }
+
+    // Executive string parsing continues below...
+    const executiveIdsString = rowObj.Executive_IDs?.toString() || '';
 
     // Parse new fields: storeCategory, storeChannel, cityTier, state, priority
     const storeCategory = (rowObj.storeCategory || rowObj['Store Category'] || rowObj.Store_Category || rowObj.store_category)?.toString().trim() || '';
@@ -201,7 +193,8 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
         latitude,
         longitude,
         partnerBrandIds,
-        partnerBrandTypes, // may be undefined if column not provided
+        partnerBrandTypes: partnerBrandTypes.length > 0 ? partnerBrandTypes : undefined,
+        storeBrandsData, // Passed down for StoreBrand collection sync
         executiveIds,
         executivesToAdd,
         executivesToRemove,
@@ -285,6 +278,48 @@ export async function batchProcessStoreRecords(
             priority: storeData.priority
           }
         });
+
+        // Synchronize StoreBrand collection
+        if (storeData.storeBrandsData) {
+          // Get current StoreBrands for this store
+          const currentStoreBrands = await prisma.storeBrand.findMany({
+            where: { storeId: storeData.storeId }
+          });
+          const currentBrandIds = currentStoreBrands.map(sb => sb.brandId);
+          const newBrandIds = storeData.storeBrandsData.map((sb: any) => sb.brandId);
+
+          const brandsToRemove = currentBrandIds.filter(id => !newBrandIds.includes(id));
+
+          // Delete removed brands from StoreBrand
+          if (brandsToRemove.length > 0) {
+            await prisma.storeBrand.deleteMany({
+              where: {
+                storeId: storeData.storeId,
+                brandId: { in: brandsToRemove }
+              }
+            });
+          }
+
+          // Upsert new or updated brands
+          for (const sb of storeData.storeBrandsData) {
+            await prisma.storeBrand.upsert({
+              where: {
+                storeId_brandId: {
+                  storeId: storeData.storeId,
+                  brandId: sb.brandId
+                }
+              },
+              update: {
+                storeBrandId: sb.storeBrandId
+              },
+              create: {
+                storeId: storeData.storeId,
+                brandId: sb.brandId,
+                storeBrandId: sb.storeBrandId
+              }
+            });
+          }
+        }
 
         // Remove old executive assignments
         if (storeData.executivesToRemove.length > 0) {

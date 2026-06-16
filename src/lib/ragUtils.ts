@@ -40,6 +40,7 @@ const RAG_THRESHOLDS = {
   B: { green: 16, amber: 12 },
   C: { green: 14, amber: 10 },
   D: { green: 10, amber: 3 },
+  NONE: { green: 10, amber: 3 },
 } as const;
 
 /**
@@ -233,6 +234,7 @@ export function formatStoreType(storeType: PartnerBrandType): string {
     case 'B': return 'B';
     case 'C': return 'C';
     case 'D': return 'D';
+    case 'NONE': return 'NONE';
     default: return 'Unknown';
   }
 }

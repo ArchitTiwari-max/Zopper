@@ -143,17 +143,16 @@ export async function GET(request: NextRequest) {
       const storeBrandIdMap = new Map(
         store.storeBrands.map(sb => [sb.brandId, sb.storeBrandId || ''])
       );
-
       const brandData = sortedBrands.flatMap(brand => {
         const idx = store.partnerBrandIds?.indexOf(brand.id) ?? -1;
         const isPresent = idx !== -1;
+        const type = isPresent ? store.partnerBrandTypes?.[idx] : '';
         return [
           isPresent ? brand.id : '',                                            // ZopperBrandId
           isPresent ? (storeBrandIdMap.get(brand.id) || '') : '',               // StoreBrandId
-          isPresent ? (store.partnerBrandTypes?.[idx] || '') : ''               // BrandType
+          (isPresent && type && type !== 'NONE') ? type : ''                    // BrandType
         ];
       });
-
       ws.addRow([
         store.id,
         store.storeName,

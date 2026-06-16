@@ -122,8 +122,42 @@ export async function POST(request: NextRequest) {
           message: `🔄 Starting row-by-row validation phase...`
         })}\\n\\n`));
         
-        const storeData: any[] = XLSX.utils.sheet_to_json(ws); // Use first row as headers
-        const totalRows = storeData.length; // Use actual data length
+        // Custom parsing to handle 2-row merged headers
+        const rawData: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        const storeData: any[] = [];
+        
+        if (rawData.length >= 2) {
+          const row0 = rawData[0] || [];
+          const row1 = rawData[1] || [];
+          const flatHeaders: string[] = [];
+          let lastBrand = '';
+          
+          for (let i = 0; i < Math.max(row0.length, row1.length); i++) {
+            const topVal = row0[i] ? String(row0[i]).trim() : '';
+            const subVal = row1[i] ? String(row1[i]).trim() : '';
+            
+            if (subVal === 'ZopperBrandId' || subVal === 'StoreBrandId' || subVal === 'BrandType') {
+              if (topVal) lastBrand = topVal;
+              flatHeaders[i] = `${lastBrand} [${subVal}]`;
+            } else {
+              flatHeaders[i] = topVal || subVal || `__EMPTY_${i}`;
+            }
+          }
+
+          // Build object array starting from row 2 (actual data)
+          for (let i = 2; i < rawData.length; i++) {
+            const rowArray = rawData[i];
+            if (!rowArray || rowArray.length === 0 || rowArray.every(c => c === undefined || c === null || c === '')) continue;
+            
+            const obj: any = {};
+            for (let j = 0; j < flatHeaders.length; j++) {
+              obj[flatHeaders[j]] = rowArray[j] !== undefined ? rowArray[j] : '';
+            }
+            storeData.push(obj);
+          }
+        }
+
+        const totalRows = storeData.length;
         
         // Debug: Log file structure
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({

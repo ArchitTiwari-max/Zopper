@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { PartnerBrandType } from '@prisma/client';
 import {
   getRAGStatus,
   getMonthlyTrend,
@@ -172,21 +173,21 @@ export async function GET(request: NextRequest) {
 
       // Use the brand-specific type when a brand filter is active, 
       // or pick the "best" type among all brands if no filter is applied.
-      let storeType: string;
+      let storeType: PartnerBrandType;
       if (brandIdFilter) {
         const brandIdx = store.partnerBrandIds.indexOf(brandIdFilter);
-        storeType = (brandIdx >= 0 ? store.partnerBrandTypes[brandIdx] : store.partnerBrandTypes[0]) as string || 'D';
+        storeType = (brandIdx >= 0 ? store.partnerBrandTypes[brandIdx] : store.partnerBrandTypes[0]) as PartnerBrandType || PartnerBrandType.D;
       } else {
         // Find the "highest" type (A+ > A > B > C > D)
-        const priorityOrder: Record<string, number> = { 'A_PLUS': 5, 'A': 4, 'B': 3, 'C': 2, 'D': 1 };
-        let bestType = 'D';
+        const priorityOrder: Record<string, number> = { 'A_PLUS': 5, 'A': 4, 'B': 3, 'C': 2, 'D': 1, 'NONE': 0 };
+        let bestType: PartnerBrandType = PartnerBrandType.D;
         let bestScore = 0;
         
         for (const t of store.partnerBrandTypes) {
           const score = priorityOrder[t as string] || 0;
           if (score > bestScore) {
             bestScore = score;
-            bestType = t as string;
+            bestType = t as PartnerBrandType;
           }
         }
         storeType = bestType;
@@ -254,7 +255,7 @@ export async function GET(request: NextRequest) {
         monthlyTrendRAG,
         planSales:          currentPeriodPlanSales,
         deviceSales:        Math.round(normalizedDevice7),
-        city:               store.city,
+        city:               store.city || '',
         totalRevenue:       currData?.revenue || 0,
       });
     }
