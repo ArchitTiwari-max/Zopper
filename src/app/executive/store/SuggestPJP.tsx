@@ -52,6 +52,20 @@ interface SuggestPJPProps {
     submitting: boolean;
 }
 
+const haversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const straightDistance = R * c;
+    const estimatedDrivingDistance = straightDistance * 1.4; // 1.4x circuity factor
+    return Math.round(estimatedDrivingDistance * 10) / 10;
+};
+
 const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, submitting }) => {
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [searchQuery, setSearchQuery] = useState('');
@@ -224,20 +238,12 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
         return new Date() >= deadlineUTC;
     })();
 
-    const haversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-        const R = 6371;
-        const dLat = ((lat2 - lat1) * Math.PI) / 180;
-        const dLon = ((lon2 - lon1) * Math.PI) / 180;
-        const a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return Math.round(R * c * 10) / 10;
-    };
-
     useEffect(() => {
         let active = true;
+        
+        // Reset/set to null (Calculating...) first
+        setRouteDistances(new Array(suggestedRoute.length).fill(undefined));
+
         (async () => {
             if (!startStoreCoords || suggestedRoute.length === 0) {
                 if (active) setRouteDistances([]);
@@ -274,11 +280,12 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
                 setRouteDistances(distances);
             }
         })();
+        
         return () => { active = false; };
     }, [suggestedRoute, startStoreCoords]);
 
     const getDistance = (index: number) => {
-        return routeDistances[index] || 0;
+        return routeDistances[index] !== undefined ? routeDistances[index] : null;
     };
 
     // ─── Step 1: Start Store Picker ───────────    // ─── Render Helper ────────────────────────────────────────────────────────
@@ -471,8 +478,10 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
 
                                             {/* Meta row */}
                                             <div className="spjp-route-meta">
-                                                {getDistance(index) > 0 && (
-                                                    <span className="spjp-distance-chip">📏 {getDistance(index)} km from previous stop</span>
+                                                {getDistance(index) !== 0 && (
+                                                    <span className="spjp-distance-chip">
+                                                        📏 {getDistance(index) !== null ? `${getDistance(index)} km` : 'Calculating...'} from previous stop
+                                                    </span>
                                                 )}
                                                 <span className="spjp-last-visit-chip">🕐 {store.visited}</span>
                                                 {store.wasInLastPJP && (

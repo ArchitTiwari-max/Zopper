@@ -1039,3 +1039,48 @@
         font-size: 16px;
     }
 }
+
+/* On-demand Calculation Buttons */
+.spjp-calc-btn {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px dashed #0284c7;
+    border-radius: 10px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-style 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.spjp-calc-btn:hover {
+    background: #bae6fd;
+    color: #025a87;
+    border-style: solid;
+}
+
+.spjp-recalc-btn {
+    background: none;
+    border: none;
+    font-size: 10px;
+    cursor: pointer;
+    padding: 0 4px;
+    margin-left: 6px;
+    transition: transform 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.spjp-recalc-btn:hover {
+    transform: rotate(180deg);
+}
+
+.spjp-distance-chip.loading {
+    background: #f1f3f5;
+    color: #6c757d;
+}

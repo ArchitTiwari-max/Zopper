@@ -4,6 +4,7 @@
 const { MongoClient } = require('mongodb');
 const XLSX = require('xlsx');
 const path = require('path');
+require('dotenv').config();
 
 // MongoDB connection string from environment or default
 const mongoUri = process.env.DATABASE_URL;

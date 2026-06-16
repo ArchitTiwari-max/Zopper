@@ -32,6 +32,7 @@ const UpdateCoordinatesModal: React.FC<UpdateCoordinatesModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const mapRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const googleMapRef = useRef<google.maps.Map | null>(null);
@@ -139,7 +140,6 @@ const UpdateCoordinatesModal: React.FC<UpdateCoordinatesModalProps> = ({
 
   // Load Google Maps script
   useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey) {
       console.error('NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not set');
       setMapLoaded(false);
@@ -180,7 +180,7 @@ const UpdateCoordinatesModal: React.FC<UpdateCoordinatesModalProps> = ({
         delete window[callbackName];
       }
     };
-  }, [initMap]);
+  }, [initMap, apiKey]);
 
   // Prevent background scroll
   useEffect(() => {
