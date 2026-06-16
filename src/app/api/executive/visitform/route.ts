@@ -284,6 +284,7 @@ export async function POST(request: NextRequest) {
       prisma.visit.findFirst({
         where: {
           storeId,
+          executiveId: executive.id,
           visitDate: {
             gte: startOfDay,
             lte: endOfDay
@@ -293,6 +294,7 @@ export async function POST(request: NextRequest) {
       prisma.digitalVisit.findFirst({
         where: {
           storeId,
+          executiveId: executive.id,
           connectDate: {
             gte: startOfDay,
             lte: endOfDay

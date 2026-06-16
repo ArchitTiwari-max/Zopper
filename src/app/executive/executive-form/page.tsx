@@ -280,6 +280,7 @@ const ExecutiveFormContent: React.FC = () => {
     
     // Check in pastVisits (physical visits)
     const hasPhysical = pastVisits.some(visit => {
+      if (!visit.canViewDetails) return false;
       if (visit.visitDate && visit.visitDate === selectedDate) return true;
       if (visit.createdAt) {
         const createdDateStr = new Date(visit.createdAt).toISOString().split('T')[0];
@@ -290,6 +291,7 @@ const ExecutiveFormContent: React.FC = () => {
 
     // Check in digitalVisits (digital connects)
     const hasDigital = digitalVisits.some(visit => {
+      if (!visit.canViewDetails) return false;
       if (visit.date) {
         const connectDateStr = new Date(visit.date).toISOString().split('T')[0];
         if (connectDateStr === selectedDate) return true;

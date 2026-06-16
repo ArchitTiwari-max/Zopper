@@ -203,11 +203,11 @@ const DatewiseExcelImport = () => {
                   }
                   
                   if (data.rowData) {
-                    const { Store_ID, Brand, Category, status, message } = data.rowData;
+                    const { StoreBrand_ID, Category, status, message } = data.rowData;
                     const icon = status === 'success' ? '✅' : '❌';
                     const logType = status === 'success' ? 'success' : 'error';
-                    
-                    addConsoleLog(logType, `${icon} Row ${data.currentRow}/${data.totalRows}: ${Store_ID} | ${Brand} | ${Category}`);
+
+                    addConsoleLog(logType, `${icon} Row ${data.currentRow}/${data.totalRows}: ${StoreBrand_ID} | ${Category}`);
                     if (message && message !== 'Total successful:') {
                       addConsoleLog(logType === 'success' ? 'info' : 'error', `   └─ ${message}`);
                     }
@@ -285,14 +285,24 @@ const DatewiseExcelImport = () => {
     }
   };
 
-  const downloadTemplate = () => {
-    // Create a link to download the template
-    const link = document.createElement('a');
-    link.href = '/templates/daily-sales-template.xlsx';
-    link.download = 'daily-sales-template.xlsx';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const downloadTemplate = async () => {
+    try {
+      const response = await fetch('/api/admin/excel-export/daily-sales-template');
+      if (!response.ok) throw new Error('Failed to generate template');
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const disposition = response.headers.get('Content-Disposition') || '';
+      const match = disposition.match(/filename="([^"]+)"/);
+      link.download = match ? match[1] : 'daily-sales-template.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Template download failed:', err);
+    }
   };
 
   const clearFile = () => {
@@ -325,7 +335,7 @@ const DatewiseExcelImport = () => {
             </div>
           </div>
           <p className="excel-dat-sale-import-description">
-            Upload Excel files with daily sales data. The file should contain Store_ID, Brand, Category, 
+            Upload Excel files with daily sales data. The file should contain StoreBrand_ID, Category,
             and date columns with metrics like Count of Sales and Revenue.
           </p>
         </div>
@@ -551,7 +561,7 @@ const DatewiseExcelImport = () => {
         <div className="excel-dat-sale-format-info">
           <h3 className="excel-dat-sale-format-title">Expected Excel Format for Daily Sales:</h3>
           <div className="excel-dat-sale-format-list">
-            <p>• <strong>Required columns:</strong> Store_ID, Brand, Category</p>
+            <p>• <strong>Required columns:</strong> StoreBrand_ID, Category</p>
             <p>• <strong>Date columns:</strong> Format as DD-MM-YYYY (e.g., 01-01-2024)</p>
             <p>• <strong>Daily Metrics:</strong> Count of Sales, Revenue</p>
             <p>• <strong>Header structure:</strong> Two-row headers with dates and metrics</p>

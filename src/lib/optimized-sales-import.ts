@@ -21,6 +21,7 @@ interface CacheData {
   stores: Map<string, { id: string; storeBrands: { brandId: string }[] }>;
   brands: Map<string, { id: string; brandName: string }>;
   categories: Map<string, { id: string; categoryName: string }>;
+  storeBrandsById: Map<string, { storeId: string; brandId: string }>;
 }
 
 // Global cache - reused across requests
@@ -37,7 +38,7 @@ async function initializeCache(prisma: PrismaClient): Promise<CacheData> {
 
   console.log('🔄 Initializing reference data cache...');
   
-  const [stores, brands, categories] = await Promise.all([
+  const [stores, brands, categories, storeBrands] = await Promise.all([
     prisma.store.findMany({
       select: {
         id: true,
@@ -47,16 +48,25 @@ async function initializeCache(prisma: PrismaClient): Promise<CacheData> {
       }
     }),
     prisma.brand.findMany({ select: { id: true, brandName: true } }),
-    prisma.category.findMany({ select: { id: true, categoryName: true } })
+    prisma.category.findMany({ select: { id: true, categoryName: true } }),
+    prisma.storeBrand.findMany({
+      where: { storeBrandId: { not: null } },
+      select: { storeBrandId: true, storeId: true, brandId: true }
+    })
   ]);
 
   globalCache = {
     stores: new Map(stores.map(s => [s.id, s])),
     brands: new Map(brands.map(b => [b.brandName, b])),
-    categories: new Map(categories.map(c => [c.categoryName, c]))
+    categories: new Map(categories.map(c => [c.categoryName, c])),
+    storeBrandsById: new Map(
+      storeBrands
+        .filter(sb => sb.storeBrandId)
+        .map(sb => [sb.storeBrandId!, { storeId: sb.storeId, brandId: sb.brandId }])
+    )
   };
 
-  console.log(`✅ Cache initialized - ${stores.length} stores, ${brands.length} brands, ${categories.length} categories`);
+  console.log(`✅ Cache initialized - ${stores.length} stores, ${brands.length} brands, ${categories.length} categories, ${storeBrands.length} storeBrand mappings`);
   return globalCache;
 }
 
@@ -134,39 +144,31 @@ export async function optimizedPostSales(rowObj: Record<string, any>, storeCount
 }
 
 /**
- * Optimized daily sales processing
+ * Optimized daily sales processing using StoreBrand_ID
  */
 export async function optimizedPostDailySales(rowObj: Record<string, any>, successCount: number, cache: CacheData): Promise<string> {
   try {
-    const { Store_ID, Brand, Category, ...dateMetrics } = rowObj;
-    const categoryName = (Category && typeof Category === 'string' && Category.trim()) 
-      ? Category.trim() 
+    const { StoreBrand_ID, Category, ...dateMetrics } = rowObj;
+    const categoryName = (Category && typeof Category === 'string' && Category.trim())
+      ? Category.trim()
       : 'Other';
-    const context = `Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${categoryName}`;
-    
-    if (!Store_ID || !Brand) {
-      return `❌ Missing Store_ID or Brand. ${context}`;
+    const context = `StoreBrand_ID: ${StoreBrand_ID || 'N/A'}, Category: ${categoryName}`;
+
+    if (!StoreBrand_ID) {
+      return `❌ Missing StoreBrand_ID. ${context}`;
     }
-    
-    // Cache lookups (near-zero latency)
-    const store = cache.stores.get(Store_ID);
-    if (!store) return `❌ Store not found. ${context}`;
-    
-    const brand = cache.brands.get(Brand);
-    if (!brand) return `❌ Brand not found. ${context}`;
-    
+
+    // Lookup store+brand via storeBrandId from cache
+    const mapping = cache.storeBrandsById.get(String(StoreBrand_ID).trim());
+    if (!mapping) return `❌ StoreBrand_ID not found in database. ${context}`;
+
     const category = cache.categories.get(categoryName);
-    if (!category) return `❌ Category not found. ${context}`;
-    
-    if (!store.storeBrands.some(sb => sb.brandId === brand.id)) {
-      return `❌ Brand is not mapped to this store. ${context}`;
-    }
+    if (!category) return `❌ Category not found: "${categoryName}". ${context}`;
 
     // Build dailySales grouped by month ("1".."12"). Dates stored as DD-MM-YYYY
     const dailySalesByMonth: Record<string, any[]> = {};
     let detectedYear: number | null = null;
     for (const key in dateMetrics) {
-      // Support both DD-MM-YYYY and D/M/YYYY formats
       let match = key.match(/^([0-9]{1,2})-([0-9]{1,2})-([0-9]{4}) (Count of Sales|Revenue)$/);
       if (!match) {
         match = key.match(/^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{4}) (Count of Sales|Revenue)$/);
@@ -174,8 +176,8 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
       if (!match) continue;
       const [_, dd, mm, yyyy, metric] = match;
       const monthNum = parseInt(mm, 10);
-      const monthKey = String(monthNum); // "1".."12"
-      const date = `${dd.padStart(2, '0')}-${mm.padStart(2, '0')}-${yyyy}`; // Ensure DD-MM-YYYY format
+      const monthKey = String(monthNum);
+      const date = `${dd.padStart(2, '0')}-${mm.padStart(2, '0')}-${yyyy}`;
       detectedYear = detectedYear ?? parseInt(yyyy, 10);
 
       if (!dailySalesByMonth[monthKey]) dailySalesByMonth[monthKey] = [];
@@ -190,13 +192,12 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
     }
 
     const year = detectedYear ?? new Date().getFullYear();
-    
-    // Return prepared data for batch processing
+
     return JSON.stringify({
       success: true,
       data: {
-        storeId: Store_ID,
-        brandId: brand.id,
+        storeId: mapping.storeId,
+        brandId: mapping.brandId,
         categoryId: category.id,
         year,
         dailySales: dailySalesByMonth,
@@ -204,11 +205,11 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
         successCount
       }
     });
-    
+
   } catch (err) {
     console.error('Daily sales optimization error:', err);
-    const { Store_ID, Brand, Category } = rowObj;
-    return `❌ Internal server error for Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${Category || 'N/A'}`;
+    const { StoreBrand_ID, Category } = rowObj;
+    return `❌ Internal server error for StoreBrand_ID: ${StoreBrand_ID || 'N/A'}, Category: ${Category || 'N/A'}`;
   }
 }
 

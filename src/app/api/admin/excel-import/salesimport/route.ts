@@ -20,6 +20,7 @@ interface ProgressUpdate {
   rowData?: {
     Store_ID: string;
     Brand: string;
+    StoreBrand_ID: string;
     Category: string;
     status: 'success' | 'error';
     message: string;
@@ -143,7 +144,9 @@ export async function POST(request: NextRequest) {
           secondHeaderRow.push(subHeader);
         }
 
-        const keepFields = ['Store_ID', 'Brand', 'Category'];
+        const keepFields = importType === 'daily'
+          ? ['StoreBrand_ID', 'Category']
+          : ['Store_ID', 'Brand', 'Category'];
         const totalRows = range.e.r - range.s.r - 1;
         let successful = 0;
         let failed = 0;
@@ -249,8 +252,9 @@ export async function POST(request: NextRequest) {
                     totalRows,
                     phase: 'validating',
                     rowData: {
-                      Store_ID: rowObj.Store_ID,
-                      Brand: rowObj.Brand,
+                      Store_ID: rowObj.Store_ID || '',
+                      Brand: rowObj.Brand || '',
+                      StoreBrand_ID: rowObj.StoreBrand_ID || '',
                       Category: rowObj.Category,
                       status: 'success',
                       message: `✅ Validated and queued for batch processing`
@@ -272,8 +276,9 @@ export async function POST(request: NextRequest) {
                 phase: 'validating',
                 message: `❌ Row ${currentRow} validation failed: ${parseError}`,
                 rowData: {
-                  Store_ID: rowObj.Store_ID || 'N/A',
-                  Brand: rowObj.Brand || 'N/A',
+                  Store_ID: rowObj.Store_ID || '',
+                  Brand: rowObj.Brand || '',
+                  StoreBrand_ID: rowObj.StoreBrand_ID || 'N/A',
                   Category: rowObj.Category || 'N/A',
                   status: 'error',
                   message: message.replace(/❌ /, '')
@@ -298,8 +303,9 @@ export async function POST(request: NextRequest) {
               phase: 'error',
               message: `❌ Critical error on row ${currentRow}: ${err}`,
               rowData: {
-                Store_ID: 'N/A',
-                Brand: 'N/A',
+                Store_ID: '',
+                Brand: '',
+                StoreBrand_ID: 'N/A',
                 Category: 'N/A',
                 status: 'error',
                 message: msg
