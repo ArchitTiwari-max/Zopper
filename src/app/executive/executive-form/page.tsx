@@ -675,11 +675,66 @@ const ExecutiveFormContent: React.FC = () => {
   };
 
   // Issue management functions
+  const isNoIssueWord = (text: string) => {
+    const cleanText = text.trim().toLowerCase();
+    const noIssuePatterns = [
+      /^no$/,
+      /^none$/,
+      /^nil$/,
+      /^nothing$/,
+      /^no\s+issue$/,
+      /^no\s+issues$/,
+      /^n\/a$/,
+      /^na$/,
+      /^n\.a\.$/,
+      /^ok$/,
+      /^all\s+ok$/,
+      /^fine$/,
+      /^nothing\s+to\s+report$/,
+    ];
+    return noIssuePatterns.some((pattern) => pattern.test(cleanText));
+  };
+
+  const handleAddBrandIssue = (brand: string) => {
+    const issue = brandVisitDetails[brand]?.currentIssue?.trim();
+    if (!issue) return;
+
+    if (isNoIssueWord(issue)) {
+      alert(
+        "If there are no issues, please leave this field blank. You do not need to type 'No', 'None', 'Nil', or similar words. Only enter a value if there is an explicit issue to report.",
+      );
+      setBrandVisitDetails((prev) => ({
+        ...prev,
+        [brand]: {
+          ...prev[brand],
+          currentIssue: "",
+        },
+      }));
+      return;
+    }
+
+    setBrandVisitDetails((prev) => ({
+      ...prev,
+      [brand]: {
+        ...prev[brand],
+        issuesRaised: [...(prev[brand].issuesRaised || []), issue],
+        currentIssue: "",
+      },
+    }));
+  };
+
   const addIssue = () => {
     if (
       currentIssue.trim() &&
       !formData.issuesRaised.includes(currentIssue.trim())
     ) {
+      if (isNoIssueWord(currentIssue)) {
+        alert(
+          "If there are no issues, please leave this field blank. You do not need to type 'No', 'None', 'Nil', or similar words. Only enter a value if there is an explicit issue to report.",
+        );
+        setCurrentIssue("");
+        return;
+      }
       setFormData((prev) => ({
         ...prev,
         issuesRaised: [...prev.issuesRaised, currentIssue.trim()],
@@ -1373,46 +1428,14 @@ const ExecutiveFormContent: React.FC = () => {
                             onKeyPress={(e) => {
                               if (e.key === "Enter") {
                                 e.preventDefault();
-                                const issue =
-                                  brandVisitDetails[
-                                    brand
-                                  ]?.currentIssue?.trim();
-                                if (issue) {
-                                  setBrandVisitDetails((prev) => ({
-                                    ...prev,
-                                    [brand]: {
-                                      ...prev[brand],
-                                      issuesRaised: [
-                                        ...(prev[brand].issuesRaised || []),
-                                        issue,
-                                      ],
-                                      currentIssue: "",
-                                    },
-                                  }));
-                                }
+                                handleAddBrandIssue(brand);
                               }
                             }}
                           />
                           <button
                             type="button"
                             className="exec-f-sub-add-issue-btn"
-                            onClick={() => {
-                              const issue =
-                                brandVisitDetails[brand]?.currentIssue?.trim();
-                              if (issue) {
-                                setBrandVisitDetails((prev) => ({
-                                  ...prev,
-                                  [brand]: {
-                                    ...prev[brand],
-                                    issuesRaised: [
-                                      ...(prev[brand].issuesRaised || []),
-                                      issue,
-                                    ],
-                                    currentIssue: "",
-                                  },
-                                }));
-                              }
-                            }}
+                            onClick={() => handleAddBrandIssue(brand)}
                             disabled={
                               !brandVisitDetails[brand]?.currentIssue?.trim()
                             }
@@ -2013,46 +2036,14 @@ const ExecutiveFormContent: React.FC = () => {
                             onKeyPress={(e) => {
                               if (e.key === "Enter") {
                                 e.preventDefault();
-                                const issue =
-                                  brandVisitDetails[
-                                    brand
-                                  ]?.currentIssue?.trim();
-                                if (issue) {
-                                  setBrandVisitDetails((prev) => ({
-                                    ...prev,
-                                    [brand]: {
-                                      ...prev[brand],
-                                      issuesRaised: [
-                                        ...(prev[brand].issuesRaised || []),
-                                        issue,
-                                      ],
-                                      currentIssue: "",
-                                    },
-                                  }));
-                                }
+                                handleAddBrandIssue(brand);
                               }
                             }}
                           />
                           <button
                             type="button"
                             className="exec-f-sub-add-issue-btn"
-                            onClick={() => {
-                              const issue =
-                                brandVisitDetails[brand]?.currentIssue?.trim();
-                              if (issue) {
-                                setBrandVisitDetails((prev) => ({
-                                  ...prev,
-                                  [brand]: {
-                                    ...prev[brand],
-                                    issuesRaised: [
-                                      ...(prev[brand].issuesRaised || []),
-                                      issue,
-                                    ],
-                                    currentIssue: "",
-                                  },
-                                }));
-                              }
-                            }}
+                            onClick={() => handleAddBrandIssue(brand)}
                             disabled={
                               !brandVisitDetails[brand]?.currentIssue?.trim()
                             }
