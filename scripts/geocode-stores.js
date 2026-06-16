@@ -139,6 +139,12 @@ async function main() {
                 console.log(`✔  ${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)}`);
                 found++;
                 backupRows.push({ storeId: store.id, storeName: store.storeName, city: store.city, latitude: geo.lat, longitude: geo.lng });
+                
+                // Update the database immediately
+                await prisma.store.update({
+                    where: { id: store.id },
+                    data: { latitude: geo.lat, longitude: geo.lng },
+                });
             } else {
                 console.log(`✗  ${geo.status}`);
                 notFound++;
@@ -160,34 +166,13 @@ async function main() {
     // Final backup save
     saveBackup(backupRows);
     console.log(`\n💾 Backup saved to: ${BACKUP_FILE}`);
-    console.log(`   ✔ Geocoded: ${found} | ✗ Not found: ${notFound}\n`);
-
-    // ── STEP 2: Write all coords to MongoDB ───────────────────────────────────
-    console.log('🗄️  Step 2: Writing coordinates to MongoDB...\n');
-
-    let dbUpdated = 0, dbFailed = 0;
-    const rowsWithCoords = backupRows.filter(r => r.latitude != null);
-
-    for (let i = 0; i < rowsWithCoords.length; i++) {
-        const row = rowsWithCoords[i];
-        try {
-            await prisma.store.update({
-                where: { id: row.storeId },
-                data: { latitude: parseFloat(row.latitude), longitude: parseFloat(row.longitude) },
-            });
-            dbUpdated++;
-        } catch (e) {
-            dbFailed++;
-        }
-        if ((i + 1) % 200 === 0) {
-            console.log(`  [${i + 1}/${rowsWithCoords.length}] DB updated: ${dbUpdated}...`);
-        }
-    }
+    console.log(`   ✔ Geocoded and updated in DB: ${found} | ✗ Not found: ${notFound}\n`);
 
     console.log(`\n✅  All done!`);
-    console.log(`   DB updated: ${dbUpdated} | DB failed: ${dbFailed}`);
+    console.log(`   Geocoded:   ${found}`);
+    console.log(`   Not found:  ${notFound}`);
     console.log(`   Backup at:  ${BACKUP_FILE}`);
-    console.log(`\n💡 If DB failed, re-import anytime with:`);
+    console.log(`\n💡 If DB fails, you can re-import anytime with:`);
     console.log(`   node scripts/geocode-stores.js --import-from-backup\n`);
 
     await prisma.$disconnect();
