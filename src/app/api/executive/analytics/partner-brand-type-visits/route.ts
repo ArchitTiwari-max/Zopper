@@ -58,7 +58,16 @@ export async function GET(request: NextRequest) {
       Promise.all(storeChunks.map(ids =>
         prisma.store.findMany({
           where: { id: { in: ids } },
-          select: { id: true, storeName: true, partnerBrandIds: true, partnerBrandTypes: true },
+          select: {
+            id: true,
+            storeName: true,
+            storeBrands: {
+              select: {
+                brandId: true,
+                brandType: true
+              }
+            }
+          },
         })
       )),
       Promise.all(storeChunks.map(ids =>
@@ -89,22 +98,10 @@ export async function GET(request: NextRequest) {
     const groups: Record<string, { id: string; name: string }[]> = { A_PLUS: [], A: [], B: [], C: [], D: [] };
 
     for (const s of stores) {
-      if (!brandId) {
-        if (Array.isArray(s.partnerBrandIds) && Array.isArray(s.partnerBrandTypes)) {
-          const len = Math.min(s.partnerBrandIds.length, s.partnerBrandTypes.length);
-          for (let i = 0; i < len; i++) {
-            const t = s.partnerBrandTypes[i] as PartnerBrandType;
-            if (t && groups[t] && !groupSets[t].has(s.id)) {
-              groupSets[t].add(s.id);
-              groups[t].push({ id: s.id, name: s.storeName });
-            }
-          }
-        }
-      } else {
-        const idx = s.partnerBrandIds.indexOf(brandId);
-        if (idx >= 0 && Array.isArray(s.partnerBrandTypes) && s.partnerBrandTypes[idx]) {
-          const t = s.partnerBrandTypes[idx] as PartnerBrandType;
-          if (groups[t] && !groupSets[t].has(s.id)) {
+      for (const sb of s.storeBrands) {
+        if (!brandId || sb.brandId === brandId) {
+          const t = sb.brandType;
+          if (t && groups[t] && !groupSets[t].has(s.id)) {
             groupSets[t].add(s.id);
             groups[t].push({ id: s.id, name: s.storeName });
           }

@@ -86,12 +86,18 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
     const { Store_ID, Brand, Category, ...monthMetrics } = data;
-    if (!Store_ID || !Brand || !Category) {
-      return NextResponse.json({ error: '⚠️ Missing Store_ID, Brand, or Category' }, { status: 400 });
+    const categoryName = (Category && typeof Category === 'string' && Category.trim()) 
+      ? Category.trim() 
+      : 'Other';
+    if (!Store_ID || !Brand) {
+      return NextResponse.json({ error: '⚠️ Missing Store_ID or Brand' }, { status: 400 });
     }
 
     // 1. Find store by id
-    const store = await prisma.store.findUnique({ where: { id: Store_ID } });
+    const store = await prisma.store.findUnique({
+      where: { id: Store_ID },
+      include: { storeBrands: true }
+    });
     if (!store) return NextResponse.json({ error: '⚠️ Store not found' }, { status: 400 });
 
     // 2. Find brand by name
@@ -99,20 +105,13 @@ export async function POST(request: Request) {
     if (!brand) return NextResponse.json({ error: '⚠️ Brand not found' }, { status: 400 });
 
     // 3. Find category by name
-    const category = await prisma.category.findUnique({ where: { categoryName: Category } });
+    const category = await prisma.category.findUnique({ where: { categoryName: categoryName } });
     if (!category) return NextResponse.json({ error: '⚠️ Category not found' }, { status: 400 });
 
     // 4. Check brand is mapped to store
-    if (!store.partnerBrandIds.includes(brand.id)) {
+    const storeBrandIds = store.storeBrands.map(sb => sb.brandId);
+    if (!storeBrandIds.includes(brand.id)) {
       return NextResponse.json({ error: '⚠️ Brand is not mapped to this store' }, { status: 400 });
-    }
-
-    // 5. Check category is mapped to brand
-    const catBrand = await prisma.categoryBrand.findUnique({
-      where: { brandId_categoryId: { brandId: brand.id, categoryId: category.id } }
-    });
-    if (!catBrand) {
-      return NextResponse.json({ error: '⚠️ Category is not mapped to this brand' }, { status: 400 });
     }
 
     // 6. Group month-metric keys by year

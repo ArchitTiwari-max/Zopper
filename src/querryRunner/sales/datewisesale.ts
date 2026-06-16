@@ -5,24 +5,24 @@ const prisma = new PrismaClient();
 export async function postDailySales(rowObj: Record<string, any>, successCount: number): Promise<string> {
   try {
     const { Store_ID, Brand, Category, ...dateMetrics } = rowObj;
-    const context = `Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${Category || 'N/A'}`;
-    if (!Store_ID || !Brand || !Category) {
-      return `❌ Missing Store_ID, Brand, or Category. ${context}`;
+    const categoryName = (Category && typeof Category === 'string' && Category.trim()) 
+      ? Category.trim() 
+      : 'Other';
+    const context = `Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${categoryName}`;
+    if (!Store_ID || !Brand) {
+      return `❌ Missing Store_ID or Brand. ${context}`;
     }
-    const store = await prisma.store.findUnique({ where: { id: Store_ID } });
+    const store = await prisma.store.findUnique({
+      where: { id: Store_ID },
+      include: { storeBrands: true }
+    });
     if (!store) return `❌ Store not found. ${context}`;
     const brand = await prisma.brand.findUnique({ where: { brandName: Brand } });
     if (!brand) return `❌ Brand not found. ${context}`;
-    const category = await prisma.category.findUnique({ where: { categoryName: Category } });
+    const category = await prisma.category.findUnique({ where: { categoryName: categoryName } });
     if (!category) return `❌ Category not found. ${context}`;
-    if (!store.partnerBrandIds.includes(brand.id)) {
+    if (!store.storeBrands.some(sb => sb.brandId === brand.id)) {
       return `❌ Brand is not mapped to this store. ${context}`;
-    }
-    const catBrand = await prisma.categoryBrand.findUnique({
-      where: { brandId_categoryId: { brandId: brand.id, categoryId: category.id } }
-    });
-    if (!catBrand) {
-      return `❌ Category is not mapped to this brand. ${context}`;
     }
 
     // Build dailySales array - support both DD-MM-YYYY and D/M/YYYY formats

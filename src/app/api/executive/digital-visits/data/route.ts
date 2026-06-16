@@ -50,7 +50,15 @@ export async function GET(request: NextRequest) {
         updatedAt: true,
         reviewedByAdmin: { select: { id: true, name: true } },
         executive: { select: { id: true, name: true } },
-        store: { select: { id: true, storeName: true, partnerBrandIds: true } },
+        store: {
+          select: {
+            id: true,
+            storeName: true,
+            storeBrands: {
+              select: { brandId: true }
+            }
+          }
+        },
         issues: { select: { id: true, details: true, status: true, createdAt: true } },
         brandVisitDetails: true,
       },
@@ -58,14 +66,14 @@ export async function GET(request: NextRequest) {
     });
 
     // Build brand map
-    const allBrandIds = [...new Set(visits.flatMap(v => v.store?.partnerBrandIds || []))];
+    const allBrandIds = [...new Set(visits.flatMap(v => v.store?.storeBrands.map(sb => sb.brandId) || []))];
     const brands = allBrandIds.length ? await prisma.brand.findMany({ where: { id: { in: allBrandIds } }, select: { id: true, brandName: true } }) : [];
     const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
 
     const data = visits.map(v => ({
       id: v.id,
       storeName: v.store?.storeName || 'Unknown Store',
-      partnerBrand: (v.store?.partnerBrandIds || []).map(id => brandMap.get(id) || 'Unknown Brand').join(', ') || 'N/A',
+      partnerBrand: (v.store?.storeBrands || []).map(sb => brandMap.get(sb.brandId) || 'Unknown Brand').join(', ') || 'N/A',
       status: v.status as any,
       reviewerName: v.reviewedByAdmin?.name,
       representative: v.executive?.name || 'Unknown Executive',

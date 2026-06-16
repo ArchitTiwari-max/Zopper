@@ -138,8 +138,12 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         storeName: true,
-        partnerBrandIds: true,
-        partnerBrandTypes: true,
+        storeBrands: {
+          select: {
+            brandId: true,
+            brandType: true
+          }
+        },
         salesRecords: {
           where: {
             year: year
@@ -207,8 +211,9 @@ export async function GET(request: NextRequest) {
       let brandCount = 0;
 
       // Process each partner brand type
-      store.partnerBrandTypes.forEach((brandType, index) => {
-        const brandId = store.partnerBrandIds[index];
+      store.storeBrands.forEach((sb) => {
+        const brandId = sb.brandId;
+        const brandType = sb.brandType;
         const brandName = brandMap.get(brandId) || 'Unknown Brand';
         
         let currentAttachRate = 0;

@@ -69,12 +69,16 @@ export async function GET(
         storeName: true,
         city: true,
         fullAddress: true,
-        partnerBrandIds: true
+        storeBrands: {
+          select: {
+            brandId: true
+          }
+        }
       }
     });
 
     // Get brand names for the stores
-    const allBrandIds = [...new Set(stores.flatMap(store => store.partnerBrandIds || []))];
+    const allBrandIds = [...new Set(stores.flatMap(store => store.storeBrands.map(sb => sb.brandId)))];
     const brands = allBrandIds.length > 0 ? await prisma.brand.findMany({
       where: {
         id: { in: allBrandIds }
@@ -93,7 +97,7 @@ export async function GET(
       storeName: store.storeName,
       city: store.city,
       fullAddress: store.fullAddress,
-      partnerBrands: store.partnerBrandIds?.map(brandId => brandMap.get(brandId) || 'Unknown Brand') || []
+      partnerBrands: store.storeBrands.map(sb => brandMap.get(sb.brandId) || 'Unknown Brand')
     }));
 
     return NextResponse.json({

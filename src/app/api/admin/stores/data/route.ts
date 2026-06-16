@@ -146,18 +146,13 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Brand ID filter at DB level
-    if (brandFilterId) {
-      whereClause.partnerBrandIds = {
-        has: brandFilterId
-      };
-    }
-
-    // Brand type filter at DB level
-    if (brandFilterTypeValue) {
-      // partnerBrandTypes is an array of types aligned with partnerBrandIds
-      whereClause.partnerBrandTypes = {
-        has: brandFilterTypeValue
+    // Brand ID and/or Brand type filter at DB level
+    if (brandFilterId || brandFilterTypeValue) {
+      const condition: any = {};
+      if (brandFilterId) condition.brandId = brandFilterId;
+      if (brandFilterTypeValue) condition.brandType = brandFilterTypeValue;
+      whereClause.storeBrands = {
+        some: condition
       };
     }
 
@@ -246,8 +241,12 @@ export async function GET(request: NextRequest) {
         storeName: true,
         city: true,
         fullAddress: true,
-        partnerBrandIds: true,
-        partnerBrandTypes: true,
+        storeBrands: {
+          select: {
+            brandId: true,
+            brandType: true
+          }
+        },
         visits: {
           orderBy: { visitDate: 'desc' },
           take: 1,            // only most-recent visit needed
@@ -312,14 +311,14 @@ export async function GET(request: NextRequest) {
 
     // ── Map to response shape ─────────────────────────────────────────────────
     const responseStores = orderedStores.map(store => {
-      const partnerBrands = (store.partnerBrandIds || [])
-        .map(id => brandMap.get(id))
+      const partnerBrands = store.storeBrands
+        .map(sb => brandMap.get(sb.brandId))
         .filter(Boolean) as string[];
 
-      const partnerBrandPairs = (store.partnerBrandIds || []).map((id, idx) => ({
-        id,
-        name: brandMap.get(id) || 'Unknown Brand',
-        type: (store as any).partnerBrandTypes?.[idx] || null
+      const partnerBrandPairs = store.storeBrands.map(sb => ({
+        id: sb.brandId,
+        name: brandMap.get(sb.brandId) || 'Unknown Brand',
+        type: sb.brandType || null
       }));
 
       const lastVisit = store.visits[0]

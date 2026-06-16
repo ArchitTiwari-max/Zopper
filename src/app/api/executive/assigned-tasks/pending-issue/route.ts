@@ -56,7 +56,9 @@ export async function GET(request: NextRequest) {
                     storeName: true,
                     city: true,
                     fullAddress: true,
-                    partnerBrandIds: true
+                    storeBrands: {
+                      select: { brandId: true }
+                    }
                   }
                 },
                 createdAt: true,
@@ -72,7 +74,9 @@ export async function GET(request: NextRequest) {
                     storeName: true,
                     city: true,
                     fullAddress: true,
-                    partnerBrandIds: true
+                    storeBrands: {
+                      select: { brandId: true }
+                    }
                   }
                 },
                 connectDate: true,
@@ -123,7 +127,7 @@ export async function GET(request: NextRequest) {
             storeName: store?.storeName || 'Unknown Store',
             city: store?.city || '',
             fullAddress: store?.fullAddress || null,
-            partnerBrandIds: store?.partnerBrandIds || []
+            partnerBrandIds: store?.storeBrands?.map((sb: any) => sb.brandId) || []
           },
           issue: assigned.issue.details,
           city: store?.city || '',
@@ -246,8 +250,8 @@ export async function PUT(request: NextRequest) {
       include: {
         issue: {
           include: {
-            visit: { include: { store: true } },
-            digitalVisit: { include: { store: true } }
+            visit: { include: { store: { include: { storeBrands: true } } } },
+            digitalVisit: { include: { store: { include: { storeBrands: true } } } }
           }
         },
         assignReport: true
@@ -273,7 +277,7 @@ export async function PUT(request: NextRequest) {
         storeName: store?.storeName || 'Unknown Store',
         city: store?.city || '',
         fullAddress: store?.fullAddress || null,
-        partnerBrandIds: store?.partnerBrandIds || []
+        partnerBrandIds: store?.storeBrands?.map((sb: any) => sb.brandId) || []
       },
       issue: {
         id: assignedTask.issue.id,

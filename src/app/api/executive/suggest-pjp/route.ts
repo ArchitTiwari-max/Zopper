@@ -104,7 +104,8 @@ export async function GET(request: NextRequest) {
 
         // Fetch all assigned stores with coordinates
         const allStores = await prisma.store.findMany({
-            where: { id: { in: assignedStoreIds } }
+            where: { id: { in: assignedStoreIds } },
+            include: { storeBrands: true }
         });
 
         // Find start store
@@ -183,7 +184,7 @@ export async function GET(request: NextRequest) {
             const store = storeMap.get(storeId);
             if (!store) return null;
             const lastVisit = lastVisitByStore.get(storeId) ?? null;
-            const partnerBrands = store.partnerBrandIds.map(id => brandMap.get(id)).filter(Boolean);
+            const partnerBrands = store.storeBrands.map(sb => brandMap.get(sb.brandId)).filter(Boolean);
 
             return {
                 id: store.id,
@@ -193,7 +194,7 @@ export async function GET(request: NextRequest) {
                 latitude: store.latitude,
                 longitude: store.longitude,
                 partnerBrands,
-                partnerBrandTypes: (store as any).partnerBrandTypes ?? [],
+                partnerBrandTypes: store.storeBrands.map(sb => sb.brandType),
                 distanceFromStart,  // distance from the selected starting store
                 lastVisitDate: lastVisit?.createdAt ?? null,
                 visited: formatVisited(lastVisit?.createdAt ?? null),

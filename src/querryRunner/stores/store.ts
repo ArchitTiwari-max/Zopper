@@ -99,10 +99,34 @@ async function main() {
           storeName,
           city,
           fullAddress: '',
-          partnerBrandIds,
-          partnerBrandTypes,
         }
       });
+
+      // Create associated StoreBrand relations
+      for (let i = 0; i < partnerBrandIds.length; i++) {
+        const brandId = partnerBrandIds[i];
+        const brandType = partnerBrandTypes[i] || PartnerBrandType.NONE;
+        try {
+          await prisma.storeBrand.upsert({
+            where: {
+              storeId_brandId: {
+                storeId: storeId,
+                brandId: brandId,
+              }
+            },
+            update: {
+              brandType: brandType,
+            },
+            create: {
+              storeId: storeId,
+              brandId: brandId,
+              brandType: brandType,
+            }
+          });
+        } catch (err) {
+          console.error(`❌ Error creating StoreBrand relation for store ${storeId} and brand ${brandId}:`, err);
+        }
+      }
       console.log(`✅ Created store: ${storeName} (ID: ${storeId})`);
     } catch (error) {
       console.error(`❌ Error creating store ${storeName} (ID: ${storeId}):`, error);

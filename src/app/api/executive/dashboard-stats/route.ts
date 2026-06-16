@@ -56,7 +56,11 @@ export async function GET(request: NextRequest) {
     const [storeData, allBrands, visits, pendingTasksCount, completedTasksCount] = await Promise.all([
       prisma.store.findMany({
         where: { id: { in: executive.executiveStores.map(es => es.storeId) } },
-        select: { partnerBrandIds: true }
+        select: {
+          storeBrands: {
+            select: { brandId: true }
+          }
+        }
       }),
       prisma.brand.findMany({ select: { id: true, brandName: true } }),
       prisma.visit.findMany({
@@ -73,7 +77,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Filter relevant brands
-    const uniqueBrandIds = Array.from(new Set(storeData.flatMap(s => s.partnerBrandIds)));
+    const uniqueBrandIds = Array.from(new Set(storeData.flatMap(s => s.storeBrands.map(sb => sb.brandId))));
     const relevantBrands = allBrands.filter(b => uniqueBrandIds.includes(b.id));
     const relevantBrandIds = new Set(uniqueBrandIds);
 

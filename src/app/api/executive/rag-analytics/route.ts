@@ -107,7 +107,17 @@ export async function GET(request: NextRequest) {
       Promise.all(storeChunks.map(ids =>
         prisma.store.findMany({
           where: { id: { in: ids } },
-          select: { id: true, storeName: true, city: true, partnerBrandTypes: true, partnerBrandIds: true }
+          select: {
+            id: true,
+            storeName: true,
+            city: true,
+            storeBrands: {
+              select: {
+                brandId: true,
+                brandType: true
+              }
+            }
+          }
         })
       )),
       // Fetch current year sales (with dailySales)
@@ -168,26 +178,29 @@ export async function GET(request: NextRequest) {
     const ragPerformances: RAGStorePerformance[] = [];
 
     for (const store of allStores) {
+      const associatedBrands = store.storeBrands;
+      const associatedBrandIds = associatedBrands.map(sb => sb.brandId);
+
       // Brand filter
-      if (brandIdFilter && !store.partnerBrandIds.includes(brandIdFilter)) continue;
+      if (brandIdFilter && !associatedBrandIds.includes(brandIdFilter)) continue;
 
       // Use the brand-specific type when a brand filter is active, 
       // or pick the "best" type among all brands if no filter is applied.
       let storeType: PartnerBrandType;
       if (brandIdFilter) {
-        const brandIdx = store.partnerBrandIds.indexOf(brandIdFilter);
-        storeType = (brandIdx >= 0 ? store.partnerBrandTypes[brandIdx] : store.partnerBrandTypes[0]) as PartnerBrandType || PartnerBrandType.D;
+        const matchedBrand = associatedBrands.find(sb => sb.brandId === brandIdFilter);
+        storeType = matchedBrand?.brandType || associatedBrands[0]?.brandType || PartnerBrandType.D;
       } else {
         // Find the "highest" type (A+ > A > B > C > D)
         const priorityOrder: Record<string, number> = { 'A_PLUS': 5, 'A': 4, 'B': 3, 'C': 2, 'D': 1, 'NONE': 0 };
         let bestType: PartnerBrandType = PartnerBrandType.D;
         let bestScore = 0;
         
-        for (const t of store.partnerBrandTypes) {
-          const score = priorityOrder[t as string] || 0;
+        for (const sb of associatedBrands) {
+          const score = priorityOrder[sb.brandType] || 0;
           if (score > bestScore) {
             bestScore = score;
-            bestType = t as PartnerBrandType;
+            bestType = sb.brandType;
           }
         }
         storeType = bestType;

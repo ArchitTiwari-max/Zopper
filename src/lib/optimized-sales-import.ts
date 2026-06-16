@@ -18,10 +18,9 @@ export function getPrismaInstance(): PrismaClient {
 
 // Cache interfaces for better performance
 interface CacheData {
-  stores: Map<string, { id: string; partnerBrandIds: string[] }>;
+  stores: Map<string, { id: string; storeBrands: { brandId: string }[] }>;
   brands: Map<string, { id: string; brandName: string }>;
   categories: Map<string, { id: string; categoryName: string }>;
-  categoryBrands: Map<string, { brandId: string; categoryId: string }>;
 }
 
 // Global cache - reused across requests
@@ -38,18 +37,23 @@ async function initializeCache(prisma: PrismaClient): Promise<CacheData> {
 
   console.log('🔄 Initializing reference data cache...');
   
-  const [stores, brands, categories, categoryBrands] = await Promise.all([
-    prisma.store.findMany({ select: { id: true, partnerBrandIds: true } }),
+  const [stores, brands, categories] = await Promise.all([
+    prisma.store.findMany({
+      select: {
+        id: true,
+        storeBrands: {
+          select: { brandId: true }
+        }
+      }
+    }),
     prisma.brand.findMany({ select: { id: true, brandName: true } }),
-    prisma.category.findMany({ select: { id: true, categoryName: true } }),
-    prisma.categoryBrand.findMany({ select: { brandId: true, categoryId: true } })
+    prisma.category.findMany({ select: { id: true, categoryName: true } })
   ]);
 
   globalCache = {
     stores: new Map(stores.map(s => [s.id, s])),
     brands: new Map(brands.map(b => [b.brandName, b])),
-    categories: new Map(categories.map(c => [c.categoryName, c])),
-    categoryBrands: new Map(categoryBrands.map(cb => [`${cb.brandId}_${cb.categoryId}`, cb]))
+    categories: new Map(categories.map(c => [c.categoryName, c]))
   };
 
   console.log(`✅ Cache initialized - ${stores.length} stores, ${brands.length} brands, ${categories.length} categories`);
@@ -62,11 +66,14 @@ async function initializeCache(prisma: PrismaClient): Promise<CacheData> {
 export async function optimizedPostSales(rowObj: Record<string, any>, storeCount: number, cache: CacheData): Promise<string> {
   try {
     const { Store_ID, Brand, Category, ...monthMetrics } = rowObj;
-    const context = `Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${Category || 'N/A'}`;
+    const categoryName = (Category && typeof Category === 'string' && Category.trim()) 
+      ? Category.trim() 
+      : 'Other';
+    const context = `Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${categoryName}`;
     
     // Quick validation
-    if (!Store_ID || !Brand || !Category) {
-      return `❌ Missing Store_ID, Brand, or Category. ${context}`;
+    if (!Store_ID || !Brand) {
+      return `❌ Missing Store_ID or Brand. ${context}`;
     }
 
     // Cache lookups (near-zero latency)
@@ -76,16 +83,11 @@ export async function optimizedPostSales(rowObj: Record<string, any>, storeCount
     const brand = cache.brands.get(Brand);
     if (!brand) return `❌ Brand not found. ${context}`;
     
-    const category = cache.categories.get(Category);
+    const category = cache.categories.get(categoryName);
     if (!category) return `❌ Category not found. ${context}`;
     
-    if (!store.partnerBrandIds.includes(brand.id)) {
+    if (!store.storeBrands.some(sb => sb.brandId === brand.id)) {
       return `❌ Brand is not mapped to this store. ${context}`;
-    }
-    
-    const catBrandKey = `${brand.id}_${category.id}`;
-    if (!cache.categoryBrands.has(catBrandKey)) {
-      return `❌ Category is not mapped to this brand. ${context}`;
     }
 
     // Process monthly sales data - support both DD-MM-YYYY and D/M/YYYY formats
@@ -137,10 +139,13 @@ export async function optimizedPostSales(rowObj: Record<string, any>, storeCount
 export async function optimizedPostDailySales(rowObj: Record<string, any>, successCount: number, cache: CacheData): Promise<string> {
   try {
     const { Store_ID, Brand, Category, ...dateMetrics } = rowObj;
-    const context = `Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${Category || 'N/A'}`;
+    const categoryName = (Category && typeof Category === 'string' && Category.trim()) 
+      ? Category.trim() 
+      : 'Other';
+    const context = `Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${categoryName}`;
     
-    if (!Store_ID || !Brand || !Category) {
-      return `❌ Missing Store_ID, Brand, or Category. ${context}`;
+    if (!Store_ID || !Brand) {
+      return `❌ Missing Store_ID or Brand. ${context}`;
     }
     
     // Cache lookups (near-zero latency)
@@ -150,16 +155,11 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
     const brand = cache.brands.get(Brand);
     if (!brand) return `❌ Brand not found. ${context}`;
     
-    const category = cache.categories.get(Category);
+    const category = cache.categories.get(categoryName);
     if (!category) return `❌ Category not found. ${context}`;
     
-    if (!store.partnerBrandIds.includes(brand.id)) {
+    if (!store.storeBrands.some(sb => sb.brandId === brand.id)) {
       return `❌ Brand is not mapped to this store. ${context}`;
-    }
-    
-    const catBrandKey = `${brand.id}_${category.id}`;
-    if (!cache.categoryBrands.has(catBrandKey)) {
-      return `❌ Category is not mapped to this brand. ${context}`;
     }
 
     // Build dailySales grouped by month ("1".."12"). Dates stored as DD-MM-YYYY

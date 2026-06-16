@@ -94,13 +94,23 @@ export async function GET(request: NextRequest) {
     // ── 3) Candidate stores ───────────────────────────────────────────────────
     const stores = await prisma.store.findMany({
       where: allowedStoreIds ? { id: { in: allowedStoreIds } } : {},
-      select: { id: true, storeName: true, city: true, partnerBrandIds: true, partnerBrandTypes: true },
+      select: {
+        id: true,
+        storeName: true,
+        city: true,
+        storeBrands: {
+          select: {
+            brandId: true,
+            brandType: true
+          }
+        }
+      },
     });
 
     const candidate = stores
       .map(s => {
-        const ids   = s.partnerBrandIds || [];
-        const types = (s.partnerBrandTypes || []) as PartnerBrandType[];
+        const ids   = (s.storeBrands || []).map(sb => sb.brandId);
+        const types = (s.storeBrands || []).map(sb => sb.brandType);
         let selectedIds: string[];
         if (!pbtEnum) {
           selectedIds = ids.slice();
@@ -115,7 +125,14 @@ export async function GET(request: NextRequest) {
         if (brandIdFilter && brandIdFilter !== 'All') {
           selectedIds = selectedIds.filter(id => id === brandIdFilter);
         }
-        return selectedIds.length > 0 ? { ...s, typeBrandIds: selectedIds } : null;
+        return selectedIds.length > 0 ? {
+          id: s.id,
+          storeName: s.storeName,
+          city: s.city,
+          partnerBrandIds: ids,
+          partnerBrandTypes: types,
+          typeBrandIds: selectedIds
+        } : null;
       })
       .filter(Boolean) as Array<{
         id: string; storeName: string; city: string | null;

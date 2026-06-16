@@ -37,7 +37,11 @@ export async function GET(request: NextRequest) {
                 }
             },
             include: {
-                store: true
+                store: {
+                    include: {
+                        storeBrands: true
+                    }
+                }
             }
         });
 
@@ -64,7 +68,7 @@ export async function GET(request: NextRequest) {
 
         const data = rescheduledVisits.map(v => {
             const store = v.store;
-            const partnerBrands = store.partnerBrandIds.map(id => brandMap.get(id)).filter(Boolean);
+            const partnerBrands = store.storeBrands.map(sb => brandMap.get(sb.brandId)).filter(Boolean);
 
             return {
                 id: store.id,
@@ -74,7 +78,7 @@ export async function GET(request: NextRequest) {
                 latitude: store.latitude,
                 longitude: store.longitude,
                 partnerBrands,
-                partnerBrandTypes: (store as any).partnerBrandTypes ?? [],
+                partnerBrandTypes: store.storeBrands.map(sb => sb.brandType),
                 distanceFromStart: 0,
                 lastVisitDate: v.createdAt,
                 visited: formatVisited(v.createdAt),

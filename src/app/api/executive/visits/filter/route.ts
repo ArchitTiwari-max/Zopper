@@ -48,7 +48,9 @@ export async function GET(request: NextRequest) {
           id: true,
           storeName: true,
           city: true,
-          partnerBrandIds: true
+          storeBrands: {
+            select: { brandId: true }
+          }
         }
       }),
       
@@ -57,7 +59,7 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           brandName: true,
-          // category field removed - using CategoryBrand relation
+          // category field removed
         },
         orderBy: {
           brandName: 'asc'
@@ -74,7 +76,7 @@ export async function GET(request: NextRequest) {
     const brands = ['All Brands', ...allBrandNames];
 
     // Get brands currently used by assigned stores
-    const usedBrandIds = new Set(assignedStores.flatMap(store => store.partnerBrandIds));
+    const usedBrandIds = new Set(assignedStores.flatMap(store => store.storeBrands.map(sb => sb.brandId)));
     const usedBrands = allBrands
       .filter(brand => usedBrandIds.has(brand.id))
       .map(brand => brand.brandName)
@@ -84,7 +86,7 @@ export async function GET(request: NextRequest) {
     // Get brand categories for advanced filtering
     const categories = Array.from(new Set(
       allBrands
-        .map(brand => 'General') // TODO: Implement category lookup via CategoryBrand relation
+        .map(brand => 'General') // Default to 'General' category
         .filter(category => category && category.trim() !== '')
     )).sort();
     const brandCategories = ['All Categories', ...categories];

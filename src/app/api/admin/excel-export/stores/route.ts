@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
             executive: { select: { id: true, name: true } }
           }
         },
-        storeBrands: { select: { brandId: true, storeBrandId: true } },
+        storeBrands: { select: { brandId: true, storeBrandId: true, brandType: true } },
         _count: { select: { visits: true } }
       },
       orderBy: { id: 'asc' }
@@ -140,16 +140,16 @@ export async function GET(request: NextRequest) {
 
     // ---- Data Rows ----
     stores.forEach(store => {
-      const storeBrandIdMap = new Map(
-        store.storeBrands.map(sb => [sb.brandId, sb.storeBrandId || ''])
+      const storeBrandMap = new Map(
+        store.storeBrands.map(sb => [sb.brandId, sb])
       );
       const brandData = sortedBrands.flatMap(brand => {
-        const idx = store.partnerBrandIds?.indexOf(brand.id) ?? -1;
-        const isPresent = idx !== -1;
-        const type = isPresent ? store.partnerBrandTypes?.[idx] : '';
+        const sb = storeBrandMap.get(brand.id);
+        const isPresent = !!sb;
+        const type = sb?.brandType || '';
         return [
           isPresent ? brand.id : '',                                            // ZopperBrandId
-          isPresent ? (storeBrandIdMap.get(brand.id) || '') : '',               // StoreBrandId
+          isPresent ? (sb?.storeBrandId || '') : '',                            // StoreBrandId
           (isPresent && type && type !== 'NONE') ? type : ''                    // BrandType
         ];
       });

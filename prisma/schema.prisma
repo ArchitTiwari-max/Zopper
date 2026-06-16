@@ -93,8 +93,6 @@ model Store {
   longitude         Float? // Geocoded longitude (Google Places API)
   visits            Visit[]
   digitalVisits     DigitalVisit[]
-  partnerBrandIds   String[] // references Brand IDs
-  partnerBrandTypes PartnerBrandType[] // parallel array corresoponding to same index in partnerBrandIds
   executiveStores   ExecutiveStoreAssignment[]
   salesRecords      SalesRecord[]
   adminVisits       AdminVisit[]
@@ -106,23 +104,23 @@ model Store {
   priority          Priority?
   targets           StoreTarget[]
   storeBrands       StoreBrand[]
-
-  @@index([partnerBrandTypes])
-  @@index([partnerBrandIds])
 }
 
 model StoreTarget {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   storeId       String
+  brandId       String
   month         Int      // Month (1-12)
   year          Int      // Year (e.g. 2026)
   targetRevenue Float?
   targetUnits   Int?
 
   store         Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  brand         Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
 
-  @@unique([storeId, month, year])
+  @@unique([storeId, brandId, month, year])
   @@index([storeId, year])
+  @@index([brandId])
   @@map("StoreTarget")
 }
 
@@ -142,36 +140,27 @@ model ExecutiveStoreAssignment {
 model Brand {
   id           String          @id @map("_id")
   brandName    String          @unique
-  categories   CategoryBrand[]
   salesRecords SalesRecord[]
   storeBrands  StoreBrand[]
+  targets      StoreTarget[]
 }
 
 model Category {
   id           String          @id @map("_id")
   categoryName String          @unique
-  brands       CategoryBrand[]
   salesRecords SalesRecord[]
 
   // Index for better performance when searching by category name
 }
 
-model CategoryBrand {
-  id         String @id @map("_id")
-  brandId    String
-  categoryId String
 
-  brand    Brand    @relation(fields: [brandId], references: [id])
-  category Category @relation(fields: [categoryId], references: [id])
-
-  @@unique([brandId, categoryId])
-}
 
 model StoreBrand {
-  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  id           String           @id @default(auto()) @map("_id") @db.ObjectId
   storeId      String
   brandId      String
   storeBrandId String?
+  brandType    PartnerBrandType @default(NONE)
 
   store Store @relation(fields: [storeId], references: [id])
   brand Brand @relation(fields: [brandId], references: [id])

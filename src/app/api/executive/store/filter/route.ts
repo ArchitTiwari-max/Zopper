@@ -52,7 +52,14 @@ export async function GET(request: NextRequest) {
       Promise.all(storeChunks.map(ids =>
         prisma.store.findMany({
           where: { id: { in: ids } },
-          select: { id: true, storeName: true, city: true, partnerBrandIds: true }
+          select: {
+            id: true,
+            storeName: true,
+            city: true,
+            storeBrands: {
+              select: { brandId: true }
+            }
+          }
         })
       )),
       prisma.brand.findMany({ select: { id: true, brandName: true }, orderBy: { brandName: 'asc' } })
@@ -63,7 +70,7 @@ export async function GET(request: NextRequest) {
     // ── 3) Derive filter options (pure in-memory) ─────────────────────────────
     const allCities = Array.from(new Set(allStores.map(s => s.city))).sort();
 
-    const usedBrandIds = new Set(allStores.flatMap(s => s.partnerBrandIds));
+    const usedBrandIds = new Set(allStores.flatMap(s => s.storeBrands.map(sb => sb.brandId)));
     const usedBrands   = allBrands.filter(b => usedBrandIds.has(b.id)).map(b => b.brandName);
     const allBrandNames = allBrands.map(b => b.brandName);
 

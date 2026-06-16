@@ -104,6 +104,7 @@ export async function GET(request: NextRequest) {
     const stores = await prisma.store.findMany({
       where: whereClause,
       include: {
+        storeBrands: { select: { brandId: true, brandType: true } },
         salesRecords: {
           where: {
             year: year
@@ -130,8 +131,8 @@ export async function GET(request: NextRequest) {
       const sampleStore = stores[0];
       console.log(`  Sample store: ${sampleStore.storeName}`);
       console.log(`    Sales records: ${sampleStore.salesRecords.length}`);
-      console.log(`    Partner brand types: ${sampleStore.partnerBrandTypes.join(', ')}`);
-      console.log(`    Partner brand IDs: ${sampleStore.partnerBrandIds.join(', ')}`);
+      console.log(`    Partner brand types: ${sampleStore.storeBrands.map(sb => sb.brandType).join(', ')}`);
+      console.log(`    Partner brand IDs: ${sampleStore.storeBrands.map(sb => sb.brandId).join(', ')}`);
       
       if (sampleStore.salesRecords.length > 0) {
         const sampleRecord = sampleStore.salesRecords[0];
@@ -156,8 +157,10 @@ export async function GET(request: NextRequest) {
 
     // Process stores and calculate RAG status
     const processedStores = stores.map(store => {
+      const partnerBrandIds = store.storeBrands.map(sb => sb.brandId);
+      const partnerBrandTypes = store.storeBrands.map(sb => sb.brandType);
       // Get partner brands for this store
-      const partnerBrands = store.partnerBrandIds
+      const partnerBrands = partnerBrandIds
         .map(brandId => brandMap.get(brandId))
         .filter(Boolean) as string[];
 
@@ -193,8 +196,8 @@ export async function GET(request: NextRequest) {
       });
 
       // Process each partner brand type
-      store.partnerBrandTypes.forEach((brandType, index) => {
-        const brandId = store.partnerBrandIds[index];
+      partnerBrandTypes.forEach((brandType, index) => {
+        const brandId = partnerBrandIds[index];
         const brandName = brandMap.get(brandId) || 'Unknown Brand';
         
         // Find sales record for this brand

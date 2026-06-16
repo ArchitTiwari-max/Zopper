@@ -85,7 +85,7 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
 
     const partnerBrandIds: string[] = [];
     const partnerBrandTypes: PartnerBrandType[] = [];
-    const storeBrandsData: { brandId: string; storeBrandId: string | null }[] = [];
+    const storeBrandsData: { brandId: string; storeBrandId: string | null; brandType: PartnerBrandType }[] = [];
 
     // Identify brand columns based on the new format
     const brandNames = new Set<string>();
@@ -106,10 +106,9 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
         partnerBrandIds.push(brandId);
         
         const storeBrandId = rowObj[`${brandName} [StoreBrandId]`]?.toString().trim() || null;
-        storeBrandsData.push({ brandId, storeBrandId });
-
         const brandTypeStr = rowObj[`${brandName} [BrandType]`]?.toString().trim() || '';
         const mappedType = mapType(brandTypeStr);
+        storeBrandsData.push({ brandId, storeBrandId, brandType: mappedType });
         partnerBrandTypes.push(mappedType);
       }
     }
@@ -253,9 +252,6 @@ export async function batchProcessStoreRecords(
             fullAddress: storeData.fullAddress,
             latitude: storeData.latitude,
             longitude: storeData.longitude,
-            partnerBrandIds: storeData.partnerBrandIds,
-            // Only set types if provided; otherwise keep existing or set to empty when ids empty
-            ...(storeData.partnerBrandTypes ? { partnerBrandTypes: storeData.partnerBrandTypes } : {}),
             storeCategory: storeData.storeCategory,
             storeChannel: storeData.storeChannel,
             cityTier: storeData.cityTier,
@@ -269,8 +265,6 @@ export async function batchProcessStoreRecords(
             fullAddress: storeData.fullAddress,
             latitude: storeData.latitude,
             longitude: storeData.longitude,
-            partnerBrandIds: storeData.partnerBrandIds,
-            partnerBrandTypes: storeData.partnerBrandTypes ?? [],
             storeCategory: storeData.storeCategory,
             storeChannel: storeData.storeChannel,
             cityTier: storeData.cityTier,
@@ -310,12 +304,14 @@ export async function batchProcessStoreRecords(
                 }
               },
               update: {
-                storeBrandId: sb.storeBrandId
+                storeBrandId: sb.storeBrandId,
+                brandType: sb.brandType
               },
               create: {
                 storeId: storeData.storeId,
                 brandId: sb.brandId,
-                storeBrandId: sb.storeBrandId
+                storeBrandId: sb.storeBrandId,
+                brandType: sb.brandType
               }
             });
           }

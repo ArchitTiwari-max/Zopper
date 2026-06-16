@@ -31,8 +31,12 @@ export async function GET(request: NextRequest) {
           fullAddress: true,
           latitude: true,
           longitude: true,
-          partnerBrandIds: true,
-          partnerBrandTypes: true,
+          storeBrands: {
+            select: {
+              brandId: true,
+              brandType: true
+            }
+          },
         },
         orderBy: {
           storeName: 'asc'
@@ -43,12 +47,11 @@ export async function GET(request: NextRequest) {
       const brandMap = new Map(allBrands.map(b => [b.id, b.brandName]));
 
       const transformedStores = stores.map(store => {
-        const partnerBrands = store.partnerBrandIds
-          .map(bid => brandMap.get(bid))
+        const partnerBrands = store.storeBrands
+          .map(sb => brandMap.get(sb.brandId))
           .filter(Boolean) as string[];
 
-        const partnerBrandTypes = Array.isArray((store as any).partnerBrandTypes)
-          ? (store as any).partnerBrandTypes : [];
+        const partnerBrandTypes = store.storeBrands.map(sb => sb.brandType);
 
         return {
           id: store.id,
@@ -124,8 +127,12 @@ export async function GET(request: NextRequest) {
             fullAddress: true,
             latitude: true,
             longitude: true,
-            partnerBrandIds: true,
-            partnerBrandTypes: true,
+            storeBrands: {
+              select: {
+                brandId: true,
+                brandType: true
+              }
+            }
           }
         })
       )),
@@ -157,12 +164,11 @@ export async function GET(request: NextRequest) {
     const now = new Date();
 
     const transformedStores = stores.map(store => {
-      const partnerBrands = store.partnerBrandIds
-        .map(bid => brandMap.get(bid))
+      const partnerBrands = store.storeBrands
+        .map(sb => brandMap.get(sb.brandId))
         .filter(Boolean) as string[];
 
-      const partnerBrandTypes = Array.isArray((store as any).partnerBrandTypes)
-        ? (store as any).partnerBrandTypes : [];
+      const partnerBrandTypes = store.storeBrands.map(sb => sb.brandType);
 
       // Last visit status
       let visitStatus = 'No visit';
@@ -262,9 +268,27 @@ export async function PUT(request: NextRequest) {
     const { storeId, brandIds } = await request.json();
     if (!storeId || !brandIds) return NextResponse.json({ error: 'Store ID and brand IDs are required' }, { status: 400 });
 
-    const updatedStore = await prisma.store.update({
+    await prisma.$transaction([
+      prisma.storeBrand.deleteMany({
+        where: {
+          storeId: storeId,
+          brandId: { notIn: brandIds }
+        }
+      }),
+      ...brandIds.map((brandId: string) =>
+        prisma.storeBrand.upsert({
+          where: {
+            storeId_brandId: { storeId, brandId }
+          },
+          update: {},
+          create: { storeId, brandId }
+        })
+      )
+    ]);
+
+    const updatedStore = await prisma.store.findUnique({
       where: { id: storeId },
-      data: { partnerBrandIds: brandIds }
+      include: { storeBrands: true }
     });
 
     return NextResponse.json({ success: true, data: updatedStore });

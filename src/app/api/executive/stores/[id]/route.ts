@@ -29,6 +29,7 @@ export async function GET(
     const store = await prisma.store.findUnique({
       where: { id: storeId },
       include: {
+        storeBrands: true,
         visits: {
           orderBy: {
             visitDate: 'desc'
@@ -46,7 +47,7 @@ export async function GET(
     const partnerBrands = await prisma.brand.findMany({
       where: {
         id: {
-          in: store.partnerBrandIds
+          in: store.storeBrands.map(sb => sb.brandId)
         }
       }
     });

@@ -24,25 +24,6 @@ async function main() {
         },
       });
 
-      // Create CategoryBrand relations
-      const brandIdsArray = category.brandIds.split(',');
-
-      for (const brandId of brandIdsArray) {
-        await prisma.categoryBrand.upsert({
-          where: {
-            brandId_categoryId: {
-              brandId: brandId.trim(),
-              categoryId: category.Category_id,
-            },
-          },
-          update: {},
-          create: {
-            id: `${brandId.trim()}_${category.Category_id}`,
-            brandId: brandId.trim(),
-            categoryId: category.Category_id,
-          },
-        });
-      }
       console.log(`✅ Successfully processed category ${category.Category_id} - ${category.categoryName}`);
     } catch (error) {
       console.error(`❌ Failed to process category ${category.Category_id} - ${category.categoryName}`, error);

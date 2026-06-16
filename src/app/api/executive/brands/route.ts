@@ -35,20 +35,17 @@ export async function GET(request: NextRequest) {
         id: { in: storeIds }
       },
       select: {
-        partnerBrandIds: true
+        storeBrands: {
+          select: { brandId: true }
+        }
       }
     });
 
     // Extract all unique brand IDs from the executive's assigned stores
     const assignedBrandIds = new Set<string>();
     for (const store of stores) {
-      const storeBrandIds = store.partnerBrandIds;
-      if (Array.isArray(storeBrandIds)) {
-        for (const brandId of storeBrandIds) {
-          if (typeof brandId === 'string') {
-            assignedBrandIds.add(brandId);
-          }
-        }
+      for (const sb of store.storeBrands) {
+        assignedBrandIds.add(sb.brandId);
       }
     }
 

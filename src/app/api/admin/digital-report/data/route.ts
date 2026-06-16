@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
     if (partnerBrand && partnerBrand !== 'All Brands') {
       const brandRecord = await prisma.brand.findFirst({ where: { brandName: partnerBrand } });
       if (brandRecord) {
-        whereClause.store = { ...whereClause.store, partnerBrandIds: { has: brandRecord.id } };
+        whereClause.store = { ...whereClause.store, storeBrands: { some: { brandId: brandRecord.id } } };
       } else {
         whereClause.id = 'invalid_id_brand_not_found';
       }
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
         personMet: true,
         reviewedByAdmin: { select: { id: true, name: true } },
         executive: { select: { id: true, name: true } },
-        store: { select: { id: true, storeName: true, city: true, partnerBrandIds: true } },
+        store: { select: { id: true, storeName: true, city: true, storeBrands: { select: { brandId: true } } } },
         issues: { select: { id: true, details: true, status: true } },
         brandVisitDetails: true,
       },
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
     const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
 
     let processed = digitalVisits.map((v) => {
-      const partnerBrands = (v.store?.partnerBrandIds || []).map((id: string) => brandMap.get(id)).filter(Boolean) as string[];
+      const partnerBrands = ((v.store as any)?.storeBrands || []).map((sb: any) => brandMap.get(sb.brandId)).filter(Boolean) as string[];
       const execName = v.executive?.name || 'Unknown Executive';
       const initials = execName.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
       const avatarColor = '#2563eb';

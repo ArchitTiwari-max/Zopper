@@ -72,8 +72,22 @@ export async function GET(request: NextRequest) {
 
     // ── 2) Fetch matching stores (capped to prevent full-table scan) ──────────
     const stores = await prisma.store.findMany({
-      where: brandIdFilter ? { partnerBrandIds: { has: brandIdFilter } } : undefined,
-      select: { id: true, storeName: true, city: true, partnerBrandTypes: true, partnerBrandIds: true },
+      where: brandIdFilter ? {
+        storeBrands: {
+          some: { brandId: brandIdFilter }
+        }
+      } : undefined,
+      select: {
+        id: true,
+        storeName: true,
+        city: true,
+        storeBrands: {
+          select: {
+            brandId: true,
+            brandType: true
+          }
+        }
+      },
       take: storeLimit,
     });
 
@@ -135,23 +149,25 @@ export async function GET(request: NextRequest) {
     const ragPerformances: RAGStorePerformance[] = [];
 
     for (const store of stores) {
+      const associatedBrands = store.storeBrands;
+
       // Use the brand-specific type when a brand filter is active,
       // or pick the "best" type among all brands if no filter is applied.
       let storeType: string;
       if (brandIdFilter) {
-        const brandIdx = store.partnerBrandIds.indexOf(brandIdFilter);
-        storeType = (brandIdx >= 0 ? store.partnerBrandTypes[brandIdx] : store.partnerBrandTypes[0]) as string || 'D';
+        const matchedBrand = associatedBrands.find(sb => sb.brandId === brandIdFilter);
+        storeType = matchedBrand?.brandType || associatedBrands[0]?.brandType || 'D';
       } else {
         // Find the "highest" type (A+ > A > B > C > D)
         const priorityOrder: Record<string, number> = { 'A_PLUS': 5, 'A': 4, 'B': 3, 'C': 2, 'D': 1 };
         let bestType = 'D';
         let bestScore = 0;
         
-        for (const t of store.partnerBrandTypes) {
-          const score = priorityOrder[t as string] || 0;
+        for (const sb of associatedBrands) {
+          const score = priorityOrder[sb.brandType] || 0;
           if (score > bestScore) {
             bestScore = score;
-            bestType = t as string;
+            bestType = sb.brandType;
           }
         }
         storeType = bestType;

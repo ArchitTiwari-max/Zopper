@@ -104,7 +104,9 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             storeName: true,
-            partnerBrandIds: true
+            storeBrands: {
+              select: { brandId: true }
+            }
           }
         },
         executive: {
@@ -146,7 +148,7 @@ export async function GET(request: NextRequest) {
 
     // Get all unique brand IDs from all visits
     const allBrandIds = [...new Set(
-      visits.flatMap(visit => visit.store?.partnerBrandIds || [])
+      visits.flatMap(visit => visit.store?.storeBrands.map(sb => sb.brandId) || [])
     )];
 
     // Fetch brand names for all brand IDs
@@ -167,8 +169,8 @@ export async function GET(request: NextRequest) {
     const transformedVisits = visits.map(visit => ({
       id: visit.id,
       storeName: visit.store?.storeName || 'Unknown Store',
-      partnerBrand: visit.store?.partnerBrandIds && visit.store.partnerBrandIds.length > 0
-        ? visit.store.partnerBrandIds.map(brandId => brandMap.get(brandId) || 'Unknown Brand').join(', ')
+      partnerBrand: visit.store?.storeBrands && visit.store.storeBrands.length > 0
+        ? visit.store.storeBrands.map(sb => brandMap.get(sb.brandId) || 'Unknown Brand').join(', ')
         : 'N/A',
       status: visit.status,
       reviewerName: visit.reviewedByAdmin?.name,

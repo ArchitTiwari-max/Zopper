@@ -131,13 +131,13 @@ export async function GET(request: NextRequest) {
           visit: {
             include: {
               executive: { select: { id: true, name: true } },
-              store: { select: { id: true, storeName: true, city: true, fullAddress: true, partnerBrandIds: true } }
+              store: { select: { id: true, storeName: true, city: true, fullAddress: true, storeBrands: { select: { brandId: true } } } }
             }
           },
           digitalVisit: {
             include: {
               executive: { select: { id: true, name: true } },
-              store: { select: { id: true, storeName: true, city: true, fullAddress: true, partnerBrandIds: true } }
+              store: { select: { id: true, storeName: true, city: true, fullAddress: true, storeBrands: { select: { brandId: true } } } }
             }
           },
           assigned: {
@@ -171,9 +171,9 @@ export async function GET(request: NextRequest) {
           .map((brandId: string) => brandMap.get(brandId))
           .filter(Boolean) as string[];
         partnerBrandNames = visitBrands;
-      } else if (source?.store && Array.isArray((source.store as any).partnerBrandIds)) {
-        const pb = (source.store as any).partnerBrandIds
-          .map((id: string) => brandMap.get(id))
+      } else if (source?.store && Array.isArray((source.store as any).storeBrands)) {
+        const pb = (source.store as any).storeBrands
+          .map((sb: any) => brandMap.get(sb.brandId))
           .filter(Boolean) as string[];
         partnerBrandNames = pb;
       }

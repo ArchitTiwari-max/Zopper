@@ -174,8 +174,9 @@ async function main() {
         for (const target of loserTargets) {
           const existingWinnerTarget = await tx.storeTarget.findUnique({
             where: {
-              storeId_month_year: {
+              storeId_brandId_month_year: {
                 storeId: winnerId,
+                brandId: target.brandId,
                 month: target.month,
                 year: target.year
               }

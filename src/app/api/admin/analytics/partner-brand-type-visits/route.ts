@@ -37,28 +37,21 @@ export async function GET(request: NextRequest) {
     console.log('🔄 Processing partner-brand-type-visits query...');
     const startTime = Date.now();
 
-    // OPTIMIZED: Filter stores to only those having brand types to avoid massive overhead
-    const storesQuery = brandId 
-      ? {
-          where: {
-            partnerBrandIds: { has: brandId },
-            partnerBrandTypes: { isEmpty: false }
-          }
-        }
-      : {
-          where: {
-            partnerBrandTypes: { isEmpty: false }
-          }
-        };
-
-    // Get stores efficiently with proper filtering
     const stores = await prisma.store.findMany({
-      ...storesQuery,
+      where: brandId ? {
+        storeBrands: {
+          some: { brandId: brandId }
+        }
+      } : undefined,
       select: {
         id: true,
         storeName: true,
-        partnerBrandIds: true,
-        partnerBrandTypes: true,
+        storeBrands: {
+          select: {
+            brandId: true,
+            brandType: true
+          }
+        }
       },
     });
 
@@ -123,24 +116,11 @@ export async function GET(request: NextRequest) {
     const groupSeenIds: Record<string, Set<string>>                     = { A_PLUS: new Set(), A: new Set(), B: new Set(), C: new Set(), D: new Set() };
 
     for (const store of storesWithVisits) {
-      const brandIds   = Array.isArray(store.partnerBrandIds)   ? store.partnerBrandIds   : [];
-      const brandTypes = Array.isArray(store.partnerBrandTypes) ? store.partnerBrandTypes : [];
+      const associatedBrands = store.storeBrands;
 
-      if (!brandId) {
-        // No filter → place the store in every type it carries (deduplicated per type)
-        const len = Math.min(brandIds.length, brandTypes.length);
-        for (let i = 0; i < len; i++) {
-          const type = brandTypes[i] as PartnerBrandType;
-          if (type && groupStores[type] && !groupSeenIds[type].has(store.id)) {
-            groupSeenIds[type].add(store.id);
-            groupStores[type].push({ id: store.id, name: store.storeName });
-          }
-        }
-      } else {
-        // Brand filter → find the matching brand index, use its type
-        const idx = brandIds.indexOf(brandId);
-        if (idx >= 0 && idx < brandTypes.length) {
-          const type = brandTypes[idx] as PartnerBrandType;
+      for (const sb of associatedBrands) {
+        if (!brandId || sb.brandId === brandId) {
+          const type = sb.brandType;
           if (type && groupStores[type] && !groupSeenIds[type].has(store.id)) {
             groupSeenIds[type].add(store.id);
             groupStores[type].push({ id: store.id, name: store.storeName });

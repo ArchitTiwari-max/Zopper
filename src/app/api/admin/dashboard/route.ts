@@ -257,7 +257,7 @@ async function getBrandVisitData(startDate: Date, endDate: Date) {
       select: {
         id: true,
         brandName: true,
-        // category field removed - using CategoryBrand relation
+        // category field removed
       }
     });
 
@@ -287,7 +287,7 @@ async function getBrandVisitData(startDate: Date, endDate: Date) {
     brands.forEach(brand => {
       brandVisitMap.set(brand.id, {
         name: brand.brandName,
-        category: 'General', // TODO: Implement category lookup via CategoryBrand relation
+        category: 'General', // Default to 'General' category
         visits: 0,
         uniqueStores: new Set<string>()
       });

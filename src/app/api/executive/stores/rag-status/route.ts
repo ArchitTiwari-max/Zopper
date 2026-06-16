@@ -155,6 +155,7 @@ export async function GET(request: NextRequest) {
     const stores = await prisma.store.findMany({
       where: whereClause,
       include: {
+        storeBrands: true,
         salesRecords: {
           where: {
             year: year
@@ -183,8 +184,8 @@ export async function GET(request: NextRequest) {
     // Process stores and calculate RAG status
     const processedStores = stores.map(store => {
       // Get partner brands for this store
-      const partnerBrands = store.partnerBrandIds
-        .map(brandId => brandMap.get(brandId))
+      const partnerBrands = store.storeBrands
+        .map(sb => brandMap.get(sb.brandId))
         .filter(Boolean) as string[];
 
       // Apply brand filter if specified
@@ -219,8 +220,9 @@ export async function GET(request: NextRequest) {
       });
 
       // Process each partner brand type
-      store.partnerBrandTypes.forEach((brandType, index) => {
-        const brandId = store.partnerBrandIds[index];
+      store.storeBrands.forEach((sb) => {
+        const brandId = sb.brandId;
+        const brandType = sb.brandType;
         const brandName = brandMap.get(brandId) || 'Unknown Brand';
         
         // Find sales record for this brand

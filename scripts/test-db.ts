@@ -3,22 +3,35 @@ import { PrismaClient } from '@prisma/client';
 async function main() {
   const prisma = new PrismaClient();
   try {
-    console.log('Connecting to database...');
-    const count = await prisma.store.count();
-    console.log(`Database connection successful! Total stores: ${count}`);
+    const totalStores = await prisma.store.count();
     
-    // Sample a few stores
-    const samples = await prisma.store.findMany({
-      take: 5,
-      select: {
-        id: true,
-        storeName: true,
-        city: true
-      }
+    // Count stores that have at least one StoreBrand relation
+    const storesWithBrands = await prisma.store.count({
+      where: {
+        storeBrands: {
+          some: {},
+        },
+      },
     });
-    console.log('Sample stores from DB:', JSON.stringify(samples, null, 2));
+    
+    const totalStoreBrands = await prisma.storeBrand.count();
+    
+    // Count StoreBrand records that have a brandType other than NONE
+    const migratedStoreBrands = await prisma.storeBrand.count({
+      where: {
+        brandType: {
+          not: 'NONE',
+        },
+      },
+    });
+
+    console.log('--- DB Check ---');
+    console.log(`Total Stores: ${totalStores}`);
+    console.log(`Stores with StoreBrand relations: ${storesWithBrands}`);
+    console.log(`Total StoreBrand records: ${totalStoreBrands}`);
+    console.log(`StoreBrand records with brandType (not NONE): ${migratedStoreBrands}`);
   } catch (err) {
-    console.error('Error connecting to database:', err);
+    console.error('Error:', err);
   } finally {
     await prisma.$disconnect();
   }
