@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
           longitude: true,
           partnerBrandIds: true,
           partnerBrandTypes: true,
+          priority: true,
         },
         orderBy: {
           storeName: 'asc'
@@ -63,7 +64,8 @@ export async function GET(request: NextRequest) {
           lastVisitDate: null,
           isFlagged: false,
           sortOrder: 0,
-          alignmentScore: 0
+          alignmentScore: 0,
+          priority: store.priority || null
         };
       });
 
@@ -126,6 +128,7 @@ export async function GET(request: NextRequest) {
             longitude: true,
             partnerBrandIds: true,
             partnerBrandTypes: true,
+            priority: true,
           }
         })
       )),
@@ -219,7 +222,8 @@ export async function GET(request: NextRequest) {
         lastVisitDate,
         isFlagged: flaggedMap.get(store.id) || false,
         sortOrder: lastVisitDate ? new Date(lastVisitDate).getTime() : 0,
-        alignmentScore
+        alignmentScore,
+        priority: store.priority || null
       };
     });
 
