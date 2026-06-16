@@ -286,8 +286,7 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
 
     useEffect(() => {
         let active = true;
-        
-        // Reset/set to null (Calculating...) first
+
         setRouteDistances(new Array(suggestedRoute.length).fill(undefined));
 
         (async () => {
@@ -301,32 +300,29 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
                 ...suggestedRoute.map(s => ({ lat: s.latitude, lng: s.longitude }))
             ];
 
-            const origins = points.slice(0, -1);
-            const destinations = points.slice(1);
-            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-
-            const distances = await Promise.all(origins.map(async (orig, i) => {
-                const dest = destinations[i];
-                const fallback = haversineDistance(orig.lat, orig.lng, dest.lat, dest.lng);
-                if (!apiKey) return fallback;
-
-                try {
-                    const res = await fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?origins=${orig.lat},${orig.lng}&destinations=${dest.lat},${dest.lng}&key=${apiKey}`);
-                    const data = await res.json();
-                    if (data.status === 'OK' && data.rows?.[0]?.elements?.[0]?.status === 'OK') {
-                        return Math.round((data.rows[0].elements[0].distance.value / 1000) * 10) / 10;
-                    }
-                    return fallback;
-                } catch (e) {
-                    return fallback;
-                }
+            const legs = points.slice(0, -1).map((orig, i) => ({
+                originLat: orig.lat,
+                originLng: orig.lng,
+                destLat: points[i + 1].lat,
+                destLng: points[i + 1].lng
             }));
 
-            if (active) {
-                setRouteDistances(distances);
+            try {
+                const res = await fetch('/api/executive/driving-distance', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ legs })
+                });
+                const data = await res.json();
+                if (active && data.success) {
+                    setRouteDistances(data.distances);
+                }
+            } catch (e) {
+                console.error('Failed to fetch driving distances:', e);
             }
         })();
-        
+
         return () => { active = false; };
     }, [suggestedRoute, startStoreCoords]);
 
