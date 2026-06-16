@@ -23,6 +23,7 @@ async function getGoogleMapsDistances(
         const originStr = `${origin.lat},${origin.lng}`;
         const destStr = chunk.map(d => `${d.lat},${d.lng}`).join('|');
 
+        try {
             const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${originStr}&destinations=${destStr}&key=${apiKey}`;
             const res = await fetch(url);
             const data = await res.json();
@@ -35,15 +36,23 @@ async function getGoogleMapsDistances(
             chunk.forEach((dest, index) => {
                 const element = elements[index];
                 if (element.status !== 'OK' || !element.distance) {
-                    throw new Error(`No route found for store ${dest.id} (element status: ${element.status})`);
+                    distanceMap.set(dest.id, -1);
+                } else {
+                    // distance.value is in meters, convert to km
+                    distanceMap.set(dest.id, element.distance.value / 1000);
                 }
-                // distance.value is in meters, convert to km
-                distanceMap.set(dest.id, element.distance.value / 1000);
             });
+        } catch (e) {
+            console.error("[suggest-pjp] Error getting driving distance, skipping stores:", e);
+            chunk.forEach((dest) => {
+                distanceMap.set(dest.id, -1);
+            });
+        }
     }
 
     return distanceMap;
 }
+
 
 export async function GET(request: NextRequest) {
     try {
@@ -98,14 +107,19 @@ export async function GET(request: NextRequest) {
         );
 
         const routeOrder = destinationStores
-            .map(s => ({
-                id: s.id,
-                latitude: s.lat,
-                longitude: s.lng,
-                distanceFromStart: Math.round((drivingDistances.get(s.id) || 0) * 10) / 10
-            }))
+            .map(s => {
+                const dist = drivingDistances.get(s.id);
+                return {
+                    id: s.id,
+                    latitude: s.lat,
+                    longitude: s.lng,
+                    distanceFromStart: dist !== undefined && dist !== -1 ? Math.round(dist * 10) / 10 : -1
+                };
+            })
+            .filter(r => r.distanceFromStart !== -1)
             .sort((a, b) => a.distanceFromStart - b.distanceFromStart)
             .slice(0, 10);
+
 
         // Fetch last visit for each route store + start store (for history)
         const allRouteIds = [startStoreId, ...routeOrder.map(r => r.id)];

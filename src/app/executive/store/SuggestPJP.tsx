@@ -528,11 +528,9 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
 
                                             {/* Meta row */}
                                             <div className="spjp-route-meta">
-                                                {getDistance(index) !== 0 && (
-                                                    <span className="spjp-distance-chip">
-                                                        📏 {getDistance(index) !== null ? `${getDistance(index)} km` : 'Calculating...'} from previous stop
-                                                    </span>
-                                                )}
+                                                <span className="spjp-distance-chip">
+                                                    📏 {getDistance(index) === null ? 'Calculating...' : `${getDistance(index) === 0 ? '0.1' : getDistance(index)} km`} from previous stop
+                                                </span>
                                                 <span className="spjp-last-visit-chip">🕐 {store.visited}</span>
                                                 {store.wasInLastPJP && (
                                                     <span className="spjp-was-pjp-chip">📋 Was in last PJP</span>
@@ -717,7 +715,7 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
                                         <span className="spjp-step3-store-name">{store.storeName}</span>
                                         <span className="spjp-step3-store-city">
                                             {store.city}
-                                            {getDistance(i) > 0 && ` · ${getDistance(i)} km from previous`}
+                                            {getDistance(i) !== null && ` · ${getDistance(i) === 0 ? '0.1' : getDistance(i)} km from previous`}
                                         </span>
                                     </div>
                                 </div>
