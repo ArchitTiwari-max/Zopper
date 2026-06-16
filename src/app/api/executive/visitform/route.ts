@@ -122,6 +122,8 @@ export async function GET(request: NextRequest) {
             imageUrls: visit.imageUrls,
             adminComment: visit.adminComment,
             storeName: visit.store?.storeName || 'Unknown Store',
+            brandVisitDetails: visit.brandVisitDetails || null,
+            visitDate: visit.visitDate ? visit.visitDate.toISOString().split('T')[0] : null,
             issues: visit.issues
               .filter((issue: any) =>
                 issue.assigned.some((assignment: any) =>
@@ -165,6 +167,8 @@ export async function GET(request: NextRequest) {
             imageUrls: [],
             adminComment: null,
             storeName: visit.store?.storeName || 'Unknown Store',
+            brandVisitDetails: visit.brandVisitDetails || null,
+            visitDate: visit.visitDate ? visit.visitDate.toISOString().split('T')[0] : null,
             issues: (visit.issues || []).map((issue: any) => ({
               id: issue.id,
               details: issue.details,
@@ -216,8 +220,10 @@ export async function POST(request: NextRequest) {
       POSMchecked,
       issuesRaised,
       brandsVisited,
+      brandVisitDetails,
       remarks,
-      imageUrls
+      imageUrls,
+      nextScheduledDate
     } = await request.json();
 
     if (!storeId || !personMet || personMet.length === 0) {
@@ -270,14 +276,70 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Get brand IDs from brand names
+    // Check for duplicate visits (physical or digital) on this day for this store
+    const startOfDay = new Date(visitDate + 'T00:00:00.000Z');
+    const endOfDay = new Date(visitDate + 'T23:59:59.999Z');
+
+    const [existingPhysicalVisit, existingDigitalVisit] = await Promise.all([
+      prisma.visit.findFirst({
+        where: {
+          storeId,
+          visitDate: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        }
+      }),
+      prisma.digitalVisit.findFirst({
+        where: {
+          storeId,
+          connectDate: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        }
+      })
+    ]);
+
+    if (existingPhysicalVisit || existingDigitalVisit) {
+      return NextResponse.json({
+        error: 'A visit has already been submitted for this store on this date',
+        code: 'DUPLICATE_VISIT'
+      }, { status: 400 });
+    }
+
+    // Get brand IDs from brand names (either from brandsVisited or brandVisitDetails)
     const brandIds: string[] = [];
-    if (brandsVisited && brandsVisited.length > 0) {
+    const brandsToLookup = brandsVisited && brandsVisited.length > 0 
+      ? brandsVisited 
+      : (brandVisitDetails ? brandVisitDetails.map((b: any) => b.brandName) : []);
+      
+    const brandMap: Record<string, string> = {};
+    if (brandsToLookup.length > 0) {
       const brands = await prisma.brand.findMany({
-        where: { brandName: { in: brandsVisited } }
+        where: { brandName: { in: brandsToLookup } }
+      });
+      brands.forEach(brand => {
+        brandMap[brand.brandName] = brand.id;
       });
       brandIds.push(...brands.map(brand => brand.id));
     }
+
+    // Inject brandId inside brandVisitDetails JSON array
+    const updatedBrandVisitDetails = brandVisitDetails && Array.isArray(brandVisitDetails)
+      ? brandVisitDetails.map((b: any) => ({
+          ...b,
+          brandId: brandMap[b.brandName] || null
+        }))
+      : null;
+
+    // Aggregate brand remarks into root remarks field
+    const combinedRemarks = brandVisitDetails && Array.isArray(brandVisitDetails)
+      ? brandVisitDetails
+          .filter((b: any) => b.remarks && b.remarks.trim() !== '')
+          .map((b: any) => `${b.brandName}\n${b.remarks.trim()}`)
+          .join('\n\n')
+      : '';
 
     const visitDateTime = new Date(visitDate + 'T00:00:00.000Z');
 
@@ -285,13 +347,15 @@ export async function POST(request: NextRequest) {
       data: {
         personMet,
         POSMchecked,
-        remarks: remarks || '',
+        remarks: combinedRemarks || remarks || '',
         imageUrls: imageUrls || [],
         status: 'PENDING_REVIEW' as any,
         executiveId: executive.id,
         storeId,
         brandIds,
-        visitDate: visitDateTime
+        brandVisitDetails: updatedBrandVisitDetails,
+        visitDate: visitDateTime,
+        ...(nextScheduledDate ? { nextScheduledDate: new Date(nextScheduledDate + 'T00:00:00.000Z') } : {})
       },
       include: {
         store: true,
@@ -300,6 +364,8 @@ export async function POST(request: NextRequest) {
     });
 
     let createdIssues: any[] = [];
+    
+    // Process top-level issues
     if (issuesRaised && Array.isArray(issuesRaised) && issuesRaised.length > 0) {
       for (const issueDetail of issuesRaised) {
         if (issueDetail && issueDetail.trim() !== '') {
@@ -318,6 +384,80 @@ export async function POST(request: NextRequest) {
             status: createdIssue.status
           });
         }
+      }
+    }
+
+    // Process per-brand issues
+    if (brandVisitDetails && Array.isArray(brandVisitDetails)) {
+      for (const brandData of brandVisitDetails) {
+        if (brandData.issuesRaised && Array.isArray(brandData.issuesRaised) && brandData.issuesRaised.length > 0) {
+          for (const issueDetail of brandData.issuesRaised) {
+            if (issueDetail && issueDetail.trim() !== '') {
+              const uniqueIssueId = await generateUniqueIssueId();
+              const createdIssue = await prisma.issue.create({
+                data: {
+                  id: uniqueIssueId,
+                  details: `[${brandData.brandName}] ${issueDetail.trim()}`,
+                  visitId: visit.id,
+                  status: 'Pending'
+                }
+              });
+              createdIssues.push({
+                id: createdIssue.id,
+                details: createdIssue.details,
+                status: createdIssue.status
+              });
+            }
+          }
+        }
+      }
+    }
+
+    if (nextScheduledDate) {
+      const nextDate = new Date(nextScheduledDate + 'T00:00:00.000Z');
+      
+      const existingPlan = await prisma.visitPlan.findFirst({
+        where: {
+          executiveId: executive.id,
+          plannedVisitDate: nextDate
+        }
+      });
+
+      const storeSnapshotInfo = {
+        id: visit.store.id,
+        storeName: visit.store.storeName,
+        isRescheduled: true,
+        rescheduledFromVisitId: visit.id
+      };
+
+      if (existingPlan) {
+        if (!existingPlan.storeIds.includes(storeId)) {
+          let updatedSnapshots: any[] = [];
+          if (existingPlan.storesSnapshot && Array.isArray(existingPlan.storesSnapshot)) {
+            updatedSnapshots = [...existingPlan.storesSnapshot];
+          }
+          updatedSnapshots.push(storeSnapshotInfo);
+
+          await prisma.visitPlan.update({
+            where: { id: existingPlan.id },
+            data: {
+              storeIds: { push: storeId },
+              storesSnapshot: updatedSnapshots
+            }
+          });
+        }
+      } else {
+        await prisma.visitPlan.create({
+          data: {
+            executiveId: executive.id,
+            plannedVisitDate: nextDate,
+            storeIds: [storeId],
+            storesSnapshot: [storeSnapshotInfo],
+            createdByRole: 'EXECUTIVE',
+            adminComment: "Auto-added from physical visit rescheduling",
+            status: 'SUBMITTED'
+          }
+        });
       }
     }
 

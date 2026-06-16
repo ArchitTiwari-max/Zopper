@@ -67,19 +67,86 @@ export async function POST(request: NextRequest) {
     const executive = await prisma.executive.findUnique({ where: { userId: user.userId } });
     if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
 
-    const { storeId, visitDate, connectDate, personMet, remarks, issuesRaised } = await request.json();
+    const { storeId, visitDate, connectDate, personMet, remarks, issuesRaised, brandVisitDetails } = await request.json();
 
     const dateStr: string | undefined = connectDate || visitDate; // backward compat
 
     if (!storeId || !dateStr) return NextResponse.json({ error: 'storeId and connectDate are required' }, { status: 400 });
     if (!personMet || !Array.isArray(personMet) || personMet.length === 0) return NextResponse.json({ error: 'At least one person spoken is required' }, { status: 400 });
-    if (!remarks || String(remarks).trim() === '') return NextResponse.json({ error: 'Remarks are required' }, { status: 400 });
+
+    // Look up brand names to resolve brand IDs for brandVisitDetails
+    const brandsToLookup = brandVisitDetails && Array.isArray(brandVisitDetails)
+      ? brandVisitDetails.map((b: any) => b.brandName)
+      : [];
+    
+    const brandMap: Record<string, string> = {};
+    if (brandsToLookup.length > 0) {
+      const brands = await prisma.brand.findMany({
+        where: { brandName: { in: brandsToLookup } }
+      });
+      brands.forEach(b => {
+        brandMap[b.brandName] = b.id;
+      });
+    }
+
+    const updatedBrandVisitDetails = brandVisitDetails && Array.isArray(brandVisitDetails)
+      ? brandVisitDetails.map((b: any) => ({
+          ...b,
+          brandId: brandMap[b.brandName] || null
+        }))
+      : null;
+
+    // Aggregate brand remarks into root remarks field
+    const combinedRemarks = brandVisitDetails && Array.isArray(brandVisitDetails)
+      ? brandVisitDetails
+          .filter((b: any) => b.remarks && b.remarks.trim() !== '')
+          .map((b: any) => `${b.brandName}\n${b.remarks.trim()}`)
+          .join('\n\n')
+      : '';
+
+    const finalRemarks = combinedRemarks || (remarks ? String(remarks).trim() : '');
+
+    if (!finalRemarks || finalRemarks.trim() === '') {
+      return NextResponse.json({ error: 'Remarks are required' }, { status: 400 });
+    }
 
     // Validate store assignment
     const assignment = await prisma.executiveStoreAssignment.findUnique({
       where: { executiveId_storeId: { executiveId: executive.id, storeId } },
     });
     if (!assignment) return NextResponse.json({ error: 'Access denied: You are not assigned to this store', code: 'STORE_NOT_ASSIGNED' }, { status: 403 });
+
+    // Check for duplicate visits (physical or digital) on this day for this store
+    const startOfDay = new Date(dateStr + 'T00:00:00.000Z');
+    const endOfDay = new Date(dateStr + 'T23:59:59.999Z');
+
+    const [existingPhysicalVisit, existingDigitalVisit] = await Promise.all([
+      prisma.visit.findFirst({
+        where: {
+          storeId,
+          visitDate: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        }
+      }),
+      prisma.digitalVisit.findFirst({
+        where: {
+          storeId,
+          connectDate: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        }
+      })
+    ]);
+
+    if (existingPhysicalVisit || existingDigitalVisit) {
+      return NextResponse.json({
+        error: 'A visit has already been submitted for this store on this date',
+        code: 'DUPLICATE_VISIT'
+      }, { status: 400 });
+    }
 
     // Convert connect date
     const connectDateObj = new Date(`${dateStr}T00:00:00.000Z`);
@@ -91,10 +158,11 @@ export async function POST(request: NextRequest) {
       data: {
         connectDate: connectDateObj,
         personMet: personMet,
-        remarks: String(remarks).trim(),
+        remarks: finalRemarks,
         status: 'PENDING_REVIEW' as any,
         executiveId: executive.id,
         storeId,
+        brandVisitDetails: updatedBrandVisitDetails,
       },
     });
 

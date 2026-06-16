@@ -26,7 +26,7 @@ interface StoreData {
   latitude?: number | null;
   longitude?: number | null;
   partnerBrands: string[];
-  partnerBrandTypes: ('A_PLUS' | 'A' | 'B' | 'C' | 'D')[];
+  partnerBrandTypes: ('A_PLUS' | 'A' | 'B' | 'C' | 'D' | 'NONE')[];
   visited: string;
   lastVisitDate: string | null;
   isFlagged: boolean;
@@ -50,6 +50,7 @@ const Store: React.FC = () => {
   const [coordinateStore, setCoordinateStore] = useState<StoreData | null>(null);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [leaveReason, setLeaveReason] = useState<string>('I am on Off');
+  const [rescheduledIds, setRescheduledIds] = useState<Set<string>>(new Set());
 
   // RAG data state
   const [ragData, setRagData] = useState<Map<string, string>>(new Map()); // Map of storeId -> RAG status
@@ -91,12 +92,13 @@ const Store: React.FC = () => {
   };
 
   // Helper function to format brands with types
-  const formatBrandsWithTypes = (brands: string[], types: ('A_PLUS' | 'A' | 'B' | 'C' | 'D')[]): string => {
+  const formatBrandsWithTypes = (brands: string[], types: ('A_PLUS' | 'A' | 'B' | 'C' | 'D' | 'NONE')[]): string => {
     if (brands.length === 0) return 'No brands';
 
     return brands.map((brand, index) => {
       const type = types[index];
-      return type ? `${brand} (${formatBrandType(type)})` : brand;
+      const formatted = type ? formatBrandType(type) : '';
+      return formatted ? `${brand} (${formatted})` : brand;
     }).join(', ');
   };
 
@@ -110,6 +112,45 @@ const Store: React.FC = () => {
     const todayLocal = `${year}-${month}-${day}`;
     setPlannedVisitDate(todayLocal);
   }, []);
+
+  const prevReschedIdsRef = React.useRef<Set<string>>(new Set());
+
+  const fetchRescheduledVisits = async (date: string) => {
+    if (!date) return;
+    try {
+      const res = await fetch(`/api/executive/rescheduled-visits?date=${date}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        const newIds = new Set<string>(data.data.map((s: any) => s.id));
+        const oldIds = prevReschedIdsRef.current;
+        
+        setSelectedStores(prev => {
+          const current = new Set(prev);
+          
+          // Remove previously auto-added visits that are not in the new date's visits
+          oldIds.forEach(id => {
+            if (!newIds.has(id)) {
+              current.delete(id);
+            }
+          });
+          
+          newIds.forEach(id => current.add(id));
+          return Array.from(current);
+        });
+
+        setRescheduledIds(newIds);
+        prevReschedIdsRef.current = newIds;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    if (isCreateMode || showPreview) {
+      fetchRescheduledVisits(plannedVisitDate);
+    }
+  }, [plannedVisitDate, isCreateMode, showPreview]);
 
   // Fetch RAG data from executive RAG analytics API
   const fetchRAGData = async () => {
@@ -380,6 +421,8 @@ const Store: React.FC = () => {
   };
 
   const handleStoreSelection = (storeId: string) => {
+    if (rescheduledIds.has(storeId)) return; // Prevent unselecting rescheduled stores
+
     setSelectedStores(prev => {
       if (prev.includes(storeId)) {
         return prev.filter(id => id !== storeId);
@@ -666,7 +709,9 @@ const Store: React.FC = () => {
                         type="checkbox"
                         className="exec-v-form-store-checkbox"
                         checked={selectedStores.includes(store.id)}
+                        disabled={rescheduledIds.has(store.id)}
                         onChange={() => handleStoreSelection(store.id)}
+                        style={rescheduledIds.has(store.id) ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                       />
                     </div>
                   )}
@@ -686,7 +731,10 @@ const Store: React.FC = () => {
                       >
                         {store.isFlagged ? '⭐' : '☆'}
                       </button>
-                      <span className="exec-v-form-store-name-text">{store.storeName} {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}</span>
+                      <span className="exec-v-form-store-name-text">
+                        {store.storeName} 
+                        {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}
+                      </span>
                       <span className="exec-v-form-store-subtext">{store.city}</span>
                       {!isCreateMode && (
                         <button
@@ -839,7 +887,11 @@ const Store: React.FC = () => {
                   <div key={store.id} className="exec-v-form-preview-store-item">
                     <div className="exec-v-form-store-number">{index + 1}</div>
                     <div className="exec-v-form-store-info">
-                      <h4 className="exec-v-form-store-name">{store.storeName} {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}</h4>
+                      <h4 className="exec-v-form-store-name">
+                        {store.storeName} 
+                        {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}
+                        {rescheduledIds.has(store.id) && <span style={{ marginLeft: '6px', fontSize: '10px', verticalAlign: 'middle' }} title="Rescheduled Visit">🔴</span>}
+                      </h4>
                       <p className="exec-v-form-store-details">
                         📍 {store.city}
                         {store.fullAddress && ` • ${store.fullAddress}`}

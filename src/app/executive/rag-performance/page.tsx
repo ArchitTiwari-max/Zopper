@@ -46,8 +46,16 @@ const ExecutiveRAGPerformancePage: React.FC = () => {
   const [filters, setFilters] = useState({
     dateRange: searchParams.get('dateRange') || '7days',
     ragFilter: searchParams.get('ragFilter') || 'all',
-    brandFilter: searchParams.get('brandFilter') || 'Samsung' // Default to Samsung brand
+    brandFilter: searchParams.get('brandFilter') || 'all'
   });
+  const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    fetch('/api/executive/brands', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => setBrands((d.data || []).map((b: any) => ({ id: b.id, name: b.brandName }))))
+      .catch(() => {});
+  }, []);
 
   const fetchRAGData = async () => {
     try {
@@ -206,12 +214,9 @@ const ExecutiveRAGPerformancePage: React.FC = () => {
             className="rag-filter-select"
           >
             <option value="all">All Brands</option>
-            <option value="Samsung">Samsung</option>
-            <option value="Vivo">Vivo</option>
-            <option value="Oppo">Oppo</option>
-            <option value="OnePlus">OnePlus</option>
-            <option value="Realme">Realme</option>
-            <option value="Xiaomi">Xiaomi</option>
+            {brands.map(b => (
+              <option key={b.id} value={b.name}>{b.name}</option>
+            ))}
           </select>
         </div>
       </div>

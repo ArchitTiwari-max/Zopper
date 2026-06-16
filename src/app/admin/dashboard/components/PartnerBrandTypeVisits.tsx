@@ -42,11 +42,7 @@ const PartnerBrandTypeVisits: React.FC = () => {
         const list: BrandOption[] = (data.brands || []).map((b: any) => ({ id: b.id, name: b.name }));
         if (!ignore) {
           setBrands(list);
-          // Default brand: Samsung (case-insensitive). Fallback to first brand if Samsung not found.
-          if (!brandId && list.length > 0) {
-            const samsung = list.find((b) => b.name?.toLowerCase() === "samsung");
-            setBrandId(samsung?.id || list[0].id);
-          }
+          // No default brand restriction, show all brands by default
         }
       } catch (e: any) {
         if (!ignore) setError(e?.message || "Failed to load brands");
@@ -109,9 +105,12 @@ const PartnerBrandTypeVisits: React.FC = () => {
             {brands.length === 0 ? (
               <option value="">Loading brands...</option>
             ) : (
-              brands.map(b => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))
+              <>
+                <option value="">All Brands</option>
+                {brands.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </>
             )}
           </select>
           <select

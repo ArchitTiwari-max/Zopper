@@ -38,8 +38,11 @@ export async function GET(request: NextRequest) {
 
     // Cache per-user lightly
     const response = NextResponse.json({ success: true, data: suggestions })
-    response.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=30')
-    response.headers.set('Vary', 'Cookie')
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    response.headers.set('Vary', 'Cookie');
+    response.headers.set('Vary', 'Cookie');
     return response
   } catch (error: any) {
     console.error('Dost API error:', error)

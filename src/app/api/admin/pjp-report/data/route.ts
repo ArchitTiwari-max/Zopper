@@ -80,6 +80,7 @@ export async function GET(request: NextRequest) {
       executiveName: plan.executive.name,
       submittedAt: plan.submittedAt,
       plannedVisitDate: plan.plannedVisitDate,
+      storeIds: plan.storeIds,
       storeNames: plan.storeIds.map(id => storeMap.get(id) || 'Unknown Store'),
       pjpNotFollowedReason: plan.pjpNotFollowedReason || 'N/A'
     }));

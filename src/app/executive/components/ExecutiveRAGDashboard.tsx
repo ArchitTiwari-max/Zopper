@@ -31,8 +31,22 @@ const ExecutiveRAGDashboard: React.FC = () => {
   const [filters, setFilters] = useState({
     dateRange: '7days',
     ragFilter: 'all',
-    brandFilter: 'Samsung' // Filter to show only Samsung brand stores
+    brandFilter: 'all'
   });
+
+  const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
+
+  // Fetch available brands for this executive
+  useEffect(() => {
+    fetch('/api/executive/brands', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          setBrands(d.data.map((b: any) => ({ id: b.id, name: b.brandName })));
+        }
+      })
+      .catch(err => console.error('Error fetching brands:', err));
+  }, []);
 
   const fetchRAGData = async () => {
     try {
@@ -86,17 +100,19 @@ const ExecutiveRAGDashboard: React.FC = () => {
     const params = new URLSearchParams({
       dateRange: filters.dateRange,
       ragFilter: ragFilter || filters.ragFilter,
-      brandFilter: filters.brandFilter // Pass Samsung brand filter
+      brandFilter: filters.brandFilter
     });
     router.push(`/executive/rag-performance?${params.toString()}`);
   };
 
-  if (loading) {
+  if (loading && !analytics) {
     return (
       <div className="exec-rag-dashboard">
         <div className="exec-rag-header">
-          <h2>My Store Performance (RAG)</h2>
-          <p>Analyzing your assigned stores' attach rate performance...</p>
+          <div className="exec-rag-title-section">
+            <h2>My Store Performance (RAG)</h2>
+            <p>Analyzing your assigned stores' attach rate performance...</p>
+          </div>
         </div>
         <div className="exec-rag-loading">
           <div className="loading-spinner-large"></div>
@@ -106,11 +122,13 @@ const ExecutiveRAGDashboard: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error && !analytics) {
     return (
       <div className="exec-rag-dashboard">
         <div className="exec-rag-header">
-          <h2>My Store Performance (RAG)</h2>
+          <div className="exec-rag-title-section">
+            <h2>My Store Performance (RAG)</h2>
+          </div>
         </div>
         <div className="exec-rag-error">
           <span className="error-message">Error: {error}</span>
@@ -122,20 +140,7 @@ const ExecutiveRAGDashboard: React.FC = () => {
     );
   }
 
-  if (!analytics?.data) {
-    return (
-      <div className="exec-rag-dashboard">
-        <div className="exec-rag-header">
-          <h2>My Store Performance (RAG)</h2>
-        </div>
-        <div className="exec-rag-no-data">
-          <span>No assigned stores found</span>
-        </div>
-      </div>
-    );
-  }
-
-  const { summary, insights, metadata } = analytics.data;
+  const summary = analytics?.data?.summary || { totalStores: 0, greenStores: 0, amberStores: 0, redStores: 0, averageAttachRate: 0, improvementStores: 0 };
 
   return (
     <div className="exec-rag-dashboard">
@@ -146,6 +151,28 @@ const ExecutiveRAGDashboard: React.FC = () => {
           <p>Performance classification for your assigned stores</p>
         </div>
         
+        <div className="exec-rag-filters">
+          <select 
+            value={filters.dateRange} 
+            onChange={(e) => handleFilterChange('dateRange', e.target.value)}
+            className="exec-rag-filter-select"
+          >
+            <option value="7days">Last 7 Days</option>
+            <option value="30days">Last 30 Days</option>
+            <option value="current-month">Current Month</option>
+          </select>
+
+          <select 
+            value={filters.brandFilter} 
+            onChange={(e) => handleFilterChange('brandFilter', e.target.value)}
+            className="exec-rag-filter-select"
+          >
+            <option value="all">All Brands</option>
+            {brands.map(b => (
+              <option key={b.id} value={b.name}>{b.name}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Summary Cards - All Clickable */}

@@ -396,6 +396,13 @@
     color: #6c757d;
 }
 
+.spjp-rescheduled-tag {
+    margin-left: 6px;
+    font-size: 10px;
+    vertical-align: middle;
+}
+
+
 /* Inline Fix Coords button */
 .spjp-city-row-fix {
     display: flex;

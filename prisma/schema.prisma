@@ -15,16 +15,15 @@ enum Role {
   EXECUTIVE
 }
 
-
 model User {
-  id        String   @id @map("_id")
-  email     String   @unique
-  username  String   @unique
-  password  String
-  role      Role     @default(EXECUTIVE)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String           @id @map("_id")
+  email           String           @unique
+  username        String           @unique
+  password        String
+  role            Role             @default(EXECUTIVE)
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   executive       Executive?
   admin           Admin?
   dostChats       DostChat[]
@@ -45,7 +44,7 @@ model Admin {
   reviewedVisits        Visit[]
   reviewedDigitalVisits DigitalVisit[]
 
-  adminVisits           AdminVisit[]
+  adminVisits AdminVisit[]
 }
 
 model Executive {
@@ -76,23 +75,55 @@ enum PartnerBrandType {
   B
   C
   D
+  NONE
+}
+
+enum Priority {
+  p1
+  p2
+  p3
 }
 
 model Store {
-  id                String                      @id @map("_id")
+  id                String                     @id @map("_id")
   storeName         String
-  city              String
+  city              String?
   fullAddress       String?
-  latitude          Float?                      // Geocoded latitude (Google Places API)
-  longitude         Float?                      // Geocoded longitude (Google Places API)
+  latitude          Float? // Geocoded latitude (Google Places API)
+  longitude         Float? // Geocoded longitude (Google Places API)
   visits            Visit[]
   digitalVisits     DigitalVisit[]
-  partnerBrandIds   String[]                    // references Brand IDs
+  partnerBrandIds   String[] // references Brand IDs
   partnerBrandTypes PartnerBrandType[] // parallel array corresoponding to same index in partnerBrandIds
   executiveStores   ExecutiveStoreAssignment[]
   salesRecords      SalesRecord[]
   adminVisits       AdminVisit[]
   alignment         StoreAlignment?
+  storeCategory     String?
+  storeChannel      String?
+  cityTier          String?
+  state             String?
+  priority          Priority?
+  targets           StoreTarget[]
+  storeBrands       StoreBrand[]
+
+  @@index([partnerBrandTypes])
+  @@index([partnerBrandIds])
+}
+
+model StoreTarget {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  storeId       String
+  month         Int      // Month (1-12)
+  year          Int      // Year (e.g. 2026)
+  targetRevenue Float?
+  targetUnits   Int?
+
+  store         Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, month, year])
+  @@index([storeId, year])
+  @@map("StoreTarget")
 }
 
 model ExecutiveStoreAssignment {
@@ -113,13 +144,14 @@ model Brand {
   brandName    String          @unique
   categories   CategoryBrand[]
   salesRecords SalesRecord[]
+  storeBrands  StoreBrand[]
 }
 
 model Category {
-  id            String           @id @map("_id")
-  categoryName  String          @unique
-  brands        CategoryBrand[]
-  salesRecords  SalesRecord[]
+  id           String          @id @map("_id")
+  categoryName String          @unique
+  brands       CategoryBrand[]
+  salesRecords SalesRecord[]
 
   // Index for better performance when searching by category name
 }
@@ -135,13 +167,25 @@ model CategoryBrand {
   @@unique([brandId, categoryId])
 }
 
+model StoreBrand {
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  storeId      String
+  brandId      String
+  storeBrandId String?
+
+  store Store @relation(fields: [storeId], references: [id])
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([storeId, brandId])
+  @@map("StoreBrand")
+}
 
 model SalesRecord {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  storeId     String
-  brandId     String
-  categoryId  String
-  year        Int
+  id         String @id @default(auto()) @map("_id") @db.ObjectId
+  storeId    String
+  brandId    String
+  categoryId String
+  year       Int
 
   // Store summary of all 12 months
   // Each month contains deviceSales, planSales, attachPct, revenue etc.
@@ -160,14 +204,13 @@ model SalesRecord {
   //   ],
   //   ...
   // }
-  dailySales   Json
+  dailySales Json
 
-  store     Store     @relation(fields: [storeId], references: [id])
-  brand     Brand     @relation(fields: [brandId], references: [id])
-  category  Category  @relation(fields: [categoryId], references: [id])
+  store    Store    @relation(fields: [storeId], references: [id])
+  brand    Brand    @relation(fields: [brandId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
 
   @@unique([storeId, brandId, categoryId, year])
-
   // Indexes for faster analytics queries
   @@index([storeId, year])
   @@index([storeId, brandId, year])
@@ -189,7 +232,8 @@ model Visit {
   POSMchecked       Boolean?   @map("displayChecked") // Point of Sale Material availability check (nullable for backward compatibility)
   remarks           String?
   imageUrls         String[] // Array of image URLs
-  visitDate         DateTime?  // Actual date when visit occurred (nullable for backward compatibility during migration)
+  visitDate         DateTime? // Actual date when visit occurred (nullable for backward compatibility during migration)
+  nextScheduledDate DateTime? // Optional rescheduled/next visit date
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
   status            viststatus @default(PENDING_REVIEW)
@@ -204,6 +248,7 @@ model Visit {
   storeId  String
   store    Store    @relation(fields: [storeId], references: [id])
   brandIds String[]
+  brandVisitDetails Json? // [{ brandId, brandName, POSMchecked, remarks, imageUrls, issues }]
 
   issues        Issue[] // One Visit can have multiple Issues or none
   notifications Notification[] // Notifications related to this visit
@@ -214,22 +259,22 @@ model Visit {
 }
 
 model AdminVisit {
-  id                String     @id @default(auto()) @map("_id") @db.ObjectId
-  personMet         Json // [{ name: "Rajesh", designation: "Manager", phoneNumber: "1234567890" }]
-  POSMchecked       Boolean?   @map("displayChecked")
-  remarks           String?
-  imageUrls         String[]
-  visitDate         DateTime?  // Actual date of the visit (set by admin)
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  personMet   Json // [{ name: "Rajesh", designation: "Manager", phoneNumber: "1234567890" }]
+  POSMchecked Boolean?  @map("displayChecked")
+  remarks     String?
+  imageUrls   String[]
+  visitDate   DateTime? // Actual date of the visit (set by admin)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // relations
-  adminId           String
-  admin             Admin      @relation(fields: [adminId], references: [id])
+  adminId String
+  admin   Admin  @relation(fields: [adminId], references: [id])
 
-  storeId           String
-  store             Store      @relation(fields: [storeId], references: [id])
-  brandIds          String[]
+  storeId  String
+  store    Store    @relation(fields: [storeId], references: [id])
+  brandIds String[]
 
   @@index([adminId, visitDate])
   @@index([storeId])
@@ -250,12 +295,12 @@ model Issue {
   status    IssueStatus @default(Pending)
 
   // relations to either Physical Visit or Digital Visit
-  visitId        String?     @db.ObjectId
-  visit          Visit?      @relation(fields: [visitId], references: [id])
-  digitalVisitId String?     @db.ObjectId
+  visitId        String?       @db.ObjectId
+  visit          Visit?        @relation(fields: [visitId], references: [id])
+  digitalVisitId String?       @db.ObjectId
   digitalVisit   DigitalVisit? @relation(fields: [digitalVisitId], references: [id])
 
-  assigned  Assigned[]  // One Issue can have multiple Assigned records
+  assigned      Assigned[] // One Issue can have multiple Assigned records
   notifications Notification[] // Notifications related to this issue
 
   // Critical performance indexes based on actual queries
@@ -311,26 +356,27 @@ model AssignReport {
 //
 
 model DigitalVisit {
-  id               String       @id @default(auto()) @map("_id") @db.ObjectId
-  connectDate      DateTime     // date of call/connect
-  personMet        Json         // [{ name, designation, phoneNumber }]
-  remarks          String       // required remarks for digital visit
-  status           viststatus   @default(PENDING_REVIEW)
-  adminComment     String?
-  reviewedAt       DateTime?
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  connectDate       DateTime // date of call/connect
+  personMet         Json // [{ name, designation, phoneNumber }]
+  remarks           String // required remarks for digital visit
+  status            viststatus @default(PENDING_REVIEW)
+  adminComment      String?
+  reviewedAt        DateTime?
   reviewedByAdminId String?
-  reviewedByAdmin  Admin?       @relation(fields: [reviewedByAdminId], references: [id])
+  reviewedByAdmin   Admin?     @relation(fields: [reviewedByAdminId], references: [id])
 
   executiveId String
-  executive   Executive    @relation(fields: [executiveId], references: [id])
+  executive   Executive @relation(fields: [executiveId], references: [id])
 
   storeId String
-  store   Store       @relation(fields: [storeId], references: [id])
+  store   Store  @relation(fields: [storeId], references: [id])
 
   issues  Issue[]
+  brandVisitDetails Json? // [{ brandId, brandName, remarks, issues }]
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([executiveId, connectDate])
   @@index([storeId])
@@ -471,13 +517,13 @@ model Notification {
 // Dost chat memory
 //
 model DostChat {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   question    String
   answerText  String?
   payload     Json?
   executiveId String
   userId      String
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime @default(now())
 
   executive Executive @relation(fields: [executiveId], references: [id])
   user      User      @relation(fields: [userId], references: [id])
@@ -491,8 +537,8 @@ model DostChat {
 //
 
 model BrandDump {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  brandName String   // Godrej, Samsung, Havells, etc.
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  brandName  String // Godrej, Samsung, Havells, etc.
   uploadedAt DateTime @default(now())
 
   // Godrej specific columns (22 fields)
@@ -534,12 +580,12 @@ model BrandDump {
 model Holiday {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   date        DateTime // Holiday date (stored as UTC date)
-  name        String?  // Optional holiday name (e.g., "Christmas", "New Year")
-  description String?  // Optional description
+  name        String? // Optional holiday name (e.g., "Christmas", "New Year")
+  description String? // Optional description
   isRecurring Boolean  @default(false) // Whether this holiday repeats yearly
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  createdBy   String?  // Admin ID who created this holiday
+  createdBy   String? // Admin ID who created this holiday
 
   // Index for efficient date lookups
   @@index([date])
@@ -559,20 +605,20 @@ enum HolidayRequestStatus {
 
 model HolidayRequest {
   id            String               @id @default(auto()) @map("_id") @db.ObjectId
-  executiveName String               // Name of the executive requesting holiday
-  reason        String               // Reason for the holiday
-  startDate     DateTime             // Start date of holiday
-  endDate       DateTime             // End date of holiday
+  executiveName String // Name of the executive requesting holiday
+  reason        String // Reason for the holiday
+  startDate     DateTime // Start date of holiday
+  endDate       DateTime // End date of holiday
   type          HolidayRequestType?  @default(VACATION)
   status        HolidayRequestStatus @default(PENDING)
   submittedAt   DateTime             @default(now())
-  reviewedAt    DateTime?            // When admin reviewed the request
-  reviewedBy    String?              // Admin ID who reviewed
-  adminComment  String?              // Admin's comment on the request
+  reviewedAt    DateTime? // When admin reviewed the request
+  reviewedBy    String? // Admin ID who reviewed
+  adminComment  String? // Admin's comment on the request
 
   // Relations
   userId  String // Executive user who submitted the request
-  user    User   @relation(fields: [userId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
   storeId String? // Optional store context
 
   replacementAvailable Boolean? // Is a replacement available?
@@ -587,13 +633,12 @@ model HolidayRequest {
 // Godrej SFDC Data
 //
 
-
 model GodrejSfdc {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  planId            String   // Plan ID
-  phone             String   // Customer Phone
-  contractBookingId String   // Contract Booking ID
-  customerName      String?  // Customer Name (optional, added later)
+  planId            String // Plan ID
+  phone             String // Customer Phone
+  contractBookingId String // Contract Booking ID
+  customerName      String? // Customer Name (optional, added later)
   uploadedAt        DateTime @default(now())
 
   // Index for efficient sorting by upload date
@@ -602,17 +647,17 @@ model GodrejSfdc {
 }
 
 model StoreAlignment {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  storeId          String   @unique
-  store            Store    @relation(fields: [storeId], references: [id])
-  
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  storeId String @unique
+  store   Store  @relation(fields: [storeId], references: [id])
+
   // Dynamic staffing data stored as flexible JSON
   // Supports multiple names/contacts per role
-  storeLevel       Json     
+  storeLevel       Json
   stakeholderLevel Json
 
-  updatedAt        DateTime @updatedAt
-  updatedBy        String?  // ID of the user who last updated the data
+  updatedAt DateTime @updatedAt
+  updatedBy String? // ID of the user who last updated the data
 
   @@map("StoreAlignment")
 }
@@ -622,16 +667,16 @@ model StoreAlignment {
 // Stores are auto-matched by prefix; excluded store IDs can be managed per chain.
 model StoreChainConfig {
   id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  chainName        String   @unique           // Display name: "CROMA", "VS", "HITACHI"
-  prefix           String                     // Matching prefix (uppercase): "CROMA", "VS"
-  excludedStoreIds String[]                   // Store IDs manually removed from this chain
+  chainName        String   @unique // Display name: "CROMA", "VS", "HITACHI"
+  prefix           String // Matching prefix (uppercase): "CROMA", "VS"
+  excludedStoreIds String[] // Store IDs manually removed from this chain
 
   // JSON arrays of { role: string, weight: number }
-  storeRoles       Json                       // Store-level roles
-  stakeholderRoles Json                       // Stakeholder-level roles
+  storeRoles       Json // Store-level roles
+  stakeholderRoles Json // Stakeholder-level roles
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("StoreChainConfig")
 }
@@ -641,11 +686,12 @@ model StoreChainConfig {
 // origin and destination are stored as "lat,lng" strings to avoid float precision issues
 model DistanceCache {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  origin      String   // "lat,lng"
-  destination String   // "lat,lng"
+  origin      String // "lat,lng"
+  destination String // "lat,lng"
   distanceKm  Float
   createdAt   DateTime @default(now())
 
   @@unique([origin, destination])
   @@map("DistanceCache")
 }
+

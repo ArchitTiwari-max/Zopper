@@ -34,10 +34,12 @@ export async function GET(request: NextRequest) {
 
     // Calculate date range based on filter
     const now = new Date();
-    let startDate: Date;
-    let endDate: Date;
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
 
     switch (dateFilter) {
+      case 'All Time':
+        break;
       case 'Today':
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
@@ -67,23 +69,26 @@ export async function GET(request: NextRequest) {
     }
 
     // Build where clause for visits
-    let whereClause: any = {
-      visitDate: {
+    let whereClause: any = {};
+    if (startDate && endDate) {
+      whereClause.visitDate = {
         gte: startDate,
         lte: endDate
-      }
-    };
+      };
+    }
 
     if (storeId && storeId !== 'All Store') {
       whereClause.storeId = storeId;
     } else if (storeName && storeName !== 'All Store' && storeName.trim() !== '') {
-      whereClause.store = { ...whereClause.store, storeName: { contains: storeName, mode: 'insensitive' } };
+      const escapedStoreName = storeName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      whereClause.store = { ...whereClause.store, storeName: { contains: escapedStoreName, mode: 'insensitive' } };
     }
 
     if (executiveId && executiveId !== 'All Executive') {
       whereClause.executiveId = executiveId;
     } else if (executiveName && executiveName !== 'All Executive' && executiveName.trim() !== '') {
-      whereClause.executive = { ...whereClause.executive, name: { contains: executiveName, mode: 'insensitive' } };
+      const escapedExecName = executiveName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      whereClause.executive = { ...whereClause.executive, name: { contains: escapedExecName, mode: 'insensitive' } };
     }
 
     if (city && city !== 'All City') {
@@ -121,6 +126,7 @@ export async function GET(request: NextRequest) {
         remarks: true,
         brandIds: true,
         visitDate: true,
+        nextScheduledDate: true,
         createdAt: true,
         POSMchecked: true,
         personMet: true,
@@ -129,7 +135,8 @@ export async function GET(request: NextRequest) {
         reviewedByAdmin: { select: { id: true, name: true } },
         executive: { select: { id: true, name: true } },
         store: { select: { id: true, storeName: true, city: true } },
-        issues: { select: { id: true, details: true, status: true } }
+        issues: { select: { id: true, details: true, status: true } },
+        brandVisitDetails: true
       },
       orderBy: { visitDate: 'desc' }
     };
@@ -148,7 +155,7 @@ export async function GET(request: NextRequest) {
 
     const totalPages = isExport ? 1 : Math.ceil(totalCount / limit);
 
-    const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
+    const brandMap = new Map<string, string>(brands.map(b => [b.id, b.brandName] as [string, string]));
 
     // Efficiently fetch the most recent previous visit for each fetched visit
     const prevVisitsPromises = visits.map(v => {
@@ -171,7 +178,7 @@ export async function GET(request: NextRequest) {
     });
     
     const prevVisitsResults = await Promise.all(prevVisitsPromises);
-    const prevVisitMap = new Map<string, Date | null>(prevVisitsResults.map(r => [r.id, r.prevDate]));
+    const prevVisitMap = new Map<string, Date | null>(prevVisitsResults.map(r => [r.id, r.prevDate] as [string, Date | null]));
 
     // Process visit data
     let processedVisits = visits.map((visit) => {
@@ -233,6 +240,13 @@ export async function GET(request: NextRequest) {
         prevVisitDateStr = `${prevDate.getDate().toString().padStart(2, '0')}/${(prevDate.getMonth() + 1).toString().padStart(2, '0')}/${prevDate.getFullYear()}`;
       }
 
+      // Get next scheduled visit date
+      let nextScheduledDateStr = null;
+      if (visit.nextScheduledDate) {
+        const nextDate = new Date(visit.nextScheduledDate);
+        nextScheduledDateStr = `${nextDate.getDate().toString().padStart(2, '0')}/${(nextDate.getMonth() + 1).toString().padStart(2, '0')}/${nextDate.getFullYear()}`;
+      }
+
       return {
         id: visit.id,
         executiveId: visit.executive?.id || 'unknown',
@@ -244,6 +258,7 @@ export async function GET(request: NextRequest) {
         partnerBrand: partnerBrands,
         visitDate: formattedVisitDate,
         previousVisitDate: prevVisitDateStr,
+        nextScheduledDate: nextScheduledDateStr,
         visitStatus: visit.status as 'PENDING_REVIEW' | 'REVIEWD',
         reviewerName: visit.reviewedByAdmin?.name,
         issueStatus: issueStatusResult,
@@ -253,7 +268,8 @@ export async function GET(request: NextRequest) {
         feedback: visit.remarks || 'No feedback provided',
         POSMchecked: visit.POSMchecked,
         peopleMet: peopleMet,
-        imageUrls: visit.imageUrls || []
+        imageUrls: visit.imageUrls || [],
+        brandVisitDetails: visit.brandVisitDetails || []
       };
     });
 

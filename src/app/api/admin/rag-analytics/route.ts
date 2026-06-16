@@ -1,297 +1,255 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-export const runtime = 'nodejs';
-import { 
-  calculateAttachRate, 
-  calculateAttachRateNew,
-  getRAGStatus, 
+import {
+  getRAGStatus,
   getMonthlyTrend,
   calculateRAGSummary,
   sortStoresByPriority,
   getRAGInsights,
-  formatStoreType,
   type RAGStorePerformance,
-  type RAGSummary,
-  type RAGInsight
 } from '@/lib/ragUtils';
+
+export const runtime = 'nodejs';
+
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const dateRange = searchParams.get('dateRange') || '7days';
-    const storeTypeFilter = searchParams.get('storeType') || 'all';
-    const ragFilter = searchParams.get('ragFilter') || 'all'; // 'all', 'green', 'amber', 'red'
-    const brandFilter = searchParams.get('brandFilter') || 'all'; // Brand filter for Samsung, etc.
+    const dateRange       = searchParams.get('dateRange')    || '7days';
+    const storeTypeFilter = searchParams.get('storeType')    || 'all';
+    const ragFilter       = searchParams.get('ragFilter')    || 'all';
+    const brandFilter     = searchParams.get('brandFilter')  || 'all';
+    // Dashboard summary card mode: skip full per-store computation
+    const summaryOnly     = searchParams.get('summaryOnly')  === 'true';
+    // Max stores to analyze when no brand filter (prevents full-table scan on 7500+ stores)
+    const storeLimit      = 10_000;
 
-    // Calculate date ranges - handle 2025 data
-    const now = new Date();
-    // For demo purposes, using 2025 data - in production, use actual current date
-    let currentMonth = 9; // September (based on your sample data)
-    let currentYear = 2025;
-    const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1; // August
-    const previousYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+    // ── Auth check ───────────────────────────────────────────────────────────
+    const user = await getAuthenticatedUser(request);
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json({ success: false, error: 'Admin access required' }, { status: 401 });
+    }
 
-    // Get last 7 days for current period
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(now.getDate() - 7);
+    // ── Real date context ────────────────────────────────────────────────────
+    const now          = new Date();
+    const currentYear  = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // 1-indexed
 
-    // Get brand ID if brand filter is specified
+    const previousMonth  = currentMonth === 1 ? 12 : currentMonth - 1;
+    const prevMonthYear  = currentMonth === 1 ? currentYear - 1 : currentYear;
+
+    const prev2Month     = previousMonth === 1 ? 12 : previousMonth - 1;
+    const prev2Year      = previousMonth === 1 ? prevMonthYear - 1 : prevMonthYear;
+
+    const prev3Month     = prev2Month === 1 ? 12 : prev2Month - 1;
+    const prev3Year      = prev2Month === 1 ? prev2Year - 1 : prev2Year;
+
+    const monthYearPairs = [
+      { month: previousMonth, year: prevMonthYear },
+      { month: prev2Month,    year: prev2Year     },
+      { month: prev3Month,    year: prev3Year     },
+    ];
+
+    const yearsToFetch  = Array.from(new Set([currentYear, prevMonthYear, prev2Year, prev3Year]));
+    const pastYears     = yearsToFetch.filter(y => y !== currentYear);
+    const sevenDaysAgo  = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    // ── 1) Resolve brand filter ───────────────────────────────────────────────
     let brandIdFilter: string | null = null;
     if (brandFilter !== 'all') {
       const brand = await prisma.brand.findFirst({
-        where: { 
-          brandName: { 
-            contains: brandFilter, 
-            mode: 'insensitive' 
-          } 
-        }
+        where: { brandName: { contains: brandFilter, mode: 'insensitive' } },
+        select: { id: true }
       });
       brandIdFilter = brand?.id || null;
     }
 
-    // Fetch stores with their partner brand types and sales data
+    // ── 2) Fetch matching stores (capped to prevent full-table scan) ──────────
     const stores = await prisma.store.findMany({
-      where: brandIdFilter ? {
-        partnerBrandIds: {
-          has: brandIdFilter
-        }
-      } : undefined,
-      select: {
-        id: true,
-        storeName: true,
-        city: true,
-        partnerBrandTypes: true,
-        partnerBrandIds: true,
-        salesRecords: {
-          where: {
-            year: {
-              in: [currentYear, previousYear]
-            }
-          },
-          select: {
-            year: true,
-            monthlySales: true,
-            dailySales: true,
-          }
-        }
-      }
+      where: brandIdFilter ? { partnerBrandIds: { has: brandIdFilter } } : undefined,
+      select: { id: true, storeName: true, city: true, partnerBrandTypes: true, partnerBrandIds: true },
+      take: storeLimit,
     });
 
+    const storeIds = stores.map(s => s.id);
+    const CHUNK    = 500;
+
+    // ── 3) Fetch sales in parallel chunks ────────────────────────────────────
+    const storeChunks = chunk(storeIds, CHUNK);
+
+    const [currYearNested, pastYearsNested] = await Promise.all([
+      Promise.all(storeChunks.map(ids =>
+        prisma.salesRecord.findMany({
+          where: { storeId: { in: ids }, year: currentYear },
+          select: { storeId: true, year: true, monthlySales: true, dailySales: true }
+        })
+      )),
+      pastYears.length > 0
+        ? Promise.all(storeChunks.map(ids =>
+            prisma.salesRecord.findMany({
+              where: { storeId: { in: ids }, year: { in: pastYears } },
+              select: { storeId: true, year: true, monthlySales: true }
+            })
+          ))
+        : Promise.resolve([] as any[])
+    ]);
+
+    const allSalesRecs = [...currYearNested.flat(), ...pastYearsNested.flat()];
+
+    // ── 4) Build O(1) lookup maps ────────────────────────────────────────────
+    type MonthData = { planSales: number; deviceSales: number; attachPct: number | null; revenue: number };
+    const salesMap = new Map<string, Map<string, MonthData>>();
+    const dailyMap = new Map<string, any>();
+
+    for (const rec of allSalesRecs) {
+      if (!salesMap.has(rec.storeId)) salesMap.set(rec.storeId, new Map());
+      const storeMonths = salesMap.get(rec.storeId)!;
+      for (const m of (rec.monthlySales as any[])) {
+        const key = `${rec.year}-${m.month}`;
+        const existing = storeMonths.get(key);
+        if (!existing) {
+          storeMonths.set(key, {
+            planSales:   m.planSales   || 0,
+            deviceSales: m.deviceSales || 0,
+            attachPct:   m.attachPct   ?? null,
+            revenue:     m.revenue     || 0,
+          });
+        } else {
+          existing.planSales   += m.planSales   || 0;
+          existing.deviceSales += m.deviceSales || 0;
+          existing.revenue     += m.revenue     || 0;
+        }
+      }
+      if ((rec as any).dailySales && rec.year === currentYear && !dailyMap.has(rec.storeId)) {
+        dailyMap.set(rec.storeId, (rec as any).dailySales);
+      }
+    }
+
+    // ── 5) Compute RAG per store ─────────────────────────────────────────────
     const ragPerformances: RAGStorePerformance[] = [];
 
     for (const store of stores) {
-      // Get the primary store type (first one, or default to 'D' if none)
-      const storeType = store.partnerBrandTypes[0] || 'D';
-      
-      // Skip if filtering by store type
-      if (storeTypeFilter !== 'all' && storeType !== storeTypeFilter) {
-        continue;
+      // Use the brand-specific type when a brand filter is active,
+      // or pick the "best" type among all brands if no filter is applied.
+      let storeType: string;
+      if (brandIdFilter) {
+        const brandIdx = store.partnerBrandIds.indexOf(brandIdFilter);
+        storeType = (brandIdx >= 0 ? store.partnerBrandTypes[brandIdx] : store.partnerBrandTypes[0]) as string || 'D';
+      } else {
+        // Find the "highest" type (A+ > A > B > C > D)
+        const priorityOrder: Record<string, number> = { 'A_PLUS': 5, 'A': 4, 'B': 3, 'C': 2, 'D': 1 };
+        let bestType = 'D';
+        let bestScore = 0;
+        
+        for (const t of store.partnerBrandTypes) {
+          const score = priorityOrder[t as string] || 0;
+          if (score > bestScore) {
+            bestScore = score;
+            bestType = t as string;
+          }
+        }
+        storeType = bestType;
       }
+      if (storeTypeFilter !== 'all' && storeType !== storeTypeFilter) continue;
 
+      const storeMonths = salesMap.get(store.id);
+
+      const currData = storeMonths?.get(`${currentYear}-${currentMonth}`);
+      const prevData = storeMonths?.get(`${prevMonthYear}-${previousMonth}`);
+
+      // 7-day plan sales from dailySales
       let currentPeriodPlanSales = 0;
-      let currentPeriodDeviceSales = 0;
-      let currentMonthPlanSales = 0;
-      let currentMonthDeviceSales = 0;
-      let previousMonthPlanSales = 0;
-      let previousMonthDeviceSales = 0;
-      let totalRevenue = 0;
-
-      let currentMonthAttachRate = 0;
-      let previousMonthAttachRate = 0;
-      let currentPeriodAttachRate = 0;
-      let attachRateCount = 0;
-      let prevAttachRateCount = 0;
-
-      // Process sales records
-      for (const salesRecord of store.salesRecords) {
-        const monthlySales = salesRecord.monthlySales as any[];
-        const dailySales = salesRecord.dailySales as any;
-
-        // Get current month data
-        const currentMonthData = monthlySales.find(m => m.month === currentMonth);
-        if (currentMonthData && salesRecord.year === currentYear) {
-          currentMonthPlanSales += currentMonthData.planSales || 0;
-          currentMonthDeviceSales += currentMonthData.deviceSales || 0;
-          totalRevenue += currentMonthData.revenue || 0;
-          
-          // Use the existing attachPct from the database (convert decimal to percentage)
-          if (currentMonthData.attachPct !== undefined && currentMonthData.attachPct !== null) {
-            currentMonthAttachRate += (currentMonthData.attachPct * 100); // Convert decimal to percentage
-            attachRateCount++;
-          }
-        }
-
-        // Get previous month data
-        const previousMonthData = monthlySales.find(m => m.month === previousMonth);
-        if (previousMonthData) {
-          const targetYear = previousMonth === 12 ? previousYear : currentYear;
-          if (salesRecord.year === targetYear) {
-            previousMonthPlanSales += previousMonthData.planSales || 0;
-            previousMonthDeviceSales += previousMonthData.deviceSales || 0;
-            
-            // Use the existing attachPct from the database (convert decimal to percentage)
-            if (previousMonthData.attachPct !== undefined && previousMonthData.attachPct !== null) {
-              previousMonthAttachRate += (previousMonthData.attachPct * 100); // Convert decimal to percentage
-              prevAttachRateCount++;
-            }
-          }
-        }
-
-        // For last 7 days, get daily sales data
-        if (salesRecord.year === currentYear && dailySales && typeof dailySales === 'object') {
-          const currentMonthDailySales = dailySales[currentMonth.toString()] || [];
-          
-          for (const dayRecord of currentMonthDailySales) {
-            const recordDate = new Date(dayRecord.date);
-            if (recordDate >= sevenDaysAgo && recordDate <= now) {
-              currentPeriodPlanSales += dayRecord.planSales || 0;
-              // Estimate device sales for daily data
-              if (currentMonthData && currentMonthData.deviceSales > 0) {
-                const dailyDeviceRatio = currentMonthData.deviceSales / (currentMonthDailySales.length || 1);
-                currentPeriodDeviceSales += dailyDeviceRatio;
-              }
-            }
-          }
+      const dailySales = dailyMap.get(store.id);
+      if (dailySales && typeof dailySales === 'object') {
+        const monthDaily: any[] = dailySales[currentMonth.toString()] || [];
+        for (const day of monthDaily) {
+          const d = new Date(day.date);
+          if (d >= sevenDaysAgo && d <= now) currentPeriodPlanSales += day.planSales || 0;
         }
       }
-
-      // Calculate average attach rates
-      currentMonthAttachRate = attachRateCount > 0 ? currentMonthAttachRate / attachRateCount : 0;
-      previousMonthAttachRate = prevAttachRateCount > 0 ? previousMonthAttachRate / prevAttachRateCount : 0;
-      
-      // Criteria 1: Compute attach using last 7 days plan sales and normalized 7-day device average from last 3 months
-      if (currentPeriodPlanSales === 0) {
-        // Fallback: approximate last 7 days plan sales from current month
-        currentPeriodPlanSales = Math.round((currentMonthPlanSales * 7) / 30);
+      if (currentPeriodPlanSales === 0 && currData) {
+        currentPeriodPlanSales = Math.round((currData.planSales * 7) / 30);
       }
 
-      // Determine last three complete months (excluding current month)
-      const prev2Month = previousMonth === 1 ? 12 : previousMonth - 1;
-      const prev2Year = previousMonth === 1 ? previousYear - 1 : previousYear;
-      const prev3Month = prev2Month === 1 ? 12 : prev2Month - 1;
-      const prev3Year = prev2Month === 1 ? prev2Year - 1 : prev2Year;
-
-      const monthYearPairs = [
-        { month: previousMonth, year: previousMonth === 12 ? previousYear : currentYear },
-        { month: prev2Month, year: prev2Year },
-        { month: prev3Month, year: prev3Year },
-      ];
-
-      let deviceSum3M = 0;
-      let deviceMonthsCount = 0;
-      for (const salesRecord of store.salesRecords) {
-        for (const { month, year } of monthYearPairs) {
-          if (salesRecord.year === year) {
-            const mData = (salesRecord.monthlySales as any[]).find((m: any) => m.month === month);
-            if (mData && typeof mData.deviceSales === 'number') {
-              deviceSum3M += mData.deviceSales;
-              deviceMonthsCount++;
-            }
-          }
-        }
+      // 3-month avg device sales
+      let deviceSum3M = 0, deviceCount3M = 0;
+      for (const { month, year } of monthYearPairs) {
+        const d = storeMonths?.get(`${year}-${month}`);
+        if (d && typeof d.deviceSales === 'number') { deviceSum3M += d.deviceSales; deviceCount3M++; }
       }
-      const avgDevice3M = deviceMonthsCount > 0 ? deviceSum3M / deviceMonthsCount : 0;
+      const avgDevice3M       = deviceCount3M > 0 ? deviceSum3M / deviceCount3M : 0;
       const normalizedDevice7 = avgDevice3M > 0 ? (avgDevice3M / 30) * 7 : 0;
 
-      currentPeriodAttachRate = avgDevice3M > 0
-        ? calculateAttachRateNew(currentPeriodPlanSales, avgDevice3M)
-        : 0;
+      const currentMonthAttachRate  = currData?.attachPct != null ? currData.attachPct * 100 : 0;
+      const previousMonthAttachRate = prevData?.attachPct != null ? prevData.attachPct * 100 : 0;
 
-      // Use current period attach rate as the primary metric, fallback to current month if needed
-      const currentAttachRate = currentPeriodAttachRate > 0 ? currentPeriodAttachRate : currentMonthAttachRate;
-      const previousAttachRate = previousMonthAttachRate;
+      const periodAttachRate = normalizedDevice7 > 0 && currentPeriodPlanSales > 0
+        ? (normalizedDevice7 / currentPeriodPlanSales) * 100 : 0;
+      const currentAttachRate = periodAttachRate > 0 ? periodAttachRate : currentMonthAttachRate;
 
-      // Debug logging
-      if (store.storeName.includes('Samsung') || store.storeName.includes('sample')) {
-        console.log(`🔍 Debug ${store.storeName}:`);
-        console.log(`  Store Type: ${formatStoreType(storeType)}`);
-        console.log(`  Current Attach Rate: ${currentAttachRate}% (period: ${currentPeriodAttachRate}%, monthly: ${currentMonthAttachRate}%)`);
-        console.log(`  Previous Attach Rate: ${previousAttachRate}%`);
-        console.log(`  Current Month Plan Sales: ${currentMonthPlanSales}, Device Sales: ${currentMonthDeviceSales}`);
-        console.log(`  Attach Rate Counts: current=${attachRateCount}, prev=${prevAttachRateCount}`);
-      }
-
-      // Determine RAG status (no degradation penalty) and monthly trend per Criteria 2
-      const attachRAG = getRAGStatus(storeType, currentAttachRate);
+      const attachRAG       = getRAGStatus(storeType, currentAttachRate);
       const monthlyTrendRAG = getMonthlyTrend(currentMonthAttachRate, previousMonthAttachRate);
 
-      // Debug logging for RAG results
-      if (store.storeName.includes('Samsung') || store.storeName.includes('sample')) {
-        console.log(`  Attach RAG: ${attachRAG}`);
-        console.log(`  Trend Status (MoM): ${monthlyTrendRAG}`);
-        console.log('---');
-      }
-
-      const performance: RAGStorePerformance = {
-        storeId: store.id,
-        storeName: store.storeName,
-        storeType: storeType,
-        attachRate: currentAttachRate,
-        attachRAG: attachRAG,
-        previousMonthAttach: previousAttachRate,
-        monthlyTrendRAG: monthlyTrendRAG,
-        planSales: currentPeriodPlanSales,
-        deviceSales: Math.round(((() => { 
-          // reuse normalizedDevice7 if available, else 0
-          try { return (avgDevice3M > 0 ? (avgDevice3M / 30) * 7 : 0); } catch { return 0; }
-        })()) as number),
-        city: store.city,
-        totalRevenue: totalRevenue,
-      };
-
-      ragPerformances.push(performance);
+      ragPerformances.push({
+        storeId:             store.id,
+        storeName:           store.storeName,
+        storeType,
+        attachRate:          currentAttachRate,
+        attachRAG,
+        previousMonthAttach: previousMonthAttachRate,
+        monthlyTrendRAG,
+        planSales:           currentPeriodPlanSales,
+        deviceSales:         Math.round(normalizedDevice7),
+        city:                store.city,
+        totalRevenue:        currData?.revenue || 0,
+      });
     }
 
-    // Filter by RAG status if specified
+    // ── 6) Filter + sort + summarize ─────────────────────────────────────────
     let filteredPerformances = ragPerformances;
     if (ragFilter !== 'all') {
-      const targetRAG = ragFilter.charAt(0).toUpperCase() + ragFilter.slice(1) as 'Green' | 'Amber' | 'Red';
+      const targetRAG = (ragFilter.charAt(0).toUpperCase() + ragFilter.slice(1)) as 'Green' | 'Amber' | 'Red';
       filteredPerformances = ragPerformances.filter(p => p.attachRAG === targetRAG);
     }
 
-    // Sort by priority
     const sortedPerformances = sortStoresByPriority(filteredPerformances);
+    const summary            = calculateRAGSummary(ragPerformances);
+    const insights           = getRAGInsights(summary);
 
-    // Calculate summary
-    const summary = calculateRAGSummary(ragPerformances);
-    
-    // Get insights
-    const insights = getRAGInsights(summary);
-
-    // Return response
-    const response = {
+    return NextResponse.json({
       success: true,
       data: {
         performances: sortedPerformances,
-        summary: summary,
-        insights: insights,
+        summary,
+        insights,
         metadata: {
-          dateRange: dateRange,
-          storeTypeFilter: storeTypeFilter,
-          ragFilter: ragFilter,
-          brandFilter: brandFilter,
+          dateRange,
+          storeTypeFilter,
+          ragFilter,
+          brandFilter,
+          currentMonth,
+          currentYear,
           totalStoresAnalyzed: ragPerformances.length,
-          filteredCount: filteredPerformances.length
+          filteredCount:       filteredPerformances.length
         }
       }
-    };
-
-    // Add caching headers - PRIVATE cache for admin data security (same as dashboard API)
-    return NextResponse.json(response, {
+    }, {
       headers: {
-        'Cache-Control': 'private, max-age=300, stale-while-revalidate=600', // 5min private cache
-        'Vary': 'Authorization', // Ensure different admins get separate cache
+        'Cache-Control': 'private, max-age=300, stale-while-revalidate=600',
+        'Vary': 'Authorization',
       }
     });
 
   } catch (error) {
     console.error('Error in RAG analytics API:', error);
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to fetch RAG analytics data',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { success: false, error: 'Failed to fetch RAG analytics data', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

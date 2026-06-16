@@ -19,7 +19,8 @@ interface PastVisit {
   createdAt: string;
   updatedAt: string;
   storeName: string;
-  reviewerName?: string; // Name of the admin who marked the visit as reviewed (optional)
+  reviewerName?: string;
+  brandVisitDetails?: any[];
 }
 
 interface VisitIssue {
@@ -57,6 +58,9 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
   visit,
   isDigital
 }) => {
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [activeBrandTab, setActiveBrandTab] = React.useState<string>('');
+
   const getStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
       case 'PENDING_REVIEW':
@@ -79,13 +83,10 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
   };
 
   const formatDate = (dateString: string) => {
-    // Check if the date is already in dd/mm/yyyy format
     if (dateString && dateString.includes('/') && dateString.split('/').length === 3) {
-      // Already formatted, return as is
       return dateString;
     }
 
-    // Otherwise, format to dd/mm/yyyy format
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
       return 'Invalid Date';
@@ -110,6 +111,9 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
 
   React.useEffect(() => {
     if (isOpen) {
+      if (visit?.brandVisitDetails && visit.brandVisitDetails.length > 0) {
+        setActiveBrandTab(visit.brandVisitDetails[0].brandName);
+      }
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           onClose();
@@ -123,17 +127,14 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
         document.body.style.overflow = 'unset';
       };
     }
-  }, [isOpen, onClose]);
-
-  // NOTE: Hooks must be unconditional. Keep this before any conditional return.
-  const [isDeleting, setIsDeleting] = React.useState(false);
+  }, [isOpen, onClose, visit]);
 
   if (!isOpen || !visit) {
     return null;
   }
 
   const handleDelete = async () => {
-    if (visit.status === 'REVIEWD') return; // safety
+    if (visit.status === 'REVIEWD') return;
     const ok = window.confirm('Are you sure you want to delete this visit?');
     if (!ok) return;
 
@@ -151,9 +152,7 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
       if (!res.ok) {
         throw new Error(data?.error || 'Failed to delete visit');
       }
-      // Close and refresh list
       onClose();
-      // Soft refresh - let parent re-fetch; fallback to hard reload
       try { (window as any).dispatchEvent(new CustomEvent('visit-deleted', { detail: { id: visit.id } })); } catch { }
       setTimeout(() => { if (typeof window !== 'undefined') window.location.reload(); }, 50);
     } catch (err) {
@@ -208,130 +207,182 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
             </div>
           </div>
 
-          <div className="visit-detail-section">
-            <h3 className="visit-detail-section-title">POSM Check</h3>
-            <div className="visit-detail-grid">
-              <div className="visit-detail-item">
-                <span className="visit-detail-label">POSM Available:</span>
-                <span className="visit-detail-value">
-                  {visit.POSMchecked === null ? 'Not specified' : (visit.POSMchecked ? 'Yes' : 'No')}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {visit.personMet && visit.personMet.length > 0 && (
-            <div className="visit-detail-section">
-              <h3 className="visit-detail-section-title">People Met</h3>
-              <div className="visit-people-met-compact-list">
-                {visit.personMet.map((person, index) => (
-                  <div key={index} className="visit-person-met-compact-item" style={{ marginBottom: '8px' }}>
-                    <span className="visit-person-name">
-                      <strong>{person.name}</strong>
-                    </span>
-                    <span className="visit-person-details">
-                      {' '}({person.designation})
-                      {person.phoneNumber && (
-                        <>
-                          {' • '}
-                          <a
-                            href={`tel:${person.phoneNumber}`}
-                            className="visit-phone-link"
-                            style={{
-                              color: '#3b82f6',
-                              textDecoration: 'none',
-                              fontSize: '0.875rem'
-                            }}
-                            onMouseOver={(e) => (e.target as HTMLElement).style.textDecoration = 'underline'}
-                            onMouseOut={(e) => (e.target as HTMLElement).style.textDecoration = 'none'}
-                          >
-                            📞 {person.phoneNumber}
-                          </a>
-                        </>
-                      )}
-                    </span>
-                  </div>
+          {visit.brandVisitDetails && visit.brandVisitDetails.length > 0 && (
+            <div className="visit-detail-section" style={{ borderBottom: 'none', marginBottom: '8px' }}>
+              <span className="visit-detail-label" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Brands Visited (Click to Toggle):</span>
+              <div className="visit-brands-tabs" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {visit.brandVisitDetails.map((brandInfo: any, index: number) => (
+                  <button
+                    key={index}
+                    style={{
+                      backgroundColor: activeBrandTab === brandInfo.brandName ? '#3b82f6' : '#e2e8f0',
+                      color: activeBrandTab === brandInfo.brandName ? '#ffffff' : '#475569',
+                      border: 'none',
+                      borderRadius: '16px',
+                      padding: '6px 16px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      fontSize: '0.875rem',
+                      transition: 'all 0.2s ease',
+                      boxShadow: activeBrandTab === brandInfo.brandName ? '0 2px 4px rgba(59, 130, 246, 0.3)' : 'none'
+                    }}
+                    onClick={() => setActiveBrandTab(brandInfo.brandName)}
+                  >
+                    {brandInfo.brandName}
+                  </button>
                 ))}
               </div>
             </div>
           )}
 
-          {visit.remarks && (
-            <div className="visit-detail-section">
-              <h3 className="visit-detail-section-title">Remarks</h3>
-              <p className="visit-detail-text">{visit.remarks}</p>
-            </div>
-          )}
-
-          {visit.adminComment && (
-            <div className="visit-detail-section">
-              <h3 className="visit-detail-section-title">Admin Comment</h3>
-              <p className="visit-detail-text visit-admin-comment">{visit.adminComment}</p>
-            </div>
-          )}
-
-          {visit.imageUrls && visit.imageUrls.length > 0 && (
-            <div className="visit-detail-section">
-              <h3 className="visit-detail-section-title">Images</h3>
-              <div className="visit-images-grid">
-                {visit.imageUrls.map((imageUrl, index) => (
-                  <div key={index} className="visit-image-item">
-                    <img
-                      src={imageUrl}
-                      alt={`Visit image ${index + 1}`}
-                      className="visit-detail-image"
-                      onClick={() => window.open(imageUrl, '_blank')}
-                    />
+          {(() => {
+            if (!visit.brandVisitDetails || visit.brandVisitDetails.length === 0) {
+              return (
+                <>
+                  {/* Fallback for legacy visits without brandVisitDetails */}
+                  <div className="visit-detail-section">
+                    <h3 className="visit-detail-section-title">POSM Check</h3>
+                    <div className="visit-detail-grid">
+                      <div className="visit-detail-item">
+                        <span className="visit-detail-label">POSM Available:</span>
+                        <span className="visit-detail-value">
+                          {visit.POSMchecked === null ? 'Not specified' : (visit.POSMchecked ? 'Yes' : 'No')}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {visit.issues && visit.issues.length > 0 && (
-            <div className="visit-detail-section">
-              <h3 className="visit-detail-section-title">Issues Reported</h3>
-              <div className="visit-issues-list">
-                {visit.issues.map((issue) => (
-                  <div key={issue.id} className="visit-issue-detail-item">
-                    <div className="visit-issue-header">
-                      <span className="visit-issue-details">{issue.details}</span>
-                      <span
-                        className="visit-issue-status-badge"
-                        style={{ color: getStatusColor(issue.status) }}
-                      >
-                        {issue.status}
-                      </span>
+                  {visit.personMet && visit.personMet.length > 0 && (
+                    <div className="visit-detail-section">
+                      <h3 className="visit-detail-section-title">People Met</h3>
+                      <div className="visit-people-met-compact-list">
+                        {visit.personMet.map((person, index) => (
+                          <div key={index} className="visit-person-met-compact-item" style={{ marginBottom: '8px' }}>
+                            <span className="visit-person-name">
+                              <strong>{person.name === 'SEC' ? person.designation : person.name}</strong>
+                            </span>
+                            <span className="visit-person-details">
+                              {' '}({person.name === 'SEC' ? 'SEC' : person.designation})
+                              {person.phoneNumber && ` • 📞 ${person.phoneNumber}`}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="visit-issue-date">
-                      Created: {formatDate(issue.createdAt)}
+                  )}
+
+                  {visit.remarks && (
+                    <div className="visit-detail-section">
+                      <h3 className="visit-detail-section-title">Remarks</h3>
+                      <p className="visit-detail-text">{visit.remarks}</p>
                     </div>
-                    {issue.assigned && issue.assigned.length > 0 && (
-                      <div className="visit-issue-assignments">
-                        <h4>Assignments:</h4>
-                        {issue.assigned.map((assignment) => (
-                          <div key={assignment.id} className="visit-assignment-item">
-                            <div className="visit-assignment-header">
-                              <span className="visit-assignment-executive">{assignment.executiveName}</span>
-                              <span className="visit-assignment-status">({assignment.status})</span>
+                  )}
+
+                  {visit.imageUrls && visit.imageUrls.length > 0 && (
+                    <div className="visit-detail-section">
+                      <h3 className="visit-detail-section-title">Images</h3>
+                      <div className="visit-images-grid">
+                        {visit.imageUrls.map((imageUrl, index) => (
+                          <div key={index} className="visit-image-item">
+                            <img
+                              src={imageUrl}
+                              alt={`Visit image ${index + 1}`}
+                              className="visit-detail-image"
+                              onClick={() => window.open(imageUrl, '_blank')}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {visit.issues && visit.issues.length > 0 && (
+                    <div className="visit-detail-section">
+                      <h3 className="visit-detail-section-title">Issues Reported</h3>
+                      <div className="visit-issues-list">
+                        {visit.issues.map((issue) => (
+                          <div key={issue.id} className="visit-issue-detail-item">
+                            <div className="visit-issue-header">
+                              <span className="visit-issue-details">{issue.details}</span>
+                              <span
+                                className="visit-issue-status-badge"
+                                style={{ color: getStatusColor(issue.status) }}
+                              >
+                                {issue.status}
+                              </span>
                             </div>
-                            {assignment.adminComment && (
-                              <div className="visit-assignment-comment">
-                                <strong>Admin Comment:</strong> {assignment.adminComment}
-                              </div>
-                            )}
-                            <div className="visit-assignment-date">
-                              Assigned: {formatDate(assignment.createdAt)}
+                            <div className="visit-issue-date">
+                              Created: {formatDate(issue.createdAt)}
                             </div>
                           </div>
                         ))}
                       </div>
-                    )}
+                    </div>
+                  )}
+                </>
+              );
+            }
+
+            const activeBrandDetails = visit.brandVisitDetails.find(b => b.brandName === activeBrandTab) || visit.brandVisitDetails[0];
+
+            return (
+              <div style={{ border: '1px solid #e2e8f0', padding: '16px', borderRadius: '8px', marginTop: '16px', backgroundColor: '#f8fafc' }}>
+                <h3 style={{ margin: '0 0 16px 0', color: '#0f172a', fontSize: '1.2rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>{activeBrandDetails.brandName}</h3>
+                
+                {activeBrandDetails.POSMchecked !== null && activeBrandDetails.POSMchecked !== undefined && (
+                  <div className="visit-detail-section" style={{ marginBottom: '12px', borderBottom: 'none' }}>
+                    <span className="visit-detail-label">POSM Available: </span>
+                    <span className="visit-detail-value">{activeBrandDetails.POSMchecked ? 'Yes' : 'No'}</span>
                   </div>
-                ))}
+                )}
+
+                {activeBrandDetails.peopleMet && activeBrandDetails.peopleMet.length > 0 && (
+                  <div className="visit-detail-section" style={{ marginBottom: '12px', borderBottom: 'none' }}>
+                    <h4 className="visit-detail-section-title" style={{ fontSize: '1rem', marginTop: '8px' }}>People Met</h4>
+                    <div className="visit-people-met-compact-list">
+                      {activeBrandDetails.peopleMet.map((person: any, i: number) => (
+                        <div key={i} className="visit-person-met-compact-item" style={{ marginBottom: '4px' }}>
+                          <span className="visit-person-name"><strong>{person.name === 'SEC' ? person.designation : person.name}</strong></span>
+                          <span className="visit-person-details"> ({person.name === 'SEC' ? 'SEC' : person.designation}) {person.phoneNumber && ` • 📞 ${person.phoneNumber}`}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeBrandDetails.remarks && (
+                  <div className="visit-detail-section" style={{ marginBottom: '12px', borderBottom: 'none' }}>
+                    <h4 className="visit-detail-section-title" style={{ fontSize: '1rem', marginTop: '8px' }}>Remarks</h4>
+                    <p className="visit-detail-text">{activeBrandDetails.remarks}</p>
+                  </div>
+                )}
+
+                {activeBrandDetails.imageUrls && activeBrandDetails.imageUrls.length > 0 && (
+                  <div className="visit-detail-section" style={{ marginBottom: '12px', borderBottom: 'none' }}>
+                    <h4 className="visit-detail-section-title" style={{ fontSize: '1rem', marginTop: '8px' }}>Images</h4>
+                    <div className="visit-images-grid">
+                      {activeBrandDetails.imageUrls.map((imageUrl: string, i: number) => (
+                        <div key={i} className="visit-image-item">
+                          <img src={imageUrl} alt={`Visit image ${i + 1}`} className="visit-detail-image" onClick={() => window.open(imageUrl, '_blank')} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeBrandDetails.issuesRaised && activeBrandDetails.issuesRaised.length > 0 && (
+                  <div className="visit-detail-section" style={{ marginBottom: '12px', borderBottom: 'none' }}>
+                    <h4 className="visit-detail-section-title" style={{ fontSize: '1rem', marginTop: '8px' }}>Issues Raised</h4>
+                    <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                      {activeBrandDetails.issuesRaised.map((iss: string, i: number) => (
+                        <li key={i} style={{ color: '#dc2626' }}>{iss}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
 
         <div className="visit-modal-footer">

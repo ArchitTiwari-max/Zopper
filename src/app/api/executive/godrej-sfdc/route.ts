@@ -48,11 +48,12 @@ export async function GET(request: NextRequest) {
 
     const whereClause: any = {};
     if (search) {
+      const escapedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       whereClause.OR = [
-        { planId: { contains: search, mode: "insensitive" } },
-        { phone: { contains: search, mode: "insensitive" } },
-        { contractBookingId: { contains: search, mode: "insensitive" } },
-        { customerName: { contains: search, mode: "insensitive" } },
+        { planId: { contains: escapedSearch, mode: "insensitive" } },
+        { phone: { contains: escapedSearch, mode: "insensitive" } },
+        { contractBookingId: { contains: escapedSearch, mode: "insensitive" } },
+        { customerName: { contains: escapedSearch, mode: "insensitive" } },
       ];
     }
 

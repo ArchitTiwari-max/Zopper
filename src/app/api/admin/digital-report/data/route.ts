@@ -26,9 +26,11 @@ export async function GET(request: NextRequest) {
 
     // Date range
     const now = new Date();
-    let startDate: Date;
-    let endDate: Date;
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
     switch (dateFilter) {
+      case 'All Time':
+        break;
       case 'Today':
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
@@ -48,11 +50,20 @@ export async function GET(request: NextRequest) {
         startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); break;
     }
 
-    const whereClause: any = { connectDate: { gte: startDate, lte: endDate } };
+    const whereClause: any = {};
+    if (startDate && endDate) {
+      whereClause.connectDate = { gte: startDate, lte: endDate };
+    }
     if (storeId) whereClause.storeId = storeId;
-    else if (storeName && storeName !== 'All Store') whereClause.store = { ...whereClause.store, storeName: { contains: storeName, mode: 'insensitive' } };
+    else if (storeName && storeName !== 'All Store') {
+      const escapedStoreName = storeName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      whereClause.store = { ...whereClause.store, storeName: { contains: escapedStoreName, mode: 'insensitive' } };
+    }
     if (executiveId) whereClause.executiveId = executiveId;
-    else if (executiveName && executiveName !== 'All Executive') whereClause.executive = { ...whereClause.executive, name: { contains: executiveName, mode: 'insensitive' } };
+    else if (executiveName && executiveName !== 'All Executive') {
+      const escapedExecName = executiveName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      whereClause.executive = { ...whereClause.executive, name: { contains: escapedExecName, mode: 'insensitive' } };
+    }
     if (city && city !== 'All City') whereClause.store = { ...whereClause.store, city: city };
     if (visitStatus && visitStatus !== 'All Status') whereClause.status = visitStatus;
     if (issueStatus && issueStatus !== 'All Status') {
@@ -81,6 +92,7 @@ export async function GET(request: NextRequest) {
         executive: { select: { id: true, name: true } },
         store: { select: { id: true, storeName: true, city: true, partnerBrandIds: true } },
         issues: { select: { id: true, details: true, status: true } },
+        brandVisitDetails: true,
       },
       orderBy: { connectDate: 'desc' },
     };
@@ -146,6 +158,7 @@ export async function GET(request: NextRequest) {
         POSMchecked: null,
         peopleMet,
         imageUrls: [],
+        brandVisitDetails: (v as any).brandVisitDetails || []
       };
     });
 

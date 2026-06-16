@@ -1,31 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
-const prisma = new PrismaClient();
-
 export async function GET(request: NextRequest) {
   try {
-    // Get authenticated user
     const user = await getAuthenticatedUser(request);
     
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user || user.role !== 'EXECUTIVE') {
+      return NextResponse.json({ error: 'Unauthorized: Executive access required' }, { status: 401 });
     }
 
-    // Check if user is an executive
-    if (user.role !== 'EXECUTIVE') {
-      return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
+    // Get executive profile to resolve assigned stores
+    const executive = await prisma.executive.findUnique({
+      where: { userId: user.userId },
+      select: {
+        executiveStores: {
+          select: {
+            storeId: true
+          }
+        }
+      }
+    });
+
+    if (!executive) {
+      return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
-    // Fetch all brands from database
+    const storeIds = executive.executiveStores.map(es => es.storeId);
+
+    const stores = await prisma.store.findMany({
+      where: {
+        id: { in: storeIds }
+      },
+      select: {
+        partnerBrandIds: true
+      }
+    });
+
+    // Extract all unique brand IDs from the executive's assigned stores
+    const assignedBrandIds = new Set<string>();
+    for (const store of stores) {
+      const storeBrandIds = store.partnerBrandIds;
+      if (Array.isArray(storeBrandIds)) {
+        for (const brandId of storeBrandIds) {
+          if (typeof brandId === 'string') {
+            assignedBrandIds.add(brandId);
+          }
+        }
+      }
+    }
+
+    // Fetch only the brands that belong to the assigned stores
     const brands = await prisma.brand.findMany({
+      where: {
+        id: {
+          in: Array.from(assignedBrandIds)
+        }
+      },
       select: {
         id: true,
         brandName: true,
-        // category field removed - using CategoryBrand relation
       },
       orderBy: {
         brandName: 'asc'
@@ -35,6 +71,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: brands
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Vary': 'Cookie'
+      }
     });
 
   } catch (error) {
@@ -43,7 +86,5 @@ export async function GET(request: NextRequest) {
       { success: false, error: 'Failed to fetch brands' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

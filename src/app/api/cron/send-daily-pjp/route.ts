@@ -75,7 +75,9 @@ export async function GET() {
           storeNames = `[On Leave / Alignment] ${plan.leaveReason}`;
         } else {
           const snapshot = plan.storesSnapshot as any[] || [];
-          storeNames = snapshot.map(s => s.storeName).join('|||');
+          storeNames = snapshot.map(s => {
+            return s.isRescheduled ? `${s.storeName} (RESCHEDULED)` : s.storeName;
+          }).join('|||');
         }
         
         pjpMap.set(plan.executiveId, {

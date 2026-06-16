@@ -246,6 +246,7 @@ const VisitHistory: React.FC = () => {
   };
 
   const openVisitModal = (visit: VisitDetail) => {
+    console.log('Selected Visit details:', visit);
     setSelectedVisit({ ...visit, canViewDetails: true }); // Ensure compatibility
     if (activeTab === 'PHYSICAL' || activeTab === 'DIGITAL') {
       setSelectedVisitType(activeTab);
@@ -259,6 +260,7 @@ const VisitHistory: React.FC = () => {
   };
 
   const openHolidayModal = (holiday: HolidayRequest) => {
+    console.log('Selected Holiday details:', holiday);
     setSelectedHoliday(holiday);
     setShowHolidayModal(true);
   };

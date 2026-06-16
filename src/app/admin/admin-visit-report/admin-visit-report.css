@@ -1,0 +1,590 @@
+/* Visit Report Page Styles */
+
+.avr-overview {
+  padding: 1rem;
+  background-color: #f8fafc;
+  min-height: calc(100vh - 80px);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Filters Section */
+.avr-filters-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.avr-filters-header {
+  margin-bottom: 1rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease-in-out;
+  padding: 0.5rem;
+  border-radius: 6px;
+  margin: -0.5rem -0.5rem 1rem -0.5rem;
+}
+
+.avr-filters-header:hover {
+  background-color: #f1f5f9;
+}
+
+.avr-filters-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  cursor: pointer;
+  transition: color 0.15s ease-in-out;
+}
+
+.avr-filters-header:hover h3 {
+  color: #0f172a;
+}
+
+/* Filter content transition */
+.avr-filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.avr-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.avr-filter-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.avr-filter-select,
+.avr-filter-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: white;
+  color: #374151;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.avr-filter-select:focus,
+.avr-filter-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.avr-filter-input::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Visit Reports Table */
+.avr-table-section {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  overflow-x: auto;
+  margin-bottom: 2rem;
+  width: 100%;
+  position: relative;
+}
+
+.avr-table-section::-webkit-scrollbar {
+  height: 8px;
+}
+
+.avr-table-section::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.avr-table-section::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.avr-table-section::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.avr-table {
+  width: 100%;
+  min-width: 1050px;
+}
+
+.avr-table .avr-table-header {
+  background: #6b7280;
+  display: grid;
+  grid-template-columns: 1.6fr 1.5fr 1.2fr 1.1fr 1.3fr 1.5fr 1.8fr;
+  gap: 2rem;
+  padding: 1rem;
+  width: 100%;
+}
+
+.avr-table .avr-header-cell {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+}
+
+/* Sortable header styling */
+.avr-table .sortable-header {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.avr-table .sortable-header:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.avr-table .sort-icon {
+  font-size: 0.75rem;
+  margin-left: 0.25rem;
+  opacity: 0.8;
+}
+
+.avr-table .avr-table-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.avr-table .avr-table-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1.5fr 1.2fr 1.1fr 1.3fr 1.5fr 1.8fr;
+  gap: 2rem;
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  align-items: center;
+  transition: background-color 0.15s ease-in-out;
+  width: 100%;
+}
+
+.avr-table .avr-table-row:hover {
+  background-color: #f8fafc;
+}
+
+.avr-table .avr-table-row:last-child {
+  border-bottom: none;
+}
+
+.avr-table .avr-cell {
+  font-size: 0.875rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+/* Executive Cell */
+.avr-executive-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avr-executive-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avr-executive-name {
+  font-weight: 500;
+  color: #1e293b;
+  min-width: 0;
+  flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Store Name Cell */
+.avr-store-name-cell {
+  display: flex;
+  align-items: center;
+}
+
+.avr-store-name-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease-in-out;
+  width: 100%;
+  display: block;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.avr-store-name-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* Partner Brands Cell */
+.avr-partner-brands-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.avr-brand-tag {
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.625rem;
+  border-radius: 12px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
+  line-height: 1;
+}
+
+/* Date Cell */
+.avr-date-cell {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.avr-issue-date {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Status Cell */
+.avr-status-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+}
+
+.avr-status-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.avr-status-badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Visit Status Badges */
+.avr-visit-status-pending {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.avr-visit-status-reviewed {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+/* Issue Status Badges */
+.avr-issue-status-pending {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.avr-issue-status-assigned {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.avr-issue-status-resolved {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+/* Legacy status badges for backwards compatibility */
+.avr-status-pending-review {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.avr-status-reviewed {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.avr-status-pending-issue {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.avr-status-resolved {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+/* Visit Date Cell */
+.avr-visit-date {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Actions Cell */
+.avr-actions-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.avr-action-buttons-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.avr-view-details-btn,
+.avr-view-issue-btn,
+.avr-mark-reviewed-btn {
+  padding: 0.25rem 0.75rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avr-view-details-btn {
+  background: transparent;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+}
+
+.avr-view-details-btn:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+.avr-view-issue-btn {
+  background: #f59e0b;
+  color: white;
+}
+
+.avr-view-issue-btn:hover {
+  background: #d97706;
+  text-decoration: none;
+}
+
+.avr-mark-reviewed-btn {
+  background: #10b981;
+  color: white;
+}
+
+.avr-mark-reviewed-btn:hover {
+  background: #059669;
+}
+
+/* Issues Cell */
+.avr-issues-cell {
+  display: flex;
+  align-items: flex-start;
+}
+
+.avr-issues-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.avr-issue-link-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.avr-issue-icon {
+  font-size: 1rem;
+}
+
+.avr-issue-link {
+  color: #ef4444;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease-in-out;
+}
+
+.avr-issue-link:hover {
+  color: #dc2626;
+  text-decoration: underline;
+}
+
+.avr-has-issues {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.avr-no-issues {
+  color: #10b981;
+  font-weight: 500;
+}
+
+/* No Data Message */
+.avr-no-data-message {
+  padding: 3rem;
+  text-align: center;
+  color: #6b7280;
+  background: #f9fafb;
+  border-top: 1px solid #f1f5f9;
+}
+
+.avr-no-data-message p {
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .avr-overview {
+    padding: 0.5rem;
+  }
+  
+  .avr-table-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .avr-table .avr-table-header,
+  .avr-table .avr-table-row {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .avr-filters-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  
+  .avr-table-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 768px) {
+  .avr-overview {
+    padding: 1rem;
+  }
+  
+  .avr-filters-section {
+    padding: 1rem;
+  }
+  
+  .avr-filters-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .avr-table .avr-table-header {
+    display: none;
+  }
+  
+  .avr-table .avr-table-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    background: #f9fafb;
+  }
+  
+  .avr-table .avr-cell {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  .avr-table .avr-cell:last-child {
+    border-bottom: none;
+  }
+  
+  .avr-table .avr-cell:before {
+    content: attr(data-label) ': ';
+    font-weight: 600;
+    color: #374151;
+    display: inline-block;
+    width: 120px;
+  }
+  
+  .avr-action-buttons-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .avr-view-details-btn,
+  .avr-view-issue-btn,
+  .avr-mark-reviewed-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .avr-title h2 {
+    font-size: 1.5rem;
+  }
+  
+  .avr-executive-cell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .avr-partner-brands-cell {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
