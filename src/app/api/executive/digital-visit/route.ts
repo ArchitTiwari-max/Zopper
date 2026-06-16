@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { getAuthenticatedUser } from '@/lib/auth';
-import { generateUniqueIssueId } from '@/lib/issueIdGenerator';
+import { NextRequest, NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+import { getAuthenticatedUser } from "@/lib/auth";
+import { generateUniqueIssueId } from "@/lib/issueIdGenerator";
 
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
 const prisma = new PrismaClient();
 
@@ -11,15 +11,30 @@ const prisma = new PrismaClient();
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
+    if (!user)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (user.role !== "EXECUTIVE")
+      return NextResponse.json(
+        { error: "Access denied. Executive role required." },
+        { status: 403 },
+      );
 
     const { searchParams } = new URL(request.url);
-    const storeId = searchParams.get('storeId');
-    if (!storeId) return NextResponse.json({ error: 'Store ID is required' }, { status: 400 });
+    const storeId = searchParams.get("storeId");
+    if (!storeId)
+      return NextResponse.json(
+        { error: "Store ID is required" },
+        { status: 400 },
+      );
 
-    const currentExecutive = await prisma.executive.findUnique({ where: { userId: user.userId } });
-    if (!currentExecutive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
+    const currentExecutive = await prisma.executive.findUnique({
+      where: { userId: user.userId },
+    });
+    if (!currentExecutive)
+      return NextResponse.json(
+        { error: "Executive profile not found" },
+        { status: 404 },
+      );
 
     const visits = await prisma.digitalVisit.findMany({
       where: { storeId },
@@ -29,29 +44,38 @@ export async function GET(request: NextRequest) {
         executive: { include: { user: true } },
         reviewedByAdmin: true,
       },
-      orderBy: { connectDate: 'desc' },
+      orderBy: { connectDate: "desc" },
       take: 5,
     });
 
-    const transformed = visits.map(v => ({
+    const transformed = visits.map((v) => ({
       id: v.id,
       date: v.connectDate,
       status: v.status,
-      representative: v.executive?.name || 'Unknown Executive',
+      representative: v.executive?.name || "Unknown Executive",
       canViewDetails: v.executiveId === currentExecutive.id,
       personMet: v.personMet as any,
       remarks: v.remarks,
       adminComment: v.adminComment || null,
-      storeName: v.store?.storeName || 'Unknown Store',
-      issues: v.issues?.map(i => ({ id: i.id, details: i.details, status: i.status, createdAt: i.createdAt })) || [],
+      storeName: v.store?.storeName || "Unknown Store",
+      issues:
+        v.issues?.map((i) => ({
+          id: i.id,
+          details: i.details,
+          status: i.status,
+          createdAt: i.createdAt,
+        })) || [],
       createdAt: v.createdAt,
       updatedAt: v.updatedAt,
     }));
 
     return NextResponse.json({ success: true, data: transformed });
   } catch (e) {
-    console.error('Error fetching digital visits:', e);
-    return NextResponse.json({ error: 'Failed to fetch digital visits' }, { status: 500 });
+    console.error("Error fetching digital visits:", e);
+    return NextResponse.json(
+      { error: "Failed to fetch digital visits" },
+      { status: 500 },
+    );
   } finally {
     await prisma.$disconnect();
   }
@@ -61,64 +85,105 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
+    if (!user)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (user.role !== "EXECUTIVE")
+      return NextResponse.json(
+        { error: "Access denied. Executive role required." },
+        { status: 403 },
+      );
 
-    const executive = await prisma.executive.findUnique({ where: { userId: user.userId } });
-    if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
+    const executive = await prisma.executive.findUnique({
+      where: { userId: user.userId },
+    });
+    if (!executive)
+      return NextResponse.json(
+        { error: "Executive profile not found" },
+        { status: 404 },
+      );
 
-    const { storeId, visitDate, connectDate, personMet, remarks, issuesRaised, brandVisitDetails } = await request.json();
+    const {
+      storeId,
+      visitDate,
+      connectDate,
+      personMet,
+      remarks,
+      issuesRaised,
+      brandVisitDetails,
+    } = await request.json();
 
     const dateStr: string | undefined = connectDate || visitDate; // backward compat
 
-    if (!storeId || !dateStr) return NextResponse.json({ error: 'storeId and connectDate are required' }, { status: 400 });
-    if (!personMet || !Array.isArray(personMet) || personMet.length === 0) return NextResponse.json({ error: 'At least one person spoken is required' }, { status: 400 });
+    if (!storeId || !dateStr)
+      return NextResponse.json(
+        { error: "storeId and connectDate are required" },
+        { status: 400 },
+      );
+    if (!personMet || !Array.isArray(personMet) || personMet.length === 0)
+      return NextResponse.json(
+        { error: "At least one person spoken is required" },
+        { status: 400 },
+      );
 
     // Look up brand names to resolve brand IDs for brandVisitDetails
-    const brandsToLookup = brandVisitDetails && Array.isArray(brandVisitDetails)
-      ? brandVisitDetails.map((b: any) => b.brandName)
-      : [];
-    
+    const brandsToLookup =
+      brandVisitDetails && Array.isArray(brandVisitDetails)
+        ? brandVisitDetails.map((b: any) => b.brandName)
+        : [];
+
     const brandMap: Record<string, string> = {};
     if (brandsToLookup.length > 0) {
       const brands = await prisma.brand.findMany({
-        where: { brandName: { in: brandsToLookup } }
+        where: { brandName: { in: brandsToLookup } },
       });
-      brands.forEach(b => {
+      brands.forEach((b) => {
         brandMap[b.brandName] = b.id;
       });
     }
 
-    const updatedBrandVisitDetails = brandVisitDetails && Array.isArray(brandVisitDetails)
-      ? brandVisitDetails.map((b: any) => ({
-          ...b,
-          brandId: brandMap[b.brandName] || null
-        }))
-      : null;
+    const updatedBrandVisitDetails =
+      brandVisitDetails && Array.isArray(brandVisitDetails)
+        ? brandVisitDetails.map((b: any) => ({
+            ...b,
+            brandId: brandMap[b.brandName] || null,
+          }))
+        : null;
 
     // Aggregate brand remarks into root remarks field
-    const combinedRemarks = brandVisitDetails && Array.isArray(brandVisitDetails)
-      ? brandVisitDetails
-          .filter((b: any) => b.remarks && b.remarks.trim() !== '')
-          .map((b: any) => `${b.brandName}\n${b.remarks.trim()}`)
-          .join('\n\n')
-      : '';
+    const combinedRemarks =
+      brandVisitDetails && Array.isArray(brandVisitDetails)
+        ? brandVisitDetails
+            .filter((b: any) => b.remarks && b.remarks.trim() !== "")
+            .map((b: any) => `${b.brandName}\n${b.remarks.trim()}`)
+            .join("\n\n")
+        : "";
 
-    const finalRemarks = combinedRemarks || (remarks ? String(remarks).trim() : '');
+    const finalRemarks =
+      combinedRemarks || (remarks ? String(remarks).trim() : "");
 
-    if (!finalRemarks || finalRemarks.trim() === '') {
-      return NextResponse.json({ error: 'Remarks are required' }, { status: 400 });
+    if (!finalRemarks || finalRemarks.trim() === "") {
+      return NextResponse.json(
+        { error: "Remarks are required" },
+        { status: 400 },
+      );
     }
 
     // Validate store assignment
     const assignment = await prisma.executiveStoreAssignment.findUnique({
       where: { executiveId_storeId: { executiveId: executive.id, storeId } },
     });
-    if (!assignment) return NextResponse.json({ error: 'Access denied: You are not assigned to this store', code: 'STORE_NOT_ASSIGNED' }, { status: 403 });
+    if (!assignment)
+      return NextResponse.json(
+        {
+          error: "Access denied: You are not assigned to this store",
+          code: "STORE_NOT_ASSIGNED",
+        },
+        { status: 403 },
+      );
 
     // Check for duplicate visits (physical or digital) on this day for this store
-    const startOfDay = new Date(dateStr + 'T00:00:00.000Z');
-    const endOfDay = new Date(dateStr + 'T23:59:59.999Z');
+    const startOfDay = new Date(dateStr + "T00:00:00.000Z");
+    const endOfDay = new Date(dateStr + "T23:59:59.999Z");
 
     const [existingPhysicalVisit, existingDigitalVisit] = await Promise.all([
       prisma.visit.findFirst({
@@ -127,9 +192,9 @@ export async function POST(request: NextRequest) {
           executiveId: executive.id,
           visitDate: {
             gte: startOfDay,
-            lte: endOfDay
-          }
-        }
+            lte: endOfDay,
+          },
+        },
       }),
       prisma.digitalVisit.findFirst({
         where: {
@@ -137,23 +202,30 @@ export async function POST(request: NextRequest) {
           executiveId: executive.id,
           connectDate: {
             gte: startOfDay,
-            lte: endOfDay
-          }
-        }
-      })
+            lte: endOfDay,
+          },
+        },
+      }),
     ]);
 
     if (existingPhysicalVisit || existingDigitalVisit) {
-      return NextResponse.json({
-        error: 'A visit has already been submitted for this store on this date',
-        code: 'DUPLICATE_VISIT'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error:
+            "A visit has already been submitted for this store on this date",
+          code: "DUPLICATE_VISIT",
+        },
+        { status: 400 },
+      );
     }
 
     // Convert connect date
     const connectDateObj = new Date(`${dateStr}T00:00:00.000Z`);
     if (isNaN(connectDateObj.getTime())) {
-      return NextResponse.json({ error: 'Invalid connect date' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid connect date" },
+        { status: 400 },
+      );
     }
 
     const digitalVisit = await prisma.digitalVisit.create({
@@ -161,7 +233,7 @@ export async function POST(request: NextRequest) {
         connectDate: connectDateObj,
         personMet: personMet,
         remarks: finalRemarks,
-        status: 'PENDING_REVIEW' as any,
+        status: "PENDING_REVIEW" as any,
         executiveId: executive.id,
         storeId,
         brandVisitDetails: updatedBrandVisitDetails,
@@ -169,28 +241,49 @@ export async function POST(request: NextRequest) {
     });
 
     let createdIssues: any[] = [];
-    if (issuesRaised && Array.isArray(issuesRaised) && issuesRaised.length > 0) {
+    if (
+      issuesRaised &&
+      Array.isArray(issuesRaised) &&
+      issuesRaised.length > 0
+    ) {
       for (const details of issuesRaised) {
-        if (details && String(details).trim() !== '') {
+        if (details && String(details).trim() !== "") {
           // Generate a 7-character unique ID to match Issue schema expectations
           const uniqueIssueId = await generateUniqueIssueId();
           const created = await prisma.issue.create({
-            data: { 
+            data: {
               id: uniqueIssueId,
-              details: String(details).trim(), 
+              details: String(details).trim(),
               digitalVisitId: digitalVisit.id,
-              createdAt: connectDateObj // align issue date with connect date
+              createdAt: connectDateObj, // align issue date with connect date
             },
           });
-          createdIssues.push({ id: created.id, details: created.details, status: created.status });
+          createdIssues.push({
+            id: created.id,
+            details: created.details,
+            status: created.status,
+          });
         }
       }
     }
 
-    return NextResponse.json({ success: true, data: { digitalVisit: { id: digitalVisit.id, status: digitalVisit.status, connectDate: digitalVisit.connectDate }, issues: createdIssues } });
+    return NextResponse.json({
+      success: true,
+      data: {
+        digitalVisit: {
+          id: digitalVisit.id,
+          status: digitalVisit.status,
+          connectDate: digitalVisit.connectDate,
+        },
+        issues: createdIssues,
+      },
+    });
   } catch (e) {
-    console.error('Error creating digital visit:', e);
-    return NextResponse.json({ error: 'Failed to create digital visit' }, { status: 500 });
+    console.error("Error creating digital visit:", e);
+    return NextResponse.json(
+      { error: "Failed to create digital visit" },
+      { status: 500 },
+    );
   } finally {
     await prisma.$disconnect();
   }

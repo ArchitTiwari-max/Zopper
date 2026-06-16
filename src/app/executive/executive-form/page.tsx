@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import ImageUpload from '@/components/ImageUpload';
-import VisitDetailsModal from '../components/VisitDetailsModal';
-import './ExecutiveForm.css';
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import ImageUpload from "@/components/ImageUpload";
+import VisitDetailsModal from "../components/VisitDetailsModal";
+import "./ExecutiveForm.css";
 
 interface PastVisit {
   id: string;
   date: string;
-  status: 'PENDING_REVIEW' | 'REVIEWD';
+  status: "PENDING_REVIEW" | "REVIEWD";
   representative: string;
   canViewDetails: boolean;
   personMet: PersonMet[];
@@ -28,7 +28,7 @@ interface PastVisit {
 interface VisitIssue {
   id: string;
   details: string;
-  status: 'PENDING' | 'ASSIGNED' | 'RESOLVED';
+  status: "PENDING" | "ASSIGNED" | "RESOLVED";
   createdAt: string;
   assigned: IssueAssignment[];
 }
@@ -36,7 +36,7 @@ interface VisitIssue {
 interface IssueAssignment {
   id: string;
   adminComment?: string;
-  status: 'ASSIGNED' | 'IN_PROGRESS' | 'VIEW_REPORT';
+  status: "ASSIGNED" | "IN_PROGRESS" | "VIEW_REPORT";
   createdAt: string;
   executiveName: string;
 }
@@ -65,14 +65,14 @@ interface StoreData {
 const ExecutiveFormContent: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const storeId = searchParams.get('storeId');
+  const storeId = searchParams.get("storeId");
 
   // Extract store data from URL parameters
   const getStoreDataFromParams = (): StoreData | null => {
-    const storeName = searchParams.get('storeName');
-    const city = searchParams.get('city');
-    const fullAddress = searchParams.get('fullAddress');
-    const partnerBrandsParam = searchParams.get('partnerBrands');
+    const storeName = searchParams.get("storeName");
+    const city = searchParams.get("city");
+    const fullAddress = searchParams.get("fullAddress");
+    const partnerBrandsParam = searchParams.get("partnerBrands");
 
     if (!storeId || !storeName || !city) {
       return null;
@@ -82,7 +82,7 @@ const ExecutiveFormContent: React.FC = () => {
     try {
       partnerBrands = partnerBrandsParam ? JSON.parse(partnerBrandsParam) : [];
     } catch (error) {
-      console.error('Error parsing partner brands:', error);
+      console.error("Error parsing partner brands:", error);
       partnerBrands = [];
     }
 
@@ -91,50 +91,80 @@ const ExecutiveFormContent: React.FC = () => {
       storeName,
       city,
       fullAddress: fullAddress || undefined,
-      partnerBrands
+      partnerBrands,
     };
   };
 
   // Visit type toggle state
-  const [visitType, setVisitType] = useState<'PHYSICAL' | 'DIGITAL' | 'HOLIDAY' | 'WEEK_OFF'>('PHYSICAL');
+  const [visitType, setVisitType] = useState<
+    "PHYSICAL" | "DIGITAL" | "HOLIDAY" | "WEEK_OFF"
+  >("PHYSICAL");
 
   const [formData, setFormData] = useState({
-    visitDate: '',
+    visitDate: "",
     peopleMet: [] as PersonMet[],
-    nextScheduledDate: '',
+    nextScheduledDate: "",
     brandsVisited: [] as string[],
     issuesRaised: [] as string[],
   });
 
-  const [brandVisitDetails, setBrandVisitDetails] = useState<Record<string, { POSMchecked: boolean | null, remarks: string, uploadedImages: UploadedImage[], issuesRaised: string[], currentIssue: string, peopleMet: PersonMet[], currentPersonName: string, currentPersonDesig: string, currentPersonPhone: string, contactType: 'SEC' | 'OTHER' }>>({});
+  const [brandVisitDetails, setBrandVisitDetails] = useState<
+    Record<
+      string,
+      {
+        POSMchecked: boolean | null;
+        remarks: string;
+        uploadedImages: UploadedImage[];
+        issuesRaised: string[];
+        currentIssue: string;
+        peopleMet: PersonMet[];
+        currentPersonName: string;
+        currentPersonDesig: string;
+        currentPersonPhone: string;
+        contactType: "SEC" | "OTHER";
+      }
+    >
+  >({});
 
-  const [selectedSummaryBrand, setSelectedSummaryBrand] = useState<string>('');
-  const [activeBrandTab, setActiveBrandTab] = useState<string>('');
+  const [selectedSummaryBrand, setSelectedSummaryBrand] = useState<string>("");
+  const [activeBrandTab, setActiveBrandTab] = useState<string>("");
   // Digital visit lightweight state
   const [digitalForm, setDigitalForm] = useState({
-    connectDate: '', // IST default
-    remarks: ''
+    connectDate: "", // IST default
+    remarks: "",
   });
   const [digitalPeople, setDigitalPeople] = useState<PersonMet[]>([]);
-  const [currentDigitalPerson, setCurrentDigitalPerson] = useState({ name: '', designation: '', phoneNumber: '' });
-  const [digitalIssueText, setDigitalIssueText] = useState('');
+  const [currentDigitalPerson, setCurrentDigitalPerson] = useState({
+    name: "",
+    designation: "",
+    phoneNumber: "",
+  });
+  const [digitalIssueText, setDigitalIssueText] = useState("");
   const [digitalIssues, setDigitalIssues] = useState<string[]>([]);
 
   // Holiday form state
   const [holidayForm, setHolidayForm] = useState({
-    startDate: '',
-    endDate: '',
-    reason: '',
-    replacementAvailable: null as boolean | null
+    startDate: "",
+    endDate: "",
+    reason: "",
+    replacementAvailable: null as boolean | null,
   });
-  const [holidaySecNames, setHolidaySecNames] = useState<{ name: string, phoneNumber: string }[]>([]);
-  const [currentSecName, setCurrentSecName] = useState('');
-  const [currentSecPhone, setCurrentSecPhone] = useState('');
+  const [holidaySecNames, setHolidaySecNames] = useState<
+    { name: string; phoneNumber: string }[]
+  >([]);
+  const [currentSecName, setCurrentSecName] = useState("");
+  const [currentSecPhone, setCurrentSecPhone] = useState("");
 
-  const [currentBrand, setCurrentBrand] = useState('');
-  const [currentPerson, setCurrentPerson] = useState({ name: 'SEC', designation: '', phoneNumber: '' });
-  const [contactNameType, setContactNameType] = useState<'SEC' | 'OTHER'>('SEC');
-  const [currentIssue, setCurrentIssue] = useState('');
+  const [currentBrand, setCurrentBrand] = useState("");
+  const [currentPerson, setCurrentPerson] = useState({
+    name: "SEC",
+    designation: "",
+    phoneNumber: "",
+  });
+  const [contactNameType, setContactNameType] = useState<"SEC" | "OTHER">(
+    "SEC",
+  );
+  const [currentIssue, setCurrentIssue] = useState("");
   const [storeData, setStoreData] = useState<StoreData | null>(null);
   const [pastVisits, setPastVisits] = useState<PastVisit[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -155,7 +185,7 @@ const ExecutiveFormContent: React.FC = () => {
     const today = new Date();
     const istOffset = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
     const istDate = new Date(today.getTime() + istOffset);
-    const defaultVisitDate = istDate.toISOString().split('T')[0];
+    const defaultVisitDate = istDate.toISOString().split("T")[0];
 
     const savedData = localStorage.getItem(getFormStorageKey());
     if (savedData) {
@@ -164,27 +194,27 @@ const ExecutiveFormContent: React.FC = () => {
         setFormData({
           ...parsedData,
           // Always override visitDate with today's IST date, ignoring stale saved dates
-          visitDate: defaultVisitDate
+          visitDate: defaultVisitDate,
         });
       } catch (error) {
-        console.error('Error loading saved form data:', error);
-        setFormData(prev => ({ ...prev, visitDate: defaultVisitDate }));
+        console.error("Error loading saved form data:", error);
+        setFormData((prev) => ({ ...prev, visitDate: defaultVisitDate }));
       }
     } else {
-      setFormData(prev => ({ ...prev, visitDate: defaultVisitDate }));
+      setFormData((prev) => ({ ...prev, visitDate: defaultVisitDate }));
     }
 
     // Initialize digital form defaults
-    setDigitalForm(prev => ({
+    setDigitalForm((prev) => ({
       ...prev,
-      connectDate: defaultVisitDate
+      connectDate: defaultVisitDate,
     }));
 
     // Initialize holiday form defaults
-    setHolidayForm(prev => ({
+    setHolidayForm((prev) => ({
       ...prev,
       startDate: defaultVisitDate,
-      endDate: defaultVisitDate
+      endDate: defaultVisitDate,
     }));
 
     // Mark as initialized after loading is complete
@@ -207,7 +237,7 @@ const ExecutiveFormContent: React.FC = () => {
   // Load store data from URL parameters and fetch past visits
   useEffect(() => {
     if (!storeId) {
-      setError('Store ID is required');
+      setError("Store ID is required");
       setStoreLoading(false);
       return;
     }
@@ -221,13 +251,29 @@ const ExecutiveFormContent: React.FC = () => {
         setStoreData(storeDataFromParams);
         const initialBrandDetails: any = {};
         storeDataFromParams.partnerBrands.forEach((brand: string) => {
-          initialBrandDetails[brand] = { POSMchecked: null, remarks: '', uploadedImages: [], issuesRaised: [], currentIssue: '', peopleMet: [], currentPersonName: 'SEC', currentPersonDesig: '', currentPersonPhone: '', contactType: 'SEC' };
+          initialBrandDetails[brand] = {
+            POSMchecked: null,
+            remarks: "",
+            uploadedImages: [],
+            issuesRaised: [],
+            currentIssue: "",
+            peopleMet: [],
+            currentPersonName: "SEC",
+            currentPersonDesig: "",
+            currentPersonPhone: "",
+            contactType: "SEC",
+          };
         });
         setBrandVisitDetails(initialBrandDetails);
-        if (storeDataFromParams.partnerBrands.length > 0) { setActiveBrandTab(storeDataFromParams.partnerBrands[0]); setSelectedSummaryBrand(storeDataFromParams.partnerBrands[0]); }
+        if (storeDataFromParams.partnerBrands.length > 0) {
+          setActiveBrandTab(storeDataFromParams.partnerBrands[0]);
+          setSelectedSummaryBrand(storeDataFromParams.partnerBrands[0]);
+        }
         setError(null);
       } else {
-        setError('Store information is missing. Please go back and select a store again.');
+        setError(
+          "Store information is missing. Please go back and select a store again.",
+        );
       }
 
       setStoreLoading(false);
@@ -236,16 +282,20 @@ const ExecutiveFormContent: React.FC = () => {
     const fetchPastVisits = async () => {
       try {
         setVisitsLoading(true);
-        const response = await fetch(`/api/executive/visitform?storeId=${storeId}`);
+        const response = await fetch(
+          `/api/executive/visitform?storeId=${storeId}`,
+        );
         if (response.ok) {
           const data = await response.json();
           setPastVisits(data.data || []);
         } else {
-          console.log(`Past visits API returned ${response.status} - no visits available`);
+          console.log(
+            `Past visits API returned ${response.status} - no visits available`,
+          );
           setPastVisits([]);
         }
       } catch (error) {
-        console.log('Past visits fetch failed - this is non-critical:', error);
+        console.log("Past visits fetch failed - this is non-critical:", error);
         setPastVisits([]);
       } finally {
         setVisitsLoading(false);
@@ -255,7 +305,9 @@ const ExecutiveFormContent: React.FC = () => {
     const fetchDigitalVisits = async () => {
       try {
         setDigitalVisitsLoading(true);
-        const res = await fetch(`/api/executive/digital-visit?storeId=${storeId}`);
+        const res = await fetch(
+          `/api/executive/digital-visit?storeId=${storeId}`,
+        );
         if (res.ok) {
           const data = await res.json();
           setDigitalVisits(data.data || []);
@@ -263,7 +315,7 @@ const ExecutiveFormContent: React.FC = () => {
           setDigitalVisits([]);
         }
       } catch (error) {
-        console.log('Digital visits fetch failed - non-critical:', error);
+        console.log("Digital visits fetch failed - non-critical:", error);
         setDigitalVisits([]);
       } finally {
         setDigitalVisitsLoading(false);
@@ -277,27 +329,31 @@ const ExecutiveFormContent: React.FC = () => {
 
   const checkDuplicateVisit = (selectedDate: string) => {
     if (!selectedDate) return false;
-    
+
     // Check in pastVisits (physical visits)
-    const hasPhysical = pastVisits.some(visit => {
+    const hasPhysical = pastVisits.some((visit) => {
       if (!visit.canViewDetails) return false;
       if (visit.visitDate && visit.visitDate === selectedDate) return true;
       if (visit.createdAt) {
-        const createdDateStr = new Date(visit.createdAt).toISOString().split('T')[0];
+        const createdDateStr = new Date(visit.createdAt)
+          .toISOString()
+          .split("T")[0];
         if (createdDateStr === selectedDate) return true;
       }
       return false;
     });
 
     // Check in digitalVisits (digital connects)
-    const hasDigital = digitalVisits.some(visit => {
+    const hasDigital = digitalVisits.some((visit) => {
       if (!visit.canViewDetails) return false;
       if (visit.date) {
-        const connectDateStr = new Date(visit.date).toISOString().split('T')[0];
+        const connectDateStr = new Date(visit.date).toISOString().split("T")[0];
         if (connectDateStr === selectedDate) return true;
       }
       if (visit.createdAt) {
-        const createdDateStr = new Date(visit.createdAt).toISOString().split('T')[0];
+        const createdDateStr = new Date(visit.createdAt)
+          .toISOString()
+          .split("T")[0];
         if (createdDateStr === selectedDate) return true;
       }
       return false;
@@ -307,12 +363,12 @@ const ExecutiveFormContent: React.FC = () => {
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
     if (errors[field]) {
-      setErrors(prev => {
+      setErrors((prev) => {
         const copy = { ...prev };
         delete copy[field];
         return copy;
@@ -321,22 +377,27 @@ const ExecutiveFormContent: React.FC = () => {
   };
 
   const handleSaveDraft = () => {
-    console.log('Saving draft:', formData);
-    alert('Draft saved successfully!');
+    console.log("Saving draft:", formData);
+    alert("Draft saved successfully!");
   };
 
   const handleSubmitVisit = async () => {
     if (!storeId) {
-      alert('Store ID is required');
+      alert("Store ID is required");
       return;
     }
 
-    const isDigital = visitType === 'DIGITAL';
-    const selectedDate = isDigital ? digitalForm.connectDate : (visitType === 'PHYSICAL' ? formData.visitDate : '');
+    const isDigital = visitType === "DIGITAL";
+    const selectedDate = isDigital
+      ? digitalForm.connectDate
+      : visitType === "PHYSICAL"
+        ? formData.visitDate
+        : "";
     if (selectedDate && checkDuplicateVisit(selectedDate)) {
-      alert(isDigital 
-        ? 'A connect has already been registered for this store on this date if you want to update the visit please delete the connect first and then create new connect' 
-        : 'A visit has already been submitted for this store on this date if you want to update the visit please Delete the visit first and then create new visit'
+      alert(
+        isDigital
+          ? "A connect has already been registered for this store on this date if you want to update the visit please delete the connect first and then create new connect"
+          : "A visit has already been submitted for this store on this date if you want to update the visit please Delete the visit first and then create new visit",
       );
       return;
     }
@@ -345,80 +406,92 @@ const ExecutiveFormContent: React.FC = () => {
     const today = new Date();
     const istOffset = 5.5 * 60 * 60 * 1000;
     const istToday = new Date(today.getTime() + istOffset);
-    const todayStr = istToday.toISOString().split('T')[0];
-    const ninetyDaysAgo = new Date(istToday.getTime() - (90 * 24 * 60 * 60 * 1000));
-    const ninetyDaysAgoStr = ninetyDaysAgo.toISOString().split('T')[0];
+    const todayStr = istToday.toISOString().split("T")[0];
+    const ninetyDaysAgo = new Date(
+      istToday.getTime() - 90 * 24 * 60 * 60 * 1000,
+    );
+    const ninetyDaysAgoStr = ninetyDaysAgo.toISOString().split("T")[0];
 
     const newErrors: Record<string, string> = {};
 
-    if (visitType === 'PHYSICAL') {
+    if (visitType === "PHYSICAL") {
       // Basic validation for physical visit
       if (!formData.visitDate) {
-        newErrors.visitDate = 'Please select a visit date';
+        newErrors.visitDate = "Please select a visit date";
       } else if (formData.visitDate > todayStr) {
-        newErrors.visitDate = 'Visit date cannot be in the future. Please select today or a past date.';
+        newErrors.visitDate =
+          "Visit date cannot be in the future. Please select today or a past date.";
       } else if (formData.visitDate < ninetyDaysAgoStr) {
-        newErrors.visitDate = 'Visit date cannot be more than 90 days ago. Please select a more recent date.';
+        newErrors.visitDate =
+          "Visit date cannot be more than 90 days ago. Please select a more recent date.";
       }
-      storeData?.partnerBrands.forEach(brand => {
+      storeData?.partnerBrands.forEach((brand) => {
         if (!(brandVisitDetails[brand]?.peopleMet?.length > 0)) {
-          newErrors[`peopleMet-${brand}`] = 'Please add contact person by clicking the Add button';
+          newErrors[`peopleMet-${brand}`] =
+            "Please add contact person by clicking the Add button";
         }
       });
-    } else if (visitType === 'DIGITAL') {
+    } else if (visitType === "DIGITAL") {
       // Digital validation
       if (!digitalForm.connectDate) {
-        newErrors.connectDate = 'Please select a connect date';
+        newErrors.connectDate = "Please select a connect date";
       } else if (digitalForm.connectDate > todayStr) {
-        newErrors.connectDate = 'Connect date cannot be in the future.';
+        newErrors.connectDate = "Connect date cannot be in the future.";
       } else if (digitalForm.connectDate < ninetyDaysAgoStr) {
-        newErrors.connectDate = 'Connect date cannot be more than 90 days ago.';
+        newErrors.connectDate = "Connect date cannot be more than 90 days ago.";
       }
-      
-      storeData?.partnerBrands.forEach(brand => {
+
+      storeData?.partnerBrands.forEach((brand) => {
         if (!(brandVisitDetails[brand]?.peopleMet?.length > 0)) {
-          newErrors[`peopleMet-${brand}`] = 'Please add contact person by clicking the Add button';
+          newErrors[`peopleMet-${brand}`] =
+            "Please add contact person by clicking the Add button";
         }
         if (!brandVisitDetails[brand]?.remarks?.trim()) {
-          newErrors[`remarks-${brand}`] = 'Remarks are required for this brand';
+          newErrors[`remarks-${brand}`] = "Remarks are required for this brand";
         }
       });
-      
-    } else if (visitType === 'HOLIDAY') {
+    } else if (visitType === "HOLIDAY") {
       // Holiday validation
       if (holidaySecNames.length === 0) {
-        newErrors.holidaySecNames = 'Please add at least one SEC name';
+        newErrors.holidaySecNames = "Please add at least one SEC name";
       }
       if (!holidayForm.reason.trim()) {
-        newErrors.holidayReason = 'Please enter reason for absence';
+        newErrors.holidayReason = "Please enter reason for absence";
       }
       if (!holidayForm.startDate) {
-        newErrors.holidayStartDate = 'Please select start date';
+        newErrors.holidayStartDate = "Please select start date";
       }
       if (!holidayForm.endDate) {
-        newErrors.holidayEndDate = 'Please select end date';
-      } else if (holidayForm.startDate && holidayForm.startDate > holidayForm.endDate) {
-        newErrors.holidayEndDate = 'Start date cannot be after end date';
+        newErrors.holidayEndDate = "Please select end date";
+      } else if (
+        holidayForm.startDate &&
+        holidayForm.startDate > holidayForm.endDate
+      ) {
+        newErrors.holidayEndDate = "Start date cannot be after end date";
       }
       if (holidayForm.replacementAvailable === null) {
-        newErrors.replacementAvailable = 'Please indicate if a replacement request is available';
+        newErrors.replacementAvailable =
+          "Please indicate if a replacement request is available";
       }
-    } else if (visitType === 'WEEK_OFF') {
+    } else if (visitType === "WEEK_OFF") {
       // Week off validation
       if (!holidayForm.startDate) {
-        newErrors.holidayStartDate = 'Please select week off date';
+        newErrors.holidayStartDate = "Please select week off date";
       }
       if (holidaySecNames.length === 0) {
-        newErrors.holidaySecNames = 'Please add at least one SEC name';
+        newErrors.holidaySecNames = "Please add at least one SEC name";
       }
     }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      
+
       // Auto-switch to the first brand tab with validation errors
       if (storeData) {
-        const brandWithError = storeData.partnerBrands.find(brand => newErrors[`peopleMet-${brand}`] || newErrors[`remarks-${brand}`]);
+        const brandWithError = storeData.partnerBrands.find(
+          (brand) =>
+            newErrors[`peopleMet-${brand}`] || newErrors[`remarks-${brand}`],
+        );
         if (brandWithError && brandWithError !== activeBrandTab) {
           setActiveBrandTab(brandWithError);
         }
@@ -427,10 +500,10 @@ const ExecutiveFormContent: React.FC = () => {
       // Scroll to the first error field
       const firstErrorKey = Object.keys(newErrors)[0];
       let elementId = firstErrorKey;
-      if (firstErrorKey.startsWith('peopleMet-')) {
-        elementId = 'group-peopleMet';
-      } else if (firstErrorKey.startsWith('remarks-')) {
-        elementId = 'group-remarks';
+      if (firstErrorKey.startsWith("peopleMet-")) {
+        elementId = "group-peopleMet";
+      } else if (firstErrorKey.startsWith("remarks-")) {
+        elementId = "group-remarks";
       } else {
         elementId = `group-${firstErrorKey}`;
       }
@@ -439,7 +512,7 @@ const ExecutiveFormContent: React.FC = () => {
         const el = document.getElementById(elementId);
         if (el) {
           const y = el.getBoundingClientRect().top + window.scrollY - 120;
-          window.scrollTo({ top: y, behavior: 'smooth' });
+          window.scrollTo({ top: y, behavior: "smooth" });
         }
       }, 100);
 
@@ -449,64 +522,84 @@ const ExecutiveFormContent: React.FC = () => {
     setSubmitting(true);
 
     try {
-      if (visitType === 'HOLIDAY' || visitType === 'WEEK_OFF') {
+      if (visitType === "HOLIDAY" || visitType === "WEEK_OFF") {
         // Handle holiday/week off submission
         const holidayData = {
-          secNames: holidaySecNames.map(s => `${s.name} (${s.phoneNumber})`),
-          reason: visitType === 'WEEK_OFF' ? 'Week Off' : holidayForm.reason.trim(),
+          secNames: holidaySecNames.map((s) => `${s.name} (${s.phoneNumber})`),
+          reason:
+            visitType === "WEEK_OFF" ? "Week Off" : holidayForm.reason.trim(),
           startDate: holidayForm.startDate,
-          endDate: visitType === 'WEEK_OFF' ? holidayForm.startDate : holidayForm.endDate,
+          endDate:
+            visitType === "WEEK_OFF"
+              ? holidayForm.startDate
+              : holidayForm.endDate,
           storeId, // Include storeId for context
-          type: visitType === 'WEEK_OFF' ? 'WEEK_OFF' : 'VACATION',
-          replacementAvailable: visitType === 'WEEK_OFF' ? false : holidayForm.replacementAvailable
+          type: visitType === "WEEK_OFF" ? "WEEK_OFF" : "VACATION",
+          replacementAvailable:
+            visitType === "WEEK_OFF" ? false : holidayForm.replacementAvailable,
         };
 
-        const response = await fetch('/api/executive/holiday', {
-          method: 'POST',
+        const response = await fetch("/api/executive/holiday", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(holidayData),
         });
 
         if (!response.ok) {
           const error = await response.json();
-          throw new Error(error.message || 'Failed to submit holiday request');
+          throw new Error(error.message || "Failed to submit holiday request");
         }
 
         await response.json();
-        alert(`${visitType === 'WEEK_OFF' ? 'Week off' : 'Vacation'} request submitted successfully!`);
-        router.push('/executive/store');
+        alert(
+          `${visitType === "WEEK_OFF" ? "Week off" : "Vacation"} request submitted successfully!`,
+        );
+        router.push("/executive/store");
         return;
       }
 
-      const isDigital = visitType === 'DIGITAL';
+      const isDigital = visitType === "DIGITAL";
       const visitData: any = {
         storeId,
         visitDate: isDigital ? digitalForm.connectDate : formData.visitDate,
-        personMet: storeData?.partnerBrands.flatMap(b => brandVisitDetails[b]?.peopleMet || []),
-        brandVisitDetails: storeData?.partnerBrands.map(brand => ({
+        personMet: storeData?.partnerBrands.flatMap(
+          (b) => brandVisitDetails[b]?.peopleMet || [],
+        ),
+        brandVisitDetails: storeData?.partnerBrands.map((brand) => ({
           brandName: brand,
           POSMchecked: isDigital ? null : brandVisitDetails[brand]?.POSMchecked,
-          remarks: brandVisitDetails[brand]?.remarks || '',
-          imageUrls: isDigital ? [] : (brandVisitDetails[brand]?.uploadedImages || []).map((img: any) => img.url),
-          issuesRaised: brandVisitDetails[brand]?.issuesRaised || [], peopleMet: brandVisitDetails[brand]?.peopleMet || []
+          remarks: brandVisitDetails[brand]?.remarks || "",
+          imageUrls: isDigital
+            ? []
+            : (brandVisitDetails[brand]?.uploadedImages || []).map(
+                (img: any) => img.url,
+              ),
+          issuesRaised: brandVisitDetails[brand]?.issuesRaised || [],
+          peopleMet: brandVisitDetails[brand]?.peopleMet || [],
         })),
-        ...(isDigital ? {} : formData.nextScheduledDate ? { nextScheduledDate: formData.nextScheduledDate } : {})
+        ...(isDigital
+          ? {}
+          : formData.nextScheduledDate
+            ? { nextScheduledDate: formData.nextScheduledDate }
+            : {}),
       };
 
-      const endpoint = isDigital ? '/api/executive/digital-visit' : '/api/executive/visitform';
+      const endpoint = isDigital
+        ? "/api/executive/digital-visit"
+        : "/api/executive/visitform";
       const response = await fetch(endpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(visitData),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to submit visit');
+        throw new Error(error.message || "Failed to submit visit");
       }
 
       await response.json();
@@ -514,20 +607,26 @@ const ExecutiveFormContent: React.FC = () => {
       // Clear localStorage after successful submission
       localStorage.removeItem(getFormStorageKey());
 
-      alert('Visit submitted successfully!');
-      router.push('/executive/store');
+      alert("Visit submitted successfully!");
+      router.push("/executive/store");
     } catch (error) {
-      console.error('Error submitting visit:', error);
-      alert(error instanceof Error ? error.message : 'Failed to submit visit. Please try again.');
+      console.error("Error submitting visit:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to submit visit. Please try again.",
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
   const removeBrand = (brandToRemove: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      brandsVisited: prev.brandsVisited.filter(brand => brand !== brandToRemove)
+      brandsVisited: prev.brandsVisited.filter(
+        (brand) => brand !== brandToRemove,
+      ),
     }));
   };
 
@@ -537,50 +636,69 @@ const ExecutiveFormContent: React.FC = () => {
     if (!name.trim() || !designation.trim() || !phoneNumber.trim()) return;
     // Simple phone validation: 7-15 digits
     if (!/^\d{7,15}$/.test(phoneNumber.trim())) {
-      alert('Please enter a valid phone number (7-15 digits)');
+      alert("Please enter a valid phone number (7-15 digits)");
       return;
     }
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      peopleMet: [...prev.peopleMet, { name: name.trim(), designation: designation.trim(), phoneNumber: phoneNumber.trim() }]
+      peopleMet: [
+        ...prev.peopleMet,
+        {
+          name: name.trim(),
+          designation: designation.trim(),
+          phoneNumber: phoneNumber.trim(),
+        },
+      ],
     }));
-    setCurrentPerson({ name: contactNameType === 'SEC' ? 'SEC' : '', designation: '', phoneNumber: '' });
+    setCurrentPerson({
+      name: contactNameType === "SEC" ? "SEC" : "",
+      designation: "",
+      phoneNumber: "",
+    });
   };
 
   const removePerson = (indexToRemove: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      peopleMet: prev.peopleMet.filter((_, index) => index !== indexToRemove)
+      peopleMet: prev.peopleMet.filter((_, index) => index !== indexToRemove),
     }));
   };
 
-  const handlePersonInputChange = (field: 'name' | 'designation' | 'phoneNumber', value: string) => {
-    setCurrentPerson(prev => ({
+  const handlePersonInputChange = (
+    field: "name" | "designation" | "phoneNumber",
+    value: string,
+  ) => {
+    setCurrentPerson((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   // Issue management functions
   const addIssue = () => {
-    if (currentIssue.trim() && !formData.issuesRaised.includes(currentIssue.trim())) {
-      setFormData(prev => ({
+    if (
+      currentIssue.trim() &&
+      !formData.issuesRaised.includes(currentIssue.trim())
+    ) {
+      setFormData((prev) => ({
         ...prev,
-        issuesRaised: [...prev.issuesRaised, currentIssue.trim()]
+        issuesRaised: [...prev.issuesRaised, currentIssue.trim()],
       }));
-      setCurrentIssue('');
+      setCurrentIssue("");
     }
   };
 
   const removeIssue = (indexToRemove: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      issuesRaised: prev.issuesRaised.filter((_, index) => index !== indexToRemove)
+      issuesRaised: prev.issuesRaised.filter(
+        (_, index) => index !== indexToRemove,
+      ),
     }));
   };
 
   const handleIssueKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       addIssue();
     }
@@ -590,14 +708,17 @@ const ExecutiveFormContent: React.FC = () => {
   const addSecName = () => {
     if (currentSecName.trim() && currentSecPhone.trim()) {
       if (!/^\d{7,15}$/.test(currentSecPhone.trim())) {
-        alert('Please enter a valid phone number (7-15 digits)');
+        alert("Please enter a valid phone number (7-15 digits)");
         return;
       }
-      setHolidaySecNames(prev => [...prev, { name: currentSecName.trim(), phoneNumber: currentSecPhone.trim() }]);
-      setCurrentSecName('');
-      setCurrentSecPhone('');
+      setHolidaySecNames((prev) => [
+        ...prev,
+        { name: currentSecName.trim(), phoneNumber: currentSecPhone.trim() },
+      ]);
+      setCurrentSecName("");
+      setCurrentSecPhone("");
       if (errors.holidaySecNames) {
-        setErrors(prev => {
+        setErrors((prev) => {
           const copy = { ...prev };
           delete copy.holidaySecNames;
           return copy;
@@ -607,11 +728,13 @@ const ExecutiveFormContent: React.FC = () => {
   };
 
   const removeSecName = (indexToRemove: number) => {
-    setHolidaySecNames(prev => prev.filter((_, index) => index !== indexToRemove));
+    setHolidaySecNames((prev) =>
+      prev.filter((_, index) => index !== indexToRemove),
+    );
   };
 
   const handleSecNameKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       addSecName();
     }
@@ -619,36 +742,36 @@ const ExecutiveFormContent: React.FC = () => {
 
   // Image upload handler
   const handleImageUpload = (images: UploadedImage[]) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      uploadedImages: images
+      uploadedImages: images,
     }));
-    console.log('Updated images:', images);
+    console.log("Updated images:", images);
   };
 
   const getStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
-      case 'PENDING_REVIEW':
-        return '#ffc107';
-      case 'REVIEWD':
-        return '#28a745';
+      case "PENDING_REVIEW":
+        return "#ffc107";
+      case "REVIEWD":
+        return "#28a745";
       default:
-        return '#6c757d';
+        return "#6c757d";
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const formatStatusLabel = (status: string) => {
-    const s = (status || '').toUpperCase();
-    if (s === 'REVIEWD' || s === 'REVIEWED') return 'REVIEWED';
-    if (s === 'PENDING_REVIEW') return 'PENDING_REVIEW';
+    const s = (status || "").toUpperCase();
+    if (s === "REVIEWD" || s === "REVIEWED") return "REVIEWED";
+    if (s === "PENDING_REVIEW") return "PENDING_REVIEW";
     return status;
   };
 
@@ -671,7 +794,10 @@ const ExecutiveFormContent: React.FC = () => {
           <div className="exec-f-sub-error-state">
             <h2>Error Loading Store</h2>
             <p>{error}</p>
-            <button onClick={() => router.push('/executive/store')} className="exec-f-sub-back-btn">
+            <button
+              onClick={() => router.push("/executive/store")}
+              className="exec-f-sub-back-btn"
+            >
               Back to Stores
             </button>
           </div>
@@ -685,7 +811,10 @@ const ExecutiveFormContent: React.FC = () => {
       <div className="exec-f-sub-content">
         {/* Header */}
         <div className="exec-f-sub-header">
-          <button className="exec-f-sub-back-btn" onClick={() => router.push('/executive/store')}>
+          <button
+            className="exec-f-sub-back-btn"
+            onClick={() => router.push("/executive/store")}
+          >
             <span className="exec-f-sub-back-arrow">←</span>
             Back to Stores
           </button>
@@ -700,69 +829,87 @@ const ExecutiveFormContent: React.FC = () => {
         {/* Store Info Card */}
         <div className="exec-f-sub-store-info-card">
           {storeLoading ? (
-            <div className="loading-text">
-              Loading store information...
-            </div>
+            <div className="loading-text">Loading store information...</div>
           ) : storeData ? (
             <>
               <div className="exec-f-sub-store-header-row">
                 <h2 className="exec-f-sub-store-name">{storeData.storeName}</h2>
                 {/* Visit type toggle */}
-                <div className="exec-f-visit-type-toggle" role="tablist" aria-label="Choose visit type">
+                <div
+                  className="exec-f-visit-type-toggle"
+                  role="tablist"
+                  aria-label="Choose visit type"
+                >
                   <button
                     type="button"
-                    className={`exec-f-visit-type-btn ${visitType === 'PHYSICAL' ? 'active' : ''}`}
-                    onClick={() => setVisitType('PHYSICAL')}
-                    aria-selected={visitType === 'PHYSICAL'}
+                    className={`exec-f-visit-type-btn ${visitType === "PHYSICAL" ? "active" : ""}`}
+                    onClick={() => setVisitType("PHYSICAL")}
+                    aria-selected={visitType === "PHYSICAL"}
                   >
                     Physical Visit
                   </button>
                   <button
                     type="button"
-                    className={`exec-f-visit-type-btn ${visitType === 'DIGITAL' ? 'active' : ''}`}
-                    onClick={() => setVisitType('DIGITAL')}
-                    aria-selected={visitType === 'DIGITAL'}
+                    className={`exec-f-visit-type-btn ${visitType === "DIGITAL" ? "active" : ""}`}
+                    onClick={() => setVisitType("DIGITAL")}
+                    aria-selected={visitType === "DIGITAL"}
                   >
                     Digital Visit
                   </button>
                   <button
                     type="button"
-                    className={`exec-f-visit-type-btn ${visitType === 'HOLIDAY' ? 'active' : ''}`}
-                    onClick={() => setVisitType('HOLIDAY')}
-                    aria-selected={visitType === 'HOLIDAY'}
+                    className={`exec-f-visit-type-btn ${visitType === "HOLIDAY" ? "active" : ""}`}
+                    onClick={() => setVisitType("HOLIDAY")}
+                    aria-selected={visitType === "HOLIDAY"}
                   >
                     Vacation
                   </button>
                   <button
                     type="button"
-                    className={`exec-f-visit-type-btn ${visitType === 'WEEK_OFF' ? 'active' : ''}`}
-                    onClick={() => setVisitType('WEEK_OFF')}
-                    aria-selected={visitType === 'WEEK_OFF'}
+                    className={`exec-f-visit-type-btn ${visitType === "WEEK_OFF" ? "active" : ""}`}
+                    onClick={() => setVisitType("WEEK_OFF")}
+                    aria-selected={visitType === "WEEK_OFF"}
                   >
                     Week Off
                   </button>
                 </div>
               </div>
-              <div className="exec-f-sub-partner-brands" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
+              <div
+                className="exec-f-sub-partner-brands"
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  overflowX: "auto",
+                  paddingBottom: "8px",
+                }}
+              >
                 {storeData.partnerBrands.map((brand, index) => {
-                  const isComplete = visitType === 'DIGITAL'
-                    ? brandVisitDetails[brand]?.peopleMet?.length > 0 && brandVisitDetails[brand]?.remarks?.trim()
-                    : brandVisitDetails[brand]?.peopleMet?.length > 0;
+                  const isComplete =
+                    visitType === "DIGITAL"
+                      ? brandVisitDetails[brand]?.peopleMet?.length > 0 &&
+                        brandVisitDetails[brand]?.remarks?.trim()
+                      : brandVisitDetails[brand]?.peopleMet?.length > 0;
                   return (
                     <button
                       key={index}
                       onClick={() => setActiveBrandTab(brand)}
                       className="exec-f-sub-brand-tag"
                       style={{
-                        border: activeBrandTab === brand ? '2px solid #3b82f6' : '1px solid transparent',
+                        border:
+                          activeBrandTab === brand
+                            ? "2px solid #3b82f6"
+                            : "1px solid transparent",
                         opacity: activeBrandTab === brand ? 1 : 0.7,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
                       }}
                     >
-                      {brand} {isComplete && <span style={{ color: '#22c55e' }}>✓</span>}
+                      {brand}{" "}
+                      {isComplete && (
+                        <span style={{ color: "#22c55e" }}>✓</span>
+                      )}
                     </button>
                   );
                 })}
@@ -773,7 +920,9 @@ const ExecutiveFormContent: React.FC = () => {
                   <div className="exec-f-sub-address-info">
                     <div className="exec-f-sub-city">{storeData.city}</div>
                     {storeData.fullAddress && (
-                      <div className="exec-f-sub-full-address">{storeData.fullAddress}</div>
+                      <div className="exec-f-sub-full-address">
+                        {storeData.fullAddress}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -789,13 +938,16 @@ const ExecutiveFormContent: React.FC = () => {
         {/* Visit Form */}
         <div className="exec-f-sub-visit-form-card">
           <h3 className="exec-f-sub-section-title">
-            {visitType === 'PHYSICAL' ? 'Log Visit Details' :
-              visitType === 'DIGITAL' ? 'Log Digital Connect' :
-                visitType === 'WEEK_OFF' ? 'Week Off Info Form' :
-                  'Vacation Info Form'}
+            {visitType === "PHYSICAL"
+              ? "Log Visit Details"
+              : visitType === "DIGITAL"
+                ? "Log Digital Connect"
+                : visitType === "WEEK_OFF"
+                  ? "Week Off Info Form"
+                  : "Vacation Info Form"}
           </h3>
 
-          {visitType === 'PHYSICAL' && (
+          {visitType === "PHYSICAL" && (
             <>
               {/* Visit Date Field */}
               <div id="group-visitDate" className="exec-f-sub-form-group">
@@ -806,350 +958,580 @@ const ExecutiveFormContent: React.FC = () => {
                   type="date"
                   className="exec-f-sub-form-input exec-f-sub-form-date"
                   value={formData.visitDate}
-                  onChange={(e) => handleInputChange('visitDate', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("visitDate", e.target.value)
+                  }
                   max={(() => {
                     // Get today's date in IST for max validation
                     const today = new Date();
                     const istOffset = 5.5 * 60 * 60 * 1000;
                     const istDate = new Date(today.getTime() + istOffset);
-                    return istDate.toISOString().split('T')[0];
+                    return istDate.toISOString().split("T")[0];
                   })()}
                   min={(() => {
                     // Get date 90 days ago in IST for min validation
                     const today = new Date();
                     const istOffset = 5.5 * 60 * 60 * 1000;
                     const istDate = new Date(today.getTime() + istOffset);
-                    const ninetyDaysAgo = new Date(istDate.getTime() - (90 * 24 * 60 * 60 * 1000));
-                    return ninetyDaysAgo.toISOString().split('T')[0];
+                    const ninetyDaysAgo = new Date(
+                      istDate.getTime() - 90 * 24 * 60 * 60 * 1000,
+                    );
+                    return ninetyDaysAgo.toISOString().split("T")[0];
                   })()}
                 />
                 {errors.visitDate && (
-                  <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                  <span
+                    style={{
+                      color: "#ef4444",
+                      fontSize: "0.875rem",
+                      marginTop: "4px",
+                      display: "block",
+                    }}
+                  >
                     {errors.visitDate}
                   </span>
                 )}
               </div>
 
-
-
-
               {/* Per Brand Physical Form */}
-              {storeData && activeBrandTab && [activeBrandTab].map((brand) => (
-                <div id="brand-card-section" key={brand} className="exec-f-sub-brand-card" style={{ border: '1px solid #e2e8f0', padding: '16px', borderRadius: '8px', marginBottom: '16px', backgroundColor: '#f8fafc' }}>
-                  <h4 style={{ margin: '0 0 16px 0', color: '#0f172a', fontSize: '1.1rem' }}>{brand} Details</h4>
-                  
-                  <div className="exec-f-sub-partner-brands" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '16px' }}>
-                    {storeData.partnerBrands.map((tabBrand, index) => {
-                      const isComplete = brandVisitDetails[tabBrand]?.peopleMet?.length > 0;
-                      return (
-                        <button 
-                          key={index} 
-                          onClick={() => setActiveBrandTab(tabBrand)}
-                          className="exec-f-sub-brand-tag"
-                          style={{ 
-                            border: activeBrandTab === tabBrand ? '2px solid #3b82f6' : '1px solid transparent',
-                            opacity: activeBrandTab === tabBrand ? 1 : 0.7,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}
-                        >
-                          {tabBrand} {isComplete && <span style={{ color: '#22c55e' }}>✓</span>}
-                        </button>
-                      );
-                    })}
-                  </div>
+              {storeData &&
+                activeBrandTab &&
+                [activeBrandTab].map((brand) => (
+                  <div
+                    id="brand-card-section"
+                    key={brand}
+                    className="exec-f-sub-brand-card"
+                    style={{
+                      border: "1px solid #e2e8f0",
+                      padding: "16px",
+                      borderRadius: "8px",
+                      marginBottom: "16px",
+                      backgroundColor: "#f8fafc",
+                    }}
+                  >
+                    <h4
+                      style={{
+                        margin: "0 0 16px 0",
+                        color: "#0f172a",
+                        fontSize: "1.1rem",
+                      }}
+                    >
+                      {brand} Details
+                    </h4>
 
-                  {/* Contact Person for Brand */}
-                  <div id="group-peopleMet" className="exec-f-sub-form-group">
-                    <label className="exec-f-sub-form-label">
-                      Contact Person <span className="exec-f-sub-required">*</span>
-                    </label>
-                    {errors[`peopleMet-${brand}`] && (
-                      <span style={{ color: '#ef4444', fontSize: '0.875rem', display: 'block', marginBottom: '8px' }}>
-                        {errors[`peopleMet-${brand}`]}
-                      </span>
-                    )}
-                    <div className="exec-f-sub-people-input-container">
-                      <div className="exec-f-sub-person-input-wrapper">
-                        <div className="exec-f-sub-person-name-select">
-                          <select
-                            className="exec-f-sub-form-select exec-f-sub-person-name-select-input"
-                            value={brandVisitDetails[brand]?.contactType || 'SEC'}
-                            onChange={(e) => {
-                              const v = e.target.value as 'SEC' | 'OTHER';
-                              setBrandVisitDetails(prev => ({
-                                ...prev, [brand]: { ...prev[brand], contactType: v, currentPersonName: v === 'SEC' ? 'SEC' : '', currentPersonDesig: '' }
-                              }));
+                    <div
+                      className="exec-f-sub-partner-brands"
+                      style={{
+                        display: "flex",
+                        gap: "8px",
+                        overflowX: "auto",
+                        paddingBottom: "16px",
+                      }}
+                    >
+                      {storeData.partnerBrands.map((tabBrand, index) => {
+                        const isComplete =
+                          brandVisitDetails[tabBrand]?.peopleMet?.length > 0;
+                        return (
+                          <button
+                            key={index}
+                            onClick={() => setActiveBrandTab(tabBrand)}
+                            className="exec-f-sub-brand-tag"
+                            style={{
+                              border:
+                                activeBrandTab === tabBrand
+                                  ? "2px solid #3b82f6"
+                                  : "1px solid transparent",
+                              opacity: activeBrandTab === tabBrand ? 1 : 0.7,
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
                             }}
                           >
-                            <option value="SEC">SEC</option>
-                            <option value="OTHER">Other</option>
-                          </select>
-                          {brandVisitDetails[brand]?.contactType === 'SEC' ? (
-                            <input
-                              type="text"
-                              className="exec-f-sub-form-input exec-f-sub-person-name-input"
-                              placeholder="Enter person's name"
-                              value={brandVisitDetails[brand]?.currentPersonDesig || ''}
-                              onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonDesig: e.target.value } }))}
-                            />
-                          ) : (
-                            <>
+                            {tabBrand}{" "}
+                            {isComplete && (
+                              <span style={{ color: "#22c55e" }}>✓</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Contact Person for Brand */}
+                    <div id="group-peopleMet" className="exec-f-sub-form-group">
+                      <label className="exec-f-sub-form-label">
+                        Contact Person{" "}
+                        <span className="exec-f-sub-required">*</span>
+                      </label>
+                      {errors[`peopleMet-${brand}`] && (
+                        <span
+                          style={{
+                            color: "#ef4444",
+                            fontSize: "0.875rem",
+                            display: "block",
+                            marginBottom: "8px",
+                          }}
+                        >
+                          {errors[`peopleMet-${brand}`]}
+                        </span>
+                      )}
+                      <div className="exec-f-sub-people-input-container">
+                        <div className="exec-f-sub-person-input-wrapper">
+                          <div className="exec-f-sub-person-name-select">
+                            <select
+                              className="exec-f-sub-form-select exec-f-sub-person-name-select-input"
+                              value={
+                                brandVisitDetails[brand]?.contactType || "SEC"
+                              }
+                              onChange={(e) => {
+                                const v = e.target.value as "SEC" | "OTHER";
+                                setBrandVisitDetails((prev) => ({
+                                  ...prev,
+                                  [brand]: {
+                                    ...prev[brand],
+                                    contactType: v,
+                                    currentPersonName: v === "SEC" ? "SEC" : "",
+                                    currentPersonDesig: "",
+                                  },
+                                }));
+                              }}
+                            >
+                              <option value="SEC">SEC</option>
+                              <option value="OTHER">Other</option>
+                            </select>
+                            {brandVisitDetails[brand]?.contactType === "SEC" ? (
                               <input
                                 type="text"
                                 className="exec-f-sub-form-input exec-f-sub-person-name-input"
                                 placeholder="Enter person's name"
-                                value={brandVisitDetails[brand]?.currentPersonName || ''}
-                                onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonName: e.target.value } }))}
-                              />
-                              <input
-                                type="text"
-                                className="exec-f-sub-form-input exec-f-sub-person-designation-input"
-                                placeholder="Enter designation"
-                                value={brandVisitDetails[brand]?.currentPersonDesig || ''}
-                                onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonDesig: e.target.value } }))}
-                              />
-                            </>
-                          )}
-                        </div>
-                        <input
-                          type="tel"
-                          className="exec-f-sub-form-input exec-f-sub-person-phone-input"
-                          placeholder="Enter phone number"
-                          value={brandVisitDetails[brand]?.currentPersonPhone || ''}
-                          onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonPhone: e.target.value } }))}
-                          inputMode="numeric"
-                          pattern="\d{7,15}"
-                        />
-                        <button
-                          type="button"
-                          className="exec-f-sub-add-person-btn"
-                          onClick={() => {
-                            const bDetails = brandVisitDetails[brand];
-                            if (!bDetails) return;
-                            const name = bDetails.currentPersonName;
-                            const desig = bDetails.currentPersonDesig;
-                            const phone = bDetails.currentPersonPhone;
-                            if (!name.trim() || !desig.trim() || !phone.trim()) return;
-                            if (!/^\d{7,15}$/.test(phone.trim())) { alert('Please enter a valid phone number (7-15 digits)'); return; }
-
-                            setBrandVisitDetails(prev => ({
-                              ...prev,
-                              [brand]: {
-                                ...prev[brand],
-                                peopleMet: [...(prev[brand].peopleMet || []), { name: name.trim(), designation: desig.trim(), phoneNumber: phone.trim() }],
-                                currentPersonName: prev[brand].contactType === 'SEC' ? 'SEC' : '',
-                                currentPersonDesig: '',
-                                currentPersonPhone: ''
-                              }
-                            }));
-                            setErrors(prev => {
-                              const copy = { ...prev };
-                              delete copy[`peopleMet-${brand}`];
-                              return copy;
-                            });
-                          }}
-                          disabled={
-                            brandVisitDetails[brand]?.contactType === 'SEC'
-                              ? !brandVisitDetails[brand]?.currentPersonDesig?.trim() || !brandVisitDetails[brand]?.currentPersonPhone?.trim()
-                              : !brandVisitDetails[brand]?.currentPersonName?.trim() || !brandVisitDetails[brand]?.currentPersonDesig?.trim() || !brandVisitDetails[brand]?.currentPersonPhone?.trim()
-                          }
-                        >
-                          Add
-                        </button>
-                      </div>
-                      {brandVisitDetails[brand]?.peopleMet?.length > 0 && (
-                        <div className="exec-f-sub-people-list">
-                          {brandVisitDetails[brand].peopleMet.map((person, index) => (
-                            <div key={index} className="exec-f-sub-person-item">
-                              <div className="exec-f-sub-person-details">
-                                <span className="exec-f-sub-person-name">{person.name === 'SEC' ? person.designation : person.name}</span>
-                                <span className="exec-f-sub-person-designation">({person.name === 'SEC' ? 'SEC' : person.designation})</span>
-                                {person.phoneNumber && (
-                                  <span className="exec-f-sub-person-phone"> - {person.phoneNumber}</span>
-                                )}
-                              </div>
-                              <button
-                                type="button"
-                                className="exec-f-sub-remove-person-btn"
-                                onClick={() => {
-                                  setBrandVisitDetails(prev => ({
+                                value={
+                                  brandVisitDetails[brand]
+                                    ?.currentPersonDesig || ""
+                                }
+                                onChange={(e) =>
+                                  setBrandVisitDetails((prev) => ({
                                     ...prev,
                                     [brand]: {
                                       ...prev[brand],
-                                      peopleMet: prev[brand].peopleMet.filter((_, i) => i !== index)
-                                    }
-                                  }));
-                                }}
-                                title="Remove person"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-
-                  <div className="exec-f-sub-form-group">
-                    <label className="exec-f-sub-form-label">POSM Available</label>
-                    <div className="exec-f-sub-radio-group">
-                      <label className="exec-f-sub-radio-option">
-                        <input
-                          type="radio"
-                          name={`POSMchecked-${brand}`}
-                          value="true"
-                          checked={brandVisitDetails[brand]?.POSMchecked === true}
-                          onChange={() => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], POSMchecked: true } }))}
-                          className="exec-f-sub-radio-input"
-                        />
-                        <span className="exec-f-sub-radio-custom"></span>
-                        <span className="exec-f-sub-radio-label">Yes</span>
-                      </label>
-                      <label className="exec-f-sub-radio-option">
-                        <input
-                          type="radio"
-                          name={`POSMchecked-${brand}`}
-                          value="false"
-                          checked={brandVisitDetails[brand]?.POSMchecked === false}
-                          onChange={() => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], POSMchecked: false } }))}
-                          className="exec-f-sub-radio-input"
-                        />
-                        <span className="exec-f-sub-radio-custom"></span>
-                        <span className="exec-f-sub-radio-label">No</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="exec-f-sub-form-group">
-                    <label className="exec-f-sub-form-label">Raise Issues</label>
-                    <div className="exec-f-sub-issues-input-container">
-                      <div className="exec-f-sub-issue-input-wrapper">
-                        <input
-                          type="text"
-                          className="exec-f-sub-form-input exec-f-sub-issue-input"
-                          placeholder="Describe an issue encountered"
-                          value={brandVisitDetails[brand]?.currentIssue || ''}
-                          onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentIssue: e.target.value } }))}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              const issue = brandVisitDetails[brand]?.currentIssue?.trim();
-                              if (issue) {
-                                setBrandVisitDetails(prev => ({
-                                  ...prev,
-                                  [brand]: {
-                                    ...prev[brand],
-                                    issuesRaised: [...(prev[brand].issuesRaised || []), issue],
-                                    currentIssue: ''
+                                      currentPersonDesig: e.target.value,
+                                    },
+                                  }))
+                                }
+                              />
+                            ) : (
+                              <>
+                                <input
+                                  type="text"
+                                  className="exec-f-sub-form-input exec-f-sub-person-name-input"
+                                  placeholder="Enter person's name"
+                                  value={
+                                    brandVisitDetails[brand]
+                                      ?.currentPersonName || ""
                                   }
-                                }));
-                              }
+                                  onChange={(e) =>
+                                    setBrandVisitDetails((prev) => ({
+                                      ...prev,
+                                      [brand]: {
+                                        ...prev[brand],
+                                        currentPersonName: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                />
+                                <input
+                                  type="text"
+                                  className="exec-f-sub-form-input exec-f-sub-person-designation-input"
+                                  placeholder="Enter designation"
+                                  value={
+                                    brandVisitDetails[brand]
+                                      ?.currentPersonDesig || ""
+                                  }
+                                  onChange={(e) =>
+                                    setBrandVisitDetails((prev) => ({
+                                      ...prev,
+                                      [brand]: {
+                                        ...prev[brand],
+                                        currentPersonDesig: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                />
+                              </>
+                            )}
+                          </div>
+                          <input
+                            type="tel"
+                            className="exec-f-sub-form-input exec-f-sub-person-phone-input"
+                            placeholder="Enter phone number"
+                            value={
+                              brandVisitDetails[brand]?.currentPersonPhone || ""
                             }
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="exec-f-sub-add-issue-btn"
-                          onClick={() => {
-                            const issue = brandVisitDetails[brand]?.currentIssue?.trim();
-                            if (issue) {
-                              setBrandVisitDetails(prev => ({
+                            onChange={(e) =>
+                              setBrandVisitDetails((prev) => ({
                                 ...prev,
                                 [brand]: {
                                   ...prev[brand],
-                                  issuesRaised: [...(prev[brand].issuesRaised || []), issue],
-                                  currentIssue: ''
-                                }
-                              }));
+                                  currentPersonPhone: e.target.value,
+                                },
+                              }))
                             }
-                          }}
-                          disabled={!brandVisitDetails[brand]?.currentIssue?.trim()}
-                        >
-                          Add Issue
-                        </button>
+                            inputMode="numeric"
+                            pattern="\d{7,15}"
+                          />
+                          <button
+                            type="button"
+                            className="exec-f-sub-add-person-btn"
+                            onClick={() => {
+                              const bDetails = brandVisitDetails[brand];
+                              if (!bDetails) return;
+                              const name = bDetails.currentPersonName;
+                              const desig = bDetails.currentPersonDesig;
+                              const phone = bDetails.currentPersonPhone;
+                              if (
+                                !name.trim() ||
+                                !desig.trim() ||
+                                !phone.trim()
+                              )
+                                return;
+                              if (!/^\d{7,15}$/.test(phone.trim())) {
+                                alert(
+                                  "Please enter a valid phone number (7-15 digits)",
+                                );
+                                return;
+                              }
+
+                              setBrandVisitDetails((prev) => ({
+                                ...prev,
+                                [brand]: {
+                                  ...prev[brand],
+                                  peopleMet: [
+                                    ...(prev[brand].peopleMet || []),
+                                    {
+                                      name: name.trim(),
+                                      designation: desig.trim(),
+                                      phoneNumber: phone.trim(),
+                                    },
+                                  ],
+                                  currentPersonName:
+                                    prev[brand].contactType === "SEC"
+                                      ? "SEC"
+                                      : "",
+                                  currentPersonDesig: "",
+                                  currentPersonPhone: "",
+                                },
+                              }));
+                              setErrors((prev) => {
+                                const copy = { ...prev };
+                                delete copy[`peopleMet-${brand}`];
+                                return copy;
+                              });
+                            }}
+                            disabled={
+                              brandVisitDetails[brand]?.contactType === "SEC"
+                                ? !brandVisitDetails[
+                                    brand
+                                  ]?.currentPersonDesig?.trim() ||
+                                  !brandVisitDetails[
+                                    brand
+                                  ]?.currentPersonPhone?.trim()
+                                : !brandVisitDetails[
+                                    brand
+                                  ]?.currentPersonName?.trim() ||
+                                  !brandVisitDetails[
+                                    brand
+                                  ]?.currentPersonDesig?.trim() ||
+                                  !brandVisitDetails[
+                                    brand
+                                  ]?.currentPersonPhone?.trim()
+                            }
+                          >
+                            Add
+                          </button>
+                        </div>
+                        {brandVisitDetails[brand]?.peopleMet?.length > 0 && (
+                          <div className="exec-f-sub-people-list">
+                            {brandVisitDetails[brand].peopleMet.map(
+                              (person, index) => (
+                                <div
+                                  key={index}
+                                  className="exec-f-sub-person-item"
+                                >
+                                  <div className="exec-f-sub-person-details">
+                                    <span className="exec-f-sub-person-name">
+                                      {person.name === "SEC"
+                                        ? person.designation
+                                        : person.name}
+                                    </span>
+                                    <span className="exec-f-sub-person-designation">
+                                      (
+                                      {person.name === "SEC"
+                                        ? "SEC"
+                                        : person.designation}
+                                      )
+                                    </span>
+                                    {person.phoneNumber && (
+                                      <span className="exec-f-sub-person-phone">
+                                        {" "}
+                                        - {person.phoneNumber}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="exec-f-sub-remove-person-btn"
+                                    onClick={() => {
+                                      setBrandVisitDetails((prev) => ({
+                                        ...prev,
+                                        [brand]: {
+                                          ...prev[brand],
+                                          peopleMet: prev[
+                                            brand
+                                          ].peopleMet.filter(
+                                            (_, i) => i !== index,
+                                          ),
+                                        },
+                                      }));
+                                    }}
+                                    title="Remove person"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {brandVisitDetails[brand]?.issuesRaised?.length > 0 && (
-                        <div className="exec-f-sub-issues-list">
-                          {brandVisitDetails[brand].issuesRaised.map((issue, index) => (
-                            <div key={index} className="exec-f-sub-issue-item">
-                              <span className="exec-f-sub-issue-text">{issue}</span>
-                              <button
-                                type="button"
-                                className="exec-f-sub-remove-issue-btn"
-                                onClick={() => {
-                                  setBrandVisitDetails(prev => ({
+                    </div>
+
+                    <div className="exec-f-sub-form-group">
+                      <label className="exec-f-sub-form-label">
+                        POSM Available
+                      </label>
+                      <div className="exec-f-sub-radio-group">
+                        <label className="exec-f-sub-radio-option">
+                          <input
+                            type="radio"
+                            name={`POSMchecked-${brand}`}
+                            value="true"
+                            checked={
+                              brandVisitDetails[brand]?.POSMchecked === true
+                            }
+                            onChange={() =>
+                              setBrandVisitDetails((prev) => ({
+                                ...prev,
+                                [brand]: { ...prev[brand], POSMchecked: true },
+                              }))
+                            }
+                            className="exec-f-sub-radio-input"
+                          />
+                          <span className="exec-f-sub-radio-custom"></span>
+                          <span className="exec-f-sub-radio-label">Yes</span>
+                        </label>
+                        <label className="exec-f-sub-radio-option">
+                          <input
+                            type="radio"
+                            name={`POSMchecked-${brand}`}
+                            value="false"
+                            checked={
+                              brandVisitDetails[brand]?.POSMchecked === false
+                            }
+                            onChange={() =>
+                              setBrandVisitDetails((prev) => ({
+                                ...prev,
+                                [brand]: { ...prev[brand], POSMchecked: false },
+                              }))
+                            }
+                            className="exec-f-sub-radio-input"
+                          />
+                          <span className="exec-f-sub-radio-custom"></span>
+                          <span className="exec-f-sub-radio-label">No</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="exec-f-sub-form-group">
+                      <label className="exec-f-sub-form-label">
+                        Raise Issues
+                      </label>
+                      <div className="exec-f-sub-issues-input-container">
+                        <div className="exec-f-sub-issue-input-wrapper">
+                          <input
+                            type="text"
+                            className="exec-f-sub-form-input exec-f-sub-issue-input"
+                            placeholder="Describe an issue encountered"
+                            value={brandVisitDetails[brand]?.currentIssue || ""}
+                            onChange={(e) =>
+                              setBrandVisitDetails((prev) => ({
+                                ...prev,
+                                [brand]: {
+                                  ...prev[brand],
+                                  currentIssue: e.target.value,
+                                },
+                              }))
+                            }
+                            onKeyPress={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                const issue =
+                                  brandVisitDetails[
+                                    brand
+                                  ]?.currentIssue?.trim();
+                                if (issue) {
+                                  setBrandVisitDetails((prev) => ({
                                     ...prev,
                                     [brand]: {
                                       ...prev[brand],
-                                      issuesRaised: prev[brand].issuesRaised.filter((_, i) => i !== index)
-                                    }
+                                      issuesRaised: [
+                                        ...(prev[brand].issuesRaised || []),
+                                        issue,
+                                      ],
+                                      currentIssue: "",
+                                    },
                                   }));
-                                }}
-                                title="Remove issue"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
+                                }
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="exec-f-sub-add-issue-btn"
+                            onClick={() => {
+                              const issue =
+                                brandVisitDetails[brand]?.currentIssue?.trim();
+                              if (issue) {
+                                setBrandVisitDetails((prev) => ({
+                                  ...prev,
+                                  [brand]: {
+                                    ...prev[brand],
+                                    issuesRaised: [
+                                      ...(prev[brand].issuesRaised || []),
+                                      issue,
+                                    ],
+                                    currentIssue: "",
+                                  },
+                                }));
+                              }
+                            }}
+                            disabled={
+                              !brandVisitDetails[brand]?.currentIssue?.trim()
+                            }
+                          >
+                            Add Issue
+                          </button>
                         </div>
-                      )}
+                        {brandVisitDetails[brand]?.issuesRaised?.length > 0 && (
+                          <div className="exec-f-sub-issues-list">
+                            {brandVisitDetails[brand].issuesRaised.map(
+                              (issue, index) => (
+                                <div
+                                  key={index}
+                                  className="exec-f-sub-issue-item"
+                                >
+                                  <span className="exec-f-sub-issue-text">
+                                    {issue}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="exec-f-sub-remove-issue-btn"
+                                    onClick={() => {
+                                      setBrandVisitDetails((prev) => ({
+                                        ...prev,
+                                        [brand]: {
+                                          ...prev[brand],
+                                          issuesRaised: prev[
+                                            brand
+                                          ].issuesRaised.filter(
+                                            (_, i) => i !== index,
+                                          ),
+                                        },
+                                      }));
+                                    }}
+                                    title="Remove issue"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="exec-f-sub-form-group">
+                      <label className="exec-f-sub-form-label">
+                        Photos Taken
+                      </label>
+                      <ImageUpload
+                        onUpload={(images) => {
+                          setBrandVisitDetails((prev) => ({
+                            ...prev,
+                            [brand]: {
+                              ...prev[brand],
+                              uploadedImages: images,
+                            },
+                          }));
+                        }}
+                        multiple={true}
+                        maxFiles={5}
+                        existingImages={
+                          brandVisitDetails[brand]?.uploadedImages || []
+                        }
+                      />
+                    </div>
+
+                    <div className="exec-f-sub-form-group">
+                      <label className="exec-f-sub-form-label">Remarks</label>
+                      <textarea
+                        className="exec-f-sub-form-textarea"
+                        placeholder="Additional comments or observations..."
+                        value={brandVisitDetails[brand]?.remarks || ""}
+                        onChange={(e) =>
+                          setBrandVisitDetails((prev) => ({
+                            ...prev,
+                            [brand]: {
+                              ...prev[brand],
+                              remarks: e.target.value,
+                            },
+                          }))
+                        }
+                        rows={2}
+                      />
                     </div>
                   </div>
-
-                  <div className="exec-f-sub-form-group">
-                    <label className="exec-f-sub-form-label">Photos Taken</label>
-                    <ImageUpload
-                      onUpload={(images) => {
-                        setBrandVisitDetails(prev => ({
-                          ...prev,
-                          [brand]: {
-                            ...prev[brand],
-                            uploadedImages: images
-                          }
-                        }));
-                      }}
-                      multiple={true}
-                      maxFiles={5}
-                      existingImages={brandVisitDetails[brand]?.uploadedImages || []}
-                    />
-                  </div>
-
-                  <div className="exec-f-sub-form-group">
-                    <label className="exec-f-sub-form-label">Remarks</label>
-                    <textarea
-                      className="exec-f-sub-form-textarea"
-                      placeholder="Additional comments or observations..."
-                      value={brandVisitDetails[brand]?.remarks || ''}
-                      onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], remarks: e.target.value } }))}
-                      rows={2}
-                    />
-                  </div>
-                </div>
-              ))}
+                ))}
               <div className="exec-f-sub-form-group">
                 <label className="exec-f-sub-form-label">
                   Next Scheduled Visit (Optional)
-                  <span className="exec-f-sub-info-text" style={{ display: 'block', fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal', marginTop: '4px' }}>
-                    ℹ️ If filled, store will be auto-added to your PJP for this date
+                  <span
+                    className="exec-f-sub-info-text"
+                    style={{
+                      display: "block",
+                      fontSize: "0.8rem",
+                      color: "#64748b",
+                      fontWeight: "normal",
+                      marginTop: "4px",
+                    }}
+                  >
+                    ℹ️ If filled, store will be auto-added to your PJP for this
+                    date
                   </span>
                 </label>
                 <input
                   type="date"
                   className="exec-f-sub-form-input exec-f-sub-form-date"
                   value={formData.nextScheduledDate}
-                  onChange={(e) => handleInputChange('nextScheduledDate', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("nextScheduledDate", e.target.value)
+                  }
                   min={(() => {
                     const today = new Date();
                     const istOffset = 5.5 * 60 * 60 * 1000;
                     const istDate = new Date(today.getTime() + istOffset);
                     // Next scheduled visit should be in the future (tomorrow onwards)
                     istDate.setDate(istDate.getDate() + 1);
-                    return istDate.toISOString().split('T')[0];
+                    return istDate.toISOString().split("T")[0];
                   })()}
                 />
               </div>
@@ -1159,39 +1541,75 @@ const ExecutiveFormContent: React.FC = () => {
                   className="exec-f-sub-save-draft-btn"
                   onClick={(e) => {
                     e.preventDefault();
-                    if (storeData && storeData.partnerBrands.indexOf(activeBrandTab) > 0) {
-                      const currentIndex = storeData.partnerBrands.indexOf(activeBrandTab);
-                      setActiveBrandTab(storeData.partnerBrands[currentIndex - 1]);
+                    if (
+                      storeData &&
+                      storeData.partnerBrands.indexOf(activeBrandTab) > 0
+                    ) {
+                      const currentIndex =
+                        storeData.partnerBrands.indexOf(activeBrandTab);
+                      setActiveBrandTab(
+                        storeData.partnerBrands[currentIndex - 1],
+                      );
                       setTimeout(() => {
-                        const el = document.getElementById('brand-card-section');
+                        const el =
+                          document.getElementById("brand-card-section");
                         if (el) {
-                          const y = el.getBoundingClientRect().top + window.scrollY - 100;
-                          window.scrollTo({ top: y, behavior: 'smooth' });
+                          const y =
+                            el.getBoundingClientRect().top +
+                            window.scrollY -
+                            100;
+                          window.scrollTo({ top: y, behavior: "smooth" });
                         }
                       }, 50);
                     }
                   }}
-                  disabled={submitting || !!(storeData && storeData.partnerBrands.indexOf(activeBrandTab) === 0)}
-                  style={{ opacity: (storeData && storeData.partnerBrands.indexOf(activeBrandTab) === 0) ? 0.5 : 1, cursor: (storeData && storeData.partnerBrands.indexOf(activeBrandTab) === 0) ? 'not-allowed' : 'pointer' }}
+                  disabled={
+                    submitting ||
+                    !!(
+                      storeData &&
+                      storeData.partnerBrands.indexOf(activeBrandTab) === 0
+                    )
+                  }
+                  style={{
+                    opacity:
+                      storeData &&
+                      storeData.partnerBrands.indexOf(activeBrandTab) === 0
+                        ? 0.5
+                        : 1,
+                    cursor:
+                      storeData &&
+                      storeData.partnerBrands.indexOf(activeBrandTab) === 0
+                        ? "not-allowed"
+                        : "pointer",
+                  }}
                 >
                   Back
                 </button>
-                {storeData && storeData.partnerBrands.indexOf(activeBrandTab) < storeData.partnerBrands.length - 1 ? (
+                {storeData &&
+                storeData.partnerBrands.indexOf(activeBrandTab) <
+                  storeData.partnerBrands.length - 1 ? (
                   <button
                     className="exec-f-sub-submit-visit-btn"
                     onClick={(e) => {
                       e.preventDefault();
-                      const currentIndex = storeData.partnerBrands.indexOf(activeBrandTab);
-                      setActiveBrandTab(storeData.partnerBrands[currentIndex + 1]);
+                      const currentIndex =
+                        storeData.partnerBrands.indexOf(activeBrandTab);
+                      setActiveBrandTab(
+                        storeData.partnerBrands[currentIndex + 1],
+                      );
                       setTimeout(() => {
-                        const el = document.getElementById('brand-card-section');
+                        const el =
+                          document.getElementById("brand-card-section");
                         if (el) {
-                          const y = el.getBoundingClientRect().top + window.scrollY - 100;
-                          window.scrollTo({ top: y, behavior: 'smooth' });
+                          const y =
+                            el.getBoundingClientRect().top +
+                            window.scrollY -
+                            100;
+                          window.scrollTo({ top: y, behavior: "smooth" });
                         }
                       }, 50);
                     }}
-                    style={{ backgroundColor: '#3b82f6', color: 'white' }}
+                    style={{ backgroundColor: "#3b82f6", color: "white" }}
                   >
                     Next Brand
                   </button>
@@ -1201,14 +1619,14 @@ const ExecutiveFormContent: React.FC = () => {
                     onClick={handleSubmitVisit}
                     disabled={submitting}
                   >
-                    {submitting ? 'Submitting...' : 'Submit Visit'}
+                    {submitting ? "Submitting..." : "Submit Visit"}
                   </button>
                 )}
               </div>
             </>
           )}
 
-          {visitType === 'DIGITAL' && (
+          {visitType === "DIGITAL" && (
             <>
               {/* Digital Visit Form */}
               <div id="group-connectDate" className="exec-f-sub-form-group">
@@ -1221,9 +1639,9 @@ const ExecutiveFormContent: React.FC = () => {
                   value={digitalForm.connectDate}
                   onChange={(e) => {
                     const val = e.target.value;
-                    setDigitalForm(prev => ({ ...prev, connectDate: val }));
+                    setDigitalForm((prev) => ({ ...prev, connectDate: val }));
                     if (errors.connectDate) {
-                      setErrors(prev => {
+                      setErrors((prev) => {
                         const copy = { ...prev };
                         delete copy.connectDate;
                         return copy;
@@ -1234,319 +1652,561 @@ const ExecutiveFormContent: React.FC = () => {
                     const today = new Date();
                     const istOffset = 5.5 * 60 * 60 * 1000;
                     const istDate = new Date(today.getTime() + istOffset);
-                    return istDate.toISOString().split('T')[0];
+                    return istDate.toISOString().split("T")[0];
                   })()}
                   min={(() => {
                     const today = new Date();
                     const istOffset = 5.5 * 60 * 60 * 1000;
                     const istDate = new Date(today.getTime() + istOffset);
-                    const ninetyDaysAgo = new Date(istDate.getTime() - (90 * 24 * 60 * 60 * 1000));
-                    return ninetyDaysAgo.toISOString().split('T')[0];
+                    const ninetyDaysAgo = new Date(
+                      istDate.getTime() - 90 * 24 * 60 * 60 * 1000,
+                    );
+                    return ninetyDaysAgo.toISOString().split("T")[0];
                   })()}
                 />
                 {errors.connectDate && (
-                  <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                  <span
+                    style={{
+                      color: "#ef4444",
+                      fontSize: "0.875rem",
+                      marginTop: "4px",
+                      display: "block",
+                    }}
+                  >
                     {errors.connectDate}
                   </span>
                 )}
               </div>
 
-
-
-
               {/* Per Brand Digital Form */}
-              {storeData && activeBrandTab && [activeBrandTab].map((brand) => (
-                <div id="brand-card-section" key={brand} className="exec-f-sub-brand-card" style={{ border: '1px solid #e2e8f0', padding: '16px', borderRadius: '8px', marginBottom: '16px', backgroundColor: '#f8fafc' }}>
-                  <h4 style={{ margin: '0 0 16px 0', color: '#0f172a', fontSize: '1.1rem' }}>{brand} Details</h4>
-                  
-                  <div className="exec-f-sub-partner-brands" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '16px' }}>
-                    {storeData.partnerBrands.map((tabBrand, index) => {
-                      const isComplete = brandVisitDetails[tabBrand]?.peopleMet?.length > 0 && brandVisitDetails[tabBrand]?.remarks?.trim();
-                      return (
-                        <button 
-                          key={index} 
-                          onClick={() => setActiveBrandTab(tabBrand)}
-                          className="exec-f-sub-brand-tag"
-                          style={{ 
-                            border: activeBrandTab === tabBrand ? '2px solid #3b82f6' : '1px solid transparent',
-                            opacity: activeBrandTab === tabBrand ? 1 : 0.7,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}
-                        >
-                          {tabBrand} {isComplete && <span style={{ color: '#22c55e' }}>✓</span>}
-                        </button>
-                      );
-                    })}
-                  </div>
+              {storeData &&
+                activeBrandTab &&
+                [activeBrandTab].map((brand) => (
+                  <div
+                    id="brand-card-section"
+                    key={brand}
+                    className="exec-f-sub-brand-card"
+                    style={{
+                      border: "1px solid #e2e8f0",
+                      padding: "16px",
+                      borderRadius: "8px",
+                      marginBottom: "16px",
+                      backgroundColor: "#f8fafc",
+                    }}
+                  >
+                    <h4
+                      style={{
+                        margin: "0 0 16px 0",
+                        color: "#0f172a",
+                        fontSize: "1.1rem",
+                      }}
+                    >
+                      {brand} Details
+                    </h4>
 
-                  {/* Contact Person for Brand */}
-                  <div id="group-peopleMet" className="exec-f-sub-form-group">
-                    <label className="exec-f-sub-form-label">
-                      Contact Person <span className="exec-f-sub-required">*</span>
-                    </label>
-                    {errors[`peopleMet-${brand}`] && (
-                      <span style={{ color: '#ef4444', fontSize: '0.875rem', display: 'block', marginBottom: '8px' }}>
-                        {errors[`peopleMet-${brand}`]}
-                      </span>
-                    )}
-                    <div className="exec-f-sub-people-input-container">
-                      <div className="exec-f-sub-person-input-wrapper">
-                        <div className="exec-f-sub-person-name-select">
-                          <select
-                            className="exec-f-sub-form-select exec-f-sub-person-name-select-input"
-                            value={brandVisitDetails[brand]?.contactType || 'SEC'}
-                            onChange={(e) => {
-                              const v = e.target.value as 'SEC' | 'OTHER';
-                              setBrandVisitDetails(prev => ({
-                                ...prev, [brand]: { ...prev[brand], contactType: v, currentPersonName: v === 'SEC' ? 'SEC' : '', currentPersonDesig: '' }
-                              }));
+                    <div
+                      className="exec-f-sub-partner-brands"
+                      style={{
+                        display: "flex",
+                        gap: "8px",
+                        overflowX: "auto",
+                        paddingBottom: "16px",
+                      }}
+                    >
+                      {storeData.partnerBrands.map((tabBrand, index) => {
+                        const isComplete =
+                          brandVisitDetails[tabBrand]?.peopleMet?.length > 0 &&
+                          brandVisitDetails[tabBrand]?.remarks?.trim();
+                        return (
+                          <button
+                            key={index}
+                            onClick={() => setActiveBrandTab(tabBrand)}
+                            className="exec-f-sub-brand-tag"
+                            style={{
+                              border:
+                                activeBrandTab === tabBrand
+                                  ? "2px solid #3b82f6"
+                                  : "1px solid transparent",
+                              opacity: activeBrandTab === tabBrand ? 1 : 0.7,
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
                             }}
                           >
-                            <option value="SEC">SEC</option>
-                            <option value="OTHER">Other</option>
-                          </select>
-                          {brandVisitDetails[brand]?.contactType === 'SEC' ? (
-                            <input
-                              type="text"
-                              className="exec-f-sub-form-input exec-f-sub-person-name-input"
-                              placeholder="Enter person's name"
-                              value={brandVisitDetails[brand]?.currentPersonDesig || ''}
-                              onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonDesig: e.target.value } }))}
-                            />
-                          ) : (
-                            <>
+                            {tabBrand}{" "}
+                            {isComplete && (
+                              <span style={{ color: "#22c55e" }}>✓</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Contact Person for Brand */}
+                    <div id="group-peopleMet" className="exec-f-sub-form-group">
+                      <label className="exec-f-sub-form-label">
+                        Contact Person{" "}
+                        <span className="exec-f-sub-required">*</span>
+                      </label>
+                      {errors[`peopleMet-${brand}`] && (
+                        <span
+                          style={{
+                            color: "#ef4444",
+                            fontSize: "0.875rem",
+                            display: "block",
+                            marginBottom: "8px",
+                          }}
+                        >
+                          {errors[`peopleMet-${brand}`]}
+                        </span>
+                      )}
+                      <div className="exec-f-sub-people-input-container">
+                        <div className="exec-f-sub-person-input-wrapper">
+                          <div className="exec-f-sub-person-name-select">
+                            <select
+                              className="exec-f-sub-form-select exec-f-sub-person-name-select-input"
+                              value={
+                                brandVisitDetails[brand]?.contactType || "SEC"
+                              }
+                              onChange={(e) => {
+                                const v = e.target.value as "SEC" | "OTHER";
+                                setBrandVisitDetails((prev) => ({
+                                  ...prev,
+                                  [brand]: {
+                                    ...prev[brand],
+                                    contactType: v,
+                                    currentPersonName: v === "SEC" ? "SEC" : "",
+                                    currentPersonDesig: "",
+                                  },
+                                }));
+                              }}
+                            >
+                              <option value="SEC">SEC</option>
+                              <option value="OTHER">Other</option>
+                            </select>
+                            {brandVisitDetails[brand]?.contactType === "SEC" ? (
                               <input
                                 type="text"
                                 className="exec-f-sub-form-input exec-f-sub-person-name-input"
                                 placeholder="Enter person's name"
-                                value={brandVisitDetails[brand]?.currentPersonName || ''}
-                                onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonName: e.target.value } }))}
-                              />
-                              <input
-                                type="text"
-                                className="exec-f-sub-form-input exec-f-sub-person-designation-input"
-                                placeholder="Enter designation"
-                                value={brandVisitDetails[brand]?.currentPersonDesig || ''}
-                                onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonDesig: e.target.value } }))}
-                              />
-                            </>
-                          )}
-                        </div>
-                        <input
-                          type="tel"
-                          className="exec-f-sub-form-input exec-f-sub-person-phone-input"
-                          placeholder="Enter phone number"
-                          value={brandVisitDetails[brand]?.currentPersonPhone || ''}
-                          onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonPhone: e.target.value } }))}
-                          inputMode="numeric"
-                          pattern="\d{7,15}"
-                        />
-                        <button
-                          type="button"
-                          className="exec-f-sub-add-person-btn"
-                          onClick={() => {
-                            const bDetails = brandVisitDetails[brand];
-                            if (!bDetails) return;
-                            const name = bDetails.currentPersonName;
-                            const desig = bDetails.currentPersonDesig;
-                            const phone = bDetails.currentPersonPhone;
-                            if (!name.trim() || !desig.trim() || !phone.trim()) return;
-                            if (!/^\d{7,15}$/.test(phone.trim())) { alert('Please enter a valid phone number (7-15 digits)'); return; }
-
-                            setBrandVisitDetails(prev => ({
-                              ...prev,
-                              [brand]: {
-                                ...prev[brand],
-                                peopleMet: [...(prev[brand].peopleMet || []), { name: name.trim(), designation: desig.trim(), phoneNumber: phone.trim() }],
-                                currentPersonName: prev[brand].contactType === 'SEC' ? 'SEC' : '',
-                                currentPersonDesig: '',
-                                currentPersonPhone: ''
-                              }
-                            }));
-                            setErrors(prev => {
-                              const copy = { ...prev };
-                              delete copy[`peopleMet-${brand}`];
-                              return copy;
-                            });
-                          }}
-                          disabled={
-                            brandVisitDetails[brand]?.contactType === 'SEC'
-                              ? !brandVisitDetails[brand]?.currentPersonDesig?.trim() || !brandVisitDetails[brand]?.currentPersonPhone?.trim()
-                              : !brandVisitDetails[brand]?.currentPersonName?.trim() || !brandVisitDetails[brand]?.currentPersonDesig?.trim() || !brandVisitDetails[brand]?.currentPersonPhone?.trim()
-                          }
-                        >
-                          Add
-                        </button>
-                      </div>
-                      {brandVisitDetails[brand]?.peopleMet?.length > 0 && (
-                        <div className="exec-f-sub-people-list">
-                          {brandVisitDetails[brand].peopleMet.map((person, index) => (
-                            <div key={index} className="exec-f-sub-person-item">
-                              <div className="exec-f-sub-person-details">
-                                <span className="exec-f-sub-person-name">{person.name === 'SEC' ? person.designation : person.name}</span>
-                                <span className="exec-f-sub-person-designation">({person.name === 'SEC' ? 'SEC' : person.designation})</span>
-                                {person.phoneNumber && (
-                                  <span className="exec-f-sub-person-phone"> - {person.phoneNumber}</span>
-                                )}
-                              </div>
-                              <button
-                                type="button"
-                                className="exec-f-sub-remove-person-btn"
-                                onClick={() => {
-                                  setBrandVisitDetails(prev => ({
+                                value={
+                                  brandVisitDetails[brand]
+                                    ?.currentPersonDesig || ""
+                                }
+                                onChange={(e) =>
+                                  setBrandVisitDetails((prev) => ({
                                     ...prev,
                                     [brand]: {
                                       ...prev[brand],
-                                      peopleMet: prev[brand].peopleMet.filter((_, i) => i !== index)
-                                    }
-                                  }));
-                                }}
-                                title="Remove person"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-
-                  <div className="exec-f-sub-form-group">
-                    <label className="exec-f-sub-form-label">Raise Issues</label>
-                    <div className="exec-f-sub-issues-input-container">
-                      <div className="exec-f-sub-issue-input-wrapper">
-                        <input
-                          type="text"
-                          className="exec-f-sub-form-input exec-f-sub-issue-input"
-                          placeholder="Describe an issue encountered"
-                          value={brandVisitDetails[brand]?.currentIssue || ''}
-                          onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentIssue: e.target.value } }))}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              const issue = brandVisitDetails[brand]?.currentIssue?.trim();
-                              if (issue) {
-                                setBrandVisitDetails(prev => ({
-                                  ...prev,
-                                  [brand]: {
-                                    ...prev[brand],
-                                    issuesRaised: [...(prev[brand].issuesRaised || []), issue],
-                                    currentIssue: ''
+                                      currentPersonDesig: e.target.value,
+                                    },
+                                  }))
+                                }
+                              />
+                            ) : (
+                              <>
+                                <input
+                                  type="text"
+                                  className="exec-f-sub-form-input exec-f-sub-person-name-input"
+                                  placeholder="Enter person's name"
+                                  value={
+                                    brandVisitDetails[brand]
+                                      ?.currentPersonName || ""
                                   }
-                                }));
-                              }
+                                  onChange={(e) =>
+                                    setBrandVisitDetails((prev) => ({
+                                      ...prev,
+                                      [brand]: {
+                                        ...prev[brand],
+                                        currentPersonName: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                />
+                                <input
+                                  type="text"
+                                  className="exec-f-sub-form-input exec-f-sub-person-designation-input"
+                                  placeholder="Enter designation"
+                                  value={
+                                    brandVisitDetails[brand]
+                                      ?.currentPersonDesig || ""
+                                  }
+                                  onChange={(e) =>
+                                    setBrandVisitDetails((prev) => ({
+                                      ...prev,
+                                      [brand]: {
+                                        ...prev[brand],
+                                        currentPersonDesig: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                />
+                              </>
+                            )}
+                          </div>
+                          <input
+                            type="tel"
+                            className="exec-f-sub-form-input exec-f-sub-person-phone-input"
+                            placeholder="Enter phone number"
+                            value={
+                              brandVisitDetails[brand]?.currentPersonPhone || ""
                             }
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="exec-f-sub-add-issue-btn"
-                          onClick={() => {
-                            const issue = brandVisitDetails[brand]?.currentIssue?.trim();
-                            if (issue) {
-                              setBrandVisitDetails(prev => ({
+                            onChange={(e) =>
+                              setBrandVisitDetails((prev) => ({
                                 ...prev,
                                 [brand]: {
                                   ...prev[brand],
-                                  issuesRaised: [...(prev[brand].issuesRaised || []), issue],
-                                  currentIssue: ''
-                                }
-                              }));
+                                  currentPersonPhone: e.target.value,
+                                },
+                              }))
                             }
-                          }}
-                          disabled={!brandVisitDetails[brand]?.currentIssue?.trim()}
-                        >
-                          Add Issue
-                        </button>
+                            inputMode="numeric"
+                            pattern="\d{7,15}"
+                          />
+                          <button
+                            type="button"
+                            className="exec-f-sub-add-person-btn"
+                            onClick={() => {
+                              const bDetails = brandVisitDetails[brand];
+                              if (!bDetails) return;
+                              const name = bDetails.currentPersonName;
+                              const desig = bDetails.currentPersonDesig;
+                              const phone = bDetails.currentPersonPhone;
+                              if (
+                                !name.trim() ||
+                                !desig.trim() ||
+                                !phone.trim()
+                              )
+                                return;
+                              if (!/^\d{7,15}$/.test(phone.trim())) {
+                                alert(
+                                  "Please enter a valid phone number (7-15 digits)",
+                                );
+                                return;
+                              }
+
+                              setBrandVisitDetails((prev) => ({
+                                ...prev,
+                                [brand]: {
+                                  ...prev[brand],
+                                  peopleMet: [
+                                    ...(prev[brand].peopleMet || []),
+                                    {
+                                      name: name.trim(),
+                                      designation: desig.trim(),
+                                      phoneNumber: phone.trim(),
+                                    },
+                                  ],
+                                  currentPersonName:
+                                    prev[brand].contactType === "SEC"
+                                      ? "SEC"
+                                      : "",
+                                  currentPersonDesig: "",
+                                  currentPersonPhone: "",
+                                },
+                              }));
+                              setErrors((prev) => {
+                                const copy = { ...prev };
+                                delete copy[`peopleMet-${brand}`];
+                                return copy;
+                              });
+                            }}
+                            disabled={
+                              brandVisitDetails[brand]?.contactType === "SEC"
+                                ? !brandVisitDetails[
+                                    brand
+                                  ]?.currentPersonDesig?.trim() ||
+                                  !brandVisitDetails[
+                                    brand
+                                  ]?.currentPersonPhone?.trim()
+                                : !brandVisitDetails[
+                                    brand
+                                  ]?.currentPersonName?.trim() ||
+                                  !brandVisitDetails[
+                                    brand
+                                  ]?.currentPersonDesig?.trim() ||
+                                  !brandVisitDetails[
+                                    brand
+                                  ]?.currentPersonPhone?.trim()
+                            }
+                          >
+                            Add
+                          </button>
+                        </div>
+                        {brandVisitDetails[brand]?.peopleMet?.length > 0 && (
+                          <div className="exec-f-sub-people-list">
+                            {brandVisitDetails[brand].peopleMet.map(
+                              (person, index) => (
+                                <div
+                                  key={index}
+                                  className="exec-f-sub-person-item"
+                                >
+                                  <div className="exec-f-sub-person-details">
+                                    <span className="exec-f-sub-person-name">
+                                      {person.name === "SEC"
+                                        ? person.designation
+                                        : person.name}
+                                    </span>
+                                    <span className="exec-f-sub-person-designation">
+                                      (
+                                      {person.name === "SEC"
+                                        ? "SEC"
+                                        : person.designation}
+                                      )
+                                    </span>
+                                    {person.phoneNumber && (
+                                      <span className="exec-f-sub-person-phone">
+                                        {" "}
+                                        - {person.phoneNumber}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="exec-f-sub-remove-person-btn"
+                                    onClick={() => {
+                                      setBrandVisitDetails((prev) => ({
+                                        ...prev,
+                                        [brand]: {
+                                          ...prev[brand],
+                                          peopleMet: prev[
+                                            brand
+                                          ].peopleMet.filter(
+                                            (_, i) => i !== index,
+                                          ),
+                                        },
+                                      }));
+                                    }}
+                                    title="Remove person"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {brandVisitDetails[brand]?.issuesRaised?.length > 0 && (
-                        <div className="exec-f-sub-issues-list">
-                          {brandVisitDetails[brand].issuesRaised.map((issue, index) => (
-                            <div key={index} className="exec-f-sub-issue-item">
-                              <span className="exec-f-sub-issue-text">{issue}</span>
-                              <button
-                                type="button"
-                                className="exec-f-sub-remove-issue-btn"
-                                onClick={() => {
-                                  setBrandVisitDetails(prev => ({
+                    </div>
+
+                    <div className="exec-f-sub-form-group">
+                      <label className="exec-f-sub-form-label">
+                        Raise Issues
+                      </label>
+                      <div className="exec-f-sub-issues-input-container">
+                        <div className="exec-f-sub-issue-input-wrapper">
+                          <input
+                            type="text"
+                            className="exec-f-sub-form-input exec-f-sub-issue-input"
+                            placeholder="Describe an issue encountered"
+                            value={brandVisitDetails[brand]?.currentIssue || ""}
+                            onChange={(e) =>
+                              setBrandVisitDetails((prev) => ({
+                                ...prev,
+                                [brand]: {
+                                  ...prev[brand],
+                                  currentIssue: e.target.value,
+                                },
+                              }))
+                            }
+                            onKeyPress={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                const issue =
+                                  brandVisitDetails[
+                                    brand
+                                  ]?.currentIssue?.trim();
+                                if (issue) {
+                                  setBrandVisitDetails((prev) => ({
                                     ...prev,
                                     [brand]: {
                                       ...prev[brand],
-                                      issuesRaised: prev[brand].issuesRaised.filter((_, i) => i !== index)
-                                    }
+                                      issuesRaised: [
+                                        ...(prev[brand].issuesRaised || []),
+                                        issue,
+                                      ],
+                                      currentIssue: "",
+                                    },
                                   }));
-                                }}
-                                title="Remove issue"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
+                                }
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="exec-f-sub-add-issue-btn"
+                            onClick={() => {
+                              const issue =
+                                brandVisitDetails[brand]?.currentIssue?.trim();
+                              if (issue) {
+                                setBrandVisitDetails((prev) => ({
+                                  ...prev,
+                                  [brand]: {
+                                    ...prev[brand],
+                                    issuesRaised: [
+                                      ...(prev[brand].issuesRaised || []),
+                                      issue,
+                                    ],
+                                    currentIssue: "",
+                                  },
+                                }));
+                              }
+                            }}
+                            disabled={
+                              !brandVisitDetails[brand]?.currentIssue?.trim()
+                            }
+                          >
+                            Add Issue
+                          </button>
                         </div>
+                        {brandVisitDetails[brand]?.issuesRaised?.length > 0 && (
+                          <div className="exec-f-sub-issues-list">
+                            {brandVisitDetails[brand].issuesRaised.map(
+                              (issue, index) => (
+                                <div
+                                  key={index}
+                                  className="exec-f-sub-issue-item"
+                                >
+                                  <span className="exec-f-sub-issue-text">
+                                    {issue}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="exec-f-sub-remove-issue-btn"
+                                    onClick={() => {
+                                      setBrandVisitDetails((prev) => ({
+                                        ...prev,
+                                        [brand]: {
+                                          ...prev[brand],
+                                          issuesRaised: prev[
+                                            brand
+                                          ].issuesRaised.filter(
+                                            (_, i) => i !== index,
+                                          ),
+                                        },
+                                      }));
+                                    }}
+                                    title="Remove issue"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div id="group-remarks" className="exec-f-sub-form-group">
+                      <label className="exec-f-sub-form-label">
+                        Remarks <span className="exec-f-sub-required">*</span>
+                      </label>
+                      <textarea
+                        className="exec-f-sub-form-textarea"
+                        placeholder="Add remarks for the digital connect (required)"
+                        value={brandVisitDetails[brand]?.remarks || ""}
+                        onChange={(e) =>
+                          setBrandVisitDetails((prev) => ({
+                            ...prev,
+                            [brand]: {
+                              ...prev[brand],
+                              remarks: e.target.value,
+                            },
+                          }))
+                        }
+                        rows={2}
+                      />
+                      {errors[`remarks-${brand}`] && (
+                        <span
+                          style={{
+                            color: "#ef4444",
+                            fontSize: "0.875rem",
+                            marginTop: "4px",
+                            display: "block",
+                          }}
+                        >
+                          {errors[`remarks-${brand}`]}
+                        </span>
                       )}
                     </div>
                   </div>
-
-                  <div id="group-remarks" className="exec-f-sub-form-group">
-                    <label className="exec-f-sub-form-label">Remarks <span className="exec-f-sub-required">*</span></label>
-                    <textarea
-                      className="exec-f-sub-form-textarea"
-                      placeholder="Add remarks for the digital connect (required)"
-                      value={brandVisitDetails[brand]?.remarks || ''}
-                      onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], remarks: e.target.value } }))}
-                      rows={2}
-                    />
-                    {errors[`remarks-${brand}`] && (
-                      <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
-                        {errors[`remarks-${brand}`]}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
+                ))}
               <div className="exec-f-sub-form-actions">
                 <button
                   className="exec-f-sub-save-draft-btn"
                   onClick={(e) => {
                     e.preventDefault();
-                    if (storeData && storeData.partnerBrands.indexOf(activeBrandTab) > 0) {
-                      const currentIndex = storeData.partnerBrands.indexOf(activeBrandTab);
-                      setActiveBrandTab(storeData.partnerBrands[currentIndex - 1]);
+                    if (
+                      storeData &&
+                      storeData.partnerBrands.indexOf(activeBrandTab) > 0
+                    ) {
+                      const currentIndex =
+                        storeData.partnerBrands.indexOf(activeBrandTab);
+                      setActiveBrandTab(
+                        storeData.partnerBrands[currentIndex - 1],
+                      );
                       setTimeout(() => {
-                        const el = document.getElementById('brand-card-section');
+                        const el =
+                          document.getElementById("brand-card-section");
                         if (el) {
-                          const y = el.getBoundingClientRect().top + window.scrollY - 100;
-                          window.scrollTo({ top: y, behavior: 'smooth' });
+                          const y =
+                            el.getBoundingClientRect().top +
+                            window.scrollY -
+                            100;
+                          window.scrollTo({ top: y, behavior: "smooth" });
                         }
                       }, 50);
                     }
                   }}
-                  disabled={submitting || !!(storeData && storeData.partnerBrands.indexOf(activeBrandTab) === 0)}
-                  style={{ opacity: (storeData && storeData.partnerBrands.indexOf(activeBrandTab) === 0) ? 0.5 : 1, cursor: (storeData && storeData.partnerBrands.indexOf(activeBrandTab) === 0) ? 'not-allowed' : 'pointer' }}
+                  disabled={
+                    submitting ||
+                    !!(
+                      storeData &&
+                      storeData.partnerBrands.indexOf(activeBrandTab) === 0
+                    )
+                  }
+                  style={{
+                    opacity:
+                      storeData &&
+                      storeData.partnerBrands.indexOf(activeBrandTab) === 0
+                        ? 0.5
+                        : 1,
+                    cursor:
+                      storeData &&
+                      storeData.partnerBrands.indexOf(activeBrandTab) === 0
+                        ? "not-allowed"
+                        : "pointer",
+                  }}
                 >
                   Back
                 </button>
-                {storeData && storeData.partnerBrands.indexOf(activeBrandTab) < storeData.partnerBrands.length - 1 ? (
+                {storeData &&
+                storeData.partnerBrands.indexOf(activeBrandTab) <
+                  storeData.partnerBrands.length - 1 ? (
                   <button
                     className="exec-f-sub-submit-visit-btn"
                     onClick={(e) => {
                       e.preventDefault();
-                      const currentIndex = storeData.partnerBrands.indexOf(activeBrandTab);
-                      setActiveBrandTab(storeData.partnerBrands[currentIndex + 1]);
+                      const currentIndex =
+                        storeData.partnerBrands.indexOf(activeBrandTab);
+                      setActiveBrandTab(
+                        storeData.partnerBrands[currentIndex + 1],
+                      );
                       setTimeout(() => {
-                        const el = document.getElementById('brand-card-section');
+                        const el =
+                          document.getElementById("brand-card-section");
                         if (el) {
-                          const y = el.getBoundingClientRect().top + window.scrollY - 100;
-                          window.scrollTo({ top: y, behavior: 'smooth' });
+                          const y =
+                            el.getBoundingClientRect().top +
+                            window.scrollY -
+                            100;
+                          window.scrollTo({ top: y, behavior: "smooth" });
                         }
                       }, 50);
                     }}
-                    style={{ backgroundColor: '#3b82f6', color: 'white' }}
+                    style={{ backgroundColor: "#3b82f6", color: "white" }}
                   >
                     Next Brand
                   </button>
@@ -1556,15 +2216,14 @@ const ExecutiveFormContent: React.FC = () => {
                     onClick={handleSubmitVisit}
                     disabled={submitting}
                   >
-                    {submitting ? 'Submitting...' : 'Submit Visit'}
+                    {submitting ? "Submitting..." : "Submit Visit"}
                   </button>
                 )}
               </div>
             </>
           )}
 
-
-          {visitType === 'HOLIDAY' && (
+          {visitType === "HOLIDAY" && (
             <>
               {/* Holiday Form */}
               <div className="exec-f-sub-form-group">
@@ -1572,7 +2231,10 @@ const ExecutiveFormContent: React.FC = () => {
                   Vacation Period <span className="exec-f-sub-required">*</span>
                 </label>
                 <div className="exec-f-sub-date-range-container">
-                  <div id="group-holidayStartDate" className="exec-f-sub-date-input-group">
+                  <div
+                    id="group-holidayStartDate"
+                    className="exec-f-sub-date-input-group"
+                  >
                     <label className="exec-f-sub-date-label">From Date</label>
                     <input
                       type="date"
@@ -1580,9 +2242,9 @@ const ExecutiveFormContent: React.FC = () => {
                       value={holidayForm.startDate}
                       onChange={(e) => {
                         const val = e.target.value;
-                        setHolidayForm(prev => ({ ...prev, startDate: val }));
+                        setHolidayForm((prev) => ({ ...prev, startDate: val }));
                         if (errors.holidayStartDate) {
-                          setErrors(prev => {
+                          setErrors((prev) => {
                             const copy = { ...prev };
                             delete copy.holidayStartDate;
                             return copy;
@@ -1594,16 +2256,26 @@ const ExecutiveFormContent: React.FC = () => {
                         const today = new Date();
                         const istOffset = 5.5 * 60 * 60 * 1000;
                         const istDate = new Date(today.getTime() + istOffset);
-                        return istDate.toISOString().split('T')[0];
+                        return istDate.toISOString().split("T")[0];
                       })()}
                     />
                     {errors.holidayStartDate && (
-                      <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                      <span
+                        style={{
+                          color: "#ef4444",
+                          fontSize: "0.875rem",
+                          marginTop: "4px",
+                          display: "block",
+                        }}
+                      >
                         {errors.holidayStartDate}
                       </span>
                     )}
                   </div>
-                  <div id="group-holidayEndDate" className="exec-f-sub-date-input-group">
+                  <div
+                    id="group-holidayEndDate"
+                    className="exec-f-sub-date-input-group"
+                  >
                     <label className="exec-f-sub-date-label">To Date</label>
                     <input
                       type="date"
@@ -1611,24 +2283,34 @@ const ExecutiveFormContent: React.FC = () => {
                       value={holidayForm.endDate}
                       onChange={(e) => {
                         const val = e.target.value;
-                        setHolidayForm(prev => ({ ...prev, endDate: val }));
+                        setHolidayForm((prev) => ({ ...prev, endDate: val }));
                         if (errors.holidayEndDate) {
-                          setErrors(prev => {
+                          setErrors((prev) => {
                             const copy = { ...prev };
                             delete copy.holidayEndDate;
                             return copy;
                           });
                         }
                       }}
-                      min={holidayForm.startDate || (() => {
-                        const today = new Date();
-                        const istOffset = 5.5 * 60 * 60 * 1000;
-                        const istDate = new Date(today.getTime() + istOffset);
-                        return istDate.toISOString().split('T')[0];
-                      })()}
+                      min={
+                        holidayForm.startDate ||
+                        (() => {
+                          const today = new Date();
+                          const istOffset = 5.5 * 60 * 60 * 1000;
+                          const istDate = new Date(today.getTime() + istOffset);
+                          return istDate.toISOString().split("T")[0];
+                        })()
+                      }
                     />
                     {errors.holidayEndDate && (
-                      <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                      <span
+                        style={{
+                          color: "#ef4444",
+                          fontSize: "0.875rem",
+                          marginTop: "4px",
+                          display: "block",
+                        }}
+                      >
                         {errors.holidayEndDate}
                       </span>
                     )}
@@ -1641,7 +2323,14 @@ const ExecutiveFormContent: React.FC = () => {
                   SEC Names <span className="exec-f-sub-required">*</span>
                 </label>
                 {errors.holidaySecNames && (
-                  <span style={{ color: '#ef4444', fontSize: '0.875rem', display: 'block', marginBottom: '8px' }}>
+                  <span
+                    style={{
+                      color: "#ef4444",
+                      fontSize: "0.875rem",
+                      display: "block",
+                      marginBottom: "8px",
+                    }}
+                  >
                     {errors.holidaySecNames}
                   </span>
                 )}
@@ -1661,13 +2350,15 @@ const ExecutiveFormContent: React.FC = () => {
                       value={currentSecPhone}
                       onChange={(e) => setCurrentSecPhone(e.target.value)}
                       onKeyPress={handleSecNameKeyPress}
-                      style={{ marginTop: '0.5rem' }}
+                      style={{ marginTop: "0.5rem" }}
                     />
                     <button
                       type="button"
                       className="exec-f-sub-add-sec-name-btn"
                       onClick={addSecName}
-                      disabled={!currentSecName.trim() || !currentSecPhone.trim()}
+                      disabled={
+                        !currentSecName.trim() || !currentSecPhone.trim()
+                      }
                     >
                       Add SEC
                     </button>
@@ -1676,7 +2367,9 @@ const ExecutiveFormContent: React.FC = () => {
                     <div className="exec-f-sub-sec-names-list">
                       {holidaySecNames.map((sec, index) => (
                         <div key={index} className="exec-f-sub-sec-name-item">
-                          <span className="exec-f-sub-sec-name-text">{sec.name} ({sec.phoneNumber})</span>
+                          <span className="exec-f-sub-sec-name-text">
+                            {sec.name} ({sec.phoneNumber})
+                          </span>
                           <button
                             type="button"
                             className="exec-f-sub-remove-sec-name-btn"
@@ -1692,12 +2385,23 @@ const ExecutiveFormContent: React.FC = () => {
                 </div>
               </div>
 
-              <div id="group-replacementAvailable" className="exec-f-sub-form-group">
+              <div
+                id="group-replacementAvailable"
+                className="exec-f-sub-form-group"
+              >
                 <label className="exec-f-sub-form-label">
-                  Is a replacement staff available during this period? <span className="exec-f-sub-required">*</span>
+                  Is a replacement staff available during this period?{" "}
+                  <span className="exec-f-sub-required">*</span>
                 </label>
                 {errors.replacementAvailable && (
-                  <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                  <span
+                    style={{
+                      color: "#ef4444",
+                      fontSize: "0.875rem",
+                      marginTop: "4px",
+                      display: "block",
+                    }}
+                  >
                     {errors.replacementAvailable}
                   </span>
                 )}
@@ -1709,9 +2413,12 @@ const ExecutiveFormContent: React.FC = () => {
                       value="true"
                       checked={holidayForm.replacementAvailable === true}
                       onChange={() => {
-                        setHolidayForm(prev => ({ ...prev, replacementAvailable: true }));
+                        setHolidayForm((prev) => ({
+                          ...prev,
+                          replacementAvailable: true,
+                        }));
                         if (errors.replacementAvailable) {
-                          setErrors(prev => {
+                          setErrors((prev) => {
                             const copy = { ...prev };
                             delete copy.replacementAvailable;
                             return copy;
@@ -1730,9 +2437,12 @@ const ExecutiveFormContent: React.FC = () => {
                       value="false"
                       checked={holidayForm.replacementAvailable === false}
                       onChange={() => {
-                        setHolidayForm(prev => ({ ...prev, replacementAvailable: false }));
+                        setHolidayForm((prev) => ({
+                          ...prev,
+                          replacementAvailable: false,
+                        }));
                         if (errors.replacementAvailable) {
-                          setErrors(prev => {
+                          setErrors((prev) => {
                             const copy = { ...prev };
                             delete copy.replacementAvailable;
                             return copy;
@@ -1742,14 +2452,17 @@ const ExecutiveFormContent: React.FC = () => {
                       className="exec-f-sub-radio-input"
                     />
                     <span className="exec-f-sub-radio-custom"></span>
-                    <span className="exec-f-sub-radio-label">Not Available</span>
+                    <span className="exec-f-sub-radio-label">
+                      Not Available
+                    </span>
                   </label>
                 </div>
               </div>
 
               <div id="group-holidayReason" className="exec-f-sub-form-group">
                 <label className="exec-f-sub-form-label">
-                  Reason for Absence <span className="exec-f-sub-required">*</span>
+                  Reason for Absence{" "}
+                  <span className="exec-f-sub-required">*</span>
                 </label>
                 <textarea
                   className="exec-f-sub-form-textarea"
@@ -1757,9 +2470,9 @@ const ExecutiveFormContent: React.FC = () => {
                   value={holidayForm.reason}
                   onChange={(e) => {
                     const val = e.target.value;
-                    setHolidayForm(prev => ({ ...prev, reason: val }));
+                    setHolidayForm((prev) => ({ ...prev, reason: val }));
                     if (errors.holidayReason) {
-                      setErrors(prev => {
+                      setErrors((prev) => {
                         const copy = { ...prev };
                         delete copy.holidayReason;
                         return copy;
@@ -1769,7 +2482,14 @@ const ExecutiveFormContent: React.FC = () => {
                   rows={3}
                 />
                 {errors.holidayReason && (
-                  <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                  <span
+                    style={{
+                      color: "#ef4444",
+                      fontSize: "0.875rem",
+                      marginTop: "4px",
+                      display: "block",
+                    }}
+                  >
                     {errors.holidayReason}
                   </span>
                 )}
@@ -1781,16 +2501,19 @@ const ExecutiveFormContent: React.FC = () => {
                   onClick={handleSubmitVisit}
                   disabled={submitting}
                 >
-                  {submitting ? 'Submitting...' : 'Submit Vacation Info'}
+                  {submitting ? "Submitting..." : "Submit Vacation Info"}
                 </button>
               </div>
             </>
           )}
 
-          {visitType === 'WEEK_OFF' && (
+          {visitType === "WEEK_OFF" && (
             <>
               {/* Week Off Form */}
-              <div id="group-holidayStartDate" className="exec-f-sub-form-group">
+              <div
+                id="group-holidayStartDate"
+                className="exec-f-sub-form-group"
+              >
                 <label className="exec-f-sub-form-label">
                   Week Off Date <span className="exec-f-sub-required">*</span>
                 </label>
@@ -1800,9 +2523,13 @@ const ExecutiveFormContent: React.FC = () => {
                   value={holidayForm.startDate}
                   onChange={(e) => {
                     const val = e.target.value;
-                    setHolidayForm(prev => ({ ...prev, startDate: val, endDate: val }));
+                    setHolidayForm((prev) => ({
+                      ...prev,
+                      startDate: val,
+                      endDate: val,
+                    }));
                     if (errors.holidayStartDate) {
-                      setErrors(prev => {
+                      setErrors((prev) => {
                         const copy = { ...prev };
                         delete copy.holidayStartDate;
                         return copy;
@@ -1814,11 +2541,18 @@ const ExecutiveFormContent: React.FC = () => {
                     const today = new Date();
                     const istOffset = 5.5 * 60 * 60 * 1000;
                     const istDate = new Date(today.getTime() + istOffset);
-                    return istDate.toISOString().split('T')[0];
+                    return istDate.toISOString().split("T")[0];
                   })()}
                 />
                 {errors.holidayStartDate && (
-                  <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>
+                  <span
+                    style={{
+                      color: "#ef4444",
+                      fontSize: "0.875rem",
+                      marginTop: "4px",
+                      display: "block",
+                    }}
+                  >
                     {errors.holidayStartDate}
                   </span>
                 )}
@@ -1829,7 +2563,14 @@ const ExecutiveFormContent: React.FC = () => {
                   SEC Names <span className="exec-f-sub-required">*</span>
                 </label>
                 {errors.holidaySecNames && (
-                  <span style={{ color: '#ef4444', fontSize: '0.875rem', display: 'block', marginBottom: '8px' }}>
+                  <span
+                    style={{
+                      color: "#ef4444",
+                      fontSize: "0.875rem",
+                      display: "block",
+                      marginBottom: "8px",
+                    }}
+                  >
                     {errors.holidaySecNames}
                   </span>
                 )}
@@ -1849,13 +2590,15 @@ const ExecutiveFormContent: React.FC = () => {
                       value={currentSecPhone}
                       onChange={(e) => setCurrentSecPhone(e.target.value)}
                       onKeyPress={handleSecNameKeyPress}
-                      style={{ marginTop: '0.5rem' }}
+                      style={{ marginTop: "0.5rem" }}
                     />
                     <button
                       type="button"
                       className="exec-f-sub-add-sec-name-btn"
                       onClick={addSecName}
-                      disabled={!currentSecName.trim() || !currentSecPhone.trim()}
+                      disabled={
+                        !currentSecName.trim() || !currentSecPhone.trim()
+                      }
                     >
                       Add SEC
                     </button>
@@ -1864,7 +2607,9 @@ const ExecutiveFormContent: React.FC = () => {
                     <div className="exec-f-sub-sec-names-list">
                       {holidaySecNames.map((sec, index) => (
                         <div key={index} className="exec-f-sub-sec-name-item">
-                          <span className="exec-f-sub-sec-name-text">{sec.name} ({sec.phoneNumber})</span>
+                          <span className="exec-f-sub-sec-name-text">
+                            {sec.name} ({sec.phoneNumber})
+                          </span>
                           <button
                             type="button"
                             className="exec-f-sub-remove-sec-name-btn"
@@ -1880,114 +2625,58 @@ const ExecutiveFormContent: React.FC = () => {
                 </div>
               </div>
 
-
-
-
               <div className="exec-f-sub-form-actions">
                 <button
                   className="exec-f-sub-submit-visit-btn"
                   onClick={handleSubmitVisit}
                   disabled={submitting}
                 >
-                  {submitting ? 'Submitting...' : 'Submit Week Off'}
+                  {submitting ? "Submitting..." : "Submit Week Off"}
                 </button>
               </div>
             </>
           )}
         </div>
 
-        {/* Digital Visits */}
-        {visitType !== 'HOLIDAY' && visitType !== 'WEEK_OFF' && (
-          <div className="exec-f-sub-past-visits-card">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-              <h3 className="exec-f-sub-section-title" style={{ margin: 0 }}>Last 5 Digital Visits</h3>
-              {storeData && storeData.partnerBrands.length > 0 && (
-                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-
-                  {storeData.partnerBrands.map(brand => (
-                    <button
-                      key={brand}
-                      onClick={() => setSelectedSummaryBrand(brand)}
-                      style={{ padding: '4px 12px', borderRadius: '16px', border: '1px solid #cbd5e1', backgroundColor: selectedSummaryBrand === brand ? '#3b82f6' : '#fff', color: selectedSummaryBrand === brand ? '#fff' : '#334155', fontSize: '0.875rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                    >
-                      {brand}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="exec-f-sub-visits-list">
-              {digitalVisitsLoading ? (
-                <div className="loading-text">Loading digital visits...</div>
-              ) : digitalVisits.length === 0 ? (
-                <div className="exec-f-sub-no-visits">
-                  <p>No previous digital visits found for this store.</p>
-                </div>
-              ) : (
-                digitalVisits.map((visit) => (
-                  <div key={visit.id} className="exec-f-sub-visit-item">
-                    <div className="exec-f-sub-visit-header">
-                      <div className="exec-f-sub-visit-date-status">
-                        <span className="exec-f-sub-visit-date">{formatDate(visit.visitDate || visit.createdAt)}</span>
-                        <span
-                          className="exec-f-sub-visit-status"
-                          style={{ backgroundColor: getStatusColor(visit.status) }}
-                        >
-                          {formatStatusLabel(visit.status as any)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="exec-f-sub-visit-representative">
-                      <span className="exec-f-sub-person-icon">👤</span>
-                      <span>{visit.representative}</span>
-                    </div>
-                    {visit.remarks && (
-                      <div className="exec-f-sub-visit-description">{visit.remarks}</div>
-                    )}
-                    {visit.issues && visit.issues.length > 0 && (
-                      <div className="exec-f-sub-visit-issues">
-                        <strong>Issues Reported:</strong>
-                        {visit.issues.map((issue: any) => (
-                          <div key={issue.id} className="exec-f-sub-issue-item">
-                            <span className="exec-f-sub-issue-details">{issue.details}</span>
-                            <span className="exec-f-sub-issue-status" style={{ color: getStatusColor(issue.status) }}>
-                              ({issue.status})
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {visit.personMet && visit.personMet.length > 0 && (
-                      <div className="exec-f-sub-visit-people">
-                        <strong>Contact Person:</strong>
-                        {visit.personMet.map((person: any, index: number) => (
-                          <span key={index} className="exec-f-sub-person-met">
-                            {person.name === 'SEC' ? person.designation : person.name} ({person.name === 'SEC' ? 'SEC' : person.designation})
-                            {person.phoneNumber && ` - ${person.phoneNumber}`}
-                            {index < visit.personMet.length - 1 && ', '}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
         {/* Past Visits */}
-        {visitType !== 'HOLIDAY' && visitType !== 'WEEK_OFF' && (
+        {visitType !== "HOLIDAY" && visitType !== "WEEK_OFF" && (
           <div className="exec-f-sub-past-visits-card">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-              <h3 className="exec-f-sub-section-title" style={{ margin: 0 }}>Last 5 Physical Visits</h3>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+                marginBottom: "16px",
+              }}
+            >
+              <h3 className="exec-f-sub-section-title" style={{ margin: 0 }}>
+                Last 5 Physical Visits
+              </h3>
               {storeData && storeData.partnerBrands.length > 0 && (
-                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-
-                  {storeData.partnerBrands.map(brand => (
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    overflowX: "auto",
+                    paddingBottom: "4px",
+                  }}
+                >
+                  {storeData.partnerBrands.map((brand) => (
                     <button
                       key={brand}
                       onClick={() => setSelectedSummaryBrand(brand)}
-                      style={{ padding: '4px 12px', borderRadius: '16px', border: '1px solid #cbd5e1', backgroundColor: selectedSummaryBrand === brand ? '#3b82f6' : '#fff', color: selectedSummaryBrand === brand ? '#fff' : '#334155', fontSize: '0.875rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                      style={{
+                        padding: "4px 12px",
+                        borderRadius: "16px",
+                        border: "1px solid #cbd5e1",
+                        backgroundColor:
+                          selectedSummaryBrand === brand ? "#3b82f6" : "#fff",
+                        color:
+                          selectedSummaryBrand === brand ? "#fff" : "#334155",
+                        fontSize: "0.875rem",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                      }}
                     >
                       {brand}
                     </button>
@@ -1997,9 +2686,7 @@ const ExecutiveFormContent: React.FC = () => {
             </div>
             <div className="exec-f-sub-visits-list">
               {visitsLoading ? (
-                <div className="loading-text">
-                  Loading past visits...
-                </div>
+                <div className="loading-text">Loading past visits...</div>
               ) : pastVisits.length === 0 ? (
                 <div className="exec-f-sub-no-visits">
                   <p>No previous visits found for this store.</p>
@@ -2009,10 +2696,14 @@ const ExecutiveFormContent: React.FC = () => {
                   <div key={visit.id} className="exec-f-sub-visit-item">
                     <div className="exec-f-sub-visit-header">
                       <div className="exec-f-sub-visit-date-status">
-                        <span className="exec-f-sub-visit-date">{formatDate(visit.visitDate || visit.createdAt)}</span>
+                        <span className="exec-f-sub-visit-date">
+                          {formatDate(visit.visitDate || visit.createdAt)}
+                        </span>
                         <span
                           className="exec-f-sub-visit-status"
-                          style={{ backgroundColor: getStatusColor(visit.status) }}
+                          style={{
+                            backgroundColor: getStatusColor(visit.status),
+                          }}
                         >
                           {formatStatusLabel(visit.status as any)}
                         </span>
@@ -2031,14 +2722,24 @@ const ExecutiveFormContent: React.FC = () => {
                       <span>{visit.representative}</span>
                     </div>
                     {(() => {
-                      const brandDetails = selectedSummaryBrand !== 'All'
-                        ? visit.brandVisitDetails?.find((b: any) => b.brandName === selectedSummaryBrand)
-                        : null;
-                      const displayRemarks = selectedSummaryBrand !== 'All' ? brandDetails?.remarks : visit.remarks;
+                      const brandDetails =
+                        selectedSummaryBrand !== "All"
+                          ? visit.brandVisitDetails?.find(
+                              (b: any) => b.brandName === selectedSummaryBrand,
+                            )
+                          : null;
+                      const displayRemarks =
+                        selectedSummaryBrand !== "All"
+                          ? brandDetails?.remarks
+                          : visit.remarks;
 
                       return displayRemarks ? (
                         <div className="exec-f-sub-visit-description">
-                          {selectedSummaryBrand !== 'All' && <strong style={{ color: '#3b82f6' }}>[{selectedSummaryBrand}] </strong>}
+                          {selectedSummaryBrand !== "All" && (
+                            <strong style={{ color: "#3b82f6" }}>
+                              [{selectedSummaryBrand}]{" "}
+                            </strong>
+                          )}
                           {displayRemarks}
                         </div>
                       ) : null;
@@ -2051,14 +2752,28 @@ const ExecutiveFormContent: React.FC = () => {
                     {visit.issues && visit.issues.length > 0 && (
                       <div className="exec-f-sub-visit-issues">
                         <strong>Issues Reported:</strong>
-                        {visit.issues.filter((i: any) => selectedSummaryBrand === 'All' || i.details.startsWith(`[${selectedSummaryBrand}]`)).map((issue: any) => (
-                          <div key={issue.id} className="exec-f-sub-issue-item">
-                            <span className="exec-f-sub-issue-details">{issue.details}</span>
-                            <span className="exec-f-sub-issue-status" style={{ color: getStatusColor(issue.status) }}>
-                              ({issue.status})
-                            </span>
-                          </div>
-                        ))}
+                        {visit.issues
+                          .filter(
+                            (i: any) =>
+                              selectedSummaryBrand === "All" ||
+                              i.details.startsWith(`[${selectedSummaryBrand}]`),
+                          )
+                          .map((issue: any) => (
+                            <div
+                              key={issue.id}
+                              className="exec-f-sub-issue-item"
+                            >
+                              <span className="exec-f-sub-issue-details">
+                                {issue.details}
+                              </span>
+                              <span
+                                className="exec-f-sub-issue-status"
+                                style={{ color: getStatusColor(issue.status) }}
+                              >
+                                ({issue.status})
+                              </span>
+                            </div>
+                          ))}
                       </div>
                     )}
                     {visit.personMet && visit.personMet.length > 0 && (
@@ -2066,9 +2781,13 @@ const ExecutiveFormContent: React.FC = () => {
                         <strong>Contact Person:</strong>
                         {visit.personMet.map((person, index) => (
                           <span key={index} className="exec-f-sub-person-met">
-                            {person.name === 'SEC' ? person.designation : person.name} ({person.name === 'SEC' ? 'SEC' : person.designation})
-                            {person.phoneNumber && ` - ${person.phoneNumber}`}
-                            {index < visit.personMet.length - 1 && ', '}
+                            {person.name === "SEC"
+                              ? person.designation
+                              : person.name}{" "}
+                            (
+                            {person.name === "SEC" ? "SEC" : person.designation}
+                            ){person.phoneNumber && ` - ${person.phoneNumber}`}
+                            {index < visit.personMet.length - 1 && ", "}
                           </span>
                         ))}
                       </div>
@@ -2081,18 +2800,44 @@ const ExecutiveFormContent: React.FC = () => {
         )}
 
         {/* Digital Visits */}
-        {visitType !== 'HOLIDAY' && visitType !== 'WEEK_OFF' && (
+        {visitType !== "HOLIDAY" && visitType !== "WEEK_OFF" && (
           <div className="exec-f-sub-past-visits-card">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-              <h3 className="exec-f-sub-section-title" style={{ margin: 0 }}>Last 5 Digital Visits</h3>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+                marginBottom: "16px",
+              }}
+            >
+              <h3 className="exec-f-sub-section-title" style={{ margin: 0 }}>
+                Last 5 Digital Visits
+              </h3>
               {storeData && storeData.partnerBrands.length > 0 && (
-                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-                  
-                  {storeData.partnerBrands.map(brand => (
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    overflowX: "auto",
+                    paddingBottom: "4px",
+                  }}
+                >
+                  {storeData.partnerBrands.map((brand) => (
                     <button
                       key={brand}
                       onClick={() => setSelectedSummaryBrand(brand)}
-                      style={{ padding: '4px 12px', borderRadius: '16px', border: '1px solid #cbd5e1', backgroundColor: selectedSummaryBrand === brand ? '#3b82f6' : '#fff', color: selectedSummaryBrand === brand ? '#fff' : '#334155', fontSize: '0.875rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                      style={{
+                        padding: "4px 12px",
+                        borderRadius: "16px",
+                        border: "1px solid #cbd5e1",
+                        backgroundColor:
+                          selectedSummaryBrand === brand ? "#3b82f6" : "#fff",
+                        color:
+                          selectedSummaryBrand === brand ? "#fff" : "#334155",
+                        fontSize: "0.875rem",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                      }}
                     >
                       {brand}
                     </button>
@@ -2112,10 +2857,14 @@ const ExecutiveFormContent: React.FC = () => {
                   <div key={visit.id} className="exec-f-sub-visit-item">
                     <div className="exec-f-sub-visit-header">
                       <div className="exec-f-sub-visit-date-status">
-                        <span className="exec-f-sub-visit-date">{formatDate(visit.visitDate || visit.createdAt)}</span>
+                        <span className="exec-f-sub-visit-date">
+                          {formatDate(visit.visitDate || visit.createdAt)}
+                        </span>
                         <span
                           className="exec-f-sub-visit-status"
-                          style={{ backgroundColor: getStatusColor(visit.status) }}
+                          style={{
+                            backgroundColor: getStatusColor(visit.status),
+                          }}
                         >
                           {formatStatusLabel(visit.status as any)}
                         </span>
@@ -2126,15 +2875,22 @@ const ExecutiveFormContent: React.FC = () => {
                       <span>{visit.representative}</span>
                     </div>
                     {visit.remarks && (
-                      <div className="exec-f-sub-visit-description">{visit.remarks}</div>
+                      <div className="exec-f-sub-visit-description">
+                        {visit.remarks}
+                      </div>
                     )}
                     {visit.issues && visit.issues.length > 0 && (
                       <div className="exec-f-sub-visit-issues">
                         <strong>Issues Reported:</strong>
                         {visit.issues.map((issue: any) => (
                           <div key={issue.id} className="exec-f-sub-issue-item">
-                            <span className="exec-f-sub-issue-details">{issue.details}</span>
-                            <span className="exec-f-sub-issue-status" style={{ color: getStatusColor(issue.status) }}>
+                            <span className="exec-f-sub-issue-details">
+                              {issue.details}
+                            </span>
+                            <span
+                              className="exec-f-sub-issue-status"
+                              style={{ color: getStatusColor(issue.status) }}
+                            >
                               ({issue.status})
                             </span>
                           </div>
@@ -2146,9 +2902,13 @@ const ExecutiveFormContent: React.FC = () => {
                         <strong>Contact Person:</strong>
                         {visit.personMet.map((person: any, index: number) => (
                           <span key={index} className="exec-f-sub-person-met">
-                            {person.name === 'SEC' ? person.designation : person.name} ({person.name === 'SEC' ? 'SEC' : person.designation})
-                            {person.phoneNumber && ` - ${person.phoneNumber}`}
-                            {index < visit.personMet.length - 1 && ', '}
+                            {person.name === "SEC"
+                              ? person.designation
+                              : person.name}{" "}
+                            (
+                            {person.name === "SEC" ? "SEC" : person.designation}
+                            ){person.phoneNumber && ` - ${person.phoneNumber}`}
+                            {index < visit.personMet.length - 1 && ", "}
                           </span>
                         ))}
                       </div>
@@ -2168,21 +2928,21 @@ const ExecutiveFormContent: React.FC = () => {
           isDigital={false}
         />
       </div>
-    </div >
+    </div>
   );
 };
 
 const ExecutiveForm: React.FC = () => {
   return (
-    <Suspense fallback={
-      <div className="exec-f-sub-container">
-        <div className="exec-f-sub-content">
-          <div className="loading-text">
-            Loading form...
+    <Suspense
+      fallback={
+        <div className="exec-f-sub-container">
+          <div className="exec-f-sub-content">
+            <div className="loading-text">Loading form...</div>
           </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <ExecutiveFormContent />
     </Suspense>
   );
