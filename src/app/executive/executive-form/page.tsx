@@ -316,7 +316,7 @@ const ExecutiveFormContent: React.FC = () => {
         alert('Please add at least one person met for each brand');
         return;
       }
-      
+
     } else if (visitType === 'DIGITAL') {
       // Digital validation
       if (!digitalForm.connectDate) {
@@ -662,15 +662,15 @@ const ExecutiveFormContent: React.FC = () => {
               </div>
               <div className="exec-f-sub-partner-brands" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
                 {storeData.partnerBrands.map((brand, index) => {
-                  const isComplete = visitType === 'DIGITAL' 
+                  const isComplete = visitType === 'DIGITAL'
                     ? brandVisitDetails[brand]?.peopleMet?.length > 0 && brandVisitDetails[brand]?.remarks?.trim()
                     : brandVisitDetails[brand]?.peopleMet?.length > 0;
                   return (
-                    <button 
-                      key={index} 
+                    <button
+                      key={index}
                       onClick={() => setActiveBrandTab(brand)}
                       className="exec-f-sub-brand-tag"
-                      style={{ 
+                      style={{
                         border: activeBrandTab === brand ? '2px solid #3b82f6' : '1px solid transparent',
                         opacity: activeBrandTab === brand ? 1 : 0.7,
                         cursor: 'pointer',
@@ -742,9 +742,9 @@ const ExecutiveFormContent: React.FC = () => {
                 />
               </div>
 
-              
 
-              
+
+
               {/* Per Brand Physical Form */}
               {storeData && activeBrandTab && [activeBrandTab].map((brand) => (
                 <div key={brand} className="exec-f-sub-brand-card" style={{ border: '1px solid #e2e8f0', padding: '16px', borderRadius: '8px', marginBottom: '16px', backgroundColor: '#f8fafc' }}>
@@ -777,7 +777,7 @@ const ExecutiveFormContent: React.FC = () => {
                               className="exec-f-sub-form-input exec-f-sub-person-name-input"
                               placeholder="Enter person's name"
                               value={brandVisitDetails[brand]?.currentPersonDesig || ''}
-                              onChange={(e) => setBrandVisitDetails(prev => ({...prev, [brand]: {...prev[brand], currentPersonDesig: e.target.value}}))}
+                              onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonDesig: e.target.value } }))}
                             />
                           ) : (
                             <>
@@ -786,14 +786,14 @@ const ExecutiveFormContent: React.FC = () => {
                                 className="exec-f-sub-form-input exec-f-sub-person-name-input"
                                 placeholder="Enter person's name"
                                 value={brandVisitDetails[brand]?.currentPersonName || ''}
-                                onChange={(e) => setBrandVisitDetails(prev => ({...prev, [brand]: {...prev[brand], currentPersonName: e.target.value}}))}
+                                onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonName: e.target.value } }))}
                               />
                               <input
                                 type="text"
                                 className="exec-f-sub-form-input exec-f-sub-person-designation-input"
                                 placeholder="Enter designation"
                                 value={brandVisitDetails[brand]?.currentPersonDesig || ''}
-                                onChange={(e) => setBrandVisitDetails(prev => ({...prev, [brand]: {...prev[brand], currentPersonDesig: e.target.value}}))}
+                                onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonDesig: e.target.value } }))}
                               />
                             </>
                           )}
@@ -803,7 +803,7 @@ const ExecutiveFormContent: React.FC = () => {
                           className="exec-f-sub-form-input exec-f-sub-person-phone-input"
                           placeholder="Enter phone number"
                           value={brandVisitDetails[brand]?.currentPersonPhone || ''}
-                          onChange={(e) => setBrandVisitDetails(prev => ({...prev, [brand]: {...prev[brand], currentPersonPhone: e.target.value}}))}
+                          onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonPhone: e.target.value } }))}
                           inputMode="numeric"
                           pattern="\d{7,15}"
                         />
@@ -818,7 +818,7 @@ const ExecutiveFormContent: React.FC = () => {
                             const phone = bDetails.currentPersonPhone;
                             if (!name.trim() || !desig.trim() || !phone.trim()) return;
                             if (!/^\d{7,15}$/.test(phone.trim())) { alert('Please enter a valid phone number (7-15 digits)'); return; }
-                            
+
                             setBrandVisitDetails(prev => ({
                               ...prev,
                               [brand]: {
@@ -873,7 +873,7 @@ const ExecutiveFormContent: React.FC = () => {
                     </div>
                   </div>
 
-                  
+
                   <div className="exec-f-sub-form-group">
                     <label className="exec-f-sub-form-label">POSM Available</label>
                     <div className="exec-f-sub-radio-group">
@@ -883,7 +883,7 @@ const ExecutiveFormContent: React.FC = () => {
                           name={`POSMchecked-${brand}`}
                           value="true"
                           checked={brandVisitDetails[brand]?.POSMchecked === true}
-                          onChange={() => setBrandVisitDetails(prev => ({...prev, [brand]: {...prev[brand], POSMchecked: true}}))}
+                          onChange={() => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], POSMchecked: true } }))}
                           className="exec-f-sub-radio-input"
                         />
                         <span className="exec-f-sub-radio-custom"></span>
@@ -895,7 +895,7 @@ const ExecutiveFormContent: React.FC = () => {
                           name={`POSMchecked-${brand}`}
                           value="false"
                           checked={brandVisitDetails[brand]?.POSMchecked === false}
-                          onChange={() => setBrandVisitDetails(prev => ({...prev, [brand]: {...prev[brand], POSMchecked: false}}))}
+                          onChange={() => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], POSMchecked: false } }))}
                           className="exec-f-sub-radio-input"
                         />
                         <span className="exec-f-sub-radio-custom"></span>
@@ -913,16 +913,16 @@ const ExecutiveFormContent: React.FC = () => {
                           className="exec-f-sub-form-input exec-f-sub-issue-input"
                           placeholder="Describe an issue encountered"
                           value={brandVisitDetails[brand]?.currentIssue || ''}
-                          onChange={(e) => setBrandVisitDetails(prev => ({...prev, [brand]: {...prev[brand], currentIssue: e.target.value}}))}
+                          onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentIssue: e.target.value } }))}
                           onKeyPress={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
                               const issue = brandVisitDetails[brand]?.currentIssue?.trim();
                               if (issue) {
                                 setBrandVisitDetails(prev => ({
-                                  ...prev, 
+                                  ...prev,
                                   [brand]: {
-                                    ...prev[brand], 
+                                    ...prev[brand],
                                     issuesRaised: [...(prev[brand].issuesRaised || []), issue],
                                     currentIssue: ''
                                   }
@@ -938,9 +938,9 @@ const ExecutiveFormContent: React.FC = () => {
                             const issue = brandVisitDetails[brand]?.currentIssue?.trim();
                             if (issue) {
                               setBrandVisitDetails(prev => ({
-                                ...prev, 
+                                ...prev,
                                 [brand]: {
-                                  ...prev[brand], 
+                                  ...prev[brand],
                                   issuesRaised: [...(prev[brand].issuesRaised || []), issue],
                                   currentIssue: ''
                                 }
@@ -1004,7 +1004,7 @@ const ExecutiveFormContent: React.FC = () => {
                       className="exec-f-sub-form-textarea"
                       placeholder="Additional comments or observations..."
                       value={brandVisitDetails[brand]?.remarks || ''}
-                      onChange={(e) => setBrandVisitDetails(prev => ({...prev, [brand]: {...prev[brand], remarks: e.target.value}}))}
+                      onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], remarks: e.target.value } }))}
                       rows={2}
                     />
                   </div>
@@ -1013,7 +1013,7 @@ const ExecutiveFormContent: React.FC = () => {
               <div className="exec-f-sub-form-group">
                 <label className="exec-f-sub-form-label">
                   Next Scheduled Visit (Optional)
-                  <span className="exec-f-sub-info-text" style={{display: 'block', fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal', marginTop: '4px'}}>
+                  <span className="exec-f-sub-info-text" style={{ display: 'block', fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal', marginTop: '4px' }}>
                     ℹ️ If filled, store will be auto-added to your PJP for this date
                   </span>
                 </label>
@@ -1091,9 +1091,9 @@ const ExecutiveFormContent: React.FC = () => {
                 />
               </div>
 
-              
 
-              
+
+
               {/* Per Brand Digital Form */}
               {storeData && activeBrandTab && [activeBrandTab].map((brand) => (
                 <div key={brand} className="exec-f-sub-brand-card" style={{ border: '1px solid #e2e8f0', padding: '16px', borderRadius: '8px', marginBottom: '16px', backgroundColor: '#f8fafc' }}>
@@ -1126,7 +1126,7 @@ const ExecutiveFormContent: React.FC = () => {
                               className="exec-f-sub-form-input exec-f-sub-person-name-input"
                               placeholder="Enter person's name"
                               value={brandVisitDetails[brand]?.currentPersonDesig || ''}
-                              onChange={(e) => setBrandVisitDetails(prev => ({...prev, [brand]: {...prev[brand], currentPersonDesig: e.target.value}}))}
+                              onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonDesig: e.target.value } }))}
                             />
                           ) : (
                             <>
@@ -1135,14 +1135,14 @@ const ExecutiveFormContent: React.FC = () => {
                                 className="exec-f-sub-form-input exec-f-sub-person-name-input"
                                 placeholder="Enter person's name"
                                 value={brandVisitDetails[brand]?.currentPersonName || ''}
-                                onChange={(e) => setBrandVisitDetails(prev => ({...prev, [brand]: {...prev[brand], currentPersonName: e.target.value}}))}
+                                onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonName: e.target.value } }))}
                               />
                               <input
                                 type="text"
                                 className="exec-f-sub-form-input exec-f-sub-person-designation-input"
                                 placeholder="Enter designation"
                                 value={brandVisitDetails[brand]?.currentPersonDesig || ''}
-                                onChange={(e) => setBrandVisitDetails(prev => ({...prev, [brand]: {...prev[brand], currentPersonDesig: e.target.value}}))}
+                                onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonDesig: e.target.value } }))}
                               />
                             </>
                           )}
@@ -1152,7 +1152,7 @@ const ExecutiveFormContent: React.FC = () => {
                           className="exec-f-sub-form-input exec-f-sub-person-phone-input"
                           placeholder="Enter phone number"
                           value={brandVisitDetails[brand]?.currentPersonPhone || ''}
-                          onChange={(e) => setBrandVisitDetails(prev => ({...prev, [brand]: {...prev[brand], currentPersonPhone: e.target.value}}))}
+                          onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentPersonPhone: e.target.value } }))}
                           inputMode="numeric"
                           pattern="\d{7,15}"
                         />
@@ -1167,7 +1167,7 @@ const ExecutiveFormContent: React.FC = () => {
                             const phone = bDetails.currentPersonPhone;
                             if (!name.trim() || !desig.trim() || !phone.trim()) return;
                             if (!/^\d{7,15}$/.test(phone.trim())) { alert('Please enter a valid phone number (7-15 digits)'); return; }
-                            
+
                             setBrandVisitDetails(prev => ({
                               ...prev,
                               [brand]: {
@@ -1222,7 +1222,7 @@ const ExecutiveFormContent: React.FC = () => {
                     </div>
                   </div>
 
-                  
+
                   <div className="exec-f-sub-form-group">
                     <label className="exec-f-sub-form-label">Raise Issues</label>
                     <div className="exec-f-sub-issues-input-container">
@@ -1232,16 +1232,16 @@ const ExecutiveFormContent: React.FC = () => {
                           className="exec-f-sub-form-input exec-f-sub-issue-input"
                           placeholder="Describe an issue encountered"
                           value={brandVisitDetails[brand]?.currentIssue || ''}
-                          onChange={(e) => setBrandVisitDetails(prev => ({...prev, [brand]: {...prev[brand], currentIssue: e.target.value}}))}
+                          onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], currentIssue: e.target.value } }))}
                           onKeyPress={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
                               const issue = brandVisitDetails[brand]?.currentIssue?.trim();
                               if (issue) {
                                 setBrandVisitDetails(prev => ({
-                                  ...prev, 
+                                  ...prev,
                                   [brand]: {
-                                    ...prev[brand], 
+                                    ...prev[brand],
                                     issuesRaised: [...(prev[brand].issuesRaised || []), issue],
                                     currentIssue: ''
                                   }
@@ -1257,9 +1257,9 @@ const ExecutiveFormContent: React.FC = () => {
                             const issue = brandVisitDetails[brand]?.currentIssue?.trim();
                             if (issue) {
                               setBrandVisitDetails(prev => ({
-                                ...prev, 
+                                ...prev,
                                 [brand]: {
-                                  ...prev[brand], 
+                                  ...prev[brand],
                                   issuesRaised: [...(prev[brand].issuesRaised || []), issue],
                                   currentIssue: ''
                                 }
@@ -1305,7 +1305,7 @@ const ExecutiveFormContent: React.FC = () => {
                       className="exec-f-sub-form-textarea"
                       placeholder="Add remarks for the digital connect (required)"
                       value={brandVisitDetails[brand]?.remarks || ''}
-                      onChange={(e) => setBrandVisitDetails(prev => ({...prev, [brand]: {...prev[brand], remarks: e.target.value}}))}
+                      onChange={(e) => setBrandVisitDetails(prev => ({ ...prev, [brand]: { ...prev[brand], remarks: e.target.value } }))}
                       rows={2}
                     />
                   </div>
@@ -1588,7 +1588,7 @@ const ExecutiveFormContent: React.FC = () => {
               <h3 className="exec-f-sub-section-title" style={{ margin: 0 }}>Last 5 Digital Visits</h3>
               {storeData && storeData.partnerBrands.length > 0 && (
                 <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-                  
+
                   {storeData.partnerBrands.map(brand => (
                     <button
                       key={brand}
@@ -1668,7 +1668,7 @@ const ExecutiveFormContent: React.FC = () => {
               <h3 className="exec-f-sub-section-title" style={{ margin: 0 }}>Last 5 Physical Visits</h3>
               {storeData && storeData.partnerBrands.length > 0 && (
                 <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-                  
+
                   {storeData.partnerBrands.map(brand => (
                     <button
                       key={brand}
@@ -1717,14 +1717,14 @@ const ExecutiveFormContent: React.FC = () => {
                       <span>{visit.representative}</span>
                     </div>
                     {(() => {
-                      const brandDetails = selectedSummaryBrand !== 'All' 
+                      const brandDetails = selectedSummaryBrand !== 'All'
                         ? visit.brandVisitDetails?.find((b: any) => b.brandName === selectedSummaryBrand)
                         : null;
                       const displayRemarks = selectedSummaryBrand !== 'All' ? brandDetails?.remarks : visit.remarks;
-                      
+
                       return displayRemarks ? (
                         <div className="exec-f-sub-visit-description">
-                          {selectedSummaryBrand !== 'All' && <strong style={{color: '#3b82f6'}}>[{selectedSummaryBrand}] </strong>}
+                          {selectedSummaryBrand !== 'All' && <strong style={{ color: '#3b82f6' }}>[{selectedSummaryBrand}] </strong>}
                           {displayRemarks}
                         </div>
                       ) : null;
