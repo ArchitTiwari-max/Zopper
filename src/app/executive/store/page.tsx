@@ -832,6 +832,8 @@ const Store: React.FC = () => {
             city: s.city,
             visited: s.visited,
             lastVisitDate: s.lastVisitDate ? s.lastVisitDate.toString() : null,
+            latitude: s.latitude,
+            longitude: s.longitude,
           }))}
           onClose={() => setIsSuggestMode(false)}
           onSubmit={submitVisitPlan}
