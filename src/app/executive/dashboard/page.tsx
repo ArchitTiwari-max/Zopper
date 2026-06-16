@@ -143,10 +143,10 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* RAG Store Performance Analytics */}
-        <div className="exec-dash-dashboard-card">
+        {/* RAG Store Performance Analytics (Commented out) */}
+        {/* <div className="exec-dash-dashboard-card">
           <ExecutiveRAGDashboard />
-        </div>
+        </div> */}
 
         {/* Partner Brand Type Visits (A+, A, B, C, D) - Assigned stores only */}
         <div className="exec-dash-dashboard-card">

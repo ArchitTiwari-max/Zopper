@@ -30,6 +30,7 @@ interface StoreData {
   visited: string;
   lastVisitDate: string | null;
   isFlagged: boolean;
+  priority?: string | null;
 }
 
 
@@ -733,7 +734,23 @@ const Store: React.FC = () => {
                       </button>
                       <span className="exec-v-form-store-name-text">
                         {store.storeName} 
-                        {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}
+                        {/* {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')} */}
+                        {store.priority && (
+                          <span className="store-priority-badge" style={{
+                            marginLeft: '8px',
+                            padding: '2px 6px',
+                            backgroundColor: '#f3f4f6',
+                            color: '#374151',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            border: '1px solid #d1d5db',
+                            display: 'inline-block',
+                            verticalAlign: 'middle'
+                          }}>
+                            {store.priority.toUpperCase()}
+                          </span>
+                        )}
                       </span>
                       <span className="exec-v-form-store-subtext">{store.city}</span>
                       {!isCreateMode && (
@@ -889,7 +906,23 @@ const Store: React.FC = () => {
                     <div className="exec-v-form-store-info">
                       <h4 className="exec-v-form-store-name">
                         {store.storeName} 
-                        {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}
+                        {/* {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')} */}
+                        {store.priority && (
+                          <span className="store-priority-badge" style={{
+                            marginLeft: '8px',
+                            padding: '2px 6px',
+                            backgroundColor: '#f3f4f6',
+                            color: '#374151',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            border: '1px solid #d1d5db',
+                            display: 'inline-block',
+                            verticalAlign: 'middle'
+                          }}>
+                            {store.priority.toUpperCase()}
+                          </span>
+                        )}
                         {rescheduledIds.has(store.id) && <span style={{ marginLeft: '6px', fontSize: '10px', verticalAlign: 'middle' }} title="Rescheduled Visit">🔴</span>}
                       </h4>
                       <p className="exec-v-form-store-details">

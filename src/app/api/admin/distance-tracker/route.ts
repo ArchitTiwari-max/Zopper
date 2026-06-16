@@ -57,7 +57,7 @@ async function getDrivingDistance(lat1: number, lng1: number, lat2: number, lng2
 
             return km;
         }
-        
+
         return haversineKm(lat1, lng1, lat2, lng2) * 1.50;
     } catch (e) {
         console.error("[distance-tracker] getDrivingDistance error:", e);
@@ -227,7 +227,7 @@ export async function GET(request: NextRequest) {
 
                     let totalDistanceKm = 0;
                     const storeStops = [];
-                    
+
                     for (let idx = 0; idx < optimizedVisits.length; idx++) {
                         const visit = optimizedVisits[idx];
                         const store = visit.store;

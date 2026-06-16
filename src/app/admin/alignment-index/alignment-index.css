@@ -1544,3 +1544,38 @@ body {
     0%, 100% { opacity: 0.4; }
     50% { opacity: 1; }
 }
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Map Loading Overlay */
+.map-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(8, 13, 28, 0.75);
+    backdrop-filter: blur(6px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 30; /* Above zoom controls */
+    gap: 1.5rem;
+    pointer-events: all;
+    border-radius: 8px;
+}
+
+.map-loading-overlay p {
+    font-size: 0.9rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--neon-blue);
+    animation: pulse-op 2s infinite;
+    text-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
+}
+

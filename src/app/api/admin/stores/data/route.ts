@@ -247,6 +247,7 @@ export async function GET(request: NextRequest) {
             brandType: true
           }
         },
+        priority: true,
         visits: {
           orderBy: { visitDate: 'desc' },
           take: 1,            // only most-recent visit needed
@@ -340,7 +341,8 @@ export async function GET(request: NextRequest) {
         pendingReviews,
         status: (recentVisitMap.get(store.id) || 0) > 0 ? 'Active' : 'Inactive',
         lastVisit,
-        contactPerson: 'Store Manager'
+        contactPerson: 'Store Manager',
+        priority: store.priority || null
       };
     });
 

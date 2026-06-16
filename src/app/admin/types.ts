@@ -51,6 +51,7 @@ export interface StoreData {
   city: string;
   status: 'Active' | 'Inactive' | 'Pending';
   lastVisit?: string | null;
+  priority?: string | null;
 }
 
 export interface StoreFilters {

@@ -1045,11 +1045,45 @@ const AdminStoresPage: React.FC = () => {
                       <div className="admin-stores-name-wrap">
                         {isCreatingVisitPlan ? (
                           <span className="admin-stores-store-name-truncated" title={store.storeName}>
-                            {store.storeName} {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}
+                            {store.storeName}{' '}
+                            {/* {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')} */}
+                            {store.priority && (
+                              <span className="store-priority-badge" style={{
+                                marginLeft: '8px',
+                                padding: '2px 6px',
+                                backgroundColor: '#f3f4f6',
+                                color: '#374151',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: 'bold',
+                                border: '1px solid #d1d5db',
+                                display: 'inline-block',
+                                verticalAlign: 'middle'
+                              }}>
+                                {store.priority.toUpperCase()}
+                              </span>
+                            )}
                           </span>
                         ) : (
                           <Link href={`/admin/stores/${store.id}?storeName=${encodeURIComponent(store.storeName)}&city=${encodeURIComponent(store.city)}`} className="admin-stores-store-name-link admin-stores-store-name-truncated" title={store.storeName}>
-                            {store.storeName} {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')}
+                            {store.storeName}{' '}
+                            {/* {ragData.get(store.id) && getRAGEmoji(ragData.get(store.id) as 'Red' | 'Amber' | 'Green')} */}
+                            {store.priority && (
+                              <span className="store-priority-badge" style={{
+                                marginLeft: '8px',
+                                padding: '2px 6px',
+                                backgroundColor: '#f3f4f6',
+                                color: '#374151',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: 'bold',
+                                border: '1px solid #d1d5db',
+                                display: 'inline-block',
+                                verticalAlign: 'middle'
+                              }}>
+                                {store.priority.toUpperCase()}
+                              </span>
+                            )}
                           </Link>
                         )}
                         <div className="admin-stores-store-subtext">{store.city}</div>

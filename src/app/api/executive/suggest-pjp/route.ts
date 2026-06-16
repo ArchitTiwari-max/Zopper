@@ -4,20 +4,6 @@ import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
 
-// Haversine formula: fallback if Google Maps fails
-function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371; // Earth's radius in km
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-}
 
 async function getGoogleMapsDistances(
     origin: { lat: number; lng: number },
@@ -42,35 +28,31 @@ async function getGoogleMapsDistances(
             const res = await fetch(url);
             const data = await res.json();
 
-            if (data.status === 'OK' && data.rows && data.rows[0]) {
-                const elements = data.rows[0].elements;
-                chunk.forEach((dest, index) => {
-                    const element = elements[index];
-                    if (element.status === 'OK' && element.distance) {
-                        // distance.value is in meters, convert to km
-                        distanceMap.set(dest.id, element.distance.value / 1000);
-                    } else {
-                        // Fallback to haversine if route not found
-                        distanceMap.set(dest.id, haversineDistance(origin.lat, origin.lng, dest.lat, dest.lng));
-                    }
-                });
-            } else {
-                // Fallback for chunk
-                chunk.forEach(dest => {
-                    distanceMap.set(dest.id, haversineDistance(origin.lat, origin.lng, dest.lat, dest.lng));
-                });
+            if (data.status !== 'OK' || !data.rows || !data.rows[0]) {
+                throw new Error(`Google Maps API returned status: ${data.status}`);
             }
-        } catch (err) {
-            console.error('Google Maps API error:', err);
-            // Fallback for chunk
-            chunk.forEach(dest => {
-                distanceMap.set(dest.id, haversineDistance(origin.lat, origin.lng, dest.lat, dest.lng));
+
+            const elements = data.rows[0].elements;
+            chunk.forEach((dest, index) => {
+                const element = elements[index];
+                if (element.status !== 'OK' || !element.distance) {
+                    distanceMap.set(dest.id, -1);
+                } else {
+                    // distance.value is in meters, convert to km
+                    distanceMap.set(dest.id, element.distance.value / 1000);
+                }
+            });
+        } catch (e) {
+            console.error("[suggest-pjp] Error getting driving distance, skipping stores:", e);
+            chunk.forEach((dest) => {
+                distanceMap.set(dest.id, -1);
             });
         }
     }
 
     return distanceMap;
 }
+
 
 export async function GET(request: NextRequest) {
     try {
@@ -120,28 +102,25 @@ export async function GET(request: NextRequest) {
             .filter(s => s.id !== startStoreId && s.latitude != null && s.longitude != null)
             .map(s => ({ id: s.id, lat: s.latitude!, lng: s.longitude! }));
 
-        let drivingDistances = new Map<string, number>();
-        try {
-            drivingDistances = await getGoogleMapsDistances(
-                { lat: startStore.latitude!, lng: startStore.longitude! },
-                destinationStores
-            );
-        } catch (err) {
-            console.warn('Failed to fetch Google Maps distances, falling back to Haversine', err);
-            destinationStores.forEach(s => {
-                drivingDistances.set(s.id, haversineDistance(startStore.latitude!, startStore.longitude!, s.lat, s.lng));
-            });
-        }
+        const drivingDistances = await getGoogleMapsDistances(
+            { lat: startStore.latitude!, lng: startStore.longitude! },
+            destinationStores
+        );
 
         const routeOrder = destinationStores
-            .map(s => ({
-                id: s.id,
-                latitude: s.lat,
-                longitude: s.lng,
-                distanceFromStart: Math.round((drivingDistances.get(s.id) || 0) * 10) / 10
-            }))
+            .map(s => {
+                const dist = drivingDistances.get(s.id);
+                return {
+                    id: s.id,
+                    latitude: s.lat,
+                    longitude: s.lng,
+                    distanceFromStart: dist !== undefined && dist !== -1 ? Math.round(dist * 10) / 10 : -1
+                };
+            })
+            .filter(r => r.distanceFromStart !== -1)
             .sort((a, b) => a.distanceFromStart - b.distanceFromStart)
             .slice(0, 10);
+
 
         // Fetch last visit for each route store + start store (for history)
         const allRouteIds = [startStoreId, ...routeOrder.map(r => r.id)];

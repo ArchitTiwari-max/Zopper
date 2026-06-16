@@ -53,6 +53,20 @@ interface SuggestPJPProps {
     submitting: boolean;
 }
 
+const haversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const straightDistance = R * c;
+    const estimatedDrivingDistance = straightDistance * 1.4; // 1.4x circuity factor
+    return Math.round(estimatedDrivingDistance * 10) / 10;
+};
+
 const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, submitting }) => {
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [searchQuery, setSearchQuery] = useState('');
@@ -270,20 +284,11 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
         return new Date() >= deadlineUTC;
     })();
 
-    const haversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-        const R = 6371;
-        const dLat = ((lat2 - lat1) * Math.PI) / 180;
-        const dLon = ((lon2 - lon1) * Math.PI) / 180;
-        const a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return Math.round(R * c * 10) / 10;
-    };
-
     useEffect(() => {
         let active = true;
+
+        setRouteDistances(new Array(suggestedRoute.length).fill(undefined));
+
         (async () => {
             if (!startStoreCoords || suggestedRoute.length === 0) {
                 if (active) setRouteDistances([]);
@@ -295,36 +300,34 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
                 ...suggestedRoute.map(s => ({ lat: s.latitude, lng: s.longitude }))
             ];
 
-            const origins = points.slice(0, -1);
-            const destinations = points.slice(1);
-            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-
-            const distances = await Promise.all(origins.map(async (orig, i) => {
-                const dest = destinations[i];
-                const fallback = haversineDistance(orig.lat, orig.lng, dest.lat, dest.lng);
-                if (!apiKey) return fallback;
-
-                try {
-                    const res = await fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?origins=${orig.lat},${orig.lng}&destinations=${dest.lat},${dest.lng}&key=${apiKey}`);
-                    const data = await res.json();
-                    if (data.status === 'OK' && data.rows?.[0]?.elements?.[0]?.status === 'OK') {
-                        return Math.round((data.rows[0].elements[0].distance.value / 1000) * 10) / 10;
-                    }
-                    return fallback;
-                } catch (e) {
-                    return fallback;
-                }
+            const legs = points.slice(0, -1).map((orig, i) => ({
+                originLat: orig.lat,
+                originLng: orig.lng,
+                destLat: points[i + 1].lat,
+                destLng: points[i + 1].lng
             }));
 
-            if (active) {
-                setRouteDistances(distances);
+            try {
+                const res = await fetch('/api/executive/driving-distance', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ legs })
+                });
+                const data = await res.json();
+                if (active && data.success) {
+                    setRouteDistances(data.distances);
+                }
+            } catch (e) {
+                console.error('Failed to fetch driving distances:', e);
             }
         })();
+
         return () => { active = false; };
     }, [suggestedRoute, startStoreCoords]);
 
     const getDistance = (index: number) => {
-        return routeDistances[index] || 0;
+        return routeDistances[index] !== undefined ? routeDistances[index] : null;
     };
 
     // ─── Step 1: Start Store Picker ───────────    // ─── Render Helper ────────────────────────────────────────────────────────
@@ -525,9 +528,9 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
 
                                             {/* Meta row */}
                                             <div className="spjp-route-meta">
-                                                {getDistance(index) > 0 && (
-                                                    <span className="spjp-distance-chip">📏 {getDistance(index)} km from previous stop</span>
-                                                )}
+                                                <span className="spjp-distance-chip">
+                                                    📏 {getDistance(index) === null ? 'Calculating...' : `${getDistance(index) === 0 ? '0.1' : getDistance(index)} km`} from previous stop
+                                                </span>
                                                 <span className="spjp-last-visit-chip">🕐 {store.visited}</span>
                                                 {store.wasInLastPJP && (
                                                     <span className="spjp-was-pjp-chip">📋 Was in last PJP</span>
@@ -712,7 +715,7 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
                                         <span className="spjp-step3-store-name">{store.storeName}</span>
                                         <span className="spjp-step3-store-city">
                                             {store.city}
-                                            {getDistance(i) > 0 && ` · ${getDistance(i)} km from previous`}
+                                            {getDistance(i) !== null && ` · ${getDistance(i) === 0 ? '0.1' : getDistance(i)} km from previous`}
                                         </span>
                                     </div>
                                 </div>
