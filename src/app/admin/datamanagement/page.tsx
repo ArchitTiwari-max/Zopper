@@ -117,6 +117,56 @@ const DataManagementDashboard = () => {
             </div>
           </Link>
 
+          {/* Target Import */}
+          <Link
+            href="/admin/datamanagement/targetwise"
+            className="adm-excel-import-import-card targetwise"
+          >
+            <div className="adm-excel-import-card-header">
+              <div className="adm-excel-import-card-icon targetwise">
+                <TrendingUp className="w-8 h-8 text-rose-600" />
+              </div>
+              <div className="adm-excel-import-card-title-section">
+                <div className="flex items-center gap-2">
+                  <h2 className="adm-excel-import-card-title">Target Import</h2>
+                  <span className="bg-rose-100 text-rose-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider border border-rose-200">
+                    New
+                  </span>
+                </div>
+                <p className="adm-excel-import-card-subtitle">
+                  Store target data
+                </p>
+              </div>
+              <ArrowRight className="adm-excel-import-card-arrow" />
+            </div>
+
+            <p className="adm-excel-import-card-description">
+              Import store monthly targets for revenue and units. Manage store targets and goals efficiently.
+            </p>
+
+            <div className="adm-excel-import-feature-list">
+              <div className="adm-excel-import-feature-item">
+                <FileSpreadsheet className="adm-excel-import-feature-icon targetwise" />
+                Supports .xlsx and .xls files
+              </div>
+              <div className="adm-excel-import-feature-item">
+                <Upload className="adm-excel-import-feature-icon targetwise" />
+                Pre-populated templates
+              </div>
+            </div>
+
+            <div className="adm-excel-import-columns-section targetwise">
+              <h4 className="adm-excel-import-columns-title targetwise">
+                Expected Columns:
+              </h4>
+              <div className="adm-excel-import-columns-list targetwise">
+                <p>• Store_ID, Brand_ID</p>
+                <p>• Month, Year</p>
+                <p>• Target_Revenue, Target_Units</p>
+              </div>
+            </div>
+          </Link>
+
           {/* Store Import */}
           <Link
             href="/admin/datamanagement/storewise"
