@@ -587,3 +587,69 @@
   border-radius: 4px;
   transition: width 0.3s ease;
 }
+
+/* Customized Daily Sales Template filters block */
+.excel-dat-sale-template-section {
+  padding: 1.5rem;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.5rem;
+}
+
+.excel-dat-sale-template-header-box {
+  margin-bottom: 1rem;
+}
+
+.excel-dat-sale-template-info h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #14532d;
+  margin-bottom: 0.25rem;
+}
+
+.excel-dat-sale-template-info p {
+  font-size: 0.875rem;
+  color: #15803d;
+}
+
+.excel-dat-sale-template-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #bbf7d0;
+}
+
+.excel-dat-sale-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.excel-dat-sale-filter-group label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #14532d;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.excel-dat-sale-filter-select {
+  padding: 0.5rem 0.75rem;
+  background-color: white;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #374151;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.excel-dat-sale-filter-select:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.1);
+}

@@ -452,4 +452,48 @@
 
 .adm-excel-import-columns-list.chain {
   color: #6d28d9;
-}
+}
+
+/* Target Import Card Styles */
+.adm-excel-import-import-card.targetwise {
+  border: 1px solid #fecdd3;
+  background: linear-gradient(135deg, #ffffff 0%, #fff1f2 100%);
+}
+
+.adm-excel-import-import-card.targetwise:hover {
+  border-color: #f43f5e;
+  box-shadow: 0 20px 25px -5px rgba(244, 63, 94, 0.2), 0 10px 10px -5px rgba(244, 63, 94, 0.1);
+}
+
+.adm-excel-import-card-icon.targetwise {
+  background-color: #ffe4e6;
+  box-shadow: 0 4px 6px -1px rgba(244, 63, 94, 0.1);
+}
+
+.adm-excel-import-feature-icon.targetwise {
+  color: #e11d48;
+}
+
+.adm-excel-import-columns-section.targetwise {
+  background-color: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-top: 1rem;
+}
+
+.adm-excel-import-columns-title.targetwise {
+  color: #9f1239;
+  font-weight: 600;
+}
+
+.adm-excel-import-columns-list.targetwise {
+  color: #be123c;
+}
+
+@media (hover: hover) {
+  .adm-excel-import-import-card.targetwise:hover .adm-excel-import-card-title {
+    color: #e11d48;
+  }
+}
+

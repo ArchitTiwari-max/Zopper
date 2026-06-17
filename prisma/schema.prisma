@@ -157,6 +157,7 @@ model Category {
   id           String        @id @map("_id")
   categoryName String        @unique
   salesRecords SalesRecord[]
+  storeTargets StoreTarget[]
 }
 
 model SalesRecord {
@@ -184,17 +185,20 @@ model StoreTarget {
   id            String @id @default(auto()) @map("_id") @db.ObjectId
   storeId       String
   brandId       String
-  month         Int // Month (1-12)
-  year          Int // Year (e.g. 2026)
+  categoryId    String
+  month         Int      // Month (1-12)
+  year          Int      // Year (e.g. 2026)
   targetRevenue Float?
   targetUnits   Int?
 
-  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  store         Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  brand         Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  category      Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  @@unique([storeId, brandId, month, year])
+  @@unique([storeId, brandId, categoryId, month, year])
   @@index([storeId, year])
   @@index([brandId])
+  @@index([categoryId])
   @@map("StoreTarget")
 }
 

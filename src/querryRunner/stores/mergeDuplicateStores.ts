@@ -1,13 +1,13 @@
 import { PrismaClient } from "@prisma/client";
-import * as xlsx from "xlsx";
 import path from "path";
+import * as xlsx from "xlsx";
 
 const prisma = new PrismaClient();
 
 async function main() {
   const excelFilePath = path.join(
     process.cwd(),
-    "testing/stores-export-2026-06-15 (1).xlsx"
+    "testing/stores-export-2026-06-15 (1).xlsx",
   );
   console.log(`Loading Excel file from: ${excelFilePath}`);
 
@@ -18,11 +18,16 @@ async function main() {
 
   console.log(`Total rows in excel: ${data.length}`);
 
-  let duplicatePairs = [];
+  const duplicatePairs = [];
   for (const row of data) {
     const storeId1 = row["Store_ID"];
     const storeId2 = row["Duplicate Store ID (Lower Visits)"];
-    if (storeId1 && storeId2 && typeof storeId2 === "string" && storeId2.trim() !== "") {
+    if (
+      storeId1 &&
+      storeId2 &&
+      typeof storeId2 === "string" &&
+      storeId2.trim() !== ""
+    ) {
       duplicatePairs.push({ storeId1, storeId2 });
     }
   }
@@ -31,15 +36,17 @@ async function main() {
 
   for (const pair of duplicatePairs) {
     const { storeId1, storeId2 } = pair;
-    
+
     // Validate both stores exist
     const [store1, store2] = await Promise.all([
       prisma.store.findUnique({ where: { id: storeId1 } }),
-      prisma.store.findUnique({ where: { id: storeId2 } })
+      prisma.store.findUnique({ where: { id: storeId2 } }),
     ]);
 
     if (!store1 || !store2) {
-      console.log(`Skipping ${storeId1} and ${storeId2} as one or both do not exist in DB.`);
+      console.log(
+        `Skipping ${storeId1} and ${storeId2} as one or both do not exist in DB.`,
+      );
       continue;
     }
 
@@ -47,7 +54,7 @@ async function main() {
     const [s1Visits, s1DigVisits, s1AdminVisits] = await Promise.all([
       prisma.visit.count({ where: { storeId: storeId1 } }),
       prisma.digitalVisit.count({ where: { storeId: storeId1 } }),
-      prisma.adminVisit.count({ where: { storeId: storeId1 } })
+      prisma.adminVisit.count({ where: { storeId: storeId1 } }),
     ]);
     const s1Total = s1Visits + s1DigVisits + s1AdminVisits;
 
@@ -55,7 +62,7 @@ async function main() {
     const [s2Visits, s2DigVisits, s2AdminVisits] = await Promise.all([
       prisma.visit.count({ where: { storeId: storeId2 } }),
       prisma.digitalVisit.count({ where: { storeId: storeId2 } }),
-      prisma.adminVisit.count({ where: { storeId: storeId2 } })
+      prisma.adminVisit.count({ where: { storeId: storeId2 } }),
     ]);
     const s2Total = s2Visits + s2DigVisits + s2AdminVisits;
 
@@ -72,150 +79,168 @@ async function main() {
     console.log(`Loser: ${loserId} (${Math.min(s1Total, s2Total)} visits)`);
 
     try {
-      await prisma.$transaction(async (tx) => {
-        // 1. Visits, DigitalVisits, AdminVisits
-        await tx.visit.updateMany({
-          where: { storeId: loserId },
-          data: { storeId: winnerId }
-        });
-        await tx.digitalVisit.updateMany({
-          where: { storeId: loserId },
-          data: { storeId: winnerId }
-        });
-        await tx.adminVisit.updateMany({
-          where: { storeId: loserId },
-          data: { storeId: winnerId }
-        });
-
-        // 2. HolidayRequest
-        await tx.holidayRequest.updateMany({
-          where: { storeId: loserId },
-          data: { storeId: winnerId }
-        });
-
-        // 3. VisitPlan (PJP arrays)
-        const visitPlans = await tx.visitPlan.findMany({
-          where: { storeIds: { has: loserId } }
-        });
-        for (const plan of visitPlans) {
-          const updatedStoreIds = plan.storeIds.map((id) => id === loserId ? winnerId : id);
-          const uniqueStoreIds = Array.from(new Set(updatedStoreIds));
-          await tx.visitPlan.update({
-            where: { id: plan.id },
-            data: { storeIds: uniqueStoreIds }
+      await prisma.$transaction(
+        async (tx) => {
+          // 1. Visits, DigitalVisits, AdminVisits
+          await tx.visit.updateMany({
+            where: { storeId: loserId },
+            data: { storeId: winnerId },
           });
-        }
-
-        // 4. ExecutiveStoreAssignment
-        const loserAssignments = await tx.executiveStoreAssignment.findMany({
-          where: { storeId: loserId }
-        });
-        for (const assign of loserAssignments) {
-          const existingWinnerAssign = await tx.executiveStoreAssignment.findUnique({
-            where: { executiveId_storeId: { executiveId: assign.executiveId, storeId: winnerId } }
+          await tx.digitalVisit.updateMany({
+            where: { storeId: loserId },
+            data: { storeId: winnerId },
           });
-          if (existingWinnerAssign) {
-            await tx.executiveStoreAssignment.delete({ where: { id: assign.id } });
-          } else {
-            await tx.executiveStoreAssignment.update({
-              where: { id: assign.id },
-              data: { storeId: winnerId }
+          await tx.adminVisit.updateMany({
+            where: { storeId: loserId },
+            data: { storeId: winnerId },
+          });
+
+          // 2. HolidayRequest
+          await tx.holidayRequest.updateMany({
+            where: { storeId: loserId },
+            data: { storeId: winnerId },
+          });
+
+          // 3. VisitPlan (PJP arrays)
+          const visitPlans = await tx.visitPlan.findMany({
+            where: { storeIds: { has: loserId } },
+          });
+          for (const plan of visitPlans) {
+            const updatedStoreIds = plan.storeIds.map((id) =>
+              id === loserId ? winnerId : id,
+            );
+            const uniqueStoreIds = Array.from(new Set(updatedStoreIds));
+            await tx.visitPlan.update({
+              where: { id: plan.id },
+              data: { storeIds: uniqueStoreIds },
             });
           }
-        }
 
-        // 5. StoreBrand
-        const loserBrands = await tx.storeBrand.findMany({
-          where: { storeId: loserId }
-        });
-        for (const sb of loserBrands) {
-          const existingWinnerBrand = await tx.storeBrand.findUnique({
-            where: { storeId_brandId: { storeId: winnerId, brandId: sb.brandId } }
+          // 4. ExecutiveStoreAssignment
+          const loserAssignments = await tx.executiveStoreAssignment.findMany({
+            where: { storeId: loserId },
           });
-          if (existingWinnerBrand) {
-            await tx.storeBrand.delete({ where: { id: sb.id } });
-          } else {
-            await tx.storeBrand.update({
-              where: { id: sb.id },
-              data: { storeId: winnerId }
-            });
-          }
-        }
-
-        // 6. SalesRecord
-        const loserSales = await tx.salesRecord.findMany({
-          where: { storeId: loserId }
-        });
-        for (const sale of loserSales) {
-          const existingWinnerSale = await tx.salesRecord.findUnique({
-            where: {
-              storeId_brandId_categoryId_year: {
-                storeId: winnerId,
-                brandId: sale.brandId,
-                categoryId: sale.categoryId,
-                year: sale.year
-              }
+          for (const assign of loserAssignments) {
+            const existingWinnerAssign =
+              await tx.executiveStoreAssignment.findUnique({
+                where: {
+                  executiveId_storeId: {
+                    executiveId: assign.executiveId,
+                    storeId: winnerId,
+                  },
+                },
+              });
+            if (existingWinnerAssign) {
+              await tx.executiveStoreAssignment.delete({
+                where: { id: assign.id },
+              });
+            } else {
+              await tx.executiveStoreAssignment.update({
+                where: { id: assign.id },
+                data: { storeId: winnerId },
+              });
             }
-          });
-          if (existingWinnerSale) {
-            await tx.salesRecord.delete({ where: { id: sale.id } });
-          } else {
-            await tx.salesRecord.update({
-              where: { id: sale.id },
-              data: { storeId: winnerId }
-            });
           }
-        }
 
-        // 7. StoreTarget
-        const loserTargets = await tx.storeTarget.findMany({
-          where: { storeId: loserId }
-        });
-        for (const target of loserTargets) {
-          const existingWinnerTarget = await tx.storeTarget.findUnique({
-            where: {
-              storeId_brandId_month_year: {
-                storeId: winnerId,
-                brandId: target.brandId,
-                month: target.month,
-                year: target.year
-              }
+          // 5. StoreBrand
+          const loserBrands = await tx.storeBrand.findMany({
+            where: { storeId: loserId },
+          });
+          for (const sb of loserBrands) {
+            const existingWinnerBrand = await tx.storeBrand.findUnique({
+              where: {
+                storeId_brandId: { storeId: winnerId, brandId: sb.brandId },
+              },
+            });
+            if (existingWinnerBrand) {
+              await tx.storeBrand.delete({ where: { id: sb.id } });
+            } else {
+              await tx.storeBrand.update({
+                where: { id: sb.id },
+                data: { storeId: winnerId },
+              });
             }
-          });
-          if (existingWinnerTarget) {
-            await tx.storeTarget.delete({ where: { id: target.id } });
-          } else {
-            await tx.storeTarget.update({
-              where: { id: target.id },
-              data: { storeId: winnerId }
-            });
           }
-        }
 
-        // 8. StoreAlignment
-        const loserAlignment = await tx.storeAlignment.findUnique({
-          where: { storeId: loserId }
-        });
-        if (loserAlignment) {
-          const existingWinnerAlignment = await tx.storeAlignment.findUnique({
-            where: { storeId: winnerId }
+          // 6. SalesRecord
+          const loserSales = await tx.salesRecord.findMany({
+            where: { storeId: loserId },
           });
-          if (existingWinnerAlignment) {
-            await tx.storeAlignment.delete({ where: { id: loserAlignment.id } });
-          } else {
-            await tx.storeAlignment.update({
-              where: { id: loserAlignment.id },
-              data: { storeId: winnerId }
+          for (const sale of loserSales) {
+            const existingWinnerSale = await tx.salesRecord.findUnique({
+              where: {
+                storeId_brandId_categoryId_year: {
+                  storeId: winnerId,
+                  brandId: sale.brandId,
+                  categoryId: sale.categoryId,
+                  year: sale.year,
+                },
+              },
             });
+            if (existingWinnerSale) {
+              await tx.salesRecord.delete({ where: { id: sale.id } });
+            } else {
+              await tx.salesRecord.update({
+                where: { id: sale.id },
+                data: { storeId: winnerId },
+              });
+            }
           }
-        }
 
-        // Finally, delete the Loser store
-        await tx.store.delete({ where: { id: loserId } });
-        console.log(`Successfully merged ${loserId} into ${winnerId}`);
-      }, {
-        timeout: 20000 // Increase transaction timeout for safe execution
-      });
+          // 7. StoreTarget
+          const loserTargets = await tx.storeTarget.findMany({
+            where: { storeId: loserId },
+          });
+          for (const target of loserTargets) {
+            const existingWinnerTarget = await tx.storeTarget.findUnique({
+              where: {
+                storeId_brandId_categoryId_month_year: {
+                  storeId: winnerId,
+                  brandId: target.brandId,
+                  categoryId: target.categoryId,
+                  month: target.month,
+                  year: target.year,
+                },
+              },
+            });
+            if (existingWinnerTarget) {
+              await tx.storeTarget.delete({ where: { id: target.id } });
+            } else {
+              await tx.storeTarget.update({
+                where: { id: target.id },
+                data: { storeId: winnerId },
+              });
+            }
+          }
+
+          // 8. StoreAlignment
+          const loserAlignment = await tx.storeAlignment.findUnique({
+            where: { storeId: loserId },
+          });
+          if (loserAlignment) {
+            const existingWinnerAlignment = await tx.storeAlignment.findUnique({
+              where: { storeId: winnerId },
+            });
+            if (existingWinnerAlignment) {
+              await tx.storeAlignment.delete({
+                where: { id: loserAlignment.id },
+              });
+            } else {
+              await tx.storeAlignment.update({
+                where: { id: loserAlignment.id },
+                data: { storeId: winnerId },
+              });
+            }
+          }
+
+          // Finally, delete the Loser store
+          await tx.store.delete({ where: { id: loserId } });
+          console.log(`Successfully merged ${loserId} into ${winnerId}`);
+        },
+        {
+          timeout: 20000, // Increase transaction timeout for safe execution
+        },
+      );
     } catch (error) {
       console.error(`Failed to process pair ${storeId1} - ${storeId2}`, error);
     }

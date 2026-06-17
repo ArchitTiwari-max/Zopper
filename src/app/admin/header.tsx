@@ -183,6 +183,11 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
           title: 'Daily Sales Import',
           subtitle: 'Import daily sales data with count of sales and revenue by specific dates'
         };
+      case '/admin/datamanagement/targetwise':
+        return {
+          title: 'Store Target Import',
+          subtitle: 'Import store-wise monthly targets for revenue and units'
+        };
       case '/admin/datamanagement/storewise':
         return {
           title: 'Store & Executive Import',
