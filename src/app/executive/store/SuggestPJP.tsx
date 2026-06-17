@@ -44,6 +44,9 @@ interface StoreOption {
     lastVisitDate: string | null;
     wasInLastPJP?: boolean;
     lastPJPDate?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    fullAddress?: string | null;
 }
 
 interface SuggestPJPProps {
@@ -85,13 +88,14 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
 
     const [coordModalStore, setCoordModalStore] = useState<{ id: string; storeName: string; city: string; lat?: number | null; lng?: number | null; index: number | 'start' } | null>(null);
 
-    const handleCoordsSuccess = (storeId: string, lat: number, lng: number, index: number | 'start') => {
+    const handleCoordsSuccess = (storeId: string, lat: number, lng: number, index: number | 'start', fullAddress?: string) => {
         if (index === 'start') {
             setStartStoreCoords({ lat, lng });
+            setStartStore(prev => prev ? { ...prev, latitude: lat, longitude: lng, ...(fullAddress ? { fullAddress } : {}) } : null);
         } else {
             setSuggestedRoute(prev => {
                 const arr = [...prev];
-                arr[index] = { ...arr[index], latitude: lat, longitude: lng };
+                arr[index] = { ...arr[index], latitude: lat, longitude: lng, ...(fullAddress ? { fullAddress } : {}) };
                 return arr;
             });
         }
@@ -194,8 +198,8 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
             storeName: store.storeName,
             city: store.city,
             fullAddress: null,
-            latitude: 0,
-            longitude: 0,
+            latitude: store.latitude ?? 0,
+            longitude: store.longitude ?? 0,
             partnerBrands: [],
             partnerBrandTypes: [],
             distanceFromStart: 0,
@@ -446,8 +450,8 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
                                                     id: startStore!.id,
                                                     storeName: startStore!.storeName,
                                                     city: startStore!.city,
-                                                    lat: startStoreCoords.lat,
-                                                    lng: startStoreCoords.lng,
+                                                    lat: startStoreCoords?.lat ?? null,
+                                                    lng: startStoreCoords?.lng ?? null,
                                                     index: 'start'
                                                 });
                                             }}
@@ -792,7 +796,7 @@ const SuggestPJP: React.FC<SuggestPJPProps> = ({ allStores, onClose, onSubmit, s
                     currentLat={coordModalStore.lat ?? undefined}
                     currentLng={coordModalStore.lng ?? undefined}
                     onClose={() => setCoordModalStore(null)}
-                    onSuccess={(storeId, lat, lng) => handleCoordsSuccess(storeId, lat, lng, coordModalStore.index)}
+                    onSuccess={(storeId, lat, lng, fullAddress) => handleCoordsSuccess(storeId, lat, lng, coordModalStore.index, fullAddress)}
                 />
             )}
         </>

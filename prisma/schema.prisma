@@ -41,7 +41,6 @@ enum AssignedStatus {
   Completed
 }
 
-
 model User {
   id              String           @id @map("_id")
   email           String           @unique
@@ -89,29 +88,33 @@ model Executive {
   executiveStores ExecutiveStoreAssignment[]
   // Dost chat back-relation
   dostChats       DostChat[]
+
+  // Senior-Junior hierarchy
+  managerId    String?     @map("manager_id")
+  manager      Executive?  @relation("ExecutiveHierarchy", fields: [managerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subordinates Executive[] @relation("ExecutiveHierarchy")
 }
 
-
 model Store {
-  id                String                     @id @map("_id")
-  storeName         String
-  city              String?
-  fullAddress       String?
-  latitude          Float? // Geocoded latitude (Google Places API)
-  longitude         Float? // Geocoded longitude (Google Places API)
-  visits            Visit[]
-  digitalVisits     DigitalVisit[]
-  executiveStores   ExecutiveStoreAssignment[]
-  salesRecords      SalesRecord[]
-  adminVisits       AdminVisit[]
-  alignment         StoreAlignment?
-  storeCategory     String?
-  storeChannel      String?
-  cityTier          String?
-  state             String?
-  priority          Priority?
-  targets           StoreTarget[]
-  storeBrands       StoreBrand[]
+  id              String                     @id @map("_id")
+  storeName       String
+  city            String?
+  fullAddress     String?
+  latitude        Float? // Geocoded latitude (Google Places API)
+  longitude       Float? // Geocoded longitude (Google Places API)
+  visits          Visit[]
+  digitalVisits   DigitalVisit[]
+  executiveStores ExecutiveStoreAssignment[]
+  salesRecords    SalesRecord[]
+  adminVisits     AdminVisit[]
+  alignment       StoreAlignment?
+  storeCategory   String?
+  storeChannel    String?
+  cityTier        String?
+  state           String?
+  priority        Priority?
+  targets         StoreTarget[]
+  storeBrands     StoreBrand[]
 }
 
 model ExecutiveStoreAssignment {
@@ -128,8 +131,8 @@ model ExecutiveStoreAssignment {
 }
 
 model Brand {
-  id           String          @id @map("_id")
-  brandName    String          @unique
+  id           String        @id @map("_id")
+  brandName    String        @unique
   salesRecords SalesRecord[]
   storeBrands  StoreBrand[]
   targets      StoreTarget[]
@@ -150,8 +153,8 @@ model StoreBrand {
 }
 
 model Category {
-  id           String          @id @map("_id")
-  categoryName String          @unique
+  id           String        @id @map("_id")
+  categoryName String        @unique
   salesRecords SalesRecord[]
   storeTargets StoreTarget[]
 }
@@ -164,7 +167,7 @@ model SalesRecord {
   year       Int
 
   monthlySales Json //Store summary of all 12 months Each month contains deviceSales, planSales, attachPct, revenue etc. EX. [{ month: 1, deviceSales: X, planSales: Y, attachPct: Z, revenue: R }, ..., { month: 12, ... }]
-  dailySales Json // Stores daily sales data grouped by month (e.g., { "1": [{ date: "01-01-2025", planSales: 1, revenue: 1200 }], "2": [{ date: "01-02-2025", planSales: 1, revenue: 900 }] }), tracking only planSales and revenue for each day.
+  dailySales   Json // Stores daily sales data grouped by month (e.g., { "1": [{ date: "01-01-2025", planSales: 1, revenue: 1200 }], "2": [{ date: "01-02-2025", planSales: 1, revenue: 900 }] }), tracking only planSales and revenue for each day.
 
   store    Store    @relation(fields: [storeId], references: [id])
   brand    Brand    @relation(fields: [brandId], references: [id])
@@ -178,7 +181,7 @@ model SalesRecord {
 }
 
 model StoreTarget {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  id            String @id @default(auto()) @map("_id") @db.ObjectId
   storeId       String
   brandId       String
   categoryId    String
@@ -197,10 +200,10 @@ model StoreTarget {
   @@index([categoryId])
   @@map("StoreTarget")
 }
+
 //
 // Visit & Issue
 //
-
 
 model Visit {
   id                String     @id @default(auto()) @map("_id") @db.ObjectId
@@ -221,15 +224,16 @@ model Visit {
   executiveId       String
   executive         Executive  @relation(fields: [executiveId], references: [id])
 
-  storeId  String
-  store    Store    @relation(fields: [storeId], references: [id])
-  brandIds String[]
+  storeId           String
+  store             Store    @relation(fields: [storeId], references: [id])
+  brandIds          String[]
   brandVisitDetails Json? // [{ brandId, brandName, POSMchecked, remarks, imageUrls, issues }]
 
   issues        Issue[] // One Visit can have multiple Issues or none
   notifications Notification[] // Notifications related to this visit
 
   // Critical performance indexes based on actual queries
+  @@index([executiveId, visitDate])
   @@index([executiveId, createdAt])
   @@index([storeId])
 }
@@ -283,7 +287,6 @@ model Issue {
   @@index([visitId])
   @@index([digitalVisitId])
 }
-
 
 model Assigned {
   id           String         @id @default(auto()) @map("_id") @db.ObjectId
@@ -343,12 +346,13 @@ model DigitalVisit {
   storeId String
   store   Store  @relation(fields: [storeId], references: [id])
 
-  issues  Issue[]
+  issues            Issue[]
   brandVisitDetails Json? // [{ brandId, brandName, remarks, issues }]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([executiveId])
   @@index([executiveId, connectDate])
   @@index([storeId])
 }
@@ -665,4 +669,3 @@ model DistanceCache {
   @@unique([origin, destination])
   @@map("DistanceCache")
 }
-

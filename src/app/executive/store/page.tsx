@@ -832,6 +832,8 @@ const Store: React.FC = () => {
             city: s.city,
             visited: s.visited,
             lastVisitDate: s.lastVisitDate ? s.lastVisitDate.toString() : null,
+            latitude: s.latitude,
+            longitude: s.longitude,
           }))}
           onClose={() => setIsSuggestMode(false)}
           onSubmit={submitVisitPlan}
@@ -1134,9 +1136,9 @@ const Store: React.FC = () => {
           currentLat={coordinateStore.latitude}
           currentLng={coordinateStore.longitude}
           onClose={() => setCoordinateStore(null)}
-          onSuccess={(storeId, latitude, longitude) => {
+          onSuccess={(storeId, latitude, longitude, fullAddress) => {
             setStoreData(prev =>
-              prev.map(s => s.id === storeId ? { ...s, latitude, longitude } : s)
+              prev.map(s => s.id === storeId ? { ...s, latitude, longitude, ...(fullAddress ? { fullAddress } : {}) } : s)
             );
           }}
         />

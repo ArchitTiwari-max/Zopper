@@ -28,7 +28,7 @@ import { IndiaMap } from "./IndiaMap";
 const getStateColor = (score: number | undefined, solid: boolean = false) => {
     const alpha = solid ? "1" : "0.85";
     if (score === undefined)
-        return `rgba(255, 255, 255, ${solid ? "0.2" : "0.05"})`;
+        return `rgba(255, 255, 255, 1)`;
     if (score >= 80) return `rgba(34, 197, 94, ${alpha})`;
     if (score >= 50) return `rgba(234, 179, 8, ${alpha})`;
     return `rgba(239, 68, 68, ${alpha})`;
@@ -262,6 +262,7 @@ const AlignmentIndexPage = () => {
     const [drilldownState, setDrilldownState] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<"map" | "all">("all");
     const [searchQuery, setSearchQuery] = useState("");
+    const [chainFilter, setChainFilter] = useState<"all" | "Vijay Sales" | "Croma" | "Reliance">("all");
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [detailStore, setDetailStore] = useState<any | null>(null);
@@ -303,16 +304,34 @@ const AlignmentIndexPage = () => {
         fetchFull();
     }, []);
 
+    // ── Chain-filtered view of all stores ───────────────────────────────────
+    const filteredStores = React.useMemo(
+        () =>
+            chainFilter === "all"
+                ? stores
+                : stores.filter((s) => s.storeType === chainFilter),
+        [stores, chainFilter],
+    );
+
+    // ── Chain-filtered drilldown stores (for the state panel) ────────────────
+    const filteredDrilldownStores = React.useMemo(
+        () =>
+            chainFilter === "all"
+                ? drilldownStores
+                : drilldownStores.filter((s) => s.storeType === chainFilter),
+        [drilldownStores, chainFilter],
+    );
+
     // Derived Metrics from Live Data
     const topMetrics = {
         coverage:
-            stores.length > 0
+            filteredStores.length > 0
                 ? Math.round(
-                    stores.reduce((acc, s) => acc + s.score, 0) / stores.length,
+                    filteredStores.reduce((acc, s) => acc + s.score, 0) / filteredStores.length,
                 )
                 : 0,
-        critical: stores.filter((s) => s.score < 50).length,
-        optimal: stores.filter((s) => s.score >= 80).length,
+        critical: filteredStores.filter((s) => s.score < 50).length,
+        optimal: filteredStores.filter((s) => s.score >= 80).length,
     };
 
     // Real state-level aggregation based on fetched DB store data
@@ -388,7 +407,7 @@ const AlignmentIndexPage = () => {
             };
         });
 
-        stores.forEach((store) => {
+        filteredStores.forEach((store) => {
             const stateKey = store.state
                 ?.toLowerCase()
                 ?.replace("&", "and")
@@ -413,7 +432,7 @@ const AlignmentIndexPage = () => {
         });
 
         return aggregated;
-    }, [stores]);
+    }, [filteredStores]);
 
     const stateColorMap = React.useMemo(() => {
         const map: Record<string, string> = {};
@@ -590,6 +609,27 @@ const AlignmentIndexPage = () => {
                             ALL VIEW
                         </button>
                     </div>
+
+                    {/* ── Store Chain Filter ── */}
+                    <div className="chain-filter-bar">
+                        {([
+                            { key: "all", label: "ALL CHAINS" },
+                            { key: "Vijay Sales", label: "VIJAY SALES" },
+                            { key: "Croma", label: "CROMA" },
+                            { key: "Reliance", label: "RELIANCE DIGITAL" },
+                        ] as const).map(({ key, label }) => (
+                            <button
+                                key={key}
+                                className={`chain-filter-btn chain-${key === "all" ? "all" : key === "Vijay Sales" ? "vs" : key === "Croma" ? "croma" : "reliance"} ${
+                                    chainFilter === key ? "active" : ""
+                                }`}
+                                onClick={() => setChainFilter(key)}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+
                     <div className="hud-legend">
                         <div className="legend-entry">
                             <span className="marker-preview high"></span>
@@ -690,7 +730,7 @@ const AlignmentIndexPage = () => {
                                     pointerEvents="none"
                                 />
 
-                                {stores.map((store) => (
+                                {filteredStores.map((store) => (
                                     <g
                                         key={store.id}
                                         className={`map-marker-group ${selectedStore?.id === store.id ? "active" : ""}`}
@@ -946,14 +986,14 @@ const AlignmentIndexPage = () => {
 
                             // If actively searching, show store cards
                             if (searchQuery) {
-                                const filteredStores = stores.filter(
+                                const searchResults = filteredStores.filter(
                                     (s) =>
                                         s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                                         s.code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                                         s.city?.toLowerCase().includes(searchQuery.toLowerCase()),
                                 );
 
-                                if (filteredStores.length === 0) {
+                                if (searchResults.length === 0) {
                                     return (
                                         <div
                                             style={{
@@ -977,7 +1017,7 @@ const AlignmentIndexPage = () => {
                                             gap: "1rem",
                                         }}
                                     >
-                                        {filteredStores.map((store) => (
+                                        {searchResults.map((store) => (
                                             <div
                                                 key={store.id}
                                                 className="store-list-item"
@@ -1239,13 +1279,13 @@ const AlignmentIndexPage = () => {
                                                             <div className="q-stat">
                                                                 <span className="q-lbl">TOTAL STORES</span>
                                                                 <span className="q-val">
-                                                                    {stateData[drilldownState]?.stores}
+                                                                    {filteredDrilldownStores.length || stateData[drilldownState]?.stores}
                                                                 </span>
                                                             </div>
                                                             <div className="q-stat">
                                                                 <span className="q-lbl">CRITICAL</span>
                                                                 <span className="q-val text-alert">
-                                                                    {stateData[drilldownState]?.critical}
+                                                                    {filteredDrilldownStores.filter((s) => s.score < 50).length}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -1254,7 +1294,7 @@ const AlignmentIndexPage = () => {
                                                         <div className="missing-roles-box">
                                                             <AlertCircle size={14} className="text-warning" />
                                                             <span>
-                                                                {stateData[drilldownState]?.missingRoles} Gap
+                                                                {filteredDrilldownStores.filter((s) => s.score < 100).length} Gap
                                                                 stores in region
                                                             </span>
                                                         </div>
@@ -1265,7 +1305,7 @@ const AlignmentIndexPage = () => {
                                             <div className="drilldown-data">
                                                 <h3 className="section-heading">City-wise Breakdown</h3>
                                                 {Array.from(
-                                                    new Set(drilldownStores.map((s) => s.city)),
+                                                    new Set(filteredDrilldownStores.map((s) => s.city)),
                                                 ).map((city) => (
                                                     <div key={city} className="city-accordion open">
                                                         <div className="accordion-trigger">
@@ -1276,7 +1316,7 @@ const AlignmentIndexPage = () => {
                                                             <ChevronRight size={16} className="chevron" />
                                                         </div>
                                                         <div className="accordion-content">
-                                                            {drilldownStores
+                                                            {filteredDrilldownStores
                                                                 .filter((s) => s.city === city)
                                                                 .map((store) => (
                                                                     <div

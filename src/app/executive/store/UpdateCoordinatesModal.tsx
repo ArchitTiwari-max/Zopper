@@ -10,7 +10,7 @@ interface UpdateCoordinatesModalProps {
   currentLat?: number | null;
   currentLng?: number | null;
   onClose: () => void;
-  onSuccess: (storeId: string, latitude: number, longitude: number) => void;
+  onSuccess: (storeId: string, latitude: number, longitude: number, fullAddress?: string) => void;
 }
 
 declare global {
@@ -193,6 +193,14 @@ const UpdateCoordinatesModal: React.FC<UpdateCoordinatesModalProps> = ({
   const handleSave = async () => {
     if (!selectedCoords) return;
 
+    const isValidAddress = selectedAddress && 
+      selectedAddress !== 'Fetching location...' && 
+      selectedAddress !== 'Loading address details...' && 
+      selectedAddress !== 'Address not found' && 
+      selectedAddress !== 'Unable to fetch address';
+
+    const addressToSave = isValidAddress ? selectedAddress : undefined;
+
     setSaving(true);
     try {
       const response = await fetch('/api/executive/store/coordinates', {
@@ -203,6 +211,7 @@ const UpdateCoordinatesModal: React.FC<UpdateCoordinatesModalProps> = ({
           storeId,
           latitude: selectedCoords.lat,
           longitude: selectedCoords.lng,
+          fullAddress: addressToSave,
         }),
       });
 
@@ -210,7 +219,7 @@ const UpdateCoordinatesModal: React.FC<UpdateCoordinatesModalProps> = ({
 
       if (response.ok && result.success) {
         showToast('success', '✅ Coordinates updated successfully!');
-        onSuccess(storeId, selectedCoords.lat, selectedCoords.lng);
+        onSuccess(storeId, selectedCoords.lat, selectedCoords.lng, addressToSave);
         setTimeout(() => onClose(), 1500);
       } else {
         showToast('error', `❌ ${result.error || 'Failed to update coordinates'}`);
