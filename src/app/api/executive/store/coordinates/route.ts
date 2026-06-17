@@ -22,11 +22,18 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { storeId, latitude, longitude } = body;
+    const { storeId, latitude, longitude, fullAddress } = body;
 
     if (!storeId || latitude === undefined || longitude === undefined) {
       return NextResponse.json(
         { error: 'storeId, latitude, and longitude are required' },
+        { status: 400 }
+      );
+    }
+
+    if (fullAddress !== undefined && typeof fullAddress !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid fullAddress. It must be a string.' },
         { status: 400 }
       );
     }
@@ -66,11 +73,16 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Update coordinates
+    // Update coordinates and optionally address
+    const updateData: any = { latitude, longitude };
+    if (fullAddress !== undefined) {
+      updateData.fullAddress = fullAddress;
+    }
+
     const updatedStore = await prisma.store.update({
       where: { id: storeId },
-      data: { latitude, longitude },
-      select: { id: true, storeName: true, latitude: true, longitude: true },
+      data: updateData,
+      select: { id: true, storeName: true, latitude: true, longitude: true, fullAddress: true },
     });
 
     return NextResponse.json({
@@ -80,6 +92,7 @@ export async function PATCH(request: NextRequest) {
         storeName: updatedStore.storeName,
         latitude: updatedStore.latitude,
         longitude: updatedStore.longitude,
+        fullAddress: updatedStore.fullAddress,
       },
     });
   } catch (error) {
