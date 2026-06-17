@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, User, MapPin, Monitor, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { ArrowLeft, Loader2, User, MapPin, Monitor, ChevronLeft, ChevronRight, Download, Search } from 'lucide-react';
 import VisitDetailsModal from '../../admin/components/VisitDetailsModal';
 import './subordinate-visits.css';
 import '../../admin/visit-report/visit-report.css';
@@ -65,6 +65,7 @@ export default function SubordinateVisitsPage() {
   const [selectedExecutive, setSelectedExecutive] = useState<string>('All');
   const [visitType, setVisitType] = useState<'Physical' | 'Digital'>('Physical');
   const [dateRange, setDateRange] = useState<DateRange>('last_30');
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
 
@@ -151,14 +152,18 @@ export default function SubordinateVisitsPage() {
     return ['All', ...names.sort()];
   }, [visits]);
 
-  // Client-side filter by executive + type on current page data
+  // Client-side filter by executive + type + search on current page data
   const filteredVisits = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
     return visits.filter(visit => {
       const matchExecutive = selectedExecutive === 'All' || visit.representative === selectedExecutive;
       const matchType = visit.type === visitType;
-      return matchExecutive && matchType;
+      const matchSearch = !q ||
+        visit.storeName.toLowerCase().includes(q) ||
+        visit.partnerBrand.toLowerCase().includes(q);
+      return matchExecutive && matchType && matchSearch;
     });
-  }, [visits, selectedExecutive, visitType]);
+  }, [visits, selectedExecutive, visitType, searchQuery]);
 
   const getBrandColor = (brand: string): string => {
     const brandColors: Record<string, string> = {
@@ -270,6 +275,30 @@ export default function SubordinateVisitsPage() {
                     <Monitor className="w-4 h-4 mr-2" />
                     Digital Visits
                   </button>
+                </div>
+              </div>
+
+              {/* Search Filter */}
+              <div className="filter-group">
+                <span className="filter-label">Search Store / Brand</span>
+                <div className="sub-visits-search-wrapper">
+                  <Search className="sub-visits-search-icon" />
+                  <input
+                    type="text"
+                    className="sub-visits-search-input"
+                    placeholder="Type store name or brand..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                  />
+                  {searchQuery && (
+                    <button
+                      className="sub-visits-search-clear"
+                      onClick={() => setSearchQuery('')}
+                      aria-label="Clear search"
+                    >
+                      ×
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
