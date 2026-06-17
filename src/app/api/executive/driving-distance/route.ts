@@ -27,30 +27,27 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Google Maps API key not configured' }, { status: 500 });
         }
 
-        // Build origins and destinations — one per leg
-        // Distance Matrix returns a matrix; we take element[i][i] (diagonal) for each leg pair
-        const originsStr = legs.map(l => `${l.originLat},${l.originLng}`).join('|');
-        const destsStr = legs.map(l => `${l.destLat},${l.destLng}`).join('|');
+        // Fetch distance for each leg in parallel to avoid N x N matrix size scaling issues and 100-element Google API limits
+        const distances = await Promise.all(
+            legs.map(async (leg) => {
+                try {
+                    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${leg.originLat},${leg.originLng}&destinations=${leg.destLat},${leg.destLng}&key=${apiKey}`;
+                    const res = await fetch(url);
+                    const data = await res.json();
 
-        const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${originsStr}&destinations=${destsStr}&key=${apiKey}`;
-        const res = await fetch(url);
-        const data = await res.json();
-
-        if (data.status !== 'OK' || !data.rows) {
-            return NextResponse.json(
-                { error: `Google Maps API error: ${data.status}` },
-                { status: 502 }
-            );
-        }
-
-        // Extract diagonal: row[i] → element[i] is origin[i] → destination[i]
-        const distances: (number | null)[] = legs.map((_, i) => {
-            const element = data.rows[i]?.elements[i];
-            if (element?.status === 'OK' && element.distance) {
-                return Math.round((element.distance.value / 1000) * 10) / 10;
-            }
-            return null;
-        });
+                    if (data.status === 'OK' && data.rows?.[0]?.elements?.[0]) {
+                        const element = data.rows[0].elements[0];
+                        if (element.status === 'OK' && element.distance) {
+                            return Math.round((element.distance.value / 1000) * 10) / 10;
+                        }
+                    }
+                    return null;
+                } catch (e) {
+                    console.error('Error fetching driving distance for leg:', leg, e);
+                    return null;
+                }
+            })
+        );
 
         return NextResponse.json({ success: true, distances });
     } catch (error) {
