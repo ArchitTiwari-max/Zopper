@@ -29,6 +29,8 @@ export async function GET(request: Request) {
 
     let storeBrands: {
       storeBrandId: string | null;
+      storeId: string;
+      brandId: string;
       store: { storeName: string };
     }[] = [];
     let categories: { id: string; categoryName: string }[] = [];
@@ -39,8 +41,20 @@ export async function GET(request: Request) {
       orderBy: { categoryName: "asc" },
     });
 
+    // Determine target month and year
+    let year: number;
+    let month: number;
+    if (monthParam && /^\d{2}-\d{4}$/.test(monthParam)) {
+      [month, year] = monthParam.split("-").map(Number);
+    } else {
+      const now = new Date();
+      year = now.getFullYear();
+      month = now.getMonth() + 1;
+    }
+
+    let brand: any = null;
     if (brandParam && brandParam !== "ALL") {
-      const brand = await prisma.brand.findFirst({
+      brand = await prisma.brand.findFirst({
         where: {
           OR: [
             { id: { equals: brandParam, mode: "insensitive" } },
@@ -54,6 +68,8 @@ export async function GET(request: Request) {
           where: { brandId: brand.id, storeBrandId: { not: null } },
           select: {
             storeBrandId: true,
+            storeId: true,
+            brandId: true,
             store: { select: { storeName: true } },
           },
           orderBy: { storeBrandId: "asc" },
@@ -62,23 +78,44 @@ export async function GET(request: Request) {
     } else {
       storeBrands = await prisma.storeBrand.findMany({
         where: { storeBrandId: { not: null } },
-        select: { storeBrandId: true, store: { select: { storeName: true } } },
+        select: {
+          storeBrandId: true,
+          storeId: true,
+          brandId: true,
+          store: { select: { storeName: true } },
+        },
         orderBy: { storeBrandId: "asc" },
       });
     }
 
+    // Query existing sales records for this year to pre-fill
+    const salesRecords = await prisma.salesRecord.findMany({
+      where: {
+        year,
+        ...(brandParam && brandParam !== "ALL" && brand ? { brandId: brand.id } : {}),
+      },
+      select: {
+        storeId: true,
+        brandId: true,
+        categoryId: true,
+        dailySales: true,
+      },
+    });
+
     await prisma.$disconnect();
 
-    // Determine target month
-    let year: number;
-    let month: number;
-    if (monthParam && /^\d{2}-\d{4}$/.test(monthParam)) {
-      [month, year] = monthParam.split("-").map(Number);
-    } else {
-      const now = new Date();
-      year = now.getFullYear();
-      month = now.getMonth() + 1;
-    }
+    // Key: storeId_brandId_categoryId
+    const salesMap = new Map<string, any[]>();
+    salesRecords.forEach((record) => {
+      const key = `${record.storeId.toUpperCase()}_${record.brandId.toUpperCase()}_${record.categoryId.toUpperCase()}`;
+      if (record.dailySales && typeof record.dailySales === "object" && !Array.isArray(record.dailySales)) {
+        const monthKey = String(month);
+        const monthlyData = (record.dailySales as Record<string, any[]>)[monthKey];
+        if (Array.isArray(monthlyData)) {
+          salesMap.set(key, monthlyData);
+        }
+      }
+    });
 
     const daysInMonth = new Date(year, month, 0).getDate();
     const dates: string[] = [];
@@ -142,16 +179,29 @@ export async function GET(request: Request) {
     // Freeze first 2 rows and first 2 columns
     ws.views = [{ state: "frozen", xSplit: 2, ySplit: 2, activeCell: "C3" }];
 
-    // ---- Data rows: one per storeBrandId ----
-    if (storeBrands.length > 0) {
+    // ---- Data rows: one per storeBrandId and Category combination ----
+    if (storeBrands.length > 0 && categories.length > 0) {
       for (const sb of storeBrands) {
-        if (sb.storeBrandId) {
-          ws.addRow([sb.storeBrandId, "", ...Array(dates.length * 2).fill("")]);
+        if (!sb.storeBrandId) continue;
+        for (const cat of categories) {
+          const key = `${sb.storeId.toUpperCase()}_${sb.brandId.toUpperCase()}_${cat.id.toUpperCase()}`;
+          const monthlyData = salesMap.get(key);
+          const rowData: any[] = [sb.storeBrandId, cat.categoryName];
+          for (const date of dates) {
+            const entry = monthlyData?.find((e: any) => e.date === date);
+            rowData.push(entry?.countOfSales ?? "");
+            rowData.push(entry?.revenue ?? "");
+          }
+          ws.addRow(rowData);
         }
       }
     } else {
-      // Fallback sample row if brand not found
-      ws.addRow(["SB-EXAMPLE-001", "", ...Array(dates.length * 2).fill("")]);
+      // Fallback sample row if brand not found or categories empty
+      const fallbackRow: any[] = ["SB-EXAMPLE-001", "Smartphone"];
+      for (let i = 0; i < dates.length; i++) {
+        fallbackRow.push("", "");
+      }
+      ws.addRow(fallbackRow);
     }
 
     // ---- Category Reference sheet ----
