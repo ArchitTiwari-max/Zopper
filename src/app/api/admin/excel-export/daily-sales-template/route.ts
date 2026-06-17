@@ -19,27 +19,42 @@ function styleHeaderCell(cell: ExcelJS.Cell, bgColor: string, fontColor = 'FFFFF
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const brandName = searchParams.get('brand') || 'DSDSG';
+    const brandParam = searchParams.get('brand');
     const monthParam = searchParams.get('month'); // optional: "06-2026"
     const prisma = new PrismaClient();
-
-    // Fetch brand and its StoreBrand records with non-null storeBrandId
-    const brand = await prisma.brand.findFirst({
-      where: { brandName: { contains: brandName, mode: 'insensitive' } }
-    });
 
     let storeBrands: { storeBrandId: string | null; store: { storeName: string } }[] = [];
     let categories: { id: string; categoryName: string }[] = [];
 
-    if (brand) {
-      [storeBrands, categories] = await Promise.all([
-        prisma.storeBrand.findMany({
+    // Always fetch categories
+    categories = await prisma.category.findMany({
+      select: { id: true, categoryName: true },
+      orderBy: { categoryName: 'asc' }
+    });
+
+    if (brandParam && brandParam !== 'ALL') {
+      const brand = await prisma.brand.findFirst({
+        where: {
+          OR: [
+            { id: { equals: brandParam, mode: 'insensitive' } },
+            { brandName: { contains: brandParam, mode: 'insensitive' } }
+          ]
+        }
+      });
+
+      if (brand) {
+        storeBrands = await prisma.storeBrand.findMany({
           where: { brandId: brand.id, storeBrandId: { not: null } },
           select: { storeBrandId: true, store: { select: { storeName: true } } },
           orderBy: { storeBrandId: 'asc' }
-        }),
-        prisma.category.findMany({ select: { id: true, categoryName: true }, orderBy: { categoryName: 'asc' } })
-      ]);
+        });
+      }
+    } else {
+      storeBrands = await prisma.storeBrand.findMany({
+        where: { storeBrandId: { not: null } },
+        select: { storeBrandId: true, store: { select: { storeName: true } } },
+        orderBy: { storeBrandId: 'asc' }
+      });
     }
 
     await prisma.$disconnect();
