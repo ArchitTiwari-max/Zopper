@@ -22,6 +22,12 @@ function getDateRange(range: string): { from: Date; to: Date } {
       from.setHours(0, 0, 0, 0);
       return { from, to };
     }
+    case 'last_90': {
+      const from = new Date(now);
+      from.setDate(now.getDate() - 90);
+      from.setHours(0, 0, 0, 0);
+      return { from, to };
+    }
     case 'last_30':
     default: {
       const from = new Date(now);

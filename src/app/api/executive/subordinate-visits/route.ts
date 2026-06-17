@@ -23,6 +23,12 @@ function getDateRange(range: string): { from: Date; to: Date } {
       from.setHours(0, 0, 0, 0);
       return { from, to };
     }
+    case 'last_90': {
+      const from = new Date(now);
+      from.setDate(now.getDate() - 90);
+      from.setHours(0, 0, 0, 0);
+      return { from, to };
+    }
     case 'last_30':
     default: {
       const from = new Date(now);
@@ -112,6 +118,7 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               storeName: true,
+              city: true,
               storeBrands: { select: { brandId: true } }
             }
           },
@@ -210,6 +217,7 @@ export async function GET(request: NextRequest) {
       type: 'Physical' as const,
       storeId: visit.store?.id || '',
       storeName: visit.store?.storeName || 'Unknown Store',
+      city: visit.store?.city || '',
       partnerBrand: getBrandString(visit.store?.storeBrands || []),
       status: visit.status,
       reviewerName: visit.reviewedByAdmin?.name,
@@ -232,6 +240,7 @@ export async function GET(request: NextRequest) {
       type: 'Digital' as const,
       storeId: visit.store?.id || '',
       storeName: visit.store?.storeName || 'Unknown Store',
+      city: visit.store?.city || '',
       partnerBrand: getBrandString(visit.store?.storeBrands || []),
       status: visit.status,
       reviewerName: visit.reviewedByAdmin?.name,

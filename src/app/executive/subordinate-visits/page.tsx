@@ -28,6 +28,7 @@ interface SubordinateVisit {
   type: 'Physical' | 'Digital';
   storeId: string;
   storeName: string;
+  city: string;
   partnerBrand: string;
   status: string;
   reviewerName?: string;
@@ -45,11 +46,12 @@ interface SubordinateVisit {
   issues?: Issue[];
 }
 
-type DateRange = 'today' | 'last_30' | 'last_year';
+type DateRange = 'today' | 'last_30' | 'last_90' | 'last_year';
 
 const DATE_RANGE_LABELS: Record<DateRange, string> = {
   today: 'Today',
   last_30: 'Last 30 Days',
+  last_90: 'Last 90 Days',
   last_year: 'Last Year',
 };
 
@@ -63,6 +65,7 @@ export default function SubordinateVisitsPage() {
 
   // Filter & Pagination states
   const [selectedExecutive, setSelectedExecutive] = useState<string>('All');
+  const [selectedCity, setSelectedCity] = useState<string>('All');
   const [visitType, setVisitType] = useState<'Physical' | 'Digital'>('Physical');
   const [dateRange, setDateRange] = useState<DateRange>('last_30');
   const [searchQuery, setSearchQuery] = useState('');
@@ -152,18 +155,25 @@ export default function SubordinateVisitsPage() {
     return ['All', ...names.sort()];
   }, [visits]);
 
-  // Client-side filter by executive + type + search on current page data
+  // Derive unique cities from loaded data
+  const cities = useMemo(() => {
+    const citySet = Array.from(new Set(visits.map(v => v.city).filter(Boolean)));
+    return ['All', ...citySet.sort()];
+  }, [visits]);
+
+  // Client-side filter by executive + city + type + search
   const filteredVisits = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return visits.filter(visit => {
       const matchExecutive = selectedExecutive === 'All' || visit.representative === selectedExecutive;
+      const matchCity = selectedCity === 'All' || visit.city === selectedCity;
       const matchType = visit.type === visitType;
       const matchSearch = !q ||
         visit.storeName.toLowerCase().includes(q) ||
         visit.partnerBrand.toLowerCase().includes(q);
-      return matchExecutive && matchType && matchSearch;
+      return matchExecutive && matchCity && matchType && matchSearch;
     });
-  }, [visits, selectedExecutive, visitType, searchQuery]);
+  }, [visits, selectedExecutive, selectedCity, visitType, searchQuery]);
 
   const getBrandColor = (brand: string): string => {
     const brandColors: Record<string, string> = {
@@ -203,18 +213,7 @@ export default function SubordinateVisitsPage() {
       </div>
 
       <div className="sub-visits-content">
-        {/* Date Range Filter — always visible */}
-        <div className="sub-visits-date-range-bar">
-          {(Object.keys(DATE_RANGE_LABELS) as DateRange[]).map(range => (
-            <button
-              key={range}
-              className={`date-range-btn ${dateRange === range ? 'active' : ''}`}
-              onClick={() => handleDateRangeChange(range)}
-            >
-              {DATE_RANGE_LABELS[range]}
-            </button>
-          ))}
-        </div>
+        {/* Removed date range bar as it's now in filters */}
 
         {isLoading ? (
           <div className="sub-visits-loading">
@@ -240,47 +239,11 @@ export default function SubordinateVisitsPage() {
         ) : (
           <div className="sub-visits-dashboard">
 
-            {/* Filters Section */}
-            <div className="sub-visits-filters">
-              <div className="filter-group">
-                <span className="filter-label">Filter by Executive</span>
-                <div className="executive-chips">
-                  {executives.map(exec => (
-                    <button
-                      key={exec}
-                      className={`executive-chip ${selectedExecutive === exec ? 'active' : ''}`}
-                      onClick={() => setSelectedExecutive(exec)}
-                    >
-                      {exec !== 'All' && <User className="w-3.5 h-3.5 mr-1.5" />}
-                      {exec !== 'All' ? exec.split(' ')[0] : exec}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="filter-group">
-                <span className="filter-label">Visit Type</span>
-                <div className="type-toggle-container">
-                  <button
-                    className={`type-toggle-btn ${visitType === 'Physical' ? 'active' : ''}`}
-                    onClick={() => setVisitType('Physical')}
-                  >
-                    <MapPin className="w-4 h-4 mr-2" />
-                    Physical Visits
-                  </button>
-                  <button
-                    className={`type-toggle-btn ${visitType === 'Digital' ? 'active' : ''}`}
-                    onClick={() => setVisitType('Digital')}
-                  >
-                    <Monitor className="w-4 h-4 mr-2" />
-                    Digital Visits
-                  </button>
-                </div>
-              </div>
-
-              {/* Search Filter */}
-              <div className="filter-group">
-                <span className="filter-label">Search Store / Brand</span>
+            {/* Filters Section — dropdown style */}
+            <div className="sub-visits-filters-bar">
+              {/* Search */}
+              <div className="svf-item svf-search">
+                <label className="svf-label">Search Store / Brand</label>
                 <div className="sub-visits-search-wrapper">
                   <Search className="sub-visits-search-icon" />
                   <input
@@ -300,6 +263,61 @@ export default function SubordinateVisitsPage() {
                     </button>
                   )}
                 </div>
+              </div>
+
+              {/* Date Range dropdown */}
+              <div className="svf-item">
+                <label className="svf-label">Date Range</label>
+                <select
+                  className="svf-select"
+                  value={dateRange}
+                  onChange={e => handleDateRangeChange(e.target.value as DateRange)}
+                >
+                  {(Object.keys(DATE_RANGE_LABELS) as DateRange[]).map(range => (
+                    <option key={range} value={range}>{DATE_RANGE_LABELS[range]}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Visit Type dropdown */}
+              <div className="svf-item">
+                <label className="svf-label">Visit Type</label>
+                <select
+                  className="svf-select"
+                  value={visitType}
+                  onChange={e => setVisitType(e.target.value as 'Physical' | 'Digital')}
+                >
+                  <option value="Physical">Physical</option>
+                  <option value="Digital">Digital</option>
+                </select>
+              </div>
+
+              {/* Subordinate dropdown */}
+              <div className="svf-item">
+                <label className="svf-label">Filter by Subordinate</label>
+                <select
+                  className="svf-select"
+                  value={selectedExecutive}
+                  onChange={e => setSelectedExecutive(e.target.value)}
+                >
+                  {executives.map(exec => (
+                    <option key={exec} value={exec}>{exec}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* City dropdown */}
+              <div className="svf-item">
+                <label className="svf-label">Filter by City</label>
+                <select
+                  className="svf-select"
+                  value={selectedCity}
+                  onChange={e => setSelectedCity(e.target.value)}
+                >
+                  {cities.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -343,7 +361,7 @@ export default function SubordinateVisitsPage() {
                     {selectedExecutive === 'All' && <div className="evr-header-cell">EXECUTIVE</div>}
                     <div className="evr-header-cell">STORE NAME</div>
                     <div className="evr-header-cell">BRANDS</div>
-                    <div className="evr-header-cell">VISIT DATE</div>
+                    <div className="evr-header-cell" style={{ justifyContent: 'center' }}>VISIT DATE</div>
                     <div className="evr-header-cell" style={{ fontSize: '0.65rem', marginRight: '0.5rem' }}>ISSUES</div>
                     <div className="evr-header-cell">ACTIONS</div>
                   </div>
@@ -381,7 +399,7 @@ export default function SubordinateVisitsPage() {
                         </div>
 
                         {/* 4. Visit Date */}
-                        <div className="evr-cell evr-date-cell" data-label="VISIT DATE">
+                        <div className="evr-cell evr-date-cell" data-label="VISIT DATE" style={{ justifyContent: 'center', alignItems: 'center' }}>
                           <span className="evr-visit-date">{formatVisitDate(visit.date)}</span>
                         </div>
 

@@ -221,6 +221,76 @@
   border: 1px solid #f1f5f9;
 }
 
+/* New horizontal filter bar (Stores-style) */
+.sub-visits-filters-bar {
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+  margin-bottom: 1.5rem;
+  border: 1px solid #f1f5f9;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.25rem;
+  align-items: flex-end;
+}
+
+.svf-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 140px;
+  flex: 1;
+}
+
+.svf-item.svf-search {
+  flex: 2;
+  min-width: 200px;
+}
+
+.svf-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #6b7280;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.svf-select {
+  padding: 0.5rem 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-family: 'Inter', sans-serif;
+  color: #1e293b;
+  background: #f8fafc;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  padding-right: 2rem;
+  transition: border-color 0.15s ease;
+}
+
+.svf-select:hover {
+  border-color: #6366f1;
+}
+
+@media (max-width: 600px) {
+  .sub-visits-filters-bar {
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .svf-item, .svf-item.svf-search {
+    min-width: unset;
+    width: 100%;
+    flex: unset;
+  }
+}
+
+
 .filter-group {
   margin-bottom: 1.25rem;
 }
