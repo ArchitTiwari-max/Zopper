@@ -90,9 +90,10 @@ model Executive {
   dostChats       DostChat[]
 
   // Senior-Junior hierarchy
-  managerId    String?     @map("manager_id")
-  manager      Executive?  @relation("ExecutiveHierarchy", fields: [managerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  subordinates Executive[] @relation("ExecutiveHierarchy")
+  managerIds     String[]    @map("manager_ids")
+  managers       Executive[] @relation("ExecutiveHierarchy", fields: [managerIds], references: [id])
+  subordinateIds String[]    @map("subordinate_ids")
+  subordinates   Executive[] @relation("ExecutiveHierarchy", fields: [subordinateIds], references: [id])
 }
 
 model Store {

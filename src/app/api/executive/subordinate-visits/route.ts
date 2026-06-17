@@ -62,14 +62,14 @@ export async function GET(request: NextRequest) {
     // Fetch executive + subordinate IDs
     const executive = await prisma.executive.findUnique({
       where: { userId: user.userId },
-      select: { id: true, subordinates: { select: { id: true } } }
+      select: { id: true, subordinateIds: true }
     });
 
     if (!executive) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
-    const subordinateIds = executive.subordinates.map(sub => sub.id);
+    const subordinateIds = executive.subordinateIds || [];
 
     if (subordinateIds.length === 0) {
       return NextResponse.json({ success: true, data: [], pagination: { total: 0, page, pageSize: PAGE_SIZE, totalPages: 0 } });
@@ -163,6 +163,7 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               storeName: true,
+              city: true,
               storeBrands: { select: { brandId: true } }
             }
           },
