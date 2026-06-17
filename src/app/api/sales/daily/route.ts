@@ -14,6 +14,22 @@ export async function GET(request: NextRequest) {
     const year = searchParams.get('year');
     const month = searchParams.get('month');
 
+    // Fetch all mapped brands for the store by default
+    let mappedBrands: string[] = [];
+    if (storeId) {
+      const storeBrands = await prisma.storeBrand.findMany({
+        where: { storeId },
+        include: {
+          brand: {
+            select: {
+              brandName: true,
+            },
+          },
+        },
+      });
+      mappedBrands = storeBrands.map((sb) => sb.brand.brandName);
+    }
+
     // Build where clause based on provided filters
     const where: any = {};
     if (storeId) where.storeId = storeId;
@@ -93,6 +109,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: transformedData,
+      mappedBrands,
       totalRecords: transformedData.length
     });
   } catch (err) {
