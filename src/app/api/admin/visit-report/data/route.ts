@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
     const prevVisitMap = new Map<string, Date | null>(prevVisitsResults.map(r => [r.id, r.prevDate] as [string, Date | null]));
 
     // Process visit data
-    let processedVisits = visits.map((visit) => {
+    let processedVisits = (visits as any[]).map((visit) => {
       // Get partner brands
       const partnerBrands = visit.brandIds
         .map(brandId => brandMap.get(brandId))
@@ -191,7 +191,7 @@ export async function GET(request: NextRequest) {
       const execName = visit.executive?.name || 'Unknown Executive';
       const initials = execName
         .split(' ')
-        .map(word => word.charAt(0))
+        .map((word: string) => word.charAt(0))
         .slice(0, 2)
         .join('')
         .toUpperCase();

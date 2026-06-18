@@ -8,8 +8,6 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "postinstall": "prisma generate",
-    "lint": "biome check",
-    "format": "biome format --write",
     "import-brands": "tsx src/querryRunner/Brands/brand.ts",
     "export-brand": "tsx src/querryRunner/Brands/fetchbrand.ts ",
     "import-categories": "tsx src/querryRunner/Brands/category.ts",
@@ -50,7 +48,6 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.0",
     "@tailwindcss/postcss": "^4.1.16",
     "@types/google.maps": "^3.58.1",
     "@types/node": "^20",
