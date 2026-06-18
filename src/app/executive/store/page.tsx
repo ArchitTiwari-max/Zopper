@@ -11,6 +11,7 @@ import {
   Sparkles, 
   ClipboardList, 
   Users,
+  BarChart2,
   X
 } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -41,6 +42,7 @@ const Store: React.FC = () => {
   const [isSuggestMode, setIsSuggestMode] = useState(false);
   const [showSubmittedModal, setShowSubmittedModal] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isManager, setIsManager] = useState(false);
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
   const [plannedVisitDate, setPlannedVisitDate] = useState<string>(''); // Will be set in useEffect
   const [loading, setLoading] = useState(true);
@@ -178,6 +180,20 @@ const Store: React.FC = () => {
       console.error('Failed to fetch RAG data:', error);
     }
   };
+
+  // Check if this executive is a manager (has subordinates) — lightweight check
+  useEffect(() => {
+    const checkManager = async () => {
+      try {
+        const res = await fetch('/api/executive/is-manager');
+        const data = await res.json();
+        setIsManager(data.isManager === true);
+      } catch (e) {
+        // silently fail — just don't show the button
+      }
+    };
+    checkManager();
+  }, []);
 
   // Fetch stores data from API
   useEffect(() => {
@@ -554,6 +570,16 @@ const Store: React.FC = () => {
                       <Users size={16} />
                       Store Alignment
                     </button>
+
+                    {isManager && (
+                      <button 
+                        className="exec-dropdown-item"
+                        onClick={() => { router.push('/executive/alignment-index'); setMenuOpen(false); }}
+                      >
+                        <BarChart2 size={16} />
+                        Alignment Index
+                      </button>
+                    )}
                   </div>
                 </>
               )}
