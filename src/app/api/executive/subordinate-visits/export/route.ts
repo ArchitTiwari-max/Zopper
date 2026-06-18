@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
                 select: {
                   id: true,
                   storeName: true,
-                  storeBrands: { select: { brandId: true } },
+                  storeBrands: { select: { brandId: true, brandType: true } },
                 },
               },
               executive: { select: { name: true } },
@@ -147,7 +147,7 @@ export async function GET(request: NextRequest) {
                 select: {
                   id: true,
                   storeName: true,
-                  storeBrands: { select: { brandId: true } },
+                  storeBrands: { select: { brandId: true, brandType: true } },
                 },
               },
               executive: { select: { name: true } },
@@ -176,9 +176,29 @@ export async function GET(request: NextRequest) {
           })
         : [];
     const brandMap = new Map(brands.map((b) => [b.id, b.brandName]));
-    const getBrandString = (sb: { brandId: string }[]) =>
+
+    const BRAND_TYPE_LABELS: Record<string, string> = {
+      A_PLUS: "A+",
+      A: "A",
+      B: "B",
+      C: "C",
+      D: "D",
+    };
+
+    const getBrandString = (
+      sb: { brandId: string; brandType?: string | null }[],
+    ) =>
       sb.length > 0
-        ? sb.map((s) => brandMap.get(s.brandId) || "Unknown").join(", ")
+        ? sb
+            .map((s) => {
+              const brandName = brandMap.get(s.brandId) || "Unknown";
+              const category =
+                s.brandType && s.brandType !== "NONE"
+                  ? ` (${BRAND_TYPE_LABELS[s.brandType] || s.brandType})`
+                  : "";
+              return `${brandName}${category}`;
+            })
+            .join(", ")
         : "N/A";
 
     const formatDate = (d: Date) => {

@@ -1,11 +1,21 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, User, MapPin, Monitor, ChevronLeft, ChevronRight, Download, Search } from 'lucide-react';
-import VisitDetailsModal from '../../admin/components/VisitDetailsModal';
-import './subordinate-visits.css';
-import '../../admin/visit-report/visit-report.css';
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Loader2,
+  MapPin,
+  Monitor,
+  Search,
+  User,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import VisitDetailsModal from "../../admin/components/VisitDetailsModal";
+import "./subordinate-visits.css";
+import "../../admin/visit-report/visit-report.css";
 
 interface AssignedIssue {
   id: string;
@@ -25,7 +35,7 @@ interface Issue {
 
 interface SubordinateVisit {
   id: string;
-  type: 'Physical' | 'Digital';
+  type: "Physical" | "Digital";
   storeId: string;
   storeName: string;
   city: string;
@@ -46,13 +56,13 @@ interface SubordinateVisit {
   issues?: Issue[];
 }
 
-type DateRange = 'today' | 'last_30' | 'last_90' | 'last_year';
+type DateRange = "today" | "last_30" | "last_90" | "last_year";
 
 const DATE_RANGE_LABELS: Record<DateRange, string> = {
-  today: 'Today',
-  last_30: 'Last 30 Days',
-  last_90: 'Last 90 Days',
-  last_year: 'Last Year',
+  today: "Today",
+  last_30: "Last 30 Days",
+  last_90: "Last 90 Days",
+  last_year: "Last Year",
 };
 
 const PAGE_SIZE = 50;
@@ -64,46 +74,53 @@ export default function SubordinateVisitsPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Filter & Pagination states
-  const [selectedExecutive, setSelectedExecutive] = useState<string>('All');
-  const [selectedCity, setSelectedCity] = useState<string>('All');
-  const [visitType, setVisitType] = useState<'Physical' | 'Digital'>('Physical');
-  const [dateRange, setDateRange] = useState<DateRange>('last_30');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedExecutive, setSelectedExecutive] = useState<string>("All");
+  const [selectedCity, setSelectedCity] = useState<string>("All");
+  const [visitType, setVisitType] = useState<"Physical" | "Digital">(
+    "Physical",
+  );
+  const [dateRange, setDateRange] = useState<DateRange>("last_30");
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
 
   // Modal State
-  const [selectedVisit, setSelectedVisit] = useState<SubordinateVisit | null>(null);
+  const [selectedVisit, setSelectedVisit] = useState<SubordinateVisit | null>(
+    null,
+  );
   const [isExporting, setIsExporting] = useState(false);
 
-  const fetchSubordinateVisits = useCallback(async (range: DateRange, page: number) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const response = await fetch(
-        `/api/executive/subordinate-visits?range=${range}&page=${page}`
-      );
+  const fetchSubordinateVisits = useCallback(
+    async (range: DateRange, page: number) => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await fetch(
+          `/api/executive/subordinate-visits?range=${range}&page=${page}`,
+        );
 
-      if (!response.ok) throw new Error('Failed to fetch subordinate visits');
+        if (!response.ok) throw new Error("Failed to fetch subordinate visits");
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (result.success) {
-        setVisits(result.data);
-        setPagination({
-          total: result.pagination.total,
-          totalPages: result.pagination.totalPages
-        });
-      } else {
-        throw new Error(result.error || 'Failed to fetch subordinate visits');
+        if (result.success) {
+          setVisits(result.data);
+          setPagination({
+            total: result.pagination.total,
+            totalPages: result.pagination.totalPages,
+          });
+        } else {
+          throw new Error(result.error || "Failed to fetch subordinate visits");
+        }
+      } catch (err: any) {
+        console.error("Error:", err);
+        setError(err.message || "An unexpected error occurred");
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err: any) {
-      console.error('Error:', err);
-      setError(err.message || 'An unexpected error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   useEffect(() => {
     fetchSubordinateVisits(dateRange, currentPage);
@@ -112,12 +129,12 @@ export default function SubordinateVisitsPage() {
   const handleDateRangeChange = (range: DateRange) => {
     setDateRange(range);
     setCurrentPage(1); // reset to page 1 on range change
-    setSelectedExecutive('All');
+    setSelectedExecutive("All");
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleExport = async () => {
@@ -126,24 +143,26 @@ export default function SubordinateVisitsPage() {
       const params = new URLSearchParams({
         range: dateRange,
         type: visitType,
-        executive: selectedExecutive
+        executive: selectedExecutive,
       });
-      const res = await fetch(`/api/executive/subordinate-visits/export?${params}`);
-      if (!res.ok) throw new Error('Export failed');
+      const res = await fetch(
+        `/api/executive/subordinate-visits/export?${params}`,
+      );
+      if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      const disposition = res.headers.get('Content-Disposition') || '';
+      const disposition = res.headers.get("Content-Disposition") || "";
       const match = disposition.match(/filename="?([^"]+)"?/);
-      a.download = match?.[1] || 'SubordinateVisits.xlsx';
+      a.download = match?.[1] || "SubordinateVisits.xlsx";
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Export error:', err);
-      alert('Export failed. Please try again.');
+      console.error("Export error:", err);
+      alert("Export failed. Please try again.");
     } finally {
       setIsExporting(false);
     }
@@ -151,24 +170,29 @@ export default function SubordinateVisitsPage() {
 
   // Derive unique executives from the loaded data
   const executives = useMemo(() => {
-    const names = Array.from(new Set(visits.map(v => v.representative)));
-    return ['All', ...names.sort()];
+    const names = Array.from(new Set(visits.map((v) => v.representative)));
+    return ["All", ...names.sort()];
   }, [visits]);
 
   // Derive unique cities from loaded data
   const cities = useMemo(() => {
-    const citySet = Array.from(new Set(visits.map(v => v.city).filter(Boolean)));
-    return ['All', ...citySet.sort()];
+    const citySet = Array.from(
+      new Set(visits.map((v) => v.city).filter(Boolean)),
+    );
+    return ["All", ...citySet.sort()];
   }, [visits]);
 
   // Client-side filter by executive + city + type + search
   const filteredVisits = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return visits.filter(visit => {
-      const matchExecutive = selectedExecutive === 'All' || visit.representative === selectedExecutive;
-      const matchCity = selectedCity === 'All' || visit.city === selectedCity;
+    return visits.filter((visit) => {
+      const matchExecutive =
+        selectedExecutive === "All" ||
+        visit.representative === selectedExecutive;
+      const matchCity = selectedCity === "All" || visit.city === selectedCity;
       const matchType = visit.type === visitType;
-      const matchSearch = !q ||
+      const matchSearch =
+        !q ||
         visit.storeName.toLowerCase().includes(q) ||
         visit.partnerBrand.toLowerCase().includes(q);
       return matchExecutive && matchCity && matchType && matchSearch;
@@ -176,26 +200,27 @@ export default function SubordinateVisitsPage() {
   }, [visits, selectedExecutive, selectedCity, visitType, searchQuery]);
 
   const getBrandColor = (brand: string): string => {
+    const baseBrand = brand.split("(")[0].trim();
     const brandColors: Record<string, string> = {
-      'Samsung': '#1DB584',
-      'Vivo': '#8B5CF6',
-      'Oppo': '#F97316',
-      'OnePlus': '#1DB584',
-      'Realme': '#EC4899',
-      'Xiaomi': '#EF4444',
-      'Godrej': '#3B82F6',
-      'Havells': '#F59E0B',
-      'Philips': '#10B981'
+      Samsung: "#1DB584",
+      Vivo: "#8B5CF6",
+      Oppo: "#F97316",
+      OnePlus: "#1DB584",
+      Realme: "#EC4899",
+      Xiaomi: "#EF4444",
+      Godrej: "#3B82F6",
+      Havells: "#F59E0B",
+      Philips: "#10B981",
     };
-    return brandColors[brand] || '#64748b';
+    return brandColors[baseBrand] || "#64748b";
   };
 
   const formatVisitDate = (dateString: string) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear().toString().slice(-2);
     return `${day}/${month}/${year}`;
   };
@@ -209,7 +234,9 @@ export default function SubordinateVisitsPage() {
           Back
         </button>
         <h1 className="sub-visits-title">Subordinate Visits</h1>
-        <p className="sub-visits-subtitle">View and monitor your team's activities</p>
+        <p className="sub-visits-subtitle">
+          View and monitor your team's activities
+        </p>
       </div>
 
       <div className="sub-visits-content">
@@ -234,11 +261,13 @@ export default function SubordinateVisitsPage() {
           <div className="sub-visits-empty">
             <div className="text-5xl mb-4">📭</div>
             <h3>No visits found</h3>
-            <p>No visits recorded for {DATE_RANGE_LABELS[dateRange].toLowerCase()}.</p>
+            <p>
+              No visits recorded for{" "}
+              {DATE_RANGE_LABELS[dateRange].toLowerCase()}.
+            </p>
           </div>
         ) : (
           <div className="sub-visits-dashboard">
-
             {/* Filters Section — dropdown style */}
             <div className="sub-visits-filters-bar">
               {/* Search */}
@@ -251,12 +280,12 @@ export default function SubordinateVisitsPage() {
                     className="sub-visits-search-input"
                     placeholder="Type store name or brand..."
                     value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                   />
                   {searchQuery && (
                     <button
                       className="sub-visits-search-clear"
-                      onClick={() => setSearchQuery('')}
+                      onClick={() => setSearchQuery("")}
                       aria-label="Clear search"
                     >
                       ×
@@ -271,11 +300,17 @@ export default function SubordinateVisitsPage() {
                 <select
                   className="svf-select"
                   value={dateRange}
-                  onChange={e => handleDateRangeChange(e.target.value as DateRange)}
+                  onChange={(e) =>
+                    handleDateRangeChange(e.target.value as DateRange)
+                  }
                 >
-                  {(Object.keys(DATE_RANGE_LABELS) as DateRange[]).map(range => (
-                    <option key={range} value={range}>{DATE_RANGE_LABELS[range]}</option>
-                  ))}
+                  {(Object.keys(DATE_RANGE_LABELS) as DateRange[]).map(
+                    (range) => (
+                      <option key={range} value={range}>
+                        {DATE_RANGE_LABELS[range]}
+                      </option>
+                    ),
+                  )}
                 </select>
               </div>
 
@@ -285,7 +320,9 @@ export default function SubordinateVisitsPage() {
                 <select
                   className="svf-select"
                   value={visitType}
-                  onChange={e => setVisitType(e.target.value as 'Physical' | 'Digital')}
+                  onChange={(e) =>
+                    setVisitType(e.target.value as "Physical" | "Digital")
+                  }
                 >
                   <option value="Physical">Physical</option>
                   <option value="Digital">Digital</option>
@@ -298,10 +335,12 @@ export default function SubordinateVisitsPage() {
                 <select
                   className="svf-select"
                   value={selectedExecutive}
-                  onChange={e => setSelectedExecutive(e.target.value)}
+                  onChange={(e) => setSelectedExecutive(e.target.value)}
                 >
-                  {executives.map(exec => (
-                    <option key={exec} value={exec}>{exec}</option>
+                  {executives.map((exec) => (
+                    <option key={exec} value={exec}>
+                      {exec}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -312,10 +351,12 @@ export default function SubordinateVisitsPage() {
                 <select
                   className="svf-select"
                   value={selectedCity}
-                  onChange={e => setSelectedCity(e.target.value)}
+                  onChange={(e) => setSelectedCity(e.target.value)}
                 >
-                  {cities.map(city => (
-                    <option key={city} value={city}>{city}</option>
+                  {cities.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -328,88 +369,165 @@ export default function SubordinateVisitsPage() {
                 onClick={handleExport}
                 disabled={isExporting || filteredVisits.length === 0}
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  padding: '0.4rem 0.85rem',
-                  borderRadius: '8px',
-                  backgroundColor: isExporting ? '#d1fae5' : '#10b981',
-                  color: '#fff',
-                  fontSize: '0.78rem',
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  padding: "0.4rem 0.85rem",
+                  borderRadius: "8px",
+                  backgroundColor: isExporting ? "#d1fae5" : "#10b981",
+                  color: "#fff",
+                  fontSize: "0.78rem",
                   fontWeight: 600,
-                  border: 'none',
-                  cursor: isExporting ? 'not-allowed' : 'pointer',
+                  border: "none",
+                  cursor: isExporting ? "not-allowed" : "pointer",
                   opacity: filteredVisits.length === 0 ? 0.5 : 1,
-                  transition: 'all 0.2s ease'
+                  transition: "all 0.2s ease",
                 }}
               >
-                {isExporting
-                  ? <><Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} /> Exporting...</>
-                  : <><Download style={{ width: 14, height: 14 }} /> Export Excel</>}
+                {isExporting ? (
+                  <>
+                    <Loader2
+                      style={{
+                        width: 14,
+                        height: 14,
+                        animation: "spin 1s linear infinite",
+                      }}
+                    />{" "}
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download style={{ width: 14, height: 14 }} /> Export Excel
+                  </>
+                )}
               </button>
             </div>
 
             {filteredVisits.length === 0 ? (
               <div className="sub-visits-empty-filter">
                 <div className="text-3xl mb-3 text-gray-300">🔍</div>
-                <p>No {visitType.toLowerCase()} visits found for {selectedExecutive === 'All' ? 'any executive' : selectedExecutive}.</p>
+                <p>
+                  No {visitType.toLowerCase()} visits found for{" "}
+                  {selectedExecutive === "All"
+                    ? "any executive"
+                    : selectedExecutive}
+                  .
+                </p>
               </div>
             ) : (
               <div className="evr-table-section">
                 <div className="evr-table">
-                  <div className={`evr-table-header sub-visits-custom-grid ${selectedExecutive === 'All' ? 'with-exec' : 'without-exec'}`}>
-                    {selectedExecutive === 'All' && <div className="evr-header-cell">EXECUTIVE</div>}
+                  <div
+                    className={`evr-table-header sub-visits-custom-grid ${selectedExecutive === "All" ? "with-exec" : "without-exec"}`}
+                  >
+                    {selectedExecutive === "All" && (
+                      <div className="evr-header-cell">EXECUTIVE</div>
+                    )}
                     <div className="evr-header-cell">STORE NAME</div>
                     <div className="evr-header-cell">BRANDS</div>
-                    <div className="evr-header-cell" style={{ justifyContent: 'center' }}>VISIT DATE</div>
-                    <div className="evr-header-cell" style={{ fontSize: '0.65rem', marginRight: '0.5rem' }}>ISSUES</div>
+                    <div
+                      className="evr-header-cell"
+                      style={{ justifyContent: "center" }}
+                    >
+                      VISIT DATE
+                    </div>
+                    <div
+                      className="evr-header-cell"
+                      style={{ fontSize: "0.65rem", marginRight: "0.5rem" }}
+                    >
+                      ISSUES
+                    </div>
                     <div className="evr-header-cell">ACTIONS</div>
                   </div>
 
                   <div className="evr-table-body">
                     {filteredVisits.map((visit) => (
-                      <div key={visit.id} className={`evr-table-row sub-visits-custom-grid ${selectedExecutive === 'All' ? 'with-exec' : 'without-exec'}`}>
+                      <div
+                        key={visit.id}
+                        className={`evr-table-row sub-visits-custom-grid ${selectedExecutive === "All" ? "with-exec" : "without-exec"}`}
+                      >
                         {/* 1. Executive (Conditional) */}
-                        {selectedExecutive === 'All' && (
-                          <div className="evr-cell" data-label="EXECUTIVE" style={{ paddingLeft: 0 }}>
-                            <span style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.75rem' }}>
-                              {visit.representative.split(' ')[0]}
+                        {selectedExecutive === "All" && (
+                          <div
+                            className="evr-cell"
+                            data-label="EXECUTIVE"
+                            style={{ paddingLeft: 0 }}
+                          >
+                            <span
+                              style={{
+                                fontWeight: 600,
+                                color: "#1e293b",
+                                fontSize: "0.75rem",
+                              }}
+                            >
+                              {visit.representative.split(" ")[0]}
                             </span>
                           </div>
                         )}
 
                         {/* 2. Store Name */}
-                        <div className="evr-cell evr-store-name-cell" data-label="STORE NAME">
-                          <span className="evr-store-name-link" style={{ cursor: 'default', color: '#111827' }}>{visit.storeName}</span>
+                        <div
+                          className="evr-cell evr-store-name-cell"
+                          data-label="STORE NAME"
+                        >
+                          <span
+                            className="evr-store-name-link"
+                            style={{ cursor: "default", color: "#111827" }}
+                          >
+                            {visit.storeName}
+                          </span>
                         </div>
 
                         {/* 3. Partner Brands */}
-                        <div className="evr-cell evr-partner-brands-cell" data-label="BRANDS">
-                          {visit.partnerBrand && visit.partnerBrand !== 'N/A' ? visit.partnerBrand.split(',').map((brand, i) => (
-                            <span
-                              key={i}
-                              className="evr-brand-tag"
-                              style={{ backgroundColor: getBrandColor(brand.trim()) }}
-                            >
-                              {brand.trim()}
-                            </span>
-                          )) : (
-                            <span style={{ color: '#9ca3af' }}>N/A</span>
+                        <div
+                          className="evr-cell evr-partner-brands-cell"
+                          data-label="BRANDS"
+                        >
+                          {visit.partnerBrand &&
+                          visit.partnerBrand !== "N/A" ? (
+                            visit.partnerBrand.split(",").map((brand, i) => (
+                              <span
+                                key={i}
+                                className="evr-brand-tag"
+                                style={{
+                                  backgroundColor: getBrandColor(brand.trim()),
+                                }}
+                              >
+                                {brand.trim()}
+                              </span>
+                            ))
+                          ) : (
+                            <span style={{ color: "#9ca3af" }}>N/A</span>
                           )}
                         </div>
 
                         {/* 4. Visit Date */}
-                        <div className="evr-cell evr-date-cell" data-label="VISIT DATE" style={{ justifyContent: 'center', alignItems: 'center' }}>
-                          <span className="evr-visit-date">{formatVisitDate(visit.date)}</span>
+                        <div
+                          className="evr-cell evr-date-cell"
+                          data-label="VISIT DATE"
+                          style={{
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          <span className="evr-visit-date">
+                            {formatVisitDate(visit.date)}
+                          </span>
                         </div>
 
                         {/* 5. Issues */}
-                        <div className="evr-cell evr-issues-cell" data-label="ISSUES">
+                        <div
+                          className="evr-cell evr-issues-cell"
+                          data-label="ISSUES"
+                        >
                           {visit.issues && visit.issues.length > 0 ? (
                             <span
                               className="evr-has-issues"
                               onClick={() => setSelectedVisit(visit)}
-                              style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                              style={{
+                                cursor: "pointer",
+                                textDecoration: "underline",
+                              }}
                               title="Click to view issue details"
                             >
                               Yes ({visit.issues.length})
@@ -420,19 +538,50 @@ export default function SubordinateVisitsPage() {
                         </div>
 
                         {/* 6. Actions */}
-                        <div className="evr-cell evr-actions-cell" data-label="ACTIONS">
-                          <div className="evr-action-buttons-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', width: '100%' }}>
+                        <div
+                          className="evr-cell evr-actions-cell"
+                          data-label="ACTIONS"
+                        >
+                          <div
+                            className="evr-action-buttons-group"
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "0.4rem",
+                              width: "100%",
+                            }}
+                          >
                             <button
                               className="evr-view-details-btn"
-                              style={{ backgroundColor: '#6366f1', color: '#ffffff', borderRadius: '6px', fontWeight: 600, width: '100%', padding: '0.4rem 0.5rem', border: 'none' }}
+                              style={{
+                                backgroundColor: "#6366f1",
+                                color: "#ffffff",
+                                borderRadius: "6px",
+                                fontWeight: 600,
+                                width: "100%",
+                                padding: "0.4rem 0.5rem",
+                                border: "none",
+                              }}
                               onClick={() => setSelectedVisit(visit)}
                             >
                               View Details
                             </button>
                             <button
                               className="evr-view-details-btn"
-                              style={{ backgroundColor: '#ef4444', color: '#ffffff', borderRadius: '6px', fontWeight: 600, width: '100%', padding: '0.4rem 0.5rem', border: 'none' }}
-                              onClick={() => router.push(`/executive/sales?storeId=${visit.storeId}&store=${encodeURIComponent(visit.storeName)}`)}
+                              style={{
+                                backgroundColor: "#ef4444",
+                                color: "#ffffff",
+                                borderRadius: "6px",
+                                fontWeight: 600,
+                                width: "100%",
+                                padding: "0.4rem 0.5rem",
+                                border: "none",
+                              }}
+                              onClick={() =>
+                                router.push(
+                                  `/executive/sales?storeId=${visit.storeId}&store=${encodeURIComponent(visit.storeName)}`,
+                                )
+                              }
                             >
                               Sales
                             </button>
@@ -457,24 +606,35 @@ export default function SubordinateVisitsPage() {
                 </button>
 
                 {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
-                  .filter(p => p === 1 || p === pagination.totalPages || Math.abs(p - currentPage) <= 1)
+                  .filter(
+                    (p) =>
+                      p === 1 ||
+                      p === pagination.totalPages ||
+                      Math.abs(p - currentPage) <= 1,
+                  )
                   .reduce<(number | string)[]>((acc, p, idx, arr) => {
-                    if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push('...');
+                    if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1)
+                      acc.push("...");
                     acc.push(p);
                     return acc;
                   }, [])
                   .map((item, idx) =>
-                    item === '...' ? (
-                      <span key={`ellipsis-${idx}`} className="pagination-ellipsis">…</span>
+                    item === "..." ? (
+                      <span
+                        key={`ellipsis-${idx}`}
+                        className="pagination-ellipsis"
+                      >
+                        …
+                      </span>
                     ) : (
                       <button
                         key={item}
-                        className={`pagination-btn ${currentPage === item ? 'active' : ''}`}
+                        className={`pagination-btn ${currentPage === item ? "active" : ""}`}
                         onClick={() => handlePageChange(item as number)}
                       >
                         {item}
                       </button>
-                    )
+                    ),
                   )}
 
                 <button
@@ -486,7 +646,8 @@ export default function SubordinateVisitsPage() {
                 </button>
 
                 <span className="pagination-info">
-                  {filteredVisits.length} shown · Page {currentPage} of {pagination.totalPages} · {pagination.total} total records
+                  {filteredVisits.length} shown · Page {currentPage} of{" "}
+                  {pagination.totalPages} · {pagination.total} total records
                 </span>
               </div>
             )}
@@ -502,24 +663,38 @@ export default function SubordinateVisitsPage() {
           visit={{
             id: selectedVisit.id as unknown as number,
             executiveName: selectedVisit.representative,
-            executiveInitials: selectedVisit.representative.substring(0, 2).toUpperCase(),
-            avatarColor: '#1DB584',
+            executiveInitials: selectedVisit.representative
+              .substring(0, 2)
+              .toUpperCase(),
+            avatarColor: "#1DB584",
             storeName: selectedVisit.storeName,
-            partnerBrand: selectedVisit.partnerBrand !== 'N/A' ? selectedVisit.partnerBrand.split(',').map(b => b.trim()) : [],
+            partnerBrand:
+              selectedVisit.partnerBrand !== "N/A"
+                ? selectedVisit.partnerBrand.split(",").map((b) => b.trim())
+                : [],
             visitDate: selectedVisit.date || selectedVisit.visitDate,
             visitStatus: selectedVisit.status as any,
             reviewerName: selectedVisit.reviewerName,
-            issueStatus: (selectedVisit.issues && selectedVisit.issues.length > 0 ? selectedVisit.issues[0].status : 'Pending') as any,
-            city: 'N/A',
-            issues: selectedVisit.issues && selectedVisit.issues.length > 0 ? selectedVisit.issues[0].details : 'None',
-            issueId: selectedVisit.issues && selectedVisit.issues.length > 0 ? (selectedVisit.issues[0].id as unknown as number) : undefined,
-            feedback: selectedVisit.remarks || 'No feedback provided',
+            issueStatus: (selectedVisit.issues &&
+            selectedVisit.issues.length > 0
+              ? selectedVisit.issues[0].status
+              : "Pending") as any,
+            city: "N/A",
+            issues:
+              selectedVisit.issues && selectedVisit.issues.length > 0
+                ? selectedVisit.issues[0].details
+                : "None",
+            issueId:
+              selectedVisit.issues && selectedVisit.issues.length > 0
+                ? (selectedVisit.issues[0].id as unknown as number)
+                : undefined,
+            feedback: selectedVisit.remarks || "No feedback provided",
             POSMchecked: selectedVisit.POSMchecked,
             peopleMet: selectedVisit.personMet,
             imageUrls: selectedVisit.imageUrls || [],
-            brandVisitDetails: selectedVisit.brandVisitDetails || []
+            brandVisitDetails: selectedVisit.brandVisitDetails || [],
           }}
-          isDigital={selectedVisit.type === 'Digital'}
+          isDigital={selectedVisit.type === "Digital"}
         />
       )}
     </div>
