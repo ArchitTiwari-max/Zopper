@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     let categories: { id: string; categoryName: string }[] = [];
 
     // Always fetch categories
-    categories = await prisma.category.findMany({
+    categories = await prisma.productCategory.findMany({
       select: { id: true, categoryName: true },
       orderBy: { categoryName: "asc" },
     });
@@ -97,7 +97,7 @@ export async function GET(request: Request) {
       select: {
         storeId: true,
         brandId: true,
-        categoryId: true,
+        productCategoryId: true,
         dailySales: true,
       },
     });
@@ -107,7 +107,7 @@ export async function GET(request: Request) {
     // Key: storeId_brandId_categoryId
     const salesMap = new Map<string, any[]>();
     salesRecords.forEach((record) => {
-      const key = `${record.storeId.toUpperCase()}_${record.brandId.toUpperCase()}_${record.categoryId.toUpperCase()}`;
+      const key = `${record.storeId.toUpperCase()}_${record.brandId.toUpperCase()}_${record.productCategoryId.toUpperCase()}`;
       if (record.dailySales && typeof record.dailySales === "object" && !Array.isArray(record.dailySales)) {
         const monthKey = String(month);
         const monthlyData = (record.dailySales as Record<string, any[]>)[monthKey];

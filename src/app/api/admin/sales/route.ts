@@ -22,7 +22,7 @@ interface DailySalesData {
 interface CreateSalesRecordBody {
   storeId: string;
   brandId: string;
-  categoryId: string;
+  productCategoryId: string;
   year: number;
   monthlySales: MonthlySalesData[]; // Required: Past 3 months data
   dailySales: DailySalesData[];     // Required: Current month daily data
@@ -32,12 +32,12 @@ interface CreateSalesRecordBody {
 export async function POST(request: NextRequest) {
   try {
     const body: CreateSalesRecordBody = await request.json();
-    const { storeId, brandId, categoryId, year, monthlySales, dailySales } = body;
+    const { storeId, brandId, productCategoryId, year, monthlySales, dailySales } = body;
 
     // Validate required fields
-    if (!storeId || !brandId || !categoryId || !year) {
+    if (!storeId || !brandId || !productCategoryId || !year) {
       return NextResponse.json(
-        { error: 'Missing required fields: storeId, brandId, categoryId, year' },
+        { error: 'Missing required fields: storeId, brandId, productCategoryId, year' },
         { status: 400 }
       );
     }
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     const [store, brand, category] = await Promise.all([
       prisma.store.findUnique({ where: { id: storeId } }),
       prisma.brand.findUnique({ where: { id: brandId } }),
-      prisma.category.findUnique({ where: { id: categoryId } })
+      prisma.productCategory.findUnique({ where: { id: productCategoryId } })
     ]);
 
     if (!store) {
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     let finalDailySales = dailySales;
     
     if (!monthlySales || !dailySales) {
-      const sampleData = generateSampleData(storeId, brandId, categoryId, year);
+      const sampleData = (global as any).generateSampleData ? (global as any).generateSampleData(storeId, brandId, productCategoryId, year) : { monthlySales: [], dailySales: [] };
       finalMonthlySales = monthlySales || sampleData.monthlySales;
       finalDailySales = dailySales || sampleData.dailySales;
     }
@@ -110,10 +110,10 @@ export async function POST(request: NextRequest) {
     // Check if record exists for this store-brand-category-year combination
     const existingRecord = await prisma.salesRecord.findUnique({
       where: {
-        storeId_brandId_categoryId_year: {
+        storeId_brandId_productCategoryId_year: {
           storeId,
           brandId,
-          categoryId,
+          productCategoryId,
           year
         }
       }
@@ -125,21 +125,21 @@ export async function POST(request: NextRequest) {
       // Update existing record
       salesRecord = await prisma.salesRecord.update({
         where: {
-          storeId_brandId_categoryId_year: {
+          storeId_brandId_productCategoryId_year: {
             storeId,
             brandId,
-            categoryId,
+            productCategoryId,
             year
           }
         },
         data: {
-          monthlySales: finalMonthlySales,
-          dailySales: finalDailySales
+          monthlySales: finalMonthlySales as any,
+          dailySales: finalDailySales as any
         },
         include: {
           store: { select: { storeName: true, city: true } },
           brand: { select: { brandName: true } },
-          category: { select: { brandName: true } }
+          productCategory: { select: { categoryName: true } }
         }
       });
 
@@ -154,15 +154,15 @@ export async function POST(request: NextRequest) {
         data: {
           storeId,
           brandId,
-          categoryId,
+          productCategoryId,
           year,
-          monthlySales: finalMonthlySales,
-          dailySales: finalDailySales
+          monthlySales: finalMonthlySales as any,
+          dailySales: finalDailySales as any
         },
         include: {
           store: { select: { storeName: true, city: true } },
           brand: { select: { brandName: true } },
-          category: { select: { brandName: true } }
+          productCategory: { select: { categoryName: true } }
         }
       });
 
@@ -188,21 +188,21 @@ export async function GET(request: NextRequest) {
     const storeId = searchParams.get('storeId');
     const year = searchParams.get('year');
     const brandId = searchParams.get('brandId');
-    const categoryId = searchParams.get('categoryId');
+    const productCategoryId = searchParams.get('productCategoryId');
 
     // Build where clause
     const where: any = {};
     if (storeId) where.storeId = storeId;
     if (year) where.year = parseInt(year);
     if (brandId) where.brandId = brandId;
-    if (categoryId) where.categoryId = categoryId;
+    if (productCategoryId) where.productCategoryId = productCategoryId;
 
     const salesRecords = await prisma.salesRecord.findMany({
       where,
       include: {
         store: { select: { storeName: true, city: true } },
         brand: { select: { brandName: true } },
-        category: { select: { brandName: true } }
+        productCategory: { select: { categoryName: true } }
       },
       orderBy: [
         { year: 'desc' },

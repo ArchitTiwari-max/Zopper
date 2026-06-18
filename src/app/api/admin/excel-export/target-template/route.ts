@@ -69,7 +69,7 @@ export async function GET(request: Request) {
     }
 
     // Fetch active categories
-    const categories = await prisma.category.findMany({
+    const categories = await prisma.productCategory.findMany({
       select: { id: true, categoryName: true },
       orderBy: { categoryName: "asc" },
     });
@@ -80,7 +80,7 @@ export async function GET(request: Request) {
       select: {
         storeId: true,
         brandId: true,
-        categoryId: true,
+        productCategoryId: true,
         targetRevenue: true,
         targetUnits: true,
       },
@@ -94,7 +94,7 @@ export async function GET(request: Request) {
     >();
     targets.forEach((t) => {
       targetMap.set(
-        `${t.storeId.toUpperCase()}_${t.brandId.toUpperCase()}_${t.categoryId.toUpperCase()}`,
+        `${t.storeId.toUpperCase()}_${t.brandId.toUpperCase()}_${t.productCategoryId.toUpperCase()}`,
         {
           targetRevenue: t.targetRevenue,
           targetUnits: t.targetUnits,

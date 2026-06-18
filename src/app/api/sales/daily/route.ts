@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     if (storeId) where.storeId = storeId;
     if (year) where.year = parseInt(year);
     if (brandName) where.brand = { brandName };
-    if (categoryName) where.category = { categoryName };
+    if (categoryName) where.productCategory = { categoryName };
 
     const salesRecords = await prisma.salesRecord.findMany({
       where,
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
             brandName: true
           }
         },
-        category: {
+        productCategory: {
           select: {
             id: true,
             categoryName: true
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
             storeId: record.storeId,
             storeName: record.store.storeName,
             brandName: record.brand.brandName,
-            categoryName: record.category.categoryName,
+            categoryName: record.productCategory.categoryName,
             year: record.year,
             date: iso,
             countOfSales: Number(d.countOfSales || 0),

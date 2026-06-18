@@ -48,7 +48,7 @@ async function initializeCache(prisma: PrismaClient): Promise<CacheData> {
       }
     }),
     prisma.brand.findMany({ select: { id: true, brandName: true } }),
-    prisma.category.findMany({ select: { id: true, categoryName: true } }),
+    prisma.productCategory.findMany({ select: { id: true, categoryName: true } }),
     prisma.storeBrand.findMany({
       where: { storeBrandId: { not: null } },
       select: { storeBrandId: true, storeId: true, brandId: true }
@@ -129,7 +129,7 @@ export async function optimizedPostSales(rowObj: Record<string, any>, storeCount
       data: {
         storeId: Store_ID,
         brandId: brand.id,
-        categoryId: category.id,
+        productCategoryId: category.id,
         salesByYear,
         context,
         storeCount
@@ -198,7 +198,7 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
       data: {
         storeId: mapping.storeId,
         brandId: mapping.brandId,
-        categoryId: category.id,
+        productCategoryId: category.id,
         year,
         dailySales: dailySalesByMonth,
         context,
@@ -251,7 +251,7 @@ export async function batchProcessSalesRecords(
   salesData: Array<{
     storeId: string;
     brandId: string;
-    categoryId: string;
+    productCategoryId: string;
     salesByYear: Record<number, any[]>;
     context: string;
   }>,
@@ -278,10 +278,10 @@ export async function batchProcessSalesRecords(
           const incomingMonthlySales = record.salesByYear[year];
           
           const key = {
-            storeId_brandId_categoryId_year: {
+            storeId_brandId_productCategoryId_year: {
               storeId: record.storeId,
               brandId: record.brandId,
-              categoryId: record.categoryId,
+              productCategoryId: record.productCategoryId,
               year,
             }
           } as const;
@@ -304,7 +304,7 @@ export async function batchProcessSalesRecords(
             create: {
               storeId: record.storeId,
               brandId: record.brandId,
-              categoryId: record.categoryId,
+              productCategoryId: record.productCategoryId,
               year,
               monthlySales: mergedMonthlySales,
               dailySales: []
@@ -335,7 +335,7 @@ export async function batchProcessDailySalesRecords(
   salesData: Array<{
     storeId: string;
     brandId: string;
-    categoryId: string;
+    productCategoryId: string;
     year: number;
     dailySales: Record<string, any[]>; // grouped by month { "1": [...], ... }
     context: string;
@@ -397,10 +397,10 @@ export async function batchProcessDailySalesRecords(
     try {
       const operations = chunk.map(async (record) => {
         const key = {
-          storeId_brandId_categoryId_year: {
+          storeId_brandId_productCategoryId_year: {
             storeId: record.storeId,
             brandId: record.brandId,
-            categoryId: record.categoryId,
+            productCategoryId: record.productCategoryId,
             year: record.year,
           }
         } as const;
@@ -419,7 +419,7 @@ export async function batchProcessDailySalesRecords(
           create: {
             storeId: record.storeId,
             brandId: record.brandId,
-            categoryId: record.categoryId,
+            productCategoryId: record.productCategoryId,
             year: record.year,
             monthlySales: [],
             dailySales: mergedDaily
