@@ -185,7 +185,7 @@ export async function GET(request: NextRequest) {
       // Group sales records by brand and calculate attach rates
       const salesByBrand = new Map<string, any>();
       store.salesRecords.forEach(record => {
-        const key = `${record.brandId}-${record.categoryId}`;
+        const key = `${record.brandId}-${record.productCategoryId}`;
         if (!salesByBrand.has(key)) {
           salesByBrand.set(key, {
             brandId: record.brandId,

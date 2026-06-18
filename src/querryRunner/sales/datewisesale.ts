@@ -19,7 +19,7 @@ export async function postDailySales(rowObj: Record<string, any>, successCount: 
     if (!store) return `❌ Store not found. ${context}`;
     const brand = await prisma.brand.findUnique({ where: { brandName: Brand } });
     if (!brand) return `❌ Brand not found. ${context}`;
-    const category = await prisma.category.findUnique({ where: { categoryName: categoryName } });
+    const category = await prisma.productCategory.findUnique({ where: { categoryName: categoryName } });
     if (!category) return `❌ Category not found. ${context}`;
     if (!store.storeBrands.some(sb => sb.brandId === brand.id)) {
       return `❌ Brand is not mapped to this store. ${context}`;
@@ -48,10 +48,10 @@ export async function postDailySales(rowObj: Record<string, any>, successCount: 
     const year = dailySales.length > 0 ? parseInt(dailySales[0].date.slice(0, 4)) : new Date().getFullYear();
     await prisma.salesRecord.upsert({
       where: {
-        storeId_brandId_categoryId_year: {
+        storeId_brandId_productCategoryId_year: {
           storeId: Store_ID,
           brandId: brand.id,
-          categoryId: category.id,
+          productCategoryId: category.id,
           year,
         },
       },
@@ -59,7 +59,7 @@ export async function postDailySales(rowObj: Record<string, any>, successCount: 
       create: {
         storeId: Store_ID,
         brandId: brand.id,
-        categoryId: category.id,
+        productCategoryId: category.id,
         year,
         monthlySales: [],
         dailySales,

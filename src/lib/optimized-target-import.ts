@@ -48,7 +48,7 @@ export async function initializeTargetCache(
       },
     }),
     prisma.brand.findMany({ select: { id: true, brandName: true } }),
-    prisma.category.findMany({ select: { id: true, categoryName: true } }),
+    prisma.productCategory.findMany({ select: { id: true, categoryName: true } }),
     prisma.storeBrand.findMany({
       where: { storeBrandId: { not: null } },
       select: { storeBrandId: true, storeId: true, brandId: true },
@@ -320,7 +320,7 @@ export async function optimizedPostTarget(
       data: {
         storeId,
         brandId,
-        categoryId: category.id,
+        productCategoryId: category.id,
         month,
         year,
         targetRevenue,
@@ -342,7 +342,7 @@ export async function batchProcessTargetRecords(
   targetData: Array<{
     storeId: string;
     brandId: string;
-    categoryId: string;
+    productCategoryId: string;
     month: number;
     year: number;
     targetRevenue: number | null;
@@ -363,10 +363,10 @@ export async function batchProcessTargetRecords(
       const operations = chunk.map(async (record) => {
         await prisma.storeTarget.upsert({
           where: {
-            storeId_brandId_categoryId_month_year: {
+            storeId_brandId_productCategoryId_month_year: {
               storeId: record.storeId,
               brandId: record.brandId,
-              categoryId: record.categoryId,
+              productCategoryId: record.productCategoryId,
               month: record.month,
               year: record.year,
             },
@@ -378,7 +378,7 @@ export async function batchProcessTargetRecords(
           create: {
             storeId: record.storeId,
             brandId: record.brandId,
-            categoryId: record.categoryId,
+            productCategoryId: record.productCategoryId,
             month: record.month,
             year: record.year,
             targetRevenue: record.targetRevenue,

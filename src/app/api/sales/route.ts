@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     if (storeId) where.storeId = storeId;
     if (year) where.year = parseInt(year);
     if (brandName) where.brand = { brandName };
-    if (categoryName) where.category = { categoryName };
+    if (categoryName) where.productCategory = { categoryName };
 
     const salesRecords = await prisma.salesRecord.findMany({
       where,
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
             brandName: true
           }
         },
-        category: {
+        productCategory: {
           select: {
             id: true,
             categoryName: true
@@ -58,7 +58,7 @@ export async function GET(request: Request) {
         storeId: record.storeId,
         storeName: record.store.storeName,
         brandName: record.brand.brandName,
-        categoryName: record.category.categoryName,
+        categoryName: record.productCategory.categoryName,
         year: record.year,
         month: monthData.month,
         deviceSales: monthData.deviceSales || 0,
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
     if (!brand) return NextResponse.json({ error: '⚠️ Brand not found' }, { status: 400 });
 
     // 3. Find category by name
-    const category = await prisma.category.findUnique({ where: { categoryName: categoryName } });
+    const category = await prisma.productCategory.findUnique({ where: { categoryName: categoryName } });
     if (!category) return NextResponse.json({ error: '⚠️ Category not found' }, { status: 400 });
 
     // 4. Check brand is mapped to store
@@ -140,10 +140,10 @@ export async function POST(request: Request) {
       const monthlySales = salesByYear[year];
       await prisma.salesRecord.upsert({
         where: {
-          storeId_brandId_categoryId_year: {
+          storeId_brandId_productCategoryId_year: {
             storeId: Store_ID,
             brandId: brand.id,
-            categoryId: category.id,
+            productCategoryId: category.id,
             year,
           },
         },
@@ -151,7 +151,7 @@ export async function POST(request: Request) {
         create: {
           storeId: Store_ID,
           brandId: brand.id,
-          categoryId: category.id,
+          productCategoryId: category.id,
           year,
           monthlySales,
           dailySales: [],

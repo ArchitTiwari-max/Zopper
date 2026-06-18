@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
         const batchData: Array<{
           storeId: string;
           brandId: string;
-          categoryId: string;
+          productCategoryId: string;
           month: number;
           year: number;
           targetRevenue: number | null;

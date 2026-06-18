@@ -112,7 +112,7 @@ export async function getDostSuggestions(executiveId: string, opts?: { question?
         where: { storeId },
         orderBy: [{ year: 'desc' }],
         take: 1,
-        select: { brandId: true, categoryId: true, monthlySales: true }
+        select: { brandId: true, productCategoryId: true, monthlySales: true }
       })
       return { storeId, records: rec }
     })),

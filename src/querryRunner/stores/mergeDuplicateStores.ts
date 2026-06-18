@@ -169,10 +169,10 @@ async function main() {
           for (const sale of loserSales) {
             const existingWinnerSale = await tx.salesRecord.findUnique({
               where: {
-                storeId_brandId_categoryId_year: {
+                storeId_brandId_productCategoryId_year: {
                   storeId: winnerId,
                   brandId: sale.brandId,
-                  categoryId: sale.categoryId,
+                  productCategoryId: sale.productCategoryId,
                   year: sale.year,
                 },
               },
@@ -194,10 +194,10 @@ async function main() {
           for (const target of loserTargets) {
             const existingWinnerTarget = await tx.storeTarget.findUnique({
               where: {
-                storeId_brandId_categoryId_month_year: {
+                storeId_brandId_productCategoryId_month_year: {
                   storeId: winnerId,
                   brandId: target.brandId,
-                  categoryId: target.categoryId,
+                  productCategoryId: target.productCategoryId,
                   month: target.month,
                   year: target.year,
                 },

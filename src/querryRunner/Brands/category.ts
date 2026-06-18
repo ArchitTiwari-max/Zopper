@@ -15,7 +15,7 @@ async function main() {
   for (const category of data) {
     try {
       // Create or update the Category
-      await prisma.category.upsert({
+      await prisma.productCategory.upsert({
         where: { id: category.Category_id },
         update: { categoryName: category.categoryName },
         create: {

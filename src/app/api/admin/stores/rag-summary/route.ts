@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
           },
           select: {
             brandId: true,
-            categoryId: true,
+            productCategoryId: true,
             monthlySales: true,
             brand: {
               select: {
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
       // Group sales records by brand
       const salesByBrand = new Map<string, any>();
       store.salesRecords.forEach(record => {
-        const key = `${record.brandId}-${record.categoryId}`;
+        const key = `${record.brandId}-${record.productCategoryId}`;
         if (!salesByBrand.has(key)) {
           salesByBrand.set(key, {
             brandId: record.brandId,
