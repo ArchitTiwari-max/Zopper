@@ -172,7 +172,7 @@ model SalesRecord {
   storeId              String
   brandId              String
   productCategoryId    String
-  productSubCategoryId String? @db.ObjectId
+  productSubCategoryId String?
   year                 Int
   modelName            String?
   planType             PlanType?
@@ -683,7 +683,7 @@ model DistanceCache {
 }
 
 model ProductSubCategory {
-  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  id           String        @id @map("_id")
   name         String        @unique
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt

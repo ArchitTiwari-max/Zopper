@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 
 // Singleton Prisma instance with connection pooling
 let prismaInstance: PrismaClient | null = null;
@@ -196,7 +197,10 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
         const newSubCat = await prisma.productSubCategory.upsert({
           where: { name: subCategoryName },
           update: {},
-          create: { name: subCategoryName }
+          create: {
+            id: `subcat_${uuidv4().replace(/-/g, '').substring(0, 8)}`,
+            name: subCategoryName
+          }
         });
         cache.subCategories.set(cacheKey, newSubCat);
         productSubCategoryId = newSubCat.id;
