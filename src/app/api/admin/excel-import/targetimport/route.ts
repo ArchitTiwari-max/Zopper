@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
                           StoreBrand_ID: String(
                             rowObj.StoreBrand_ID || rowObj.StoreBrand || "",
                           ),
-                          Category: String(rowObj.Category || ""),
+                          Category: String(rowObj.Category || rowObj['Product Category'] || rowObj.ProductCategory || rowObj.category || ""),
                           status: "success",
                           message: `✅ Row is valid and queued`,
                         },
@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
                       StoreBrand_ID: String(
                         rowObj.StoreBrand_ID || rowObj.StoreBrand || "N/A",
                       ),
-                      Category: String(rowObj.Category || "N/A"),
+                      Category: String(rowObj.Category || rowObj['Product Category'] || rowObj.ProductCategory || rowObj.category || "N/A"),
                       status: "error",
                       message: message.replace(/❌ /, ""),
                     },

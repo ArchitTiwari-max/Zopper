@@ -457,7 +457,7 @@ const DatewiseExcelImport = () => {
           </div>
           <p className="excel-dat-sale-import-description">
             Upload Excel files with daily sales data. The file should contain
-            StoreBrand_ID, Category, and date columns with metrics like Count of
+            StoreBrand_ID, Product Category, and date columns with metrics like Count of
             Sales and Revenue.
           </p>
         </div>
@@ -789,7 +789,7 @@ const DatewiseExcelImport = () => {
           </h3>
           <div className="excel-dat-sale-format-list">
             <p>
-              • <strong>Required columns:</strong> StoreBrand_ID, Category
+              • <strong>Required columns:</strong> StoreBrand_ID, Product Category
             </p>
             <p>
               • <strong>Date columns:</strong> Format as DD-MM-YYYY (e.g.,

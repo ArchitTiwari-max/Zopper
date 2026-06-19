@@ -742,7 +742,7 @@ const TargetwiseExcelImport = () => {
             <p>
               • <strong>Required identifier columns:</strong>{" "}
               <code>StoreBrand_ID</code> (must map exactly to records in
-              database) and <code>Category</code> (must match category name in
+              database) and <code>Product Category</code> (must match category name in
               database).
             </p>
             <p>

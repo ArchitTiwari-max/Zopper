@@ -22,6 +22,7 @@ interface CacheData {
   brands: Map<string, { id: string; brandName: string }>;
   categories: Map<string, { id: string; categoryName: string }>;
   storeBrandsById: Map<string, { storeId: string; brandId: string }>;
+  subCategories: Map<string, { id: string; name: string }>;
 }
 
 // Global cache - reused across requests
@@ -38,7 +39,7 @@ async function initializeCache(prisma: PrismaClient): Promise<CacheData> {
 
   console.log('🔄 Initializing reference data cache...');
   
-  const [stores, brands, categories, storeBrands] = await Promise.all([
+  const [stores, brands, categories, storeBrands, subCategories] = await Promise.all([
     prisma.store.findMany({
       select: {
         id: true,
@@ -52,6 +53,9 @@ async function initializeCache(prisma: PrismaClient): Promise<CacheData> {
     prisma.storeBrand.findMany({
       where: { storeBrandId: { not: null } },
       select: { storeBrandId: true, storeId: true, brandId: true }
+    }),
+    prisma.productSubCategory.findMany({
+      select: { id: true, name: true }
     })
   ]);
 
@@ -63,10 +67,11 @@ async function initializeCache(prisma: PrismaClient): Promise<CacheData> {
       storeBrands
         .filter(sb => sb.storeBrandId)
         .map(sb => [sb.storeBrandId!, { storeId: sb.storeId, brandId: sb.brandId }])
-    )
+    ),
+    subCategories: new Map(subCategories.map(sc => [sc.name.toUpperCase().trim(), sc]))
   };
 
-  console.log(`✅ Cache initialized - ${stores.length} stores, ${brands.length} brands, ${categories.length} categories, ${storeBrands.length} storeBrand mappings`);
+  console.log(`✅ Cache initialized - ${stores.length} stores, ${brands.length} brands, ${categories.length} categories, ${storeBrands.length} storeBrand mappings, ${subCategories.length} sub-categories`);
   return globalCache;
 }
 
@@ -75,11 +80,12 @@ async function initializeCache(prisma: PrismaClient): Promise<CacheData> {
  */
 export async function optimizedPostSales(rowObj: Record<string, any>, storeCount: number, cache: CacheData): Promise<string> {
   try {
-    const { Store_ID, Brand, Category, ...monthMetrics } = rowObj;
-    const categoryName = (Category && typeof Category === 'string' && Category.trim()) 
-      ? Category.trim() 
+    const { Store_ID, Brand, ...remaining } = rowObj;
+    const categoryVal = rowObj['Product Category'] || rowObj.Category || rowObj.ProductCategory || rowObj.category;
+    const categoryName = (categoryVal && typeof categoryVal === 'string' && categoryVal.trim()) 
+      ? categoryVal.trim() 
       : 'Other';
-    const context = `Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${categoryName}`;
+    const context = `Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Product Category: ${categoryName}`;
     
     // Quick validation
     if (!Store_ID || !Brand) {
@@ -94,13 +100,20 @@ export async function optimizedPostSales(rowObj: Record<string, any>, storeCount
     if (!brand) return `❌ Brand not found. ${context}`;
     
     const category = cache.categories.get(categoryName);
-    if (!category) return `❌ Category not found. ${context}`;
+    if (!category) return `❌ Product Category not found. ${context}`;
     
     if (!store.storeBrands.some(sb => sb.brandId === brand.id)) {
       return `❌ Brand is not mapped to this store. ${context}`;
     }
 
     // Process monthly sales data - support both DD-MM-YYYY and D/M/YYYY formats
+    const monthMetrics: Record<string, any> = {};
+    for (const key in remaining) {
+      if (!['Store_ID', 'Brand', 'Category', 'Product Category', 'ProductCategory', 'category'].includes(key)) {
+        monthMetrics[key] = remaining[key];
+      }
+    }
+
     const salesByYear: Record<number, any[]> = {};
     for (const key in monthMetrics) {
       let match = key.match(/^([0-9]{1,2})-([0-9]{1,2})-([0-9]{4}) (.+)$/);
@@ -138,8 +151,9 @@ export async function optimizedPostSales(rowObj: Record<string, any>, storeCount
     
   } catch (err) {
     console.error('Optimization error:', err);
-    const { Store_ID, Brand, Category } = rowObj;
-    return `❌ Internal server error for Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Category: ${Category || 'N/A'}`;
+    const { Store_ID, Brand } = rowObj;
+    const categoryVal = rowObj['Product Category'] || rowObj.Category || rowObj.ProductCategory || rowObj.category;
+    return `❌ Internal server error for Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Product Category: ${categoryVal || 'N/A'}`;
   }
 }
 
@@ -148,11 +162,12 @@ export async function optimizedPostSales(rowObj: Record<string, any>, storeCount
  */
 export async function optimizedPostDailySales(rowObj: Record<string, any>, successCount: number, cache: CacheData): Promise<string> {
   try {
-    const { StoreBrand_ID, Category, ...dateMetrics } = rowObj;
-    const categoryName = (Category && typeof Category === 'string' && Category.trim())
-      ? Category.trim()
+    const { StoreBrand_ID, ...remaining } = rowObj;
+    const categoryVal = rowObj['Product Category'] || rowObj.Category || rowObj.ProductCategory || rowObj.category;
+    const categoryName = (categoryVal && typeof categoryVal === 'string' && categoryVal.trim())
+      ? categoryVal.trim()
       : 'Other';
-    const context = `StoreBrand_ID: ${StoreBrand_ID || 'N/A'}, Category: ${categoryName}`;
+    const context = `StoreBrand_ID: ${StoreBrand_ID || 'N/A'}, Product Category: ${categoryName}`;
 
     if (!StoreBrand_ID) {
       return `❌ Missing StoreBrand_ID. ${context}`;
@@ -163,7 +178,68 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
     if (!mapping) return `❌ StoreBrand_ID not found in database. ${context}`;
 
     const category = cache.categories.get(categoryName);
-    if (!category) return `❌ Category not found: "${categoryName}". ${context}`;
+    if (!category) return `❌ Product Category not found: "${categoryName}". ${context}`;
+
+    // Extract metadata values
+    const subCategoryVal = rowObj['Product Sub Category'] || rowObj.ProductSubCategory || rowObj.productSubCategory || rowObj.subcategory;
+    const modelNameVal = rowObj['Model Name'] || rowObj.ModelName || rowObj.modelName;
+    const planTypeVal = rowObj['Plan Type'] || rowObj.PlanType || rowObj.planType;
+
+    // Handle product subcategory (dynamically create if not found)
+    let productSubCategoryId: string | null = null;
+    const subCategoryName = subCategoryVal ? String(subCategoryVal).trim() : '';
+    if (subCategoryName) {
+      const cacheKey = subCategoryName.toUpperCase();
+      let subCat = cache.subCategories.get(cacheKey);
+      if (!subCat) {
+        const prisma = getPrismaInstance();
+        const newSubCat = await prisma.productSubCategory.upsert({
+          where: { name: subCategoryName },
+          update: {},
+          create: { name: subCategoryName }
+        });
+        cache.subCategories.set(cacheKey, newSubCat);
+        productSubCategoryId = newSubCat.id;
+      } else {
+        productSubCategoryId = subCat.id;
+      }
+    }
+
+    // Validate plan type against the enum values
+    let planType: any = null;
+    if (planTypeVal) {
+      const cleanPlanType = String(planTypeVal).trim().toUpperCase();
+      if (['ADLD', 'SP', 'COMBO', 'EW'].includes(cleanPlanType)) {
+        planType = cleanPlanType;
+      } else {
+        return `❌ Invalid Plan Type: "${planTypeVal}". Allowed values are ADLD, SP, COMBO, EW. ${context}`;
+      }
+    }
+
+    // Filter out Category and other metadata key references from dateMetrics
+    const metadataKeys = [
+      'StoreBrand_ID',
+      'Category',
+      'Product Category',
+      'ProductCategory',
+      'category',
+      'Product Sub Category',
+      'ProductSubCategory',
+      'productSubCategory',
+      'subcategory',
+      'Model Name',
+      'ModelName',
+      'modelName',
+      'Plan Type',
+      'PlanType',
+      'planType'
+    ];
+    const dateMetrics: Record<string, any> = {};
+    for (const key in remaining) {
+      if (!metadataKeys.includes(key)) {
+        dateMetrics[key] = remaining[key];
+      }
+    }
 
     // Build dailySales grouped by month ("1".."12"). Dates stored as DD-MM-YYYY
     const dailySalesByMonth: Record<string, any[]> = {};
@@ -178,28 +254,36 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
       const monthNum = parseInt(mm, 10);
       const monthKey = String(monthNum);
       const date = `${dd.padStart(2, '0')}-${mm.padStart(2, '0')}-${yyyy}`;
-      detectedYear = detectedYear ?? parseInt(yyyy, 10);
-
-      if (!dailySalesByMonth[monthKey]) dailySalesByMonth[monthKey] = [];
+      if (!detectedYear) {
+        detectedYear = parseInt(yyyy, 10);
+      }
+      if (!dailySalesByMonth[monthKey]) {
+        dailySalesByMonth[monthKey] = [];
+      }
       let entry = dailySalesByMonth[monthKey].find(e => e.date === date);
       if (!entry) {
         entry = { date };
         dailySalesByMonth[monthKey].push(entry);
       }
-
       if (/count of sales/i.test(metric)) entry.countOfSales = dateMetrics[key] || 0;
       if (/revenue/i.test(metric)) entry.revenue = dateMetrics[key] || 0;
     }
 
-    const year = detectedYear ?? new Date().getFullYear();
+    if (!detectedYear) {
+      return `❌ No valid daily sales metrics/dates detected. ${context}`;
+    }
 
+    // Return prepared daily sales record payload
     return JSON.stringify({
       success: true,
       data: {
         storeId: mapping.storeId,
         brandId: mapping.brandId,
         productCategoryId: category.id,
-        year,
+        productSubCategoryId,
+        modelName: modelNameVal ? String(modelNameVal).trim() : null,
+        planType,
+        year: detectedYear,
         dailySales: dailySalesByMonth,
         context,
         successCount
@@ -207,9 +291,10 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
     });
 
   } catch (err) {
-    console.error('Daily sales optimization error:', err);
-    const { StoreBrand_ID, Category } = rowObj;
-    return `❌ Internal server error for StoreBrand_ID: ${StoreBrand_ID || 'N/A'}, Category: ${Category || 'N/A'}`;
+    console.error('Optimization error:', err);
+    const { StoreBrand_ID } = rowObj;
+    const categoryVal = rowObj['Product Category'] || rowObj.Category || rowObj.ProductCategory || rowObj.category;
+    return `❌ Internal server error for StoreBrand_ID: ${StoreBrand_ID || 'N/A'}, Product Category: ${categoryVal || 'N/A'}`;
   }
 }
 
@@ -336,6 +421,9 @@ export async function batchProcessDailySalesRecords(
     storeId: string;
     brandId: string;
     productCategoryId: string;
+    productSubCategoryId?: string | null;
+    modelName?: string | null;
+    planType?: any;
     year: number;
     dailySales: Record<string, any[]>; // grouped by month { "1": [...], ... }
     context: string;
@@ -415,11 +503,19 @@ export async function batchProcessDailySalesRecords(
 
         await prisma.salesRecord.upsert({
           where: key,
-          update: { dailySales: mergedDaily },
+          update: {
+            dailySales: mergedDaily,
+            productSubCategoryId: record.productSubCategoryId,
+            modelName: record.modelName,
+            planType: record.planType,
+          },
           create: {
             storeId: record.storeId,
             brandId: record.brandId,
             productCategoryId: record.productCategoryId,
+            productSubCategoryId: record.productSubCategoryId,
+            modelName: record.modelName,
+            planType: record.planType,
             year: record.year,
             monthlySales: [],
             dailySales: mergedDaily

@@ -167,8 +167,24 @@ export async function POST(request: NextRequest) {
 
         const keepFields =
           importType === "daily"
-            ? ["StoreBrand_ID", "Category"]
-            : ["Store_ID", "Brand", "Category"];
+            ? [
+                "StoreBrand_ID",
+                "Category",
+                "Product Category",
+                "ProductCategory",
+                "category",
+                "Product Sub Category",
+                "ProductSubCategory",
+                "productSubCategory",
+                "subcategory",
+                "Model Name",
+                "ModelName",
+                "modelName",
+                "Plan Type",
+                "PlanType",
+                "planType",
+              ]
+            : ["Store_ID", "Brand", "Category", "Product Category", "ProductCategory", "category"];
         const totalRows = range.e.r - range.s.r - 1;
         let successful = 0;
         let failed = 0;
@@ -313,7 +329,7 @@ export async function POST(request: NextRequest) {
                           Store_ID: rowObj.Store_ID || "",
                           Brand: rowObj.Brand || "",
                           StoreBrand_ID: rowObj.StoreBrand_ID || "",
-                          Category: rowObj.Category,
+                          Category: rowObj.Category || rowObj['Product Category'] || rowObj.ProductCategory || rowObj.category,
                           status: "success",
                           message: `✅ Validated and queued for batch processing`,
                         },
@@ -341,7 +357,7 @@ export async function POST(request: NextRequest) {
                       Store_ID: rowObj.Store_ID || "",
                       Brand: rowObj.Brand || "",
                       StoreBrand_ID: rowObj.StoreBrand_ID || "N/A",
-                      Category: rowObj.Category || "N/A",
+                      Category: rowObj.Category || rowObj['Product Category'] || rowObj.ProductCategory || rowObj.category || "N/A",
                       status: "error",
                       message: message.replace(/❌ /, ""),
                     },

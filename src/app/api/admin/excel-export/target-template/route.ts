@@ -116,7 +116,7 @@ export async function GET(request: Request) {
     // Header row
     const headers = [
       "StoreBrand_ID",
-      "Category",
+      "Product Category",
       "Month",
       "Year",
       "Target_Revenue",

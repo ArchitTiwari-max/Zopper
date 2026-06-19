@@ -27,7 +27,9 @@ export async function GET(request: NextRequest) {
           },
         },
       });
-      mappedBrands = storeBrands.map((sb) => sb.brand.brandName);
+      mappedBrands = storeBrands
+        .filter((sb) => sb.brand && sb.brand.brandName)
+        .map((sb) => sb.brand.brandName);
     }
 
     // Build where clause based on provided filters

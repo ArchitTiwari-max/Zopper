@@ -268,10 +268,10 @@ export async function optimizedPostTarget(
       }
     }
 
-    const context = `StoreBrand_ID: ${storeBrandId || "N/A"}, Category: ${categoryName || "N/A"}, Month: ${monthVal || "N/A"}, Year: ${yearVal || "N/A"}`;
+    const context = `StoreBrand_ID: ${storeBrandId || "N/A"}, Product Category: ${categoryName || "N/A"}, Month: ${monthVal || "N/A"}, Year: ${yearVal || "N/A"}`;
 
     if (!storeBrandId) return `❌ Missing StoreBrand_ID. ${context}`;
-    if (!categoryName) return `❌ Missing Category. ${context}`;
+    if (!categoryName) return `❌ Missing Product Category. ${context}`;
     if (month === null) return `❌ Invalid or missing Month. ${context}`;
     if (year === null || Number.isNaN(year) || year < 2000 || year > 2100)
       return `❌ Invalid or missing Year. ${context}`;
@@ -286,7 +286,7 @@ export async function optimizedPostTarget(
     // Category validation
     const category = cache.categories.get(categoryName.toUpperCase());
     if (!category)
-      return `❌ Category "${categoryName}" not found in database. ${context}`;
+      return `❌ Product Category "${categoryName}" not found in database. ${context}`;
 
     // Parse values
     let targetRevenue: number | null = null;

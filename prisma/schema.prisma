@@ -168,18 +168,22 @@ model ProductCategory {
 }
 
 model SalesRecord {
-  id                String @id @default(auto()) @map("_id") @db.ObjectId
-  storeId           String
-  brandId           String
-  productCategoryId String
-  year              Int
+  id                   String  @id @default(auto()) @map("_id") @db.ObjectId
+  storeId              String
+  brandId              String
+  productCategoryId    String
+  productSubCategoryId String? @db.ObjectId
+  year                 Int
+  modelName            String?
+  planType             PlanType?
 
   monthlySales Json //Store summary of all 12 months Each month contains deviceSales, planSales, attachPct, revenue etc. EX. [{ month: 1, deviceSales: X, planSales: Y, attachPct: Z, revenue: R }, ..., { month: 12, ... }]
   dailySales   Json // Stores daily sales data grouped by month (e.g., { "1": [{ date: "01-01-2025", planSales: 1, revenue: 1200 }], "2": [{ date: "01-02-2025", planSales: 1, revenue: 900 }] }), tracking only planSales and revenue for each day.
 
-  store           Store           @relation(fields: [storeId], references: [id])
-  brand           Brand           @relation(fields: [brandId], references: [id])
-  productCategory ProductCategory @relation(fields: [productCategoryId], references: [id])
+  store              Store               @relation(fields: [storeId], references: [id])
+  brand              Brand               @relation(fields: [brandId], references: [id])
+  productCategory    ProductCategory     @relation(fields: [productCategoryId], references: [id])
+  productSubCategory ProductSubCategory? @relation(fields: [productSubCategoryId], references: [id])
 
   @@unique([storeId, brandId, productCategoryId, year])
   // Indexes for faster analytics queries
@@ -678,20 +682,12 @@ model DistanceCache {
   @@map("DistanceCache")
 }
 
-model ProductModel {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("ProductModel")
-}
-
 model ProductSubCategory {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  name         String        @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  salesRecords SalesRecord[]
 
   @@map("ProductSubCategory")
 }
