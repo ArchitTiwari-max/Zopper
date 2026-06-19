@@ -84,6 +84,12 @@ export default function SubordinateVisitsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
 
+  // Full subordinate list — fetched independently so all appear in dropdown
+  // regardless of whether they have visits in the selected date range
+  const [subordinateList, setSubordinateList] = useState<
+    { id: string; name: string }[]
+  >([]);
+
   // Modal State
   const [selectedVisit, setSelectedVisit] = useState<SubordinateVisit | null>(
     null,
@@ -121,6 +127,23 @@ export default function SubordinateVisitsPage() {
     },
     [],
   );
+
+  // Fetch all subordinates once on mount — independent of date range / visits
+  useEffect(() => {
+    const fetchSubordinates = async () => {
+      try {
+        const res = await fetch('/api/executive/my-subordinates');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (Array.isArray(data.subordinates)) {
+          setSubordinateList(data.subordinates);
+        }
+      } catch (err) {
+        console.error('Failed to fetch subordinate list:', err);
+      }
+    };
+    fetchSubordinates();
+  }, []);
 
   useEffect(() => {
     fetchSubordinateVisits(dateRange, currentPage);
@@ -168,11 +191,17 @@ export default function SubordinateVisitsPage() {
     }
   };
 
-  // Derive unique executives from the loaded data
+  // Build executive dropdown options from the dedicated subordinate list
+  // so that all subordinates appear even without visits in the selected range.
+  // Fall back to deriving from visit data if the list hasn't loaded yet.
   const executives = useMemo(() => {
+    if (subordinateList.length > 0) {
+      return ["All", ...subordinateList.map((s) => s.name)];
+    }
+    // Fallback: derive from loaded visits while the list is loading
     const names = Array.from(new Set(visits.map((v) => v.representative)));
     return ["All", ...names.sort()];
-  }, [visits]);
+  }, [subordinateList, visits]);
 
   // Derive unique cities from loaded data
   const cities = useMemo(() => {
