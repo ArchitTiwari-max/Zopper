@@ -315,10 +315,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Short-lived private cache
+    // Prevent browser caching to avoid seeing previous user's data after relogin
     response.headers.set(
       "Cache-Control",
-      "private, max-age=60, stale-while-revalidate=120",
+      "no-store, max-age=0",
     );
 
     return response;
