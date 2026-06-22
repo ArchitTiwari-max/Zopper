@@ -164,7 +164,16 @@ model ProductCategory {
   id           String        @id @map("_id")
   categoryName String        @unique
   salesRecords SalesRecord[]
-  storeTargets StoreTarget[]
+}
+
+model ProductSubCategory {
+  id           String        @id @map("_id")
+  name         String        @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  salesRecords SalesRecord[]
+
+  @@map("ProductSubCategory")
 }
 
 model SalesRecord {
@@ -193,23 +202,20 @@ model SalesRecord {
 }
 
 model StoreTarget {
-  id                String @id @default(auto()) @map("_id") @db.ObjectId
-  storeId           String
-  brandId           String
-  productCategoryId String
-  month             Int // Month (1-12)
-  year              Int // Year (e.g. 2026)
-  targetRevenue     Float?
-  targetUnits       Int?
+  id            String @id @default(auto()) @map("_id") @db.ObjectId
+  storeId       String
+  brandId       String
+  month         Int // Month (1-12)
+  year          Int // Year (e.g. 2026)
+  targetRevenue Float?
+  targetUnits   Int?
 
-  store           Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  brand           Brand           @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  productCategory ProductCategory @relation(fields: [productCategoryId], references: [id], onDelete: Cascade)
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
 
-  @@unique([storeId, brandId, productCategoryId, month, year])
+  @@unique([storeId, brandId, month, year])
   @@index([storeId, year])
   @@index([brandId])
-  @@index([productCategoryId])
   @@map("StoreTarget")
 }
 
@@ -682,12 +688,3 @@ model DistanceCache {
   @@map("DistanceCache")
 }
 
-model ProductSubCategory {
-  id           String        @id @map("_id")
-  name         String        @unique
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  salesRecords SalesRecord[]
-
-  @@map("ProductSubCategory")
-}

@@ -40,6 +40,7 @@ const StorewiseExcelImport = () => {
   const [showConsole, setShowConsole] = useState(false);
   const [progressData, setProgressData] = useState<{ current: number; total: number } | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const consoleEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new logs are added
@@ -303,6 +304,7 @@ const StorewiseExcelImport = () => {
 
   const downloadTemplate = async () => {
     try {
+      setIsDownloading(true);
       addConsoleLog('info', '📥 Generating store import template...');
       const response = await fetch('/api/admin/excel-export/store-template');
       if (!response.ok) throw new Error('Failed to generate template');
@@ -320,6 +322,8 @@ const StorewiseExcelImport = () => {
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Failed to download template';
       addConsoleLog('error', `❌ Template download failed: ${msg}`);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -384,9 +388,13 @@ const StorewiseExcelImport = () => {
               <p>Download template or export existing stores with the same format</p>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={downloadTemplate} className="excel-stor-sale-template-button">
-                <Download size={16} />
-                <span style={{ marginLeft: '0.5rem' }}>Download Template</span>
+              <button onClick={downloadTemplate} disabled={isDownloading} className="excel-stor-sale-template-button" style={{ opacity: isDownloading ? 0.7 : 1 }}>
+                {isDownloading ? (
+                  <div className="excel-stor-sale-loading-spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', borderTopColor: 'transparent', margin: 0 }} />
+                ) : (
+                  <Download size={16} />
+                )}
+                <span style={{ marginLeft: '0.5rem' }}>{isDownloading ? 'Downloading...' : 'Download Template'}</span>
               </button>
               <button onClick={exportStores} disabled={isExporting} className="excel-stor-sale-template-button" style={{ backgroundColor: '#0891b2', borderColor: '#0891b2', opacity: isExporting ? 0.7 : 1 }}>
                 {isExporting ? (

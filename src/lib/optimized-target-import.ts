@@ -19,7 +19,6 @@ export interface TargetCacheData {
   stores: Map<string, { id: string; storeBrands: { brandId: string }[] }>;
   brands: Map<string, { id: string; brandName: string }>;
   brandsByName: Map<string, { id: string; brandName: string }>;
-  categories: Map<string, { id: string; categoryName: string }>;
   storeBrandsById: Map<string, { storeId: string; brandId: string }>;
 }
 
@@ -38,7 +37,7 @@ export async function initializeTargetCache(
 
   console.log("🔄 Initializing reference cache for targets...");
 
-  const [stores, brands, categories, storeBrands] = await Promise.all([
+  const [stores, brands, storeBrands] = await Promise.all([
     prisma.store.findMany({
       select: {
         id: true,
@@ -48,7 +47,6 @@ export async function initializeTargetCache(
       },
     }),
     prisma.brand.findMany({ select: { id: true, brandName: true } }),
-    prisma.productCategory.findMany({ select: { id: true, categoryName: true } }),
     prisma.storeBrand.findMany({
       where: { storeBrandId: { not: null } },
       select: { storeBrandId: true, storeId: true, brandId: true },
@@ -61,9 +59,6 @@ export async function initializeTargetCache(
     brandsByName: new Map(
       brands.map((b) => [b.brandName.toUpperCase().trim(), b]),
     ),
-    categories: new Map(
-      categories.map((c) => [c.categoryName.toUpperCase().trim(), c]),
-    ),
     storeBrandsById: new Map(
       storeBrands
         .filter((sb) => sb.storeBrandId)
@@ -75,7 +70,7 @@ export async function initializeTargetCache(
   };
 
   console.log(
-    `✅ Target reference cache initialized - ${stores.length} stores, ${brands.length} brands, ${categories.length} categories, ${storeBrands.length} mappings`,
+    `✅ Target reference cache initialized - ${stores.length} stores, ${brands.length} brands, ${storeBrands.length} mappings`,
   );
   return globalTargetCache;
 }
@@ -224,12 +219,6 @@ export async function optimizedPostTarget(
       "store_brand_id",
       "StoreBrand",
     ]);
-    const categoryVal = getRowValue(rowObj, [
-      "Category",
-      "category",
-      "ProductCategory",
-      "Product Category",
-    ]);
     const monthVal = getRowValue(rowObj, ["Month", "month"]);
     const yearVal = getRowValue(rowObj, ["Year", "year"]);
     const targetRevenueVal = getRowValue(rowObj, [
@@ -250,7 +239,6 @@ export async function optimizedPostTarget(
     ]);
 
     const storeBrandId = storeBrandIdVal ? String(storeBrandIdVal).trim() : "";
-    const categoryName = categoryVal ? String(categoryVal).trim() : "";
     const month = parseMonth(monthVal);
     let year = yearVal ? parseInt(String(yearVal).trim(), 10) : null;
 
@@ -268,10 +256,9 @@ export async function optimizedPostTarget(
       }
     }
 
-    const context = `StoreBrand_ID: ${storeBrandId || "N/A"}, Product Category: ${categoryName || "N/A"}, Month: ${monthVal || "N/A"}, Year: ${yearVal || "N/A"}`;
+    const context = `StoreBrand_ID: ${storeBrandId || "N/A"}, Month: ${monthVal || "N/A"}, Year: ${yearVal || "N/A"}`;
 
     if (!storeBrandId) return `❌ Missing StoreBrand_ID. ${context}`;
-    if (!categoryName) return `❌ Missing Product Category. ${context}`;
     if (month === null) return `❌ Invalid or missing Month. ${context}`;
     if (year === null || Number.isNaN(year) || year < 2000 || year > 2100)
       return `❌ Invalid or missing Year. ${context}`;
@@ -282,11 +269,6 @@ export async function optimizedPostTarget(
       return `❌ StoreBrand_ID "${storeBrandId}" not found in database. ${context}`;
 
     const { storeId, brandId } = mapping;
-
-    // Category validation
-    const category = cache.categories.get(categoryName.toUpperCase());
-    if (!category)
-      return `❌ Product Category "${categoryName}" not found in database. ${context}`;
 
     // Parse values
     let targetRevenue: number | null = null;
@@ -320,7 +302,6 @@ export async function optimizedPostTarget(
       data: {
         storeId,
         brandId,
-        productCategoryId: category.id,
         month,
         year,
         targetRevenue,
@@ -342,7 +323,6 @@ export async function batchProcessTargetRecords(
   targetData: Array<{
     storeId: string;
     brandId: string;
-    productCategoryId: string;
     month: number;
     year: number;
     targetRevenue: number | null;
@@ -363,10 +343,9 @@ export async function batchProcessTargetRecords(
       const operations = chunk.map(async (record) => {
         await prisma.storeTarget.upsert({
           where: {
-            storeId_brandId_productCategoryId_month_year: {
+            storeId_brandId_month_year: {
               storeId: record.storeId,
               brandId: record.brandId,
-              productCategoryId: record.productCategoryId,
               month: record.month,
               year: record.year,
             },
@@ -378,7 +357,6 @@ export async function batchProcessTargetRecords(
           create: {
             storeId: record.storeId,
             brandId: record.brandId,
-            productCategoryId: record.productCategoryId,
             month: record.month,
             year: record.year,
             targetRevenue: record.targetRevenue,

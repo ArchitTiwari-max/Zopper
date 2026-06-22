@@ -7,6 +7,7 @@ import {
   CheckCircle,
   Download,
   FileText,
+  Loader2,
   Terminal,
   Trash2,
   Upload,
@@ -56,6 +57,7 @@ const DatewiseExcelImport = () => {
     current: number;
     total: number;
   } | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Custom template filters
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -380,6 +382,7 @@ const DatewiseExcelImport = () => {
   };
 
   const downloadTemplate = async () => {
+    setIsDownloading(true);
     try {
       const monthStr = `${selectedMonth}-${selectedYear}`;
       const params = new URLSearchParams();
@@ -416,6 +419,8 @@ const DatewiseExcelImport = () => {
     } catch (err) {
       console.error("Template download failed:", err);
       addConsoleLog("error", `❌ Template download failed: ${err}`);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -534,10 +539,20 @@ const DatewiseExcelImport = () => {
             <button
               type="button"
               onClick={downloadTemplate}
+              disabled={isDownloading}
               className="excel-dat-sale-template-button"
             >
-              <Download className="w-4 h-4 mr-2" />
-              Download Template
+              {isDownloading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Downloading...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Template
+                </>
+              )}
             </button>
           </div>
         </div>

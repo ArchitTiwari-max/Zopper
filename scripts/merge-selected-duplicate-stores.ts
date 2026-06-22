@@ -351,10 +351,9 @@ async function run() {
       for (const targetD of targetsD) {
         const targetO = await prisma.storeTarget.findUnique({
           where: {
-            storeId_brandId_productCategoryId_month_year: {
+            storeId_brandId_month_year: {
               storeId: O.id,
               brandId: targetD.brandId,
-              productCategoryId: targetD.productCategoryId,
               month: targetD.month,
               year: targetD.year,
             },

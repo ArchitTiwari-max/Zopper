@@ -118,7 +118,6 @@ export async function POST(request: NextRequest) {
         const batchData: Array<{
           storeId: string;
           brandId: string;
-          productCategoryId: string;
           month: number;
           year: number;
           targetRevenue: number | null;
@@ -232,7 +231,6 @@ export async function POST(request: NextRequest) {
                           StoreBrand_ID: String(
                             rowObj.StoreBrand_ID || rowObj.StoreBrand || "",
                           ),
-                          Category: String(rowObj.Category || rowObj['Product Category'] || rowObj.ProductCategory || rowObj.category || ""),
                           status: "success",
                           message: `✅ Row is valid and queued`,
                         },
@@ -259,7 +257,6 @@ export async function POST(request: NextRequest) {
                       StoreBrand_ID: String(
                         rowObj.StoreBrand_ID || rowObj.StoreBrand || "N/A",
                       ),
-                      Category: String(rowObj.Category || rowObj['Product Category'] || rowObj.ProductCategory || rowObj.category || "N/A"),
                       status: "error",
                       message: message.replace(/❌ /, ""),
                     },

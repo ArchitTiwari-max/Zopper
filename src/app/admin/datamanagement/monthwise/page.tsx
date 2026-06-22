@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, AlertCircle, CheckCircle, X, Download, Terminal, Trash2, ArrowLeft } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle, X, Download, Terminal, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import './monthwise-import.css';
 
@@ -37,6 +37,7 @@ const MonthwiseExcelImport = () => {
   const [consoleLogs, setConsoleLogs] = useState<ConsoleLog[]>([]);
   const [showConsole, setShowConsole] = useState(false);
   const [progressData, setProgressData] = useState<{ current: number; total: number } | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   const consoleEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new logs are added
@@ -286,13 +287,24 @@ const MonthwiseExcelImport = () => {
   };
 
   const downloadTemplate = () => {
-    // Create a link to download the template
-    const link = document.createElement('a');
-    link.href = '/templates/monthly-sales-template.xlsx';
-    link.download = 'monthly-sales-template.xlsx';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      setIsDownloading(true);
+      // Create a link to download the template
+      const link = document.createElement('a');
+      link.href = '/templates/monthly-sales-template.xlsx';
+      link.download = 'monthly-sales-template.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      addConsoleLog('success', '✅ Template downloaded successfully!');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Failed to download template';
+      addConsoleLog('error', `❌ Template download failed: ${msg}`);
+    } finally {
+      setTimeout(() => {
+        setIsDownloading(false);
+      }, 500);
+    }
   };
 
   const clearFile = () => {
@@ -333,10 +345,20 @@ const MonthwiseExcelImport = () => {
             </div>
             <button
               onClick={downloadTemplate}
+              disabled={isDownloading}
               className="excel-mon-sale-template-button"
             >
-              <Download className="w-4 h-4 mr-2" />
-              Download Template
+              {isDownloading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Downloading...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Template
+                </>
+              )}
             </button>
           </div>
         </div>

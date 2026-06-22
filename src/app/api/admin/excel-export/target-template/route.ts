@@ -68,19 +68,12 @@ export async function GET(request: Request) {
       });
     }
 
-    // Fetch active categories
-    const categories = await prisma.productCategory.findMany({
-      select: { id: true, categoryName: true },
-      orderBy: { categoryName: "asc" },
-    });
-
     // Query existing targets for this month/year to pre-fill
     const targets = await prisma.storeTarget.findMany({
       where: { month, year },
       select: {
         storeId: true,
         brandId: true,
-        productCategoryId: true,
         targetRevenue: true,
         targetUnits: true,
       },
@@ -94,7 +87,7 @@ export async function GET(request: Request) {
     >();
     targets.forEach((t) => {
       targetMap.set(
-        `${t.storeId.toUpperCase()}_${t.brandId.toUpperCase()}_${t.productCategoryId.toUpperCase()}`,
+        `${t.storeId.toUpperCase()}_${t.brandId.toUpperCase()}`,
         {
           targetRevenue: t.targetRevenue,
           targetUnits: t.targetUnits,
@@ -107,16 +100,14 @@ export async function GET(request: Request) {
 
     // Define column dimensions
     ws.getColumn(1).width = 24; // StoreBrand_ID
-    ws.getColumn(2).width = 20; // Category
-    ws.getColumn(3).width = 12; // Month
-    ws.getColumn(4).width = 12; // Year
-    ws.getColumn(5).width = 18; // Target_Revenue
-    ws.getColumn(6).width = 15; // Target_Units
+    ws.getColumn(2).width = 12; // Month
+    ws.getColumn(3).width = 12; // Year
+    ws.getColumn(4).width = 18; // Target_Revenue
+    ws.getColumn(5).width = 15; // Target_Units
 
     // Header row
     const headers = [
       "StoreBrand_ID",
-      "Product Category",
       "Month",
       "Year",
       "Target_Revenue",
@@ -134,25 +125,22 @@ export async function GET(request: Request) {
     ws.views = [{ state: "frozen", xSplit: 0, ySplit: 1, activeCell: "A2" }];
 
     // Populate lines
-    if (storeBrands.length > 0 && categories.length > 0) {
+    if (storeBrands.length > 0) {
       storeBrands.forEach((sb) => {
         if (!sb.storeBrandId) return;
-        categories.forEach((cat) => {
-          const key = `${sb.storeId.toUpperCase()}_${sb.brandId.toUpperCase()}_${cat.id.toUpperCase()}`;
-          const existing = targetMap.get(key);
-          ws.addRow([
-            sb.storeBrandId,
-            cat.categoryName,
-            month,
-            year,
-            existing?.targetRevenue ?? "",
-            existing?.targetUnits ?? "",
-          ]);
-        });
+        const key = `${sb.storeId.toUpperCase()}_${sb.brandId.toUpperCase()}`;
+        const existing = targetMap.get(key);
+        ws.addRow([
+          sb.storeBrandId,
+          month,
+          year,
+          existing?.targetRevenue ?? "",
+          existing?.targetUnits ?? "",
+        ]);
       });
     } else {
       // Fallback/Sample
-      ws.addRow(["SB_EXAMPLE", "Smartphone", month, year, "", ""]);
+      ws.addRow(["SB_EXAMPLE", month, year, "", ""]);
     }
 
     const buffer = await workbook.xlsx.writeBuffer();
