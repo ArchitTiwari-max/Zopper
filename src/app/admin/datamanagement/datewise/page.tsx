@@ -192,7 +192,7 @@ const DatewiseExcelImport = () => {
       ],
     },
     multiple: false,
-    maxSize: 10 * 1024 * 1024, // 10MB max
+    maxSize: 20 * 1024 * 1024, // 20MB max
   });
 
   const handleImport = async () => {
@@ -605,7 +605,7 @@ const DatewiseExcelImport = () => {
                       or click to browse
                     </p>
                     <p className="excel-dat-sale-upload-text-info">
-                      Supports .xlsx and .xls files up to 10MB
+                      Supports .xlsx and .xls files up to 20MB
                     </p>
                   </div>
                 )}

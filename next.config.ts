@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
   // Reduce bundle size
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    serverActions: {
+      bodySizeLimit: "20mb",
+    },
+    middlewareClientMaxBodySize: "20mb",
   },
   
   // Faster builds
