@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import * as XLSX from "xlsx";
 export const runtime = "nodejs";
+export const maxDuration = 900; // Allow up to 30 minutes for large file processing
 
 import {
   batchProcessDailySalesRecords,
@@ -31,6 +32,15 @@ export async function POST(request: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       let cache: any = null;
+
+      const safeEnqueue = (data: string) => {
+        try {
+          controller.enqueue(encoder.encode(data));
+        } catch (e) {
+          // Stream might be closed by the client or timed out
+          console.warn("Could not enqueue data to stream (connection might be closed):", e);
+        }
+      };
 
       try {
         const formData = await request.formData();

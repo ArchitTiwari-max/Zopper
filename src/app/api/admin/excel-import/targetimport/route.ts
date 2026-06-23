@@ -10,6 +10,8 @@ import {
 } from "@/lib/optimized-target-import";
 
 export const runtime = "nodejs";
+export const maxDuration = 300; // Allow up to 5 minutes for large file processing
+
 
 export async function POST(request: NextRequest) {
   const encoder = new TextEncoder();
