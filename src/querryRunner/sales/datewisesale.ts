@@ -48,10 +48,13 @@ export async function postDailySales(rowObj: Record<string, any>, successCount: 
     const year = dailySales.length > 0 ? parseInt(dailySales[0].date.slice(0, 4)) : new Date().getFullYear();
     await prisma.salesRecord.upsert({
       where: {
-        storeId_brandId_productCategoryId_year: {
+        storeId_brandId_productCategoryId_productSubCategoryId_modelName_planType_year: {
           storeId: Store_ID,
           brandId: brand.id,
           productCategoryId: category.id,
+          productSubCategoryId: 'subcat_na',
+          modelName: 'N/A',
+          planType: 'NA' as any,
           year,
         },
       },
@@ -60,6 +63,9 @@ export async function postDailySales(rowObj: Record<string, any>, successCount: 
         storeId: Store_ID,
         brandId: brand.id,
         productCategoryId: category.id,
+        productSubCategoryId: 'subcat_na',
+        modelName: 'N/A',
+        planType: 'NA' as any,
         year,
         monthlySales: [],
         dailySales,

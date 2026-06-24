@@ -21,6 +21,15 @@ export async function GET(request: Request) {
     if (brandName) where.brand = { brandName };
     if (categoryName) where.productCategory = { categoryName };
 
+    let mappedBrands: string[] = [];
+    if (storeId) {
+      const storeBrands = await prisma.storeBrand.findMany({
+        where: { storeId },
+        include: { brand: { select: { brandName: true } } },
+      });
+      mappedBrands = storeBrands.map((sb) => sb.brand.brandName);
+    }
+
     const salesRecords = await prisma.salesRecord.findMany({
       where,
       include: {
@@ -42,6 +51,12 @@ export async function GET(request: Request) {
             id: true,
             categoryName: true
           }
+        },
+        productSubCategory: {
+          select: {
+            id: true,
+            name: true
+          }
         }
       },
       orderBy: [
@@ -59,6 +74,9 @@ export async function GET(request: Request) {
         storeName: record.store.storeName,
         brandName: record.brand.brandName,
         categoryName: record.productCategory.categoryName,
+        subCategoryName: record.productSubCategory?.name || null,
+        modelName: record.modelName || null,
+        planType: record.planType || null,
         year: record.year,
         month: monthData.month,
         deviceSales: monthData.deviceSales || 0,
@@ -71,7 +89,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       data: transformedData,
-      totalRecords: transformedData.length
+      totalRecords: transformedData.length,
+      mappedBrands
     });
   } catch (err) {
     console.error('GET /api/sales error:', err);
@@ -140,10 +159,13 @@ export async function POST(request: Request) {
       const monthlySales = salesByYear[year];
       await prisma.salesRecord.upsert({
         where: {
-          storeId_brandId_productCategoryId_year: {
+          storeId_brandId_productCategoryId_productSubCategoryId_modelName_planType_year: {
             storeId: Store_ID,
             brandId: brand.id,
             productCategoryId: category.id,
+            productSubCategoryId: 'subcat_na',
+            modelName: 'N/A',
+            planType: 'NA' as any,
             year,
           },
         },
@@ -152,6 +174,9 @@ export async function POST(request: Request) {
           storeId: Store_ID,
           brandId: brand.id,
           productCategoryId: category.id,
+          productSubCategoryId: 'subcat_na',
+          modelName: 'N/A',
+          planType: 'NA' as any,
           year,
           monthlySales,
           dailySales: [],

@@ -74,10 +74,13 @@ export async function postSales(rowObj: Record<string, any>, storeCount: number)
       const incomingMonthlySales = salesByYear[year];
       
       const key = {
-        storeId_brandId_productCategoryId_year: {
+        storeId_brandId_productCategoryId_productSubCategoryId_modelName_planType_year: {
           storeId: Store_ID,
           brandId: brand.id,
           productCategoryId: category.id,
+          productSubCategoryId: 'subcat_na',
+          modelName: 'N/A',
+          planType: 'NA' as any,
           year,
         },
       };
@@ -101,6 +104,9 @@ export async function postSales(rowObj: Record<string, any>, storeCount: number)
           storeId: Store_ID,
           brandId: brand.id,
           productCategoryId: category.id,
+          productSubCategoryId: 'subcat_na',
+          modelName: 'N/A',
+          planType: 'NA' as any,
           year,
           monthlySales: mergedMonthlySales,
           dailySales: [],

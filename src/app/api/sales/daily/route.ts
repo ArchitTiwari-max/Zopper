@@ -60,6 +60,12 @@ export async function GET(request: NextRequest) {
             id: true,
             categoryName: true
           }
+        },
+        productSubCategory: {
+          select: {
+            id: true,
+            name: true
+          }
         }
       },
       orderBy: [
@@ -93,6 +99,9 @@ export async function GET(request: NextRequest) {
             storeName: record.store.storeName,
             brandName: record.brand.brandName,
             categoryName: record.productCategory.categoryName,
+            subCategoryName: record.productSubCategory?.name || null,
+            modelName: record.modelName || null,
+            planType: record.planType || null,
             year: record.year,
             date: iso,
             countOfSales: Number(d.countOfSales || 0),

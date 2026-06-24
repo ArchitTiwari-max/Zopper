@@ -169,10 +169,13 @@ async function main() {
           for (const sale of loserSales) {
             const existingWinnerSale = await tx.salesRecord.findUnique({
               where: {
-                storeId_brandId_productCategoryId_year: {
+                storeId_brandId_productCategoryId_productSubCategoryId_modelName_planType_year: {
                   storeId: winnerId,
                   brandId: sale.brandId,
                   productCategoryId: sale.productCategoryId,
+                  productSubCategoryId: sale.productSubCategoryId,
+                  modelName: sale.modelName,
+                  planType: sale.planType,
                   year: sale.year,
                 },
               },

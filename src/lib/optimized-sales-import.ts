@@ -187,9 +187,9 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
     const planTypeVal = rowObj['Plan Type'] || rowObj.PlanType || rowObj.planType;
 
     // Handle product subcategory (dynamically create if not found)
-    let productSubCategoryId: string | null = null;
-    const subCategoryName = subCategoryVal ? String(subCategoryVal).trim() : '';
-    if (subCategoryName) {
+    let productSubCategoryId: string = 'subcat_na';
+    const subCategoryName = subCategoryVal ? String(subCategoryVal).trim() : 'N/A';
+    if (subCategoryName !== 'N/A') {
       const cacheKey = subCategoryName.toUpperCase();
       let subCat = cache.subCategories.get(cacheKey);
       if (!subCat) {
@@ -207,16 +207,35 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
       } else {
         productSubCategoryId = subCat.id;
       }
+    } else {
+      // Find or create 'N/A' subcategory
+      const cacheKey = 'N/A';
+      let subCat = cache.subCategories.get(cacheKey);
+      if (!subCat) {
+        const prisma = getPrismaInstance();
+        const newSubCat = await prisma.productSubCategory.upsert({
+          where: { name: 'N/A' },
+          update: {},
+          create: {
+            id: 'subcat_na',
+            name: 'N/A'
+          }
+        });
+        cache.subCategories.set(cacheKey, newSubCat);
+        productSubCategoryId = newSubCat.id;
+      } else {
+        productSubCategoryId = subCat.id;
+      }
     }
 
     // Validate plan type against the enum values
-    let planType: any = null;
+    let planType: any = 'NA';
     if (planTypeVal) {
       const cleanPlanType = String(planTypeVal).trim().toUpperCase();
-      if (['ADLD', 'SP', 'COMBO', 'EW'].includes(cleanPlanType)) {
+      if (['ADLD', 'SP', 'COMBO', 'EW', 'NA'].includes(cleanPlanType)) {
         planType = cleanPlanType;
       } else {
-        return `❌ Invalid Plan Type: "${planTypeVal}". Allowed values are ADLD, SP, COMBO, EW. ${context}`;
+        return `❌ Invalid Plan Type: "${planTypeVal}". Allowed values are ADLD, SP, COMBO, EW, NA. ${context}`;
       }
     }
 
@@ -285,7 +304,7 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
         brandId: mapping.brandId,
         productCategoryId: category.id,
         productSubCategoryId,
-        modelName: modelNameVal ? String(modelNameVal).trim() : null,
+        modelName: modelNameVal ? String(modelNameVal).trim() : 'N/A',
         planType,
         year: detectedYear,
         dailySales: dailySalesByMonth,
@@ -367,10 +386,13 @@ export async function batchProcessSalesRecords(
           const incomingMonthlySales = record.salesByYear[year];
           
           const key = {
-            storeId_brandId_productCategoryId_year: {
+            storeId_brandId_productCategoryId_productSubCategoryId_modelName_planType_year: {
               storeId: record.storeId,
               brandId: record.brandId,
               productCategoryId: record.productCategoryId,
+              productSubCategoryId: 'subcat_na', // Default to N/A for monthly
+              modelName: 'N/A', // Default to N/A for monthly
+              planType: 'NA' as any, // Default to NA for monthly
               year,
             }
           } as const;
@@ -394,6 +416,9 @@ export async function batchProcessSalesRecords(
               storeId: record.storeId,
               brandId: record.brandId,
               productCategoryId: record.productCategoryId,
+              productSubCategoryId: 'subcat_na',
+              modelName: 'N/A',
+              planType: 'NA' as any,
               year,
               monthlySales: mergedMonthlySales,
               dailySales: []
@@ -425,9 +450,9 @@ export async function batchProcessDailySalesRecords(
     storeId: string;
     brandId: string;
     productCategoryId: string;
-    productSubCategoryId?: string | null;
-    modelName?: string | null;
-    planType?: any;
+    productSubCategoryId: string;
+    modelName: string;
+    planType: any;
     year: number;
     dailySales: Record<string, any[]>; // grouped by month { "1": [...], ... }
     context: string;
@@ -489,10 +514,13 @@ export async function batchProcessDailySalesRecords(
     try {
       const operations = chunk.map(async (record) => {
         const key = {
-          storeId_brandId_productCategoryId_year: {
+          storeId_brandId_productCategoryId_productSubCategoryId_modelName_planType_year: {
             storeId: record.storeId,
             brandId: record.brandId,
             productCategoryId: record.productCategoryId,
+            productSubCategoryId: record.productSubCategoryId,
+            modelName: record.modelName,
+            planType: record.planType,
             year: record.year,
           }
         } as const;

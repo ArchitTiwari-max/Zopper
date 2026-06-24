@@ -14,6 +14,9 @@ interface SalesData {
   storeName: string;
   brandName: string;
   categoryName: string;
+  subCategoryName?: string;
+  modelName?: string;
+  planType?: string;
   month: number;
   year: number;
   deviceSales: number;
@@ -28,6 +31,9 @@ interface DailySalesData {
   storeName: string;
   brandName: string;
   categoryName: string;
+  subCategoryName?: string;
+  modelName?: string;
+  planType?: string;
   year: number;
   date: string;
   countOfSales: number;
@@ -222,6 +228,9 @@ const AdminSalesPage: React.FC = () => {
       if (result.success && result.data) {
         setSalesData(result.data);
         setStats(calculateStats(result.data));
+        if (result.mappedBrands) {
+          setMappedBrands(result.mappedBrands);
+        }
       } else {
         console.error("Failed to fetch sales data:", result.error);
         // Fallback to sample data if API fails
@@ -251,6 +260,7 @@ const AdminSalesPage: React.FC = () => {
   const fetchDailySalesData = async (
     targetYear: string,
     targetMonth: string,
+    targetBrand: string,
   ) => {
     if (!storeId || !targetYear || !targetMonth) {
       return;
@@ -264,22 +274,22 @@ const AdminSalesPage: React.FC = () => {
         year: targetYear,
         month: targetMonth,
       });
+      if (targetBrand) {
+        params.append("brandName", targetBrand);
+      }
 
       const response = await fetch(`/api/sales/daily?${params}`);
       const result = await response.json();
 
       if (result.success && result.data) {
         setDailySalesData(result.data);
-        setMappedBrands(result.mappedBrands || []);
       } else {
         console.error("Failed to fetch daily sales data:", result.error);
         setDailySalesData([]);
-        setMappedBrands([]);
       }
     } catch (error) {
       console.error("Error fetching daily sales data:", error);
       setDailySalesData([]);
-      setMappedBrands([]);
     } finally {
       setDailyLoading(false);
     }
@@ -328,47 +338,43 @@ const AdminSalesPage: React.FC = () => {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: fetchDailySalesData is called when store or filters change
   useEffect(() => {
-    if (storeId && dailySalesYear && dailySalesMonth) {
-      fetchDailySalesData(dailySalesYear, dailySalesMonth);
+    if (storeId && dailySalesYear && dailySalesMonth && dateWiseBrand) {
+      fetchDailySalesData(dailySalesYear, dailySalesMonth, dateWiseBrand);
     }
-  }, [storeId, dailySalesYear, dailySalesMonth]);
+  }, [storeId, dailySalesYear, dailySalesMonth, dateWiseBrand]);
 
   // Reset selected brand filter if the brand is no longer mapped to the store or has no data
+  // Reset selected brand filter if the brand is no longer mapped to the store
   // biome-ignore lint/correctness/useExhaustiveDependencies: dateWiseBrand is read to decide reset
   useEffect(() => {
     if (mappedBrands.length === 0) {
-      setDateWiseBrand("");
+      if (dateWiseBrand !== "") setDateWiseBrand("");
       return;
     }
 
-    // 1. If currently selected brand is not mapped, reset to something valid
+    if (!dateWiseBrand) {
+      setDateWiseBrand(mappedBrands[0]);
+      return;
+    }
+
     if (!mappedBrands.includes(dateWiseBrand)) {
-      const firstWithData = dailySalesData.find(item => mappedBrands.includes(item.brandName))?.brandName;
-      setDateWiseBrand(firstWithData || mappedBrands[0]);
-      return;
+      setDateWiseBrand(mappedBrands[0]);
     }
-
-    // 2. If currently selected brand is mapped, but has no data in current month,
-    // and there IS some other brand that has data, select the one that has data.
-    const currentBrandHasData = dailySalesData.some(item => item.brandName === dateWiseBrand);
-    if (!currentBrandHasData && dailySalesData.length > 0) {
-      const firstWithData = dailySalesData.find(item => mappedBrands.includes(item.brandName))?.brandName;
-      if (firstWithData) {
-        setDateWiseBrand(firstWithData);
-      }
-    }
-  }, [mappedBrands, dailySalesData]);
+  }, [mappedBrands]);
 
   const filteredData = salesData;
 
   // Group data by brand and category for the table format
   const groupedData = filteredData.reduce(
     (acc, item) => {
-      const key = `${item.brandName}-${item.categoryName}`;
+      const key = `${item.brandName}-${item.categoryName}-${item.subCategoryName || ''}-${item.modelName || ''}-${item.planType || ''}`;
       if (!acc[key]) {
         acc[key] = {
           brandName: item.brandName,
           categoryName: item.categoryName,
+          subCategoryName: item.subCategoryName,
+          modelName: item.modelName,
+          planType: item.planType,
           // Composite key: "month-year"
           months: {},
         };
@@ -388,6 +394,9 @@ const AdminSalesPage: React.FC = () => {
       {
         brandName: string;
         categoryName: string;
+        subCategoryName?: string;
+        modelName?: string;
+        planType?: string;
         months: Record<
           string,
           {
@@ -487,10 +496,10 @@ const AdminSalesPage: React.FC = () => {
       ];
     });
 
-    const headers = ["Brand", "Category", ...monthHeaders];
+    const headers = ["Brand", "Category", "Subcategory", "Model Name", "Plan Type", ...monthHeaders];
 
     const rows = tableData.map((row) => {
-      const cols: (string | number)[] = [row.brandName, row.categoryName];
+      const cols: (string | number)[] = [row.brandName, row.categoryName, row.subCategoryName || "", row.modelName || "", row.planType || ""];
       recentMonths.forEach((monthObj) => {
         const monthKey = `${monthObj.month}-${monthObj.year}`;
         const monthData = row.months[monthKey];
@@ -774,6 +783,42 @@ const AdminSalesPage: React.FC = () => {
                       color: "#495057",
                     }}
                   >
+                    Subcategory
+                  </th>
+                  <th
+                    style={{
+                      border: "1px solid #dee2e6",
+                      padding: "12px",
+                      textAlign: "center",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      color: "#495057",
+                    }}
+                  >
+                    Model Name
+                  </th>
+                  <th
+                    style={{
+                      border: "1px solid #dee2e6",
+                      padding: "12px",
+                      textAlign: "center",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      color: "#495057",
+                    }}
+                  >
+                    Plan Type
+                  </th>
+                  <th
+                    style={{
+                      border: "1px solid #dee2e6",
+                      padding: "12px",
+                      textAlign: "center",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      color: "#495057",
+                    }}
+                  >
                     Plan Sales
                   </th>
                   <th
@@ -810,13 +855,8 @@ const AdminSalesPage: React.FC = () => {
                     );
                   }
 
-                  // Filter daily sales data by selected brand
-                  const filteredDailySales =
-                    !dateWiseBrand || dateWiseBrand === "All Brands"
-                      ? dailySalesData
-                      : dailySalesData.filter(
-                          (item) => item.brandName === dateWiseBrand,
-                        );
+                  // Data is now filtered by the backend
+                  const filteredDailySales = dailySalesData;
 
                   if (filteredDailySales.length === 0) {
                     return (
@@ -859,7 +899,7 @@ const AdminSalesPage: React.FC = () => {
                     dayData.forEach((item, idx) => {
                       rowsEls.push(
                         <tr
-                          key={`${dateStr}-${item.categoryName}`}
+                          key={item.id}
                           style={{
                             backgroundColor:
                               idx % 2 === 0 ? "#f8f9fa" : "white",
@@ -888,6 +928,33 @@ const AdminSalesPage: React.FC = () => {
                             }}
                           >
                             {item.categoryName}
+                          </td>
+                          <td
+                            style={{
+                              border: "1px solid #dee2e6",
+                              padding: "10px",
+                              textAlign: "center",
+                            }}
+                          >
+                            {item.subCategoryName || "-"}
+                          </td>
+                          <td
+                            style={{
+                              border: "1px solid #dee2e6",
+                              padding: "10px",
+                              textAlign: "center",
+                            }}
+                          >
+                            {item.modelName || "-"}
+                          </td>
+                          <td
+                            style={{
+                              border: "1px solid #dee2e6",
+                              padding: "10px",
+                              textAlign: "center",
+                            }}
+                          >
+                            {item.planType || "-"}
                           </td>
                           <td
                             style={{
@@ -987,6 +1054,9 @@ const AdminSalesPage: React.FC = () => {
             <colgroup>
               <col style={{ width: "12%" }} />
               <col style={{ width: "15%" }} />
+              <col style={{ width: "10%" }} />
+              <col style={{ width: "10%" }} />
+              <col style={{ width: "10%" }} />
               <col style={{ width: "8%" }} />
               <col style={{ width: "8%" }} />
               <col style={{ width: "8%" }} />
@@ -1027,6 +1097,45 @@ const AdminSalesPage: React.FC = () => {
                   rowSpan={2}
                 >
                   CATEGORY
+                </th>
+                <th
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: "12px 8px",
+                    textAlign: "center",
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    wordWrap: "break-word",
+                  }}
+                  rowSpan={2}
+                >
+                  SUBCATEGORY
+                </th>
+                <th
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: "12px 8px",
+                    textAlign: "center",
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    wordWrap: "break-word",
+                  }}
+                  rowSpan={2}
+                >
+                  MODEL NAME
+                </th>
+                <th
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: "12px 8px",
+                    textAlign: "center",
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    wordWrap: "break-word",
+                  }}
+                  rowSpan={2}
+                >
+                  PLAN TYPE
                 </th>
                 {recentMonths.map((monthObj) => {
                   return (
@@ -1135,7 +1244,7 @@ const AdminSalesPage: React.FC = () => {
                   brandNames.forEach((brandName) => {
                     const brandRows = brandGroups[brandName];
                     brandRows.forEach((row, brandRowIndex) => {
-                      const brandKey = `${row.brandName}-${row.categoryName}`;
+                      const brandKey = `${row.brandName}-${row.categoryName}-${row.subCategoryName || ''}-${row.modelName || ''}-${row.planType || ''}`;
 
                       // Create cells first to reuse
                       const tds: React.ReactNode[] = [];
@@ -1185,6 +1294,48 @@ const AdminSalesPage: React.FC = () => {
                           }}
                         >
                           {row.categoryName}
+                        </td>,
+                        <td
+                          key={`subcat-${brandKey}`}
+                          style={{
+                            border: "1px solid #ccc",
+                            padding: "12px 8px",
+                            textAlign: "center",
+                            verticalAlign: "middle",
+                            wordWrap: "break-word",
+                            fontSize: "12px",
+                            minHeight: "50px",
+                          }}
+                        >
+                          {row.subCategoryName || "-"}
+                        </td>,
+                        <td
+                          key={`model-${brandKey}`}
+                          style={{
+                            border: "1px solid #ccc",
+                            padding: "12px 8px",
+                            textAlign: "center",
+                            verticalAlign: "middle",
+                            wordWrap: "break-word",
+                            fontSize: "12px",
+                            minHeight: "50px",
+                          }}
+                        >
+                          {row.modelName || "-"}
+                        </td>,
+                        <td
+                          key={`plan-${brandKey}`}
+                          style={{
+                            border: "1px solid #ccc",
+                            padding: "12px 8px",
+                            textAlign: "center",
+                            verticalAlign: "middle",
+                            wordWrap: "break-word",
+                            fontSize: "12px",
+                            minHeight: "50px",
+                          }}
+                        >
+                          {row.planType || "-"}
                         </td>,
                       );
 
@@ -1275,7 +1426,7 @@ const AdminSalesPage: React.FC = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan={2 + recentMonths.length * 4}
+                    colSpan={5 + recentMonths.length * 4}
                     style={{
                       border: "1px solid #ccc",
                       padding: "30px 20px",

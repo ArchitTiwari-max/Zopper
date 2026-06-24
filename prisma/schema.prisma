@@ -46,6 +46,7 @@ enum PlanType {
   SP
   COMBO
   EW
+  NA
 }
 
 model User {
@@ -181,10 +182,10 @@ model SalesRecord {
   storeId              String
   brandId              String
   productCategoryId    String
-  productSubCategoryId String?
+  productSubCategoryId String  @default("N/A")
   year                 Int
-  modelName            String?
-  planType             PlanType?
+  modelName            String  @default("N/A")
+  planType             PlanType @default(NA)
 
   monthlySales Json //Store summary of all 12 months Each month contains deviceSales, planSales, attachPct, revenue etc. EX. [{ month: 1, deviceSales: X, planSales: Y, attachPct: Z, revenue: R }, ..., { month: 12, ... }]
   dailySales   Json // Stores daily sales data grouped by month (e.g., { "1": [{ date: "01-01-2025", planSales: 1, revenue: 1200 }], "2": [{ date: "01-02-2025", planSales: 1, revenue: 900 }] }), tracking only planSales and revenue for each day.
@@ -192,9 +193,9 @@ model SalesRecord {
   store              Store               @relation(fields: [storeId], references: [id])
   brand              Brand               @relation(fields: [brandId], references: [id])
   productCategory    ProductCategory     @relation(fields: [productCategoryId], references: [id])
-  productSubCategory ProductSubCategory? @relation(fields: [productSubCategoryId], references: [id])
+  productSubCategory ProductSubCategory  @relation(fields: [productSubCategoryId], references: [id])
 
-  @@unique([storeId, brandId, productCategoryId, year])
+  @@unique([storeId, brandId, productCategoryId, productSubCategoryId, modelName, planType, year])
   // Indexes for faster analytics queries
   @@index([storeId, year])
   @@index([storeId, brandId, year])

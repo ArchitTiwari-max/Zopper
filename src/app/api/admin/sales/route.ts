@@ -110,10 +110,13 @@ export async function POST(request: NextRequest) {
     // Check if record exists for this store-brand-category-year combination
     const existingRecord = await prisma.salesRecord.findUnique({
       where: {
-        storeId_brandId_productCategoryId_year: {
+        storeId_brandId_productCategoryId_productSubCategoryId_modelName_planType_year: {
           storeId,
           brandId,
           productCategoryId,
+          productSubCategoryId: 'subcat_na',
+          modelName: 'N/A',
+          planType: 'NA' as any,
           year
         }
       }
@@ -125,10 +128,13 @@ export async function POST(request: NextRequest) {
       // Update existing record
       salesRecord = await prisma.salesRecord.update({
         where: {
-          storeId_brandId_productCategoryId_year: {
+          storeId_brandId_productCategoryId_productSubCategoryId_modelName_planType_year: {
             storeId,
             brandId,
             productCategoryId,
+            productSubCategoryId: 'subcat_na',
+            modelName: 'N/A',
+            planType: 'NA' as any,
             year
           }
         },
@@ -155,6 +161,9 @@ export async function POST(request: NextRequest) {
           storeId,
           brandId,
           productCategoryId,
+          productSubCategoryId: 'subcat_na',
+          modelName: 'N/A',
+          planType: 'NA' as any,
           year,
           monthlySales: finalMonthlySales as any,
           dailySales: finalDailySales as any
