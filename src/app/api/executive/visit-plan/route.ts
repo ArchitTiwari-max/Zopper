@@ -388,7 +388,10 @@ export async function GET(request: NextRequest) {
     const [visitPlans, totalCount] = await Promise.all([
       prisma.visitPlan.findMany({
         where: { executiveId: executive.id },
-        orderBy: { submittedAt: 'desc' },
+        orderBy: [
+          { plannedVisitDate: 'desc' },
+          { submittedAt: 'desc' }
+        ],
         skip: skip,
         take: limit,
       }),
