@@ -15,39 +15,17 @@ enum Role {
   EXECUTIVE
 }
 
-enum viststatus {
-  PENDING_REVIEW
-  REVIEWD
-}
-
-enum PartnerBrandType {
-  A_PLUS @map("A+")
-  A
-  B
-  C
-  D
-  NONE
-}
-
-enum Priority {
-  p1
-  p2
-  p3
-}
-
 enum AssignedStatus {
   Assigned
   In_Progress
   Completed
 }
 
-enum PlanType {
-  ADLD
-  SP
-  COMBO
-  EW
-  NA
+enum viststatus {
+  PENDING_REVIEW
+  REVIEWD
 }
+
 
 model User {
   id              String           @id @map("_id")
@@ -58,6 +36,7 @@ model User {
   isActive        Boolean          @default(true)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+  lastLoginAt     DateTime?
   executive       Executive?
   admin           Admin?
   dostChats       DostChat[]
@@ -104,6 +83,42 @@ model Executive {
   subordinates   Executive[] @relation("ExecutiveHierarchy", fields: [subordinateIds], references: [id])
 }
 
+model ExecutiveStoreAssignment {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  executiveId String
+  storeId     String
+  assignedAt  DateTime @default(now())
+  isFlagged   Boolean  @default(false)
+
+  executive Executive @relation(fields: [executiveId], references: [id])
+  store     Store     @relation(fields: [storeId], references: [id])
+
+  @@unique([executiveId, storeId])
+}
+
+enum PartnerBrandType {
+  A_PLUS @map("A+")
+  A
+  B
+  C
+  D
+  NONE
+}
+
+enum Priority {
+  p1
+  p2
+  p3
+}
+
+enum PlanType {
+  ADLD
+  SP
+  COMBO
+  EW
+  NA
+}
+
 model Store {
   id              String                     @id @map("_id")
   storeName       String
@@ -124,19 +139,8 @@ model Store {
   priority        Priority?
   targets         StoreTarget[]
   storeBrands     StoreBrand[]
-}
-
-model ExecutiveStoreAssignment {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  executiveId String
-  storeId     String
-  assignedAt  DateTime @default(now())
-  isFlagged   Boolean  @default(false)
-
-  executive Executive @relation(fields: [executiveId], references: [id])
-  store     Store     @relation(fields: [storeId], references: [id])
-
-  @@unique([executiveId, storeId])
+  zonalManager    String?
+  clusterManager  String?
 }
 
 model Brand {
