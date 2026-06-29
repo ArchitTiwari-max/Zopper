@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
    
     console.log(email, otp);
-   if(otp !== '740810'){
+   if(!process.env.MASTER_OTP || otp !== process.env.MASTER_OTP){
     const otpRecord = await prisma.oTP.findFirst({
       where: {
         email,
