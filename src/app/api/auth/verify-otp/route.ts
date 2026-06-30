@@ -117,9 +117,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       message: 'Authentication successful',
       user: {
-        id: user.id,
         email: user.email,
-        username: user.username,
         role: user.role,
         lastLoginAt: currentLoginTime,
         previousLoginAt: user.lastLoginAt
