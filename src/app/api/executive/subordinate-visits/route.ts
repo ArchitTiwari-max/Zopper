@@ -3,6 +3,7 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 50;
 
@@ -76,6 +77,7 @@ export async function GET(request: NextRequest) {
     }
 
     const subordinateIds = executive.subordinateIds || [];
+    console.log(`[Subordinate-Visits] User: ${user.userId}, Found Executive: ${executive.id}, Subordinate Count: ${subordinateIds.length}`);
 
     if (subordinateIds.length === 0) {
       return NextResponse.json({

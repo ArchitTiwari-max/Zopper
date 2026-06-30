@@ -103,6 +103,7 @@ export default function SubordinateVisitsPage() {
         setError(null);
         const response = await fetch(
           `/api/executive/subordinate-visits?range=${range}&page=${page}`,
+          { cache: 'no-store' }
         );
 
         if (!response.ok) throw new Error("Failed to fetch subordinate visits");
