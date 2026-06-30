@@ -3,6 +3,7 @@ import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/executive/my-subordinates
@@ -53,8 +54,8 @@ export async function GET(request: NextRequest) {
     });
 
     const response = NextResponse.json({ subordinates });
-    // Short cache — subordinate list rarely changes
-    response.headers.set('Cache-Control', 'private, max-age=300');
+    // Prevent caching so the user gets the correct subordinates instantly after switching accounts
+    response.headers.set('Cache-Control', 'no-store, max-age=0');
     return response;
   } catch (error: any) {
     console.error('Error fetching subordinates:', error);
