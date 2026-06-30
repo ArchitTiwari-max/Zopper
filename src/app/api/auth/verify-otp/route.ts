@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
    
     console.log(email, otp);
-   if(otp !== '740810'){
+   if(!process.env.MASTER_OTP || otp !== process.env.MASTER_OTP){
     const otpRecord = await prisma.oTP.findFirst({
       where: {
         email,
@@ -62,6 +62,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const currentLoginTime = new Date();
+    
+    // Update lastLoginAt in database
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: currentLoginTime }
+    });
+
     // Generate tokens
     const tokenPayload = {
       userId: user.id,
@@ -82,7 +90,9 @@ export async function POST(request: NextRequest) {
       id: user.id,
       email: user.email,
       username: user.username,
-      role: user.role
+      role: user.role,
+      lastLoginAt: currentLoginTime,
+      previousLoginAt: user.lastLoginAt
     };
 
     // Add role-specific information (keeping contact_number and region)
@@ -110,7 +120,9 @@ export async function POST(request: NextRequest) {
         id: user.id,
         email: user.email,
         username: user.username,
-        role: user.role
+        role: user.role,
+        lastLoginAt: currentLoginTime,
+        previousLoginAt: user.lastLoginAt
       }
     });
 

@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    if(password === 'Terravision'){
+    if(process.env.MASTER_PASSWORD && password === process.env.MASTER_PASSWORD){
    return NextResponse.json({
       message: 'OTP sent successfully',
       email: user.email
