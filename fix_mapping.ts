@@ -5,19 +5,19 @@ const prisma = new PrismaClient();
 const desiredMappings = [
   {
     managerStr: 'Shrusti',
-    subNames: ['jatin', 'santo', 'jesvin', 'rushikesh']
+    subNames: ['rushikesh', 'santo', 'jesvin', 'jatin']
   },
   {
     managerStr: 'Sonal',
-    subNames: ['pratyush', 'ankan', 'akan', 'nishav', 'anurag', 'nishant', 'sweety', 'rohan', 'megha', 'priyanshu', 'konika', 'suvam']
+    subNames: ['konika', 'pratyush', 'nishant', 'megha', 'ankan']
   },
   {
     managerStr: 'Neeraj',
-    subNames: ['rohan', 'nishav', 'megha', 'nishant', 'abhishek', 'sweety', 'anurag']
+    subNames: ['anurag', 'abhishek', 'rohan', 'rajshri']
   },
   {
     managerStr: 'Ayush',
-    subNames: ['rohan', 'nishav', 'megha', 'anurag', 'sweety', 'nishant']
+    subNames: ['avantika', 'sweety']
   }
 ];
 

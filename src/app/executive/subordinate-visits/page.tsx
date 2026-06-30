@@ -103,6 +103,7 @@ export default function SubordinateVisitsPage() {
         setError(null);
         const response = await fetch(
           `/api/executive/subordinate-visits?range=${range}&page=${page}`,
+          { cache: 'no-store' }
         );
 
         if (!response.ok) throw new Error("Failed to fetch subordinate visits");
@@ -132,7 +133,7 @@ export default function SubordinateVisitsPage() {
   useEffect(() => {
     const fetchSubordinates = async () => {
       try {
-        const res = await fetch('/api/executive/my-subordinates');
+        const res = await fetch('/api/executive/my-subordinates', { cache: 'no-store' });
         if (!res.ok) return;
         const data = await res.json();
         if (Array.isArray(data.subordinates)) {
