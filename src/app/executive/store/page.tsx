@@ -195,7 +195,7 @@ const Store: React.FC = () => {
     checkManager();
   }, []);
 
-  // Fetch stores data from API
+  // Fetch stores data on mount
   useEffect(() => {
     fetchStores();
     fetchRAGData();

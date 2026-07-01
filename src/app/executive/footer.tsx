@@ -25,9 +25,14 @@ const Footer: React.FC = () => {
           <span className="nav-icon">📝</span>
           <span className="nav-label">Tasks</span>
         </Link>
-        <Link href="/executive/analytics-impact" className={`nav-item ${pathname === '/executive/analytics-impact' ? 'active' : ''}`}>
+        {/* Insights tab — temporarily hidden */}
+        {/* <Link href="/executive/analytics-impact" className={`nav-item ${pathname === '/executive/analytics-impact' ? 'active' : ''}`}>
           <span className="nav-icon">💡</span>
           <span className="nav-label">Insights</span>
+        </Link> */}
+        <Link href="/executive/stakeholders" className={`nav-item ${pathname === '/executive/stakeholders' ? 'active' : ''}`}>
+          <span className="nav-icon">🤝</span>
+          <span className="nav-label">Stakeholders</span>
         </Link>
         <Link href="/executive/visit-history" className={`nav-item ${pathname === '/executive/visit-history' ? 'active' : ''}`}>
           <span className="nav-icon">📋</span>

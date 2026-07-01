@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import VisitDetailsModal from '../components/VisitDetailsModal';
 import HolidayDetailsModal from '../components/HolidayDetailsModal';
+import SubmissionTypeDropdown from '../components/SubmissionTypeDropdown';
+import StakeholderVisitDetailsModal from '../components/StakeholderVisitDetailsModal';
 import { useDateFilter } from '../contexts/DateFilterContext';
 import DateFilter from '@/components/DateFilter/DateFilter';
 import * as XLSX from 'xlsx';
@@ -74,10 +76,12 @@ const VisitHistory: React.FC = () => {
   const [physicalVisits, setPhysicalVisits] = useState<VisitDetail[]>([]);
   const [digitalVisits, setDigitalVisits] = useState<VisitDetail[]>([]);
   const [holidayRequests, setHolidayRequests] = useState<HolidayRequest[]>([]);
-  const [activeTab, setActiveTab] = useState<'PHYSICAL' | 'DIGITAL' | 'HOLIDAY'>('PHYSICAL');
+  const [stakeholderVisits, setStakeholderVisits] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'PHYSICAL' | 'DIGITAL' | 'HOLIDAY' | 'STAKEHOLDER'>('PHYSICAL');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedVisit, setSelectedVisit] = useState<VisitDetail | null>(null);
+  const [selectedStakeholderVisit, setSelectedStakeholderVisit] = useState<any | null>(null);
   const [selectedVisitType, setSelectedVisitType] = useState<'PHYSICAL' | 'DIGITAL'>('PHYSICAL');
   const [selectedHoliday, setSelectedHoliday] = useState<HolidayRequest | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -132,8 +136,8 @@ const VisitHistory: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch physical, digital data, holiday requests, and filter options in parallel
-        const [physicalRes, digitalRes, holidayRes, filterResponse] = await Promise.all([
+        // Fetch physical, digital data, holiday requests, filter options, and stakeholder visits in parallel
+        const [physicalRes, digitalRes, holidayRes, filterResponse, stakeholderRes] = await Promise.all([
           fetch(`/api/executive/visits/data?period=${encodeURIComponent(selectedPeriod)}`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
@@ -153,6 +157,11 @@ const VisitHistory: React.FC = () => {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include'
+          }),
+          fetch('/api/executive/stakeholder-visit', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
           })
         ]);
 
@@ -166,17 +175,25 @@ const VisitHistory: React.FC = () => {
           throw new Error(errorMsg);
         }
 
-        const [physicalResult, digitalResult, holidayResult, filterResult] = await Promise.all([
+        const [physicalResult, digitalResult, holidayResult, filterResult, stakeholderResult] = await Promise.all([
           physicalRes.json(),
           digitalRes.json(),
           holidayRes.ok ? holidayRes.json() : { data: [] },
-          filterResponse.json()
+          filterResponse.json(),
+          stakeholderRes.ok ? stakeholderRes.json() : { visits: [] }
         ]);
 
         if (physicalResult.success && digitalResult.success && filterResult.success) {
           setPhysicalVisits(physicalResult.data || []);
           setDigitalVisits(digitalResult.data || []);
           setHolidayRequests(holidayResult.data || []);
+          
+          const mappedStakeholderVisits = (stakeholderResult.visits || []).map((v: any) => ({
+            ...v,
+            brandName: v.brand?.brandName || 'Unknown Brand'
+          }));
+          setStakeholderVisits(mappedStakeholderVisits);
+          
           setFilterOptions(filterResult.data.filterOptions);
         } else {
           throw new Error(physicalResult.error || digitalResult.error || filterResult.error || 'Failed to fetch data');
@@ -192,6 +209,18 @@ const VisitHistory: React.FC = () => {
     };
 
     fetchVisitData();
+    
+    const handleStakeholderVisitDeleted = (e: any) => {
+      const deletedId = e.detail?.id;
+      if (deletedId) {
+        setStakeholderVisits(prev => prev.filter(v => v.id !== deletedId));
+      }
+    };
+    
+    window.addEventListener('stakeholder-visit-deleted', handleStakeholderVisitDeleted);
+    return () => {
+      window.removeEventListener('stakeholder-visit-deleted', handleStakeholderVisitDeleted);
+    };
   }, [selectedPeriod]);
 
   const getStatusColor = (status: string) => {
@@ -221,28 +250,11 @@ const VisitHistory: React.FC = () => {
       return 'Invalid Date';
     }
 
-    // Get today's date and yesterday's date for comparison
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-
-    // Reset time to 00:00:00 for accurate date comparison
-    const visitDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const yesterdayDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
-
-    // Check if the visit date is today or yesterday
-    if (visitDate.getTime() === todayDate.getTime()) {
-      return 'Today';
-    } else if (visitDate.getTime() === yesterdayDate.getTime()) {
-      return 'Yesterday';
-    } else {
-      // Format to dd/mm/yyyy format for other dates
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
-    }
+    // Format to dd/mm/yyyy format for other dates
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   const openVisitModal = (visit: VisitDetail) => {
@@ -283,22 +295,30 @@ const VisitHistory: React.FC = () => {
   };
 
   // Pick dataset based on active tab
-  const dataset = activeTab === 'PHYSICAL' ? physicalVisits : digitalVisits;
+  const dataset = activeTab === 'PHYSICAL' ? physicalVisits : activeTab === 'DIGITAL' ? digitalVisits : activeTab === 'STAKEHOLDER' ? stakeholderVisits : [];
 
   const filteredVisits = dataset.filter(visit => {
-    const matchesName = visit.storeName?.toLowerCase().includes(filters.storeName.toLowerCase());
-    const matchesCity = filters.city === 'All Cities' || visit.storeName?.includes(filters.city);
-    const matchesBrand = filters.partnerBrand === 'All Brands' || visit.partnerBrand === filters.partnerBrand;
+    const nameToSearch = (visit.storeName || visit.brandName || '').toLowerCase();
+    const matchesName = nameToSearch.includes(filters.storeName.toLowerCase());
+    
+    // For city and brand, Stakeholder visits might not have partnerBrand, they have designation.
+    // If it's a stakeholder visit and 'All Brands' / 'All Cities' are selected, we shouldn't filter them out.
+    const cityToSearch = (visit.storeName || visit.city || '');
+    const matchesCity = filters.city === 'All Cities' || cityToSearch.includes(filters.city);
+    
+    const brandToSearch = visit.partnerBrand || visit.brandName || '';
+    const matchesBrand = filters.partnerBrand === 'All Brands' || brandToSearch === filters.partnerBrand;
+    
     const matchesStatus = filters.status === 'All Status' || visit.status === filters.status;
     return matchesName && matchesCity && matchesBrand && matchesStatus;
   }).sort((a, b) => {
     switch (filters.sortBy) {
       case 'Store Name A-Z':
-        return (a.storeName || '').localeCompare(b.storeName || '');
+        return ((a.storeName || a.brandName) || '').localeCompare((b.storeName || b.brandName) || '');
       case 'Store Name Z-A':
-        return (b.storeName || '').localeCompare(a.storeName || '');
+        return ((b.storeName || b.brandName) || '').localeCompare((a.storeName || a.brandName) || '');
       case 'Status':
-        return a.status.localeCompare(b.status);
+        return (a.status || '').localeCompare(b.status || '');
       default: // Recent First
         return new Date(b.visitDate || b.createdAt).getTime() - new Date(a.visitDate || a.createdAt).getTime();
     }
@@ -459,41 +479,9 @@ const VisitHistory: React.FC = () => {
             </button>
           </div>
 
-          {/* Tab Bar - Full width below filter header */}
-          <div className="exec-visits-tabbar" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
-            <button
-              type="button"
-              className={`exec-visits-tab ${activeTab === 'PHYSICAL' ? 'active' : ''}`}
-              onClick={() => setActiveTab('PHYSICAL')}
-            >
-              <span className="exec-tab-icon">🏬</span>
-              <span className="exec-tab-text">
-                <span className="exec-tab-word">Physical</span>
-                <span className="exec-tab-visit">&nbsp;Visits</span>
-              </span>
-            </button>
-            <button
-              type="button"
-              className={`exec-visits-tab ${activeTab === 'DIGITAL' ? 'active' : ''}`}
-              onClick={() => setActiveTab('DIGITAL')}
-            >
-              <span className="exec-tab-icon">📞</span>
-              <span className="exec-tab-text">
-                <span className="exec-tab-word">Digital</span>
-                <span className="exec-tab-visit">&nbsp;Visits</span>
-              </span>
-            </button>
-            <button
-              type="button"
-              className={`exec-visits-tab ${activeTab === 'HOLIDAY' ? 'active' : ''}`}
-              onClick={() => setActiveTab('HOLIDAY')}
-            >
-              <span className="exec-tab-icon">🏖️</span>
-              <span className="exec-tab-text">
-                <span className="exec-tab-word">Vacation</span>
-                <span className="exec-tab-visit">&nbsp;& Off</span>
-              </span>
-            </button>
+          {/* Tab Bar -> Replaced with Dropdown */}
+          <div style={{ padding: '0 20px' }}>
+            <SubmissionTypeDropdown activeTab={activeTab} setActiveTab={setActiveTab as any} />
           </div>
 
           {filtersOpen && (
@@ -661,6 +649,101 @@ const VisitHistory: React.FC = () => {
                   )}
                 </tbody>
               </table>
+            ) : activeTab === 'STAKEHOLDER' ? (
+              <table className="exec-visits-table">
+                <thead>
+                  <tr>
+                    <th>Stakeholder Details</th>
+                    <th>Person(s) Met</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={4}>
+                        <div className="loading-state">
+                          <div className="loading-spinner-large"></div>
+                          <span className="loading-text">Loading visits...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filteredVisits.length === 0 ? (
+                    <tr>
+                      <td colSpan={4}>
+                        <div className="no-data-state">
+                          <p>No stakeholder visits found</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredVisits.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((visit) => (
+                      <tr key={visit.id}>
+                        <td data-label="Stakeholder Details">
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <span className="exec-visits-store-name-cell" style={{ display: 'block' }}>{visit.brandName || 'N/A'}</span>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                              {visit.stakeholderDesignation || 'N/A'}
+                            </span>
+                          </div>
+                        </td>
+                        <td data-label="Person(s) Met">
+                          <div className="exec-visits-brand-cell" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {Array.isArray(visit.personMet) ? (
+                              visit.personMet.map((p: any, idx: number) => (
+                                <div key={idx} style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <span className="exec-visits-partner-brand-cell">{p.name || p.personName || 'N/A'}</span>
+                                  {(p.designation || p.personDesignation) && (
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                      {p.designation || p.personDesignation}
+                                    </span>
+                                  )}
+                                </div>
+                              ))
+                            ) : (
+                              <span className="exec-visits-partner-brand-cell">{visit.personMet || 'N/A'}</span>
+                            )}
+                            {visit.brandIds && visit.brandIds.length > 0 && (
+                              <span className="exec-visits-type-cell" style={{ display: 'block', marginTop: '2px', color: 'var(--text-secondary)', fontSize: '12px' }}>
+                                {visit.brandIds.length} Brand(s)
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td data-label="Date">
+                          <div className="exec-visits-date-cell" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span className="exec-visits-date-table">{formatDate(visit.visitDate || visit.createdAt)}</span>
+                            {visit.nextScheduledDate && (
+                              <div style={{ display: 'flex', flexDirection: 'column', marginTop: '4px' }}>
+                                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Next Schedule</span>
+                                <span style={{ fontSize: '0.85rem', color: 'var(--primary)' }}>{formatDate(visit.nextScheduledDate)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td data-label="Action">
+                          <div className="exec-visits-action-cell" style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                            <span
+                              className="exec-visits-status-badge"
+                              style={{ backgroundColor: getStatusColor(visit.status) }}
+                            >
+                              {visit.status === 'PENDING_REVIEW' ? 'Pending Review' : visit.status === 'REVIEWD' ? 'Reviewed' : visit.status}
+                            </span>
+                            <button
+                              className="exec-visits-view-details-btn"
+                              onClick={() => setSelectedStakeholderVisit(visit)}
+                              style={{ marginTop: '4px' }}
+                            >
+                              View Detail
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             ) : (
               <table className="exec-visits-table">
                 <thead>
@@ -801,10 +884,10 @@ const VisitHistory: React.FC = () => {
         </div>
 
         {/* Pagination Controls */}
-        {!loading && !error && (activeTab === 'HOLIDAY' ? holidayRequests.length : filteredVisits.length) > itemsPerPage && (
+        {!loading && !error && (activeTab === 'HOLIDAY' ? holidayRequests.length : activeTab === 'STAKEHOLDER' ? stakeholderVisits.length : filteredVisits.length) > itemsPerPage && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--surface)', borderRadius: 'var(--radius-md)' }}>
             <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, activeTab === 'HOLIDAY' ? holidayRequests.length : filteredVisits.length)} of {activeTab === 'HOLIDAY' ? holidayRequests.length : filteredVisits.length} records
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, activeTab === 'HOLIDAY' ? holidayRequests.length : activeTab === 'STAKEHOLDER' ? stakeholderVisits.length : filteredVisits.length)} of {activeTab === 'HOLIDAY' ? holidayRequests.length : activeTab === 'STAKEHOLDER' ? stakeholderVisits.length : filteredVisits.length} records
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
@@ -815,9 +898,9 @@ const VisitHistory: React.FC = () => {
                 Previous
               </button>
               <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil((activeTab === 'HOLIDAY' ? holidayRequests.length : filteredVisits.length) / itemsPerPage)))}
-                disabled={currentPage === Math.ceil((activeTab === 'HOLIDAY' ? holidayRequests.length : filteredVisits.length) / itemsPerPage)}
-                style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', backgroundColor: currentPage === Math.ceil((activeTab === 'HOLIDAY' ? holidayRequests.length : filteredVisits.length) / itemsPerPage) ? 'var(--background)' : 'var(--surface)', cursor: currentPage === Math.ceil((activeTab === 'HOLIDAY' ? holidayRequests.length : filteredVisits.length) / itemsPerPage) ? 'not-allowed' : 'pointer' }}
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil((activeTab === 'HOLIDAY' ? holidayRequests.length : activeTab === 'STAKEHOLDER' ? stakeholderVisits.length : filteredVisits.length) / itemsPerPage)))}
+                disabled={currentPage === Math.ceil((activeTab === 'HOLIDAY' ? holidayRequests.length : activeTab === 'STAKEHOLDER' ? stakeholderVisits.length : filteredVisits.length) / itemsPerPage)}
+                style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', backgroundColor: currentPage === Math.ceil((activeTab === 'HOLIDAY' ? holidayRequests.length : activeTab === 'STAKEHOLDER' ? stakeholderVisits.length : filteredVisits.length) / itemsPerPage) ? 'var(--background)' : 'var(--surface)', cursor: currentPage === Math.ceil((activeTab === 'HOLIDAY' ? holidayRequests.length : activeTab === 'STAKEHOLDER' ? stakeholderVisits.length : filteredVisits.length) / itemsPerPage) ? 'not-allowed' : 'pointer' }}
               >
                 Next
               </button>
@@ -833,12 +916,22 @@ const VisitHistory: React.FC = () => {
           isDigital={selectedVisitType === 'DIGITAL'}
         />
 
-        {/* Holiday Details Modal */}
-        <HolidayDetailsModal
-          isOpen={showHolidayModal}
-          onClose={closeHolidayModal}
-          holiday={selectedHoliday}
-        />
+        {showHolidayModal && (
+          <HolidayDetailsModal
+            isOpen={showHolidayModal}
+            onClose={closeHolidayModal}
+            holiday={selectedHoliday}
+          />
+        )}
+
+        {selectedStakeholderVisit && (
+          <StakeholderVisitDetailsModal
+            isOpen={!!selectedStakeholderVisit}
+            onClose={() => setSelectedStakeholderVisit(null)}
+            visit={selectedStakeholderVisit}
+            brandName={selectedStakeholderVisit.brandName}
+          />
+        )}
       </div>
     </div>
   );
