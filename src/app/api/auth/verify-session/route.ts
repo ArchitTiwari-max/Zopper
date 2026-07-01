@@ -19,9 +19,7 @@ export async function GET(request: NextRequest) {
     const response = NextResponse.json({
       authenticated: true,
       user: {
-        id: authResult.user.userId,
         email: authResult.user.email,
-        username: authResult.user.username,
         role: authResult.user.role
       }
     });
