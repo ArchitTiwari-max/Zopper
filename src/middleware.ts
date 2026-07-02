@@ -23,11 +23,16 @@ export async function middleware(request: NextRequest) {
   const cookieHeader = request.headers.get('cookie') || '';
   const hasAuthCookies = cookieHeader.includes('accessToken') || cookieHeader.includes('refreshToken') || cookieHeader.includes('userInfo');
 
+  // In production/Docker environments, fetch locally to avoid DNS / public loopback network issues
+  const internalBaseUrl = process.env.NODE_ENV === 'production'
+    ? `http://127.0.0.1:${process.env.PORT || '3000'}`
+    : request.url;
+
   // Handle root login page redirect if already authenticated
   if (pathname === '/') {
     if (hasAuthCookies) {
       try {
-        const verifyRes = await fetch(new URL('/api/auth/verify-session', request.url), {
+        const verifyRes = await fetch(new URL('/api/auth/verify-session', internalBaseUrl), {
           method: 'GET',
           headers: {
             cookie: cookieHeader
@@ -67,7 +72,7 @@ export async function middleware(request: NextRequest) {
 
     try {
       // Verify session via backend auth verification endpoint
-      const verifyRes = await fetch(new URL('/api/auth/verify-session', request.url), {
+      const verifyRes = await fetch(new URL('/api/auth/verify-session', internalBaseUrl), {
         method: 'GET',
         headers: {
           cookie: cookieHeader
