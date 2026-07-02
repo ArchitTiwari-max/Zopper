@@ -108,6 +108,25 @@ export function clearAuthCookies(response: NextResponse): NextResponse {
  * Automatically sets refreshed tokens in response cookies
  */
 export async function getAuthenticatedUser(request: NextRequest): Promise<TokenPayload | null> {
+  // 1. Fast Path: If Edge Proxy Middleware already verified the user and injected x-user-data header
+  const userDataHeader = request.headers.get('x-user-data');
+  if (userDataHeader) {
+    try {
+      const user = JSON.parse(userDataHeader);
+      if (user && (user.userId || user.id)) {
+        return {
+          userId: user.userId || user.id,
+          email: user.email,
+          username: user.username,
+          role: user.role
+        };
+      }
+    } catch (e) {
+      console.error('Error parsing x-user-data header in getAuthenticatedUser:', e);
+    }
+  }
+
+  // 2. Fallback: Validate token from cookie if header is missing
   const authResult = await validateAndRefreshToken(request);
   
   // If tokens were refreshed, set them directly in the response using Next.js cookies

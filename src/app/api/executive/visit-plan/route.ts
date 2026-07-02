@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { Role } from '@prisma/client';
 
@@ -8,7 +7,7 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {
     // Get authenticated user from token
-    const user = await getAuthenticatedUser(request);
+    const user = JSON.parse(request.headers.get('x-user-data') || 'null');
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -365,7 +364,7 @@ export async function POST(request: NextRequest) {
 // GET method to fetch submitted PJPs for the executive
 export async function GET(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser(request);
+    const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user || user.role !== 'EXECUTIVE') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

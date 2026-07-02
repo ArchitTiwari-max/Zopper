@@ -1,5 +1,4 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -7,7 +6,7 @@ export const runtime = "nodejs";
 export async function GET(request: NextRequest) {
   try {
     // Authenticate user
-    const user = await getAuthenticatedUser(request);
+    const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     console.log("Godrej SFDC API - authenticated user:", user);
 
     if (!user) {

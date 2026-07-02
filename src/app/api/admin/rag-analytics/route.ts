@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import {
   getRAGStatus,
@@ -31,7 +30,7 @@ export async function GET(request: NextRequest) {
     const storeLimit      = 10_000;
 
     // ── Auth check ───────────────────────────────────────────────────────────
-    const user = await getAuthenticatedUser(request);
+    const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user || user.role !== 'ADMIN') {
       return NextResponse.json({ success: false, error: 'Admin access required' }, { status: 401 });
     }

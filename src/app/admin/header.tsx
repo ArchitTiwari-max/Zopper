@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useDateFilter } from './contexts/DateFilterContext';
 import { useNotifications } from './notifications/components/contexts/NotificationContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface PageInfo {
   title: string;
@@ -19,20 +20,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
   const pathname = usePathname();
   const { selectedDateFilter, setSelectedDateFilter } = useDateFilter();
   const { unreadCount } = useNotifications();
-  const [userInitials, setUserInitials] = useState('AD');
-
-  // Helper function to get cookie value
-  const getCookie = (name: string): string | null => {
-    if (typeof document === 'undefined') return null;
-
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) {
-      const cookieValue = parts.pop()?.split(';').shift();
-      return cookieValue ? decodeURIComponent(cookieValue) : null;
-    }
-    return null;
-  };
+  const { user } = useAuth();
 
   // Function to generate initials from name
   const generateInitials = (name: string): string => {
@@ -50,27 +38,8 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
     return firstInitial + lastInitial;
   };
 
-  // Load user data from cookie on component mount
-  useEffect(() => {
-    const loadUserInitials = () => {
-      try {
-        const userInfoCookie = getCookie('userInfo');
-
-        if (userInfoCookie) {
-          const userData = JSON.parse(userInfoCookie);
-          const userName = userData.admin?.name || userData.name || '';
-          const initials = generateInitials(userName);
-          setUserInitials(initials);
-        }
-      } catch (error) {
-        console.error('Error parsing user cookie in admin header:', error);
-        setUserInitials('AD'); // Fallback
-      }
-    };
-
-    // Add a small delay to ensure cookies are available
-    setTimeout(loadUserInitials, 100);
-  }, []);
+  const userName = user?.admin?.name || user?.name || user?.username || '';
+  const userInitials = generateInitials(userName);
 
   // Dynamic page configuration based on current route
   const getPageInfo = (): PageInfo => {

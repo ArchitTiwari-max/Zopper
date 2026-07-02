@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { PartnerBrandType } from '@prisma/client';
 import {
@@ -28,7 +27,7 @@ export async function GET(request: NextRequest) {
     const dateRange    = searchParams.get('dateRange')    || '7days';
 
     // ── Auth ────────────────────────────────────────────────────────────────────
-    const authenticatedUser = await getAuthenticatedUser(request);
+    const authenticatedUser = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!authenticatedUser || authenticatedUser.role !== 'EXECUTIVE') {
       return NextResponse.json(
         { success: false, error: 'Unauthorized: Executive access required' },

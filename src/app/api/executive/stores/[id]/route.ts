@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { getAuthenticatedUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
@@ -12,7 +11,7 @@ export async function GET(
 ) {
   try {
     // Get authenticated user from token
-    const user = await getAuthenticatedUser(request);
+    const user = JSON.parse(request.headers.get('x-user-data') || 'null');
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

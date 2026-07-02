@@ -15,28 +15,28 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-   
-    console.log(email, otp);
-   if(!process.env.MASTER_OTP || otp !== process.env.MASTER_OTP){
-    const otpRecord = await prisma.oTP.findFirst({
-      where: {
-        email,
-        otp,
-        expiresAt: {
-          gt: new Date()
-        }
-      }
-    });
-    
-    
 
-    if (!otpRecord) {
-      return NextResponse.json(
-        { error: 'Invalid or expired OTP' },
-        { status: 400 }
-      );
+    console.log(email, otp);
+    if (!process.env.MASTER_OTP || otp !== process.env.MASTER_OTP) {
+      const otpRecord = await prisma.oTP.findFirst({
+        where: {
+          email,
+          otp,
+          expiresAt: {
+            gt: new Date()
+          }
+        }
+      });
+
+
+
+      if (!otpRecord) {
+        return NextResponse.json(
+          { error: 'Invalid or expired OTP' },
+          { status: 400 }
+        );
+      }
     }
-  }
 
     // Find user with executive and admin information in single query
     const user = await prisma.user.findUnique({
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     const currentLoginTime = new Date();
-    
+
     // Update lastLoginAt in database
     await prisma.user.update({
       where: { id: user.id },

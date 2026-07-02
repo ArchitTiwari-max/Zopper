@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { getAuthenticatedUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
@@ -9,7 +8,7 @@ const prisma = new PrismaClient();
 // GET endpoint to fetch past admin visits for a store
 export async function GET(request: NextRequest) {
     try {
-        const user = await getAuthenticatedUser(request);
+        const user = JSON.parse(request.headers.get('x-user-data') || 'null');
 
         if (!user || user.role !== 'ADMIN') {
             return NextResponse.json({ error: 'Unauthorized. Admin role required.' }, { status: 401 });
@@ -130,7 +129,7 @@ export async function GET(request: NextRequest) {
 // POST endpoint to create a new admin visit
 export async function POST(request: NextRequest) {
     try {
-        const user = await getAuthenticatedUser(request);
+        const user = JSON.parse(request.headers.get('x-user-data') || 'null');
 
         if (!user || user.role !== 'ADMIN') {
             return NextResponse.json({ error: 'Unauthorized. Admin role required.' }, { status: 401 });

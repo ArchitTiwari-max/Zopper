@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { getAuthenticatedUser } from "@/lib/auth";
 import { generateUniqueIssueId } from "@/lib/issueIdGenerator";
 
 export const runtime = "nodejs";
@@ -10,7 +9,7 @@ const prisma = new PrismaClient();
 // GET: last 5 digital visits for a store
 export async function GET(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser(request);
+    const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     if (user.role !== "EXECUTIVE")
@@ -84,7 +83,7 @@ export async function GET(request: NextRequest) {
 // POST: create a new digital visit
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser(request);
+    const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     if (user.role !== "EXECUTIVE")

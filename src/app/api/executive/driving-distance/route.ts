@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
@@ -12,7 +11,7 @@ interface Leg {
 
 export async function POST(request: NextRequest) {
     try {
-        const user = await getAuthenticatedUser(request);
+        const user = JSON.parse(request.headers.get('x-user-data') || 'null');
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const body = await request.json();

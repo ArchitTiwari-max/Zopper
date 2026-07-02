@@ -1,22 +1,47 @@
-// Global fetch interceptor to handle authentication failures
-export const setupAuthInterceptor = () => {
+// Global fetch interceptor to handle authentication failures and silent token refresh
+let isInterceptorSetup = false;
+
+export const setupAuthInterceptor = (
+  onRefreshAuth?: () => Promise<any>,
+  onLogout?: () => Promise<void>
+) => {
+  if (typeof window === 'undefined') return;
+  if (isInterceptorSetup) return;
+  isInterceptorSetup = true;
+
   // Store original fetch
   const originalFetch = window.fetch;
   
   // Override fetch globally
-  window.fetch = async (...args) => {
-    const response = await originalFetch(...args);
+  window.fetch = async (input: RequestInfo | URL, init: RequestInit = {}) => {
+    let urlString = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+    
+    // Automatically attach credentials for internal API calls
+    const isInternal = urlString.startsWith('/') || urlString.startsWith(window.location.origin);
+    if (isInternal) {
+      init.credentials = init.credentials || 'include';
+    }
+
+    let response = await originalFetch(input, init);
     
     // If we get a 401 and it's not the login or auth verification endpoints
-    if (response.status === 401) {
-      const url = args[0] as string;
-      
-      // Don't redirect if this is already an auth-related API call
-      if (!url.includes('/api/auth/')) {
-        // Show session expired notification
-        showSessionExpiredNotification();
-        return response;
+    if (response.status === 401 && !urlString.includes('/api/auth/')) {
+      // Try to silently refresh token if callback is provided
+      if (onRefreshAuth) {
+        try {
+          const refreshedUser = await onRefreshAuth();
+          if (refreshedUser) {
+            // Retry the original request with refreshed cookies
+            return await originalFetch(input, init);
+          }
+        } catch (error) {
+          console.error('Silent token refresh failed:', error);
+        }
       }
+
+      // Show session expired notification and trigger logout
+      showSessionExpiredNotification(onLogout);
+      return response;
     }
     
     return response;
@@ -24,7 +49,7 @@ export const setupAuthInterceptor = () => {
 };
 
 // Show session expired notification and redirect after delay
-function showSessionExpiredNotification() {
+function showSessionExpiredNotification(onLogout?: () => Promise<void>) {
   // Prevent multiple notifications
   if (document.getElementById('session-expired-notification')) {
     return;
@@ -98,7 +123,7 @@ function showSessionExpiredNotification() {
   let progress = 0;
   const progressBar = notification.querySelector('#progress-bar') as HTMLElement;
   
-  const interval = setInterval(() => {
+  const interval = setInterval(async () => {
     progress += 100 / 30; // 30 steps over 3 seconds
     if (progressBar) {
       progressBar.style.width = Math.min(progress, 100) + '%';
@@ -106,12 +131,11 @@ function showSessionExpiredNotification() {
     
     if (progress >= 100) {
       clearInterval(interval);
-      window.location.href = '/';
+      if (onLogout) {
+        await onLogout();
+      } else {
+        window.location.href = '/';
+      }
     }
   }, 100);
-}
-
-// Call this function to set up the interceptor
-if (typeof window !== 'undefined') {
-  setupAuthInterceptor();
 }

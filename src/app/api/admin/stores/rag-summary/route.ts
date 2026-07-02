@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { PartnerBrandType } from '@prisma/client';
 
@@ -67,7 +66,7 @@ function getCurrentAndPreviousMonth(): { current: number; previous: number } {
 export async function POST(request: NextRequest) {
   try {
     // Authenticate user and check if admin
-    const user = await getAuthenticatedUser(request);
+    const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' }, 

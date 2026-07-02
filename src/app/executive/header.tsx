@@ -1,26 +1,14 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import './header.css';
 import { useNotifications } from './notifications/components/contexts/NotificationContext';
+import { useAuth } from '@/context/AuthContext';
 
 const Header: React.FC = () => {
-  const [userInitials, setUserInitials] = useState('U');
+  const { user } = useAuth();
   const { unreadCount } = useNotifications();
-
-  // Helper function to get cookie value
-  const getCookie = (name: string): string | null => {
-    if (typeof document === 'undefined') return null;
-    
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) {
-      const cookieValue = parts.pop()?.split(';').shift();
-      return cookieValue ? decodeURIComponent(cookieValue) : null;
-    }
-    return null;
-  };
 
   // Function to generate initials from name
   const generateInitials = (name: string): string => {
@@ -31,34 +19,14 @@ const Header: React.FC = () => {
     if (nameParts.length === 0) return 'U';
     if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
     
-    // Get first letter of first name and first letter of last name
     const firstInitial = nameParts[0].charAt(0).toUpperCase();
     const lastInitial = nameParts[nameParts.length - 1].charAt(0).toUpperCase();
     
     return firstInitial + lastInitial;
   };
 
-  // Load user data from cookie on component mount
-  useEffect(() => {
-    const loadUserInitials = () => {
-      try {
-        const userInfoCookie = getCookie('userInfo');
-        
-        if (userInfoCookie) {
-          const userData = JSON.parse(userInfoCookie);
-          const userName = userData.executive?.name || userData.admin?.name || '';
-          const initials = generateInitials(userName);
-          setUserInitials(initials);
-        }
-      } catch (error) {
-        console.error('Error parsing user cookie in header:', error);
-        setUserInitials('U'); // Fallback
-      }
-    };
-
-    // Add a small delay to ensure cookies are available
-    setTimeout(loadUserInitials, 100);
-  }, []);
+  const userName = user?.executive?.name || user?.admin?.name || user?.username || '';
+  const userInitials = generateInitials(userName);
 
   return (
     <div className="header">
