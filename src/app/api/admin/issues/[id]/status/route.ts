@@ -9,7 +9,7 @@ export async function PATCH(
 ) {
   try {
     // Authenticate user
-    const user = await getAuthenticatedUser(req);
+    const user = JSON.parse(req.headers.get('x-user-data') || 'null');
     
     if (!user || user.role !== 'ADMIN') {
       return NextResponse.json(
