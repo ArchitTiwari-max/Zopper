@@ -889,44 +889,50 @@ const ExecutiveFormContent: React.FC = () => {
             <>
               <div className="exec-f-sub-store-header-row">
                 <h2 className="exec-f-sub-store-name">{storeData.storeName}</h2>
-                {/* Visit type toggle */}
+                {/* Visit type dropdown */}
                 <div
-                  className="exec-f-visit-type-toggle"
-                  role="tablist"
-                  aria-label="Choose visit type"
+                  className="exec-f-visit-type-dropdown-container"
+                  style={{ minWidth: '160px', position: 'relative' }}
                 >
-                  <button
-                    type="button"
-                    className={`exec-f-visit-type-btn ${visitType === "PHYSICAL" ? "active" : ""}`}
-                    onClick={() => setVisitType("PHYSICAL")}
-                    aria-selected={visitType === "PHYSICAL"}
+                  <select
+                    className="exec-f-visit-type-select"
+                    value={visitType}
+                    onChange={(e) => setVisitType(e.target.value as any)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 36px 10px 14px',
+                      borderRadius: '10px',
+                      border: '1px solid #cbd5e1',
+                      backgroundColor: '#ffffff',
+                      fontSize: '0.9rem',
+                      fontWeight: '600',
+                      color: '#1e293b',
+                      cursor: 'pointer',
+                      outline: 'none',
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                      transition: 'all 0.2s ease',
+                      backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      backgroundSize: '16px'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#3b82f6';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.15)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#cbd5e1';
+                      e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)';
+                    }}
+                    aria-label="Choose visit type"
                   >
-                    Physical Visit
-                  </button>
-                  <button
-                    type="button"
-                    className={`exec-f-visit-type-btn ${visitType === "DIGITAL" ? "active" : ""}`}
-                    onClick={() => setVisitType("DIGITAL")}
-                    aria-selected={visitType === "DIGITAL"}
-                  >
-                    Digital Visit
-                  </button>
-                  <button
-                    type="button"
-                    className={`exec-f-visit-type-btn ${visitType === "HOLIDAY" ? "active" : ""}`}
-                    onClick={() => setVisitType("HOLIDAY")}
-                    aria-selected={visitType === "HOLIDAY"}
-                  >
-                    Vacation
-                  </button>
-                  <button
-                    type="button"
-                    className={`exec-f-visit-type-btn ${visitType === "WEEK_OFF" ? "active" : ""}`}
-                    onClick={() => setVisitType("WEEK_OFF")}
-                    aria-selected={visitType === "WEEK_OFF"}
-                  >
-                    Week Off
-                  </button>
+                    <option value="PHYSICAL">🏢 Physical Visit</option>
+                    <option value="DIGITAL">💻 Digital Visit</option>
+                    <option value="HOLIDAY">🏖️ Vacation</option>
+                    <option value="WEEK_OFF">🛌 Week Off</option>
+                  </select>
                 </div>
               </div>
               <div

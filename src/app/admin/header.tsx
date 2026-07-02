@@ -162,6 +162,11 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
           title: 'Store & Executive Import',
           subtitle: 'Import store information and manage executive assignments efficiently'
         };
+      case '/admin/datamanagement/stakeholders':
+        return {
+          title: 'Stakeholder Management',
+          subtitle: 'Upload and assign stakeholders to executives via Excel'
+        };
       case '/admin/datamanagement/usermanagement':
         return {
           title: 'User Management',
@@ -176,6 +181,11 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
         return {
           title: 'Godrej SFDC',
           subtitle: 'Secure and streamline data synchronization for field executives'
+        };
+      case '/admin/stakeholder-visit-report':
+        return {
+          title: 'Stakeholder Visit Report',
+          subtitle: 'Comprehensive overview of stakeholder visits and feedback'
         };
       default:
         return {
@@ -194,6 +204,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
       pathname === '/admin/issues' ||
       pathname === '/admin/visit-report' ||
       pathname === '/admin/digital-report' ||
+      pathname === '/admin/stakeholder-visit-report' ||
       pathname === '/admin/executives' ||
       pathname.startsWith('/admin/issues/');
   };

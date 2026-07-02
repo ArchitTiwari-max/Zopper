@@ -16,6 +16,7 @@ const Navigation: React.FC = () => {
     { id: 'admin-visit-report', label: 'Admin Visit Record', icon: 'icon-visit-report', active: pathname.includes('/admin/admin-visit-report'), href: '/admin/admin-visit-report' },
     { id: 'visit-report', label: 'Physical Visit Report', icon: 'icon-visit-report', active: pathname.includes('/admin/visit-report'), href: '/admin/visit-report' },
     { id: 'digital-report', label: 'Digital Connect Report', icon: 'icon-call', active: pathname.includes('/admin/digital-report'), href: '/admin/digital-report' },
+    { id: 'stakeholder-visit-report', label: 'Stakeholder Visit Report', icon: 'icon-executives', active: pathname.includes('/admin/stakeholder-visit-report'), href: '/admin/stakeholder-visit-report' },
     { id: 'analytics-impact', label: 'Analytics & Impact', icon: 'icon-analytics', active: pathname.includes('/admin/analytics-impact'), href: '/admin/analytics-impact' },
     { id: 'attendance', label: 'Attendance Tracker', icon: 'icon-attendance', active: pathname.includes('/admin/attendance'), href: '/admin/attendance' },
     { id: 'pjp-report', label: 'PJP Report', icon: 'icon-visit-report', active: pathname.includes('/admin/pjp-report'), href: '/admin/pjp-report' },

@@ -54,8 +54,9 @@ model Admin {
   user           User    @relation(fields: [userId], references: [id])
 
   // Back-relations: visits reviewed by this admin
-  reviewedVisits        Visit[]
-  reviewedDigitalVisits DigitalVisit[]
+  reviewedVisits            Visit[]
+  reviewedDigitalVisits     DigitalVisit[]
+  reviewedStakeholderVisits StakeholderVisit[]
 
   adminVisits AdminVisit[]
 }
@@ -69,10 +70,13 @@ model Executive {
   digitalVisits   DigitalVisit[]
   assigned        Assigned[]
   visitPlans      VisitPlan[]
+  stakeholderVisits StakeholderVisit[]
   userId          String                     @unique
   user            User                       @relation(fields: [userId], references: [id])
   // Store assignments
   executiveStores ExecutiveStoreAssignment[]
+  // Stakeholder assignments
+
   // Dost chat back-relation
   dostChats       DostChat[]
 
@@ -149,6 +153,7 @@ model Brand {
   salesRecords SalesRecord[]
   storeBrands  StoreBrand[]
   targets      StoreTarget[]
+  stakeholderVisits StakeholderVisit[]
 }
 
 model StoreBrand {
@@ -691,5 +696,76 @@ model DistanceCache {
 
   @@unique([origin, destination])
   @@map("DistanceCache")
+}
+
+//
+// Stakeholder Master (Admin-managed list of stakeholders)
+// Admin creates stakeholders with name, designation, city
+// Executives fetch this list to show cards and log visits against them
+//
+model Stakeholder {
+  id           String   @id @map("_id")
+  designation  String
+  brands       String[] @default([])
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    String?  // Admin user ID who created this stakeholder
+
+  // Back-relation to visits
+  stakeholderVisits StakeholderVisit[]
+  // Assignments to executives
+
+
+  @@index([isActive])
+  @@map("Stakeholder")
+}
+
+
+
+//
+// Stakeholder Visit
+// Store-less, POSM-less visit specifically for stakeholder meetings
+// Admin adds stakeholder (designation) from their side
+//
+model StakeholderVisit {
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+
+  // Link to Stakeholder master (optional — backward compatible)
+  stakeholderId          String?
+  stakeholder            Stakeholder? @relation(fields: [stakeholderId], references: [id])
+
+  // Stakeholder details (denormalized for display even without master record)
+  brandId                String
+  brand                  Brand      @relation(fields: [brandId], references: [id])
+  stakeholderDesignation String
+
+  // Visit details (filled by executive via form — mirrors physical Visit)
+  visitDate         DateTime?  // Actual date when visit occurred
+  personMet         Json       // [{ name: "...", designation: "...", phoneNumber: "..." }]
+  remarks           String?
+  imageUrls         String[]   // Array of uploaded image URLs
+  nextScheduledDate DateTime?  // Optional next visit date
+  brandIds          String[]   @default([])
+  brandVisitDetails Json?      // Optional brand-level details
+
+  // Status & review
+  status            viststatus @default(PENDING_REVIEW)
+  adminComment      String?
+  reviewedAt        DateTime?
+  reviewedByAdminId String?
+  reviewedByAdmin   Admin?     @relation(fields: [reviewedByAdminId], references: [id])
+
+  // Relations
+  executiveId       String
+  executive         Executive  @relation(fields: [executiveId], references: [id])
+
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  @@index([executiveId, visitDate])
+  @@index([executiveId, createdAt])
+  @@index([stakeholderId])
+  @@map("StakeholderVisit")
 }
 
