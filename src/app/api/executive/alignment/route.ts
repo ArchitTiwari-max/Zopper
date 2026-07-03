@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     let updatedByName = null;
     if (alignment?.updatedBy) {
-      const executive = await prisma.executive.findUnique({
+      const executive = await prisma.employee.findUnique({
         where: { userId: alignment.updatedBy },
         select: { name: true }
       });
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     });
 
     let currentUserName = user.userId;
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: { name: true }
     });

@@ -78,23 +78,23 @@ export async function GET(request: NextRequest) {
     }
 
     // ── 1) Get executive + store IDs + flagged map ────────────────────────────
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: {
         id: true,
         name: true,
         region: true,
-        executiveStores: { select: { storeId: true, isFlagged: true } }
+        employeeStores: { select: { storeId: true, isFlagged: true } }
       }
     });
     if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
 
     const flaggedMap = new Map<string, boolean>(
-      executive.executiveStores.map(es => [es.storeId, es.isFlagged])
+      executive.employeeStores.map(es => [es.storeId, es.isFlagged])
     );
-    const assignedStoreIds = executive.executiveStores.map(es => es.storeId);
+    const assignedStoreIds = executive.employeeStores.map(es => es.storeId);
     if (assignedStoreIds.length === 0) {
-      return NextResponse.json({ success: true, data: { stores: [], executive: { id: executive.id, name: executive.name, region: executive.region } } });
+      return NextResponse.json({ success: true, data: { stores: [], employee: { id: executive.id, name: executive.name, region: executive.region } } });
     }
 
     // ── ETag for cache validation ────────────────────────────────────────────
@@ -243,7 +243,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         stores: transformedStores,
-        executive: { id: executive.id, name: executive.name, region: executive.region }
+        employee: { id: executive.id, name: executive.name, region: executive.region }
       }
     });
 

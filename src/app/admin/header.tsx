@@ -38,7 +38,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage }) => {
     return firstInitial + lastInitial;
   };
 
-  const userName = user?.admin?.name || user?.name || user?.username || '';
+  const userName = user?.employee?.name || user?.name || user?.username || '';
   const userInitials = generateInitials(userName);
 
   // Dynamic page configuration based on current route

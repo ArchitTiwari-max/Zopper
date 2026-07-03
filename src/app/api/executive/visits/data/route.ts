@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get executive data
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId }
     });
 
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
         createdAt: true,
         updatedAt: true,
         reviewedAt: true,
-        reviewedByAdmin: { select: { id: true, name: true } },
+        reviewedByEmployee: { select: { id: true, name: true } },
         store: {
           select: {
             id: true,
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
             }
           }
         },
-        executive: {
+        employee: {
           select: {
             id: true,
             name: true
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
                 adminComment: true,
                 status: true,
                 createdAt: true,
-                executive: {
+                employee: {
                   select: {
                     id: true,
                     name: true
@@ -172,7 +172,7 @@ export async function GET(request: NextRequest) {
         ? visit.store.storeBrands.map(sb => brandMap.get(sb.brandId) || 'Unknown Brand').join(', ')
         : 'N/A',
       status: visit.status,
-      reviewerName: visit.reviewedByAdmin?.name,
+      reviewerName: visit.reviewedByEmployee?.name,
       representative: visit.executive?.name || 'Unknown Executive',
       personMet: visit.personMet,
       POSMchecked: visit.POSMchecked,

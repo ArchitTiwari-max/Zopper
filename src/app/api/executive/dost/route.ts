@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url)
     const q = url.searchParams.get('q') || undefined
 
-    const executive = await prisma.executive.findUnique({ where: { userId: user.userId }, select: { id: true } })
+    const executive = await prisma.employee.findUnique({ where: { userId: user.userId }, select: { id: true } })
     if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 })
 
     const suggestions = await getDostSuggestions(executive.id, { question: q })

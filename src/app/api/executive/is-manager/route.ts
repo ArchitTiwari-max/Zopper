@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ isManager: false });
     }
 
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: { subordinateIds: true },
     });

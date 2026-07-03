@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
     }
 
-    // Fetch executive information using userId from token
-    const executive = await prisma.executive.findUnique({
+    // Fetch employee information using userId from token
+    const employee = await prisma.employee.findUnique({
       where: {
         userId: user.userId
       },
@@ -33,18 +33,18 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    if (!executive) {
-      return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
+    if (!employee) {
+      return NextResponse.json({ error: 'Employee profile not found' }, { status: 404 });
     }
 
     // Return profile data
     const profileData = {
-      id: executive.id,
-      name: executive.name,
-      email: executive.user.email,
-      username: executive.user.username,
-      contact_number: executive.contact_number || null,
-      region: executive.region || null
+      id: employee.id,
+      name: employee.name,
+      email: employee.user.email,
+      username: employee.user.username,
+      contact_number: employee.contact_number || null,
+      region: employee.region || null
     };
 
     return NextResponse.json({
@@ -124,22 +124,28 @@ export async function PUT(request: NextRequest) {
       updates.push({ field: 'email', value: updatedUser.email });
     }
 
-    // Update executive fields (contact_number, name, region)
-    const executiveUpdateData: any = {};
-    if (contact_number) executiveUpdateData.contact_number = contact_number;
-    if (name) executiveUpdateData.name = name;
-    if (region !== undefined) executiveUpdateData.region = region;
+    // Update fields (contact_number, name, region)
+    const updateData: any = {};
+    if (contact_number) updateData.contact_number = contact_number;
+    if (name) updateData.name = name;
+    if (region !== undefined) updateData.region = region;
 
-    let updatedExecutive = null;
-    if (Object.keys(executiveUpdateData).length > 0) {
-      updatedExecutive = await prisma.executive.update({
+    if (Object.keys(updateData).length > 0) {
+      // 1. Update new Employee model
+      await prisma.employee.update({
         where: { userId: user.userId },
-        data: executiveUpdateData
+        data: updateData
+      });
+      
+      // 2. Sync legacy Executive model
+      await prisma.employee.update({
+        where: { userId: user.userId },
+        data: updateData
       });
     }
 
     // Fetch updated profile data
-    const executive = await prisma.executive.findUnique({
+    const employee = await prisma.employee.findUnique({
       where: { userId: user.userId },
       include: {
         user: {
@@ -152,12 +158,12 @@ export async function PUT(request: NextRequest) {
     });
 
     const profileData = {
-      id: executive?.id,
-      name: executive?.name,
-      email: executive?.user.email,
-      username: executive?.user.username,
-      contact_number: executive?.contact_number,
-      region: executive?.region
+      id: employee?.id,
+      name: employee?.name,
+      email: employee?.user.email,
+      username: employee?.user.username,
+      contact_number: employee?.contact_number,
+      region: employee?.region
     };
 
     return NextResponse.json({

@@ -17,10 +17,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Get executive data
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       include: {
-        executiveStores: {
+        employeeStores: {
           select: {
             storeId: true
           }
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       prisma.store.findMany({
         where: {
           id: {
-            in: executive.executiveStores.map(es => es.storeId)
+            in: executive.employeeStores.map(es => es.storeId)
           }
         },
         select: {
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
         },
         metadata: {
           executiveId: executive.id,
-          assignedStoresCount: executive.executiveStores.length,
+          assignedStoresCount: executive.employeeStores.length,
           generatedAt: new Date().toISOString(),
           cacheExpiry: new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutes
         }

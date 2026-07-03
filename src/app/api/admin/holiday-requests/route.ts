@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
             include: {
                 user: {
                     include: {
-                        executive: true, // properties like name are here
-                        admin: true
+                        employee: true, // properties like name are here
+                        employee: true
                     }
                 }
                 // we can't include store as it's not a relation
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
                 return {
                     id: req.id,
                     secDetails: req.executiveName, // This contains "Name (Phone)"
-                    submittedBy: req.user?.executive?.name || req.user?.username || 'Unknown',
+                    submittedBy: req.user?.employee?.name || req.user?.username || 'Unknown',
                     reason: req.reason,
                     startDate: req.startDate,
                     endDate: req.endDate,

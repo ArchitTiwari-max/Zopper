@@ -38,13 +38,13 @@ export async function GET(request: NextRequest) {
     const { start, end } = parseRange(range);
 
     // ── 1) Resolve executive + assigned store IDs ────────────────────────────
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
-      select: { id: true, executiveStores: { select: { storeId: true } } },
+      select: { id: true, employeeStores: { select: { storeId: true } } },
     });
     if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
 
-    const assignedStoreIds = executive.executiveStores.map(es => es.storeId);
+    const assignedStoreIds = executive.employeeStores.map(es => es.storeId);
     if (assignedStoreIds.length === 0) {
       return NextResponse.json({ data: EMPTY_RESULT, meta: { brandId: brandId || null, range: range || '30d', generatedAt: new Date().toISOString() } });
     }

@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     const visitPlans = await prisma.visitPlan.findMany({
       where,
       include: {
-        executive: {
+        employee: {
           select: {
             name: true
           }
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
 
     const formattedData = visitPlans.map(plan => ({
       id: plan.id,
-      executiveName: plan.executive.name,
+      executiveName: plan.employee.name,
       submittedAt: plan.submittedAt,
       plannedVisitDate: plan.plannedVisitDate,
       storeIds: plan.storeIds,

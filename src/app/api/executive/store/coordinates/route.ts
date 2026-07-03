@@ -50,11 +50,11 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Security: ensure this executive is assigned to the store
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: {
         id: true,
-        executiveStores: {
+        employeeStores: {
           where: { storeId },
           select: { storeId: true },
         },
@@ -65,7 +65,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
-    if (executive.executiveStores.length === 0) {
+    if (executive.employeeStores.length === 0) {
       return NextResponse.json(
         { error: 'You are not assigned to this store.' },
         { status: 403 }

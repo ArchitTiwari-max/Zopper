@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
 
-    const exec = await prisma.executive.findUnique({ where: { userId: user.userId } });
+    const exec = await prisma.employee.findUnique({ where: { userId: user.userId } });
     if (!exec) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
 
     const url = new URL(request.url);
@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
         connectDate: true,
         createdAt: true,
         updatedAt: true,
-        reviewedByAdmin: { select: { id: true, name: true } },
-        executive: { select: { id: true, name: true } },
+        reviewedByEmployee: { select: { id: true, name: true } },
+        employee: { select: { id: true, name: true } },
         store: {
           select: {
             id: true,
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       storeName: v.store?.storeName || 'Unknown Store',
       partnerBrand: (v.store?.storeBrands || []).map(sb => brandMap.get(sb.brandId) || 'Unknown Brand').join(', ') || 'N/A',
       status: v.status as any,
-      reviewerName: v.reviewedByAdmin?.name,
+      reviewerName: v.reviewedByEmployee?.name,
       representative: v.executive?.name || 'Unknown Executive',
       personMet: Array.isArray(v.personMet) ? (v.personMet as any[]).map(p => ({ name: p?.name || '', designation: p?.designation || '' })) : [],
       POSMchecked: null,

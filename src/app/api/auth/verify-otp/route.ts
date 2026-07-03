@@ -38,20 +38,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Find user with executive and admin information in single query
+    // Find user with employee information in single query
     const user = await prisma.user.findUnique({
       where: { email },
       include: {
-        executive: {
+        employee: {
           include: {
-            executiveStores: {
+            employeeStores: {
               select: {
                 storeId: true
               }
             }
           }
         },
-        admin: true
+        userRole: true
       }
     });
 
@@ -91,26 +91,42 @@ export async function POST(request: NextRequest) {
       email: user.email,
       username: user.username,
       role: user.role,
+      permissions: user.permissions || [],
+      userRole: user.userRole ? {
+        id: user.userRole.id,
+        name: user.userRole.name,
+        permissions: user.userRole.permissions
+      } : null,
       lastLoginAt: currentLoginTime,
       previousLoginAt: user.lastLoginAt
     };
 
-    // Add role-specific information (keeping contact_number and region)
-    if (user.role === 'EXECUTIVE' && user.executive) {
-      userPayload.executive = {
-        id: user.executive.id,
-        name: user.executive.name,
-        contact_number: user.executive.contact_number,
-        region: user.executive.region
-        // Removed assignedStoreIds to reduce cookie size
+    if (user.employee) {
+      userPayload.employee = {
+        id: user.employee.id,
+        name: user.employee.name,
+        contact_number: user.employee.contact_number,
+        region: user.employee.region,
+        designation: user.employee.designation,
+        department: user.employee.department
       };
-    } else if (user.role === 'ADMIN' && user.admin) {
-      userPayload.admin = {
-        id: user.admin.id,
-        name: user.admin.name,
-        contact_number: user.admin.contact_number,
-        region: user.admin.region
-      };
+
+      // Add legacy role-specific information for backward compatibility on client side
+      if (user.role === 'EXECUTIVE') {
+        userPayload.executive = {
+          id: user.employee.id,
+          name: user.employee.name,
+          contact_number: user.employee.contact_number,
+          region: user.employee.region
+        };
+      } else if (user.role === 'ADMIN') {
+        userPayload.admin = {
+          id: user.employee.id,
+          name: user.employee.name,
+          contact_number: user.employee.contact_number,
+          region: user.employee.region
+        };
+      }
     }
 
     // Create response with httpOnly cookies

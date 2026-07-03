@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     if (adminId && !['All Admin', 'All Executive'].includes(adminId)) whereClause.adminId = adminId;
 
     const [visits, brands] = await Promise.all([
-      prisma.adminVisit.findMany({
+      prisma.employeeVisit.findMany({
         where: whereClause,
         select: {
           id: true,
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
           POSMchecked: true,
           personMet: true,
           imageUrls: true,
-          admin: {
+          employee: {
             select: { id: true, name: true }
           },
           store: {

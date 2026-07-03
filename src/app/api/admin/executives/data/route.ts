@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     // Filter by store - if storeId is provided, filter executives who are assigned to that store
     if (storeId && storeId !== 'All Store') {
       // Filter by ExecutiveStoreAssignment relationship
-      whereClause.executiveStores = {
+      whereClause.employeeStores = {
         some: {
           storeId: storeId
         }
@@ -89,13 +89,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Get executives (basic fields)
-    const executives = await prisma.executive.findMany({
+    const executives = await prisma.employee.findMany({
       where: whereClause,
       select: {
         id: true,
         name: true,
         region: true,
-        executiveStores: {
+        employeeStores: {
           select: {
             storeId: true,
             assignedAt: true
@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
         region: executive.region || 'Not Assigned',
         totalVisits: visitCountMap.get(executive.id) || 0,
         lastVisit: formattedLastVisit,
-        assignedStoreIds: executive.executiveStores.map(es => es.storeId),
+        assignedStoreIds: executive.employeeStores.map(es => es.storeId),
         avatarColor: colors[colorIndex]
       };
     });

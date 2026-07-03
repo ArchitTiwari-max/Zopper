@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get executive record
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.id },
       select: { id: true, name: true }
     });
@@ -101,8 +101,8 @@ export async function GET(request: NextRequest) {
     const year = parseInt(searchParams.get('year') || new Date().getFullYear().toString());
 
     // Get stores assigned to this executive
-    const executiveStoreAssignments = await prisma.executiveStoreAssignment.findMany({
-      where: { executiveId: executive.id },
+    const executiveStoreAssignments = await prisma.employeeStoreAssignment.findMany({
+      where: { employeeId: executive.id },
       select: { storeId: true }
     });
     const assignedStoreIds = executiveStoreAssignments.map(esa => esa.storeId);

@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get executive record
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.id },
       select: { id: true, name: true }
     });
@@ -106,8 +106,8 @@ export async function GET(request: NextRequest) {
     const { current: currentMonth, previous: previousMonth } = getCurrentAndPreviousMonth();
 
     // Get only stores assigned to this executive
-    const executiveStoreAssignments = await prisma.executiveStoreAssignment.findMany({
-      where: { executiveId: executive.id },
+    const executiveStoreAssignments = await prisma.employeeStoreAssignment.findMany({
+      where: { employeeId: executive.id },
       select: { storeId: true }
     });
 

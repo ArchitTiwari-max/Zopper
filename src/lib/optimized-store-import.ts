@@ -38,12 +38,21 @@ export async function initializeStoreCache(prisma: PrismaClient): Promise<StoreC
   console.log('🔄 Initializing store import cache...');
   
   const [executives, stores, brands] = await Promise.all([
-    prisma.executive.findMany({ select: { id: true, name: true } }),
+    prisma.employee.findMany({
+      where: {
+        user: {
+          userRole: {
+            name: 'SALES_EXECUTIVE'
+          }
+        }
+      },
+      select: { id: true, name: true }
+    }),
     prisma.store.findMany({ 
       select: { 
         id: true, 
         storeName: true,
-        executiveStores: { select: { executiveId: true } }
+        employeeStores: { select: { employeeId: true } }
       } 
     }),
     prisma.brand.findMany({ select: { id: true, brandName: true } })
@@ -54,7 +63,7 @@ export async function initializeStoreCache(prisma: PrismaClient): Promise<StoreC
     stores: new Map(stores.map(s => [s.id, {
       id: s.id,
       storeName: s.storeName,
-      currentExecutives: s.executiveStores.map(es => es.executiveId)
+      currentExecutives: s.employeeStores.map(es => es.executiveId)
     }])),
     brands: new Map(brands.map(b => [b.id, b]))
   };
@@ -319,10 +328,10 @@ export async function batchProcessStoreRecords(
 
         // Remove old executive assignments
         if (storeData.executivesToRemove.length > 0) {
-          await prisma.executiveStoreAssignment.deleteMany({
+          await prisma.employeeStoreAssignment.deleteMany({
             where: {
               storeId: storeData.storeId,
-              executiveId: { in: storeData.executivesToRemove }
+              employeeId: { in: storeData.executivesToRemove }
             }
           });
         }
@@ -330,10 +339,10 @@ export async function batchProcessStoreRecords(
         // Add new executive assignments
         if (storeData.executivesToAdd.length > 0) {
           for (const executiveId of storeData.executivesToAdd) {
-            await prisma.executiveStoreAssignment.upsert({
+            await prisma.employeeStoreAssignment.upsert({
               where: {
-                executiveId_storeId: {
-                  executiveId: executiveId,
+                employeeId_storeId: {
+                  employeeId: executiveId,
                   storeId: storeData.storeId
                 }
               },
@@ -341,7 +350,7 @@ export async function batchProcessStoreRecords(
                 assignedAt: new Date()
               },
               create: {
-                executiveId: executiveId,
+                employeeId: executiveId,
                 storeId: storeData.storeId,
                 assignedAt: new Date()
               }

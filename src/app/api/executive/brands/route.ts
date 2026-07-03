@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Get executive profile to resolve assigned stores
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: {
-        executiveStores: {
+        employeeStores: {
           select: {
             storeId: true
           }
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
     }
 
-    const storeIds = executive.executiveStores.map(es => es.storeId);
+    const storeIds = executive.employeeStores.map(es => es.storeId);
 
     const stores = await prisma.store.findMany({
       where: {

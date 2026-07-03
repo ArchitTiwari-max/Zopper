@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const currentExecutive = await prisma.executive.findUnique({
+    const currentExecutive = await prisma.employee.findUnique({
       where: { userId: user.userId },
     });
 
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get last 5 visits for this store by ANY executive or admin
-    const [execVisitsRaw, adminVisitsRaw] = await Promise.all([
+    const [execVisitsRaw, employeeVisitsRaw] = await Promise.all([
       prisma.visit.findMany({
         where: { storeId },
         include: {
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
             include: {
               assigned: {
                 include: {
-                  executive: {
+                  employee: {
                     include: { user: true },
                   },
                 },
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
             },
           },
           store: true,
-          executive: {
+          employee: {
             include: { user: true },
           },
         },
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       (prisma as any).adminVisit
         ? (prisma as any).adminVisit.findMany({
             where: { storeId },
-            include: { store: true, admin: true },
+            include: { store: true, employee: true },
             orderBy: { createdAt: "desc" },
             take: 5,
           })
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
         ...v,
         submitterType: "EXECUTIVE" as const,
       })),
-      ...adminVisitsRaw.map((v: any) => ({
+      ...employeeVisitsRaw.map((v: any) => ({
         ...v,
         submitterType: "ADMIN" as const,
       })),
@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
                 issue.assigned.some(
                   (assignment: any) =>
                     assignment.executive &&
-                    assignment.executive.id === currentExecutive.id,
+                    assignment.employee.id === currentExecutive.id,
                 ),
               )
               .map((issue: any) => ({
@@ -168,7 +168,7 @@ export async function GET(request: NextRequest) {
                   .filter(
                     (assignment: any) =>
                       assignment.executive &&
-                      assignment.executive.id === currentExecutive.id,
+                      assignment.employee.id === currentExecutive.id,
                   )
                   .map((assignment: any) => ({
                     id: assignment.id,
@@ -247,7 +247,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
     });
 
@@ -319,10 +319,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const assignment = await prisma.executiveStoreAssignment.findUnique({
+    const assignment = await prisma.employeeStoreAssignment.findUnique({
       where: {
-        executiveId_storeId: {
-          executiveId: executive.id,
+        employeeId_storeId: { employeeId: executive.id,
           storeId: storeId,
         },
       },
@@ -436,7 +435,7 @@ export async function POST(request: NextRequest) {
       },
       include: {
         store: true,
-        executive: { include: { user: true } },
+        employee: { include: { user: true } },
       },
     });
 

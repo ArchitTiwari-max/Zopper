@@ -36,14 +36,14 @@ export async function GET() {
         submittedAt: {
           lte: utcToday12Noon,
         },
-        executive: {
+        employee: {
             user: {
                 isActive: true
             }
         }
       },
       include: {
-        executive: true
+        employee: true
       },
       orderBy: {
         submittedAt: 'desc'
@@ -51,7 +51,7 @@ export async function GET() {
     });
 
     // Fetch all active executives to send individual PJP mails
-    const activeExecutives = await prisma.executive.findMany({
+    const activeExecutives = await prisma.employee.findMany({
       where: {
         user: {
           isActive: true

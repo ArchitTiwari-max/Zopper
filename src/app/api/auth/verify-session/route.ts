@@ -25,7 +25,11 @@ export async function GET(request: NextRequest) {
         const userInfoCookie = request.cookies.get('userInfo')?.value;
         if (userInfoCookie) {
           const decoded = decodeURIComponent(userInfoCookie);
-          fullUser = JSON.parse(decoded);
+          const parsed = JSON.parse(decoded);
+          // Only use the cached user info if it has the permissions array
+          if (parsed && Array.isArray(parsed.permissions)) {
+            fullUser = parsed;
+          }
         }
       } catch (e) {
         console.error('Error parsing userInfo cookie:', e);
@@ -38,7 +42,8 @@ export async function GET(request: NextRequest) {
         id: authResult.user.userId,
         email: authResult.user.email,
         username: authResult.user.username,
-        role: authResult.user.role
+        role: authResult.user.role,
+        permissions: []
       }
     });
 
@@ -48,8 +53,8 @@ export async function GET(request: NextRequest) {
         const dbUser = await prisma.user.findUnique({
           where: { id: authResult.user.userId },
           include: {
-            executive: true,
-            admin: true
+            userRole: true,
+            employee: true
           }
         });
 
@@ -59,24 +64,42 @@ export async function GET(request: NextRequest) {
             email: dbUser.email,
             username: dbUser.username,
             role: dbUser.role,
+            permissions: dbUser.permissions || [],
+            userRole: dbUser.userRole ? {
+              id: dbUser.userRole.id,
+              name: dbUser.userRole.name,
+              permissions: dbUser.userRole.permissions
+            } : null,
             lastLoginAt: dbUser.lastLoginAt,
             previousLoginAt: dbUser.lastLoginAt
           };
 
-          if (dbUser.role === 'EXECUTIVE' && dbUser.executive) {
-            userPayload.executive = {
-              id: dbUser.executive.id,
-              name: dbUser.executive.name,
-              contact_number: dbUser.executive.contact_number,
-              region: dbUser.executive.region
+          if (dbUser.employee) {
+            userPayload.employee = {
+              id: dbUser.employee.id,
+              name: dbUser.employee.name,
+              contact_number: dbUser.employee.contact_number,
+              region: dbUser.employee.region,
+              designation: dbUser.employee.designation,
+              department: dbUser.employee.department
             };
-          } else if (dbUser.role === 'ADMIN' && dbUser.admin) {
-            userPayload.admin = {
-              id: dbUser.admin.id,
-              name: dbUser.admin.name,
-              contact_number: dbUser.admin.contact_number,
-              region: dbUser.admin.region
-            };
+
+            // Add legacy role-specific information for backward compatibility on client side
+            if (dbUser.role === 'EXECUTIVE') {
+              userPayload.executive = {
+                id: dbUser.employee.id,
+                name: dbUser.employee.name,
+                contact_number: dbUser.employee.contact_number,
+                region: dbUser.employee.region
+              };
+            } else if (dbUser.role === 'ADMIN') {
+              userPayload.admin = {
+                id: dbUser.employee.id,
+                name: dbUser.employee.name,
+                contact_number: dbUser.employee.contact_number,
+                region: dbUser.employee.region
+              };
+            }
           }
 
           fullUser = userPayload;

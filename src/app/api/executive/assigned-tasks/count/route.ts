@@ -21,14 +21,14 @@ export async function GET(request: NextRequest) {
     // Execute all queries in parallel to avoid N+1 problem
     const [executive, pendingIssuesCount, visitPlans] = await Promise.all([
       // Get executive profile
-      prisma.executive.findUnique({
+      prisma.employee.findUnique({
         where: { userId: user.userId }
       }),
       
       // Get pending issues count directly from database
       prisma.assigned.count({
         where: {
-          executive: { userId: user.userId }, // Join through executive relationship
+          employee: { userId: user.userId }, // Join through executive relationship
           OR: [
             { status: AssignedStatus.Assigned },
             { status: AssignedStatus.In_Progress }
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       // Get visit plans for counting (only what we need)
       prisma.visitPlan.findMany({
         where: {
-          executive: { userId: user.userId } // Join through executive relationship
+          employee: { userId: user.userId } // Join through executive relationship
         },
         select: {
           storesSnapshot: true

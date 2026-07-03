@@ -129,19 +129,19 @@ export async function GET(request: NextRequest) {
         include: {
           visit: {
             include: {
-              executive: { select: { id: true, name: true } },
+              employee: { select: { id: true, name: true } },
               store: { select: { id: true, storeName: true, city: true, fullAddress: true, storeBrands: { select: { brandId: true } } } }
             }
           },
           digitalVisit: {
             include: {
-              executive: { select: { id: true, name: true } },
+              employee: { select: { id: true, name: true } },
               store: { select: { id: true, storeName: true, city: true, fullAddress: true, storeBrands: { select: { brandId: true } } } }
             }
           },
           assigned: {
             include: {
-              executive: { select: { name: true } }
+              employee: { select: { name: true } }
             }
           }
         },

@@ -17,18 +17,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
     }
 
-    // Get executive from user ID with store assignments
-    const executive = await prisma.executive.findUnique({
+    // Get employee from user ID with store assignments
+    const employee = await prisma.employee.findUnique({
       where: { userId: user.userId },
       include: {
-        executiveStores: {
+        employeeStores: {
           select: { storeId: true }
         }
       }
     });
 
-    if (!executive) {
-      return NextResponse.json({ success: false, error: 'Executive profile not found' }, { status: 404 });
+    if (!employee) {
+      return NextResponse.json({ success: false, error: 'Employee profile not found' }, { status: 404 });
     }
 
     // Get period from query params
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     // Fetch all data in parallel
     const [storeData, allBrands, visits, pendingTasksCount, completedTasksCount] = await Promise.all([
       prisma.store.findMany({
-        where: { id: { in: executive.executiveStores.map(es => es.storeId) } },
+        where: { id: { in: employee.employeeStores.map(es => es.storeId) } },
         select: {
           storeBrands: {
             select: { brandId: true }
@@ -63,15 +63,15 @@ export async function GET(request: NextRequest) {
       }),
       prisma.brand.findMany({ select: { id: true, brandName: true } }),
       prisma.visit.findMany({
-        where: { executiveId: executive.id, visitDate: { gte: startDate, lte: now } },
+        where: { executiveId: employee.id, visitDate: { gte: startDate, lte: now } },
         select: { brandIds: true }
       }),
       // MongoDB provider does not support groupBy in Prisma. Use count queries instead.
       prisma.assigned.count({
-        where: { executiveId: executive.id, status: { in: ['Assigned', 'In_Progress'] } }
+        where: { executiveId: employee.id, status: { in: ['Assigned', 'In_Progress'] } }
       }),
       prisma.assigned.count({
-        where: { executiveId: executive.id, status: 'Completed' }
+        where: { executiveId: employee.id, status: 'Completed' }
       })
     ]);
 

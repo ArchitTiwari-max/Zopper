@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
         const [adminVisitsRaw, executiveVisitsRaw] = await Promise.all([
             (prisma as any).adminVisit.findMany({
                 where: { storeId: storeId },
-                include: { store: true, admin: { include: { user: true } } },
+                include: { store: true, employee: { include: { user: true } } },
                 orderBy: { createdAt: 'desc' },
                 take: 5
             }),
@@ -33,12 +33,12 @@ export async function GET(request: NextRequest) {
                 where: { storeId: storeId },
                 include: {
                     store: true,
-                    executive: { include: { user: true } },
+                    employee: { include: { user: true } },
                     issues: {
                         include: {
                             assigned: {
                                 include: {
-                                    executive: {
+                                    employee: {
                                         include: { user: true }
                                     }
                                 }
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
         ]);
 
         const allVisits = [
-            ...adminVisitsRaw.map((v: any) => ({ ...v, submitterType: 'ADMIN' as const })),
+            ...employeeVisitsRaw.map((v: any) => ({ ...v, submitterType: 'ADMIN' as const })),
             ...executiveVisitsRaw.map((v: any) => ({ ...v, submitterType: 'EXECUTIVE' as const }))
         ].sort((a, b) => {
             const aDate = (a as any).visitDate || a.createdAt;
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized. Admin role required.' }, { status: 401 });
         }
 
-        const admin = await prisma.admin.findUnique({
+        const admin = await prisma.employee.findUnique({
             where: { userId: user.userId }
         });
 
@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
             },
             include: {
                 store: true,
-                admin: true
+                employee: true
             }
         });
 

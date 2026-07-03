@@ -44,14 +44,14 @@ export async function GET(req: Request) {
           gte: todayVisitDateStart,
           lt: tomorrowVisitDateStart,
         },
-        executive: {
+        employee: {
           user: {
             isActive: true,
           },
         },
       },
       include: {
-        executive: {
+        employee: {
           include: {
             user: true,
           },
@@ -87,7 +87,7 @@ export async function GET(req: Request) {
     console.log(`🔍 Found ${visits.length} visits, ${visitPlans.length} PJPs and ${brands.length} unique brands`);
 
     // Fetch all active executives
-    const allExecutives = await prisma.executive.findMany({
+    const allExecutives = await prisma.employee.findMany({
       include: {
         user: true,
       },

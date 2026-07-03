@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
       whereClause.executiveId = executiveId;
     } else if (executiveName && executiveName !== 'All Executive' && executiveName.trim() !== '') {
       const escapedExecName = executiveName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      whereClause.executive = { ...whereClause.executive, name: { contains: escapedExecName, mode: 'insensitive' } };
+      whereClause.employee = { ...whereClause.employee, name: { contains: escapedExecName, mode: 'insensitive' } };
     }
 
     if (city && city !== 'All City') {
@@ -131,8 +131,10 @@ export async function GET(request: NextRequest) {
         personMet: true,
         imageUrls: true,
         reviewedAt: true,
-        reviewedByAdmin: { select: { id: true, name: true } },
-        executive: { select: { id: true, name: true } },
+        reviewedByEmployee: { select: { id: true, name: true } },
+        reviewedByEmployee: { select: { id: true, name: true } },
+        employee: { select: { id: true, name: true } },
+        employee: { select: { id: true, name: true } },
         store: { select: { id: true, storeName: true, city: true } },
         issues: { select: { id: true, details: true, status: true } },
         brandVisitDetails: true
@@ -187,7 +189,8 @@ export async function GET(request: NextRequest) {
         .filter(Boolean) as string[];
 
       // Get executive initials
-      const execName = visit.executive?.name || 'Unknown Executive';
+      const employeeProfile = visit.employee || visit.executive;
+      const execName = employeeProfile?.name || 'Unknown Executive';
       const initials = execName
         .split(' ')
         .map((word: string) => word.charAt(0))
@@ -248,7 +251,7 @@ export async function GET(request: NextRequest) {
 
       return {
         id: visit.id,
-        executiveId: visit.executive?.id || 'unknown',
+        executiveId: employeeProfile?.id || 'unknown',
         executiveName: execName,
         executiveInitials: initials,
         avatarColor: colors[safeColorIndex] || colors[0],
@@ -259,7 +262,7 @@ export async function GET(request: NextRequest) {
         previousVisitDate: prevVisitDateStr,
         nextScheduledDate: nextScheduledDateStr,
         visitStatus: visit.status as 'PENDING_REVIEW' | 'REVIEWD',
-        reviewerName: visit.reviewedByAdmin?.name,
+        reviewerName: visit.reviewedByEmployee?.name || visit.reviewedByEmployee?.name,
         issueStatus: issueStatusResult,
         city: visit.store?.city || 'Unknown',
         issues: issues,

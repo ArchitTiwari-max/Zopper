@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     // OPTIMIZED: Get all filter data concurrently with Promise.all - no limits, fetch all data
     const [executives, stores] = await Promise.all([
       // Get ALL executives for executive names - no limits
-      prisma.executive.findMany({
+      prisma.employee.findMany({
         select: {
           id: true,
           name: true,

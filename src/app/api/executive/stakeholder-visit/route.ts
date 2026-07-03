@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Executive access required' }, { status: 403 });
 
-    const executive = await prisma.executive.findUnique({ where: { userId: user.userId } });
+    const executive = await prisma.employee.findUnique({ where: { userId: user.userId } });
     if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
 
     const { searchParams } = new URL(request.url);
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         adminComment: true,
         createdAt: true,
         nextScheduledDate: true,
-        executive: {
+        employee: {
           select: {
             name: true
           }
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Executive access required' }, { status: 403 });
 
-    const executive = await prisma.executive.findUnique({ where: { userId: user.userId } });
+    const executive = await prisma.employee.findUnique({ where: { userId: user.userId } });
     if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
 
     const body = await request.json();
@@ -115,7 +115,7 @@ export async function DELETE(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Executive access required' }, { status: 403 });
 
-    const executive = await prisma.executive.findUnique({ where: { userId: user.userId } });
+    const executive = await prisma.employee.findUnique({ where: { userId: user.userId } });
     if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
 
     const body = await request.json();

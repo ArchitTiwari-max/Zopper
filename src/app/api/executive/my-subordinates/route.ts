@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch this executive's subordinateIds
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: { subordinateIds: true },
     });
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch name for every subordinate id
-    const subordinates = await prisma.executive.findMany({
+    const subordinates = await prisma.employee.findMany({
       where: { id: { in: subordinateIds } },
       select: { id: true, name: true },
       orderBy: { name: 'asc' },

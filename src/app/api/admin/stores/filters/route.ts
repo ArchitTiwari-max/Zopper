@@ -52,12 +52,12 @@ export async function GET(request: NextRequest) {
       }),
 
       // Get all executives
-      prisma.executive.findMany({
+      prisma.employee.findMany({
         select: {
           id: true,
           name: true,
           region: true,
-          executiveStores: {
+          employeeStores: {
             select: {
               storeId: true
             }
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
         id: executive.id,
         name: executive.name,
         region: executive.region,
-        assignedStoreIds: executive.executiveStores.map(es => es.storeId)
+        assignedStoreIds: executive.employeeStores.map(es => es.storeId)
       })),
       brands: brands.map(brand => ({
         id: brand.id,

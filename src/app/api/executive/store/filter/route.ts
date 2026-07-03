@@ -16,16 +16,16 @@ export async function GET(request: NextRequest) {
     if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
 
     // ── 1) Get executive + assigned store IDs ─────────────────────────────────
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: {
         id: true,
-        executiveStores: { select: { storeId: true } }
+        employeeStores: { select: { storeId: true } }
       }
     });
     if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
 
-    const assignedStoreIds = executive.executiveStores.map(es => es.storeId);
+    const assignedStoreIds = executive.employeeStores.map(es => es.storeId);
 
     // ── ETag ──────────────────────────────────────────────────────────────────
     const currentTime = Math.floor(Date.now() / (10 * 60 * 1000)) * (10 * 60 * 1000); // 10-min buckets

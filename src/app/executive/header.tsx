@@ -25,7 +25,7 @@ const Header: React.FC = () => {
     return firstInitial + lastInitial;
   };
 
-  const userName = user?.executive?.name || user?.admin?.name || user?.username || '';
+  const userName = user?.employee?.name || user?.employee?.name || user?.username || '';
   const userInitials = generateInitials(userName);
 
   return (

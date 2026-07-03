@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get executive details
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       include: { user: true }
     });
@@ -186,8 +186,8 @@ export async function POST(request: NextRequest) {
           storeName: true,
           city: true,
           fullAddress: true,
-          executiveStores: {
-            where: { executiveId: executive.id },
+          employeeStores: {
+            where: { employeeId: executive.id },
             select: { isFlagged: true }
           }
         }
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
 
       // Process stores to extract flag status and prepare snapshot
       storesWithFlag = stores.map(store => {
-        const isFlagged = store.executiveStores[0]?.isFlagged || false;
+        const isFlagged = store.employeeStores[0]?.isFlagged || false;
         if (isFlagged) {
           flaggedStoreNames.push(store.storeName);
         }
@@ -374,7 +374,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const skip = (page - 1) * limit;
 
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: { id: true }
     });
@@ -423,7 +423,7 @@ export async function GET(request: NextRequest) {
           const store = storeMap.get(id);
           const snapshot = storesSnapshot.find(s => s.id === id);
           if (store) {
-            return { ...store, isRescheduled: snapshot?.isRescheduled || false };
+            return { ...(store as any), isRescheduled: snapshot?.isRescheduled || false };
           }
           return null;
         }).filter(Boolean)

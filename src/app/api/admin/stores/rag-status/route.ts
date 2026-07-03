@@ -10,14 +10,15 @@ const RAG_CRITERIA = {
   A: { green: 20, amber: 12 },
   B: { green: 16, amber: 12 },
   C: { green: 14, amber: 10 },
-  D: { green: 10, amber: 3 }
+  D: { green: 10, amber: 3 },
+  NONE: { green: 10, amber: 3 }
 } as const;
 
 type RAGStatus = 'green' | 'amber' | 'red';
 
 // Calculate base RAG status from attach rate and brand type
 function getBaseRAGStatus(brandType: PartnerBrandType, attachRate: number): RAGStatus {
-  const criteria = RAG_CRITERIA[brandType];
+  const criteria = RAG_CRITERIA[brandType] || RAG_CRITERIA.NONE;
   
   if (attachRate >= criteria.green) return 'green';
   if (attachRate >= criteria.amber) return 'amber';

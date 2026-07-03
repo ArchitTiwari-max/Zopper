@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: authenticatedUser.userId },
       select: { id: true }
     });
@@ -84,8 +84,8 @@ export async function GET(request: NextRequest) {
     }
 
     // ── 2) Get executive's assigned store IDs ────────────────────────────────
-    const assignments = await prisma.executiveStoreAssignment.findMany({
-      where: { executiveId },
+    const assignments = await prisma.employeeStoreAssignment.findMany({
+      where: { employeeId: executiveId },
       select: { storeId: true }
     });
     if (assignments.length === 0) {

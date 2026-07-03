@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get admin details
-    const admin = await prisma.admin.findUnique({
+    const admin = await prisma.employee.findUnique({
       where: { userId: authResult.user!.userId },
       include: { user: true }
     });
@@ -43,11 +43,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Get executive details with store assignments
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { id: executiveId },
       include: { 
         user: true,
-        executiveStores: {
+        employeeStores: {
           select: {
             storeId: true
           }
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     // CRITICAL VALIDATION: Check if executive is assigned to all selected stores
-    const assignedStoreIds = executive.executiveStores.map(es => es.storeId);
+    const assignedStoreIds = executive.employeeStores.map(es => es.storeId);
     const unassignedStoreIds = storeIds.filter(storeId => !assignedStoreIds.includes(storeId));
     
     if (unassignedStoreIds.length > 0) {
@@ -198,7 +198,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch all executives
-    const executives = await prisma.executive.findMany({
+    const executives = await prisma.employee.findMany({
       include: {
         user: {
           select: {

@@ -8,6 +8,20 @@ export interface UserInfo {
   email: string;
   username: string;
   role: string;
+  permissions?: string[];
+  userRole?: {
+    id: string;
+    name: string;
+    permissions: string[];
+  } | null;
+  employee?: {
+    id: string;
+    name: string;
+    contact_number?: string;
+    region?: string;
+    designation?: string | null;
+    department?: string | null;
+  } | null;
   lastLoginAt?: string;
   previousLoginAt?: string;
   executive?: {
@@ -34,6 +48,7 @@ interface AuthContextType {
   refreshAuth: () => Promise<UserInfo | null>;
   logout: () => Promise<void>;
   updateUser: (newUser: Partial<UserInfo>) => void;
+  hasPermission: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,6 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialUse
   const [isLoading, setIsLoading] = useState<boolean>(!initialUser);
 
   // Function to fetch latest auth state on-demand (Phase 4)
+  // This only use when there is any update in session like onboarding page user detail change form submit, not for initial loading
   const refreshAuth = useCallback(async (): Promise<UserInfo | null> => {
     try {
       const response = await fetch('/api/auth/verify-session?refresh=true', {
@@ -101,6 +117,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialUse
     setUser(prev => prev ? { ...prev, ...newUser } : null);
   }, []);
 
+  const hasPermission = useCallback((permission: string): boolean => {
+    if (!user) return false;
+    
+    // Check in userRole first (new schema)
+    if (user.userRole && Array.isArray(user.userRole.permissions)) {
+      if (user.userRole.permissions.includes(permission)) return true;
+    }
+    
+    // Fallback to legacy permissions array
+    if (Array.isArray(user.permissions)) {
+      return user.permissions.includes(permission);
+    }
+    
+    return false;
+  }, [user]);
+
   // On mount, set up the global API interceptor (Phase 5)
   useEffect(() => {
     setupAuthInterceptor(refreshAuth, logout);
@@ -123,6 +155,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialUse
     refreshAuth,
     logout,
     updateUser,
+    hasPermission,
   };
 
   return (

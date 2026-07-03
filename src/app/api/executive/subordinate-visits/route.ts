@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * PAGE_SIZE;
 
     // Fetch executive + subordinate IDs
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: { id: true, subordinateIds: true },
     });
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
             visitDate: true,
             createdAt: true,
             updatedAt: true,
-            reviewedByAdmin: { select: { name: true } },
+            reviewedByEmployee: { select: { name: true } },
             store: {
               select: {
                 id: true,
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
                 storeBrands: { select: { brandId: true, brandType: true } },
               },
             },
-            executive: { select: { name: true } },
+            employee: { select: { name: true } },
             issues: {
               select: {
                 id: true,
@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
                     adminComment: true,
                     status: true,
                     createdAt: true,
-                    executive: { select: { id: true, name: true } },
+                    employee: { select: { id: true, name: true } },
                   },
                 },
               },
@@ -165,7 +165,7 @@ export async function GET(request: NextRequest) {
             connectDate: true,
             createdAt: true,
             updatedAt: true,
-            reviewedByAdmin: { select: { name: true } },
+            reviewedByEmployee: { select: { name: true } },
             store: {
               select: {
                 id: true,
@@ -174,7 +174,7 @@ export async function GET(request: NextRequest) {
                 storeBrands: { select: { brandId: true, brandType: true } },
               },
             },
-            executive: { select: { name: true } },
+            employee: { select: { name: true } },
             issues: {
               select: {
                 id: true,
@@ -187,7 +187,7 @@ export async function GET(request: NextRequest) {
                     adminComment: true,
                     status: true,
                     createdAt: true,
-                    executive: { select: { id: true, name: true } },
+                    employee: { select: { id: true, name: true } },
                   },
                 },
               },
@@ -258,7 +258,7 @@ export async function GET(request: NextRequest) {
       city: visit.store?.city || "",
       partnerBrand: getBrandString(visit.store?.storeBrands || []),
       status: visit.status,
-      reviewerName: visit.reviewedByAdmin?.name,
+      reviewerName: visit.reviewedByEmployee?.name,
       representative: visit.executive?.name || "Unknown Executive",
       personMet: visit.personMet,
       POSMchecked: visit.POSMchecked,
@@ -281,7 +281,7 @@ export async function GET(request: NextRequest) {
       city: visit.store?.city || "",
       partnerBrand: getBrandString(visit.store?.storeBrands || []),
       status: visit.status,
-      reviewerName: visit.reviewedByAdmin?.name,
+      reviewerName: visit.reviewedByEmployee?.name,
       representative: visit.executive?.name || "Unknown Executive",
       personMet: visit.personMet,
       POSMchecked: null,

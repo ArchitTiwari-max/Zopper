@@ -22,7 +22,7 @@ async function main() {
             username: row.username,
             password: row.password, // assuming already hashed
             role: "EXECUTIVE",
-            executive: {
+            employee: {
               create: {
                 id: row.Executive_id,
                 name: row.name,
@@ -32,7 +32,7 @@ async function main() {
             },
           },
           include: {
-            executive: true,
+            employee: true,
           },
         });
 
@@ -46,7 +46,7 @@ async function main() {
             username: row.username,
             password: row.password,
             role: "ADMIN",
-            admin: {
+            employee: {
               create: {
                 id: row.Admin_id,
                 name: row.name,
@@ -56,7 +56,7 @@ async function main() {
             },
           },
           include: {
-            admin: true,
+            employee: true,
           },
         });
 

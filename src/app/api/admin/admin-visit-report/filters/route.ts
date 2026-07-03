@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
           storeName: 'asc'
         } // Sort in DB if possible, but we'll still sort below because of distinct nature
       }),
-      prisma.admin.findMany({
+      prisma.employee.findMany({
         select: {
           id: true,
           name: true,

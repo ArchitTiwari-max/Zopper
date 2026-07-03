@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get executive data first
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       include: {
         user: true
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     // Fetch visit plans with updatedAt for cache invalidation
     const visitPlans = await prisma.visitPlan.findMany({
       where: {
-        executive: { userId: user.userId } // Join through executive relationship
+        employee: { userId: user.userId } // Join through executive relationship
       },
       select: {
         id: true,
@@ -129,10 +129,10 @@ export async function PUT(request: NextRequest) {
     const visitPlan = await prisma.visitPlan.findFirst({
       where: {
         id: planId,
-        executive: { userId: user.userId } // Join through executive relationship
+        employee: { userId: user.userId } // Join through executive relationship
       },
       include: {
-        executive: {
+        employee: {
           select: { id: true, name: true }
         }
       }

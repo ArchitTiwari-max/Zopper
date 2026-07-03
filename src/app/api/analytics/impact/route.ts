@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
     let resolvedExecId: string | null = null;
 
     if (user.role === 'EXECUTIVE') {
-      const exec = await prisma.executive.findUnique({
+      const exec = await prisma.employee.findUnique({
         where: { userId: user.userId },
         select: { id: true },
       });
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     } else if (user.role === 'ADMIN' && scopeExecId) {
       resolvedExecId = scopeExecId;
     } else if (user.role === 'ADMIN' && executiveName) {
-      const exec = await prisma.executive.findFirst({
+      const exec = await prisma.employee.findFirst({
         where: { name: { contains: executiveName, mode: 'insensitive' } },
         select: { id: true },
       });
@@ -84,11 +84,11 @@ export async function GET(request: NextRequest) {
     let allowedStoreIds: string[] | null = null;
 
     if (resolvedExecId) {
-      const exec = await prisma.executive.findUnique({
+      const exec = await prisma.employee.findUnique({
         where: { id: resolvedExecId },
-        select: { executiveStores: { select: { storeId: true } } },
+        select: { employeeStores: { select: { storeId: true } } },
       });
-      allowedStoreIds = exec?.executiveStores.map(es => es.storeId) ?? [];
+      allowedStoreIds = exec?.employeeStores.map(es => es.storeId) ?? [];
     }
 
     // ── 3) Candidate stores ───────────────────────────────────────────────────
@@ -191,7 +191,7 @@ export async function GET(request: NextRequest) {
     
     const execNameMap = new Map<string, string>();
     if (execIds.length > 0) {
-      const execs = await prisma.executive.findMany({
+      const execs = await prisma.employee.findMany({
         where: { id: { in: execIds } },
         select: { id: true, name: true }
       });

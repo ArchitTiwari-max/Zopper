@@ -11,7 +11,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const admin = await prisma.admin.findUnique({
+    const admin = await prisma.employee.findUnique({
       where: { userId: user.id || (user as any).userId }
     });
 

@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         { status: 400 },
       );
 
-    const currentExecutive = await prisma.executive.findUnique({
+    const currentExecutive = await prisma.employee.findUnique({
       where: { userId: user.userId },
     });
     if (!currentExecutive)
@@ -40,8 +40,8 @@ export async function GET(request: NextRequest) {
       include: {
         issues: true,
         store: true,
-        executive: { include: { user: true } },
-        reviewedByAdmin: true,
+        employee: { include: { user: true } },
+        reviewedByEmployee: true,
       },
       orderBy: { connectDate: "desc" },
       take: 5,
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       id: v.id,
       date: v.connectDate,
       status: v.status,
-      representative: v.executive?.name || "Unknown Executive",
+      representative: v.employee?.name || "Unknown Executive",
       canViewDetails: v.executiveId === currentExecutive.id,
       personMet: v.personMet as any,
       remarks: v.remarks,
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
         { status: 403 },
       );
 
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
     });
     if (!executive)
@@ -168,8 +168,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate store assignment
-    const assignment = await prisma.executiveStoreAssignment.findUnique({
-      where: { executiveId_storeId: { executiveId: executive.id, storeId } },
+    const assignment = await prisma.employeeStoreAssignment.findUnique({
+      where: { employeeId_storeId: { employeeId: executive.id, storeId } },
     });
     if (!assignment)
       return NextResponse.json(

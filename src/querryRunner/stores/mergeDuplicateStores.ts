@@ -54,7 +54,7 @@ async function main() {
     const [s1Visits, s1DigVisits, s1AdminVisits] = await Promise.all([
       prisma.visit.count({ where: { storeId: storeId1 } }),
       prisma.digitalVisit.count({ where: { storeId: storeId1 } }),
-      prisma.adminVisit.count({ where: { storeId: storeId1 } }),
+      prisma.employeeVisit.count({ where: { storeId: storeId1 } }),
     ]);
     const s1Total = s1Visits + s1DigVisits + s1AdminVisits;
 
@@ -62,7 +62,7 @@ async function main() {
     const [s2Visits, s2DigVisits, s2AdminVisits] = await Promise.all([
       prisma.visit.count({ where: { storeId: storeId2 } }),
       prisma.digitalVisit.count({ where: { storeId: storeId2 } }),
-      prisma.adminVisit.count({ where: { storeId: storeId2 } }),
+      prisma.employeeVisit.count({ where: { storeId: storeId2 } }),
     ]);
     const s2Total = s2Visits + s2DigVisits + s2AdminVisits;
 
@@ -124,8 +124,8 @@ async function main() {
             const existingWinnerAssign =
               await tx.executiveStoreAssignment.findUnique({
                 where: {
-                  executiveId_storeId: {
-                    executiveId: assign.executiveId,
+                  employeeId_storeId: {
+                    employeeId: assign.executiveId,
                     storeId: winnerId,
                   },
                 },

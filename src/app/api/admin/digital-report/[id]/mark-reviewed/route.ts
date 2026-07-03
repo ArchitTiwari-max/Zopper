@@ -9,7 +9,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'ADMIN') return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
 
-    const admin = await prisma.admin.findUnique({ where: { userId: user.userId } });
+    const admin = await prisma.employee.findUnique({ where: { userId: user.userId } });
     if (!admin) return NextResponse.json({ error: 'Admin profile not found' }, { status: 404 });
 
     const id = params.id;
@@ -28,10 +28,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       data: {
         status: 'REVIEWD',
         reviewedAt: new Date(),
-        reviewedByAdmin: { connect: { id: admin.id } },
+        reviewedByEmployee: { connect: { id: admin.id } },
         adminComment: adminComment || undefined,
       },
-      include: { reviewedByAdmin: true },
+      include: { reviewedByEmployee: true },
     });
 
     return NextResponse.json({ success: true, message: 'Marked as reviewed', visit: updated });

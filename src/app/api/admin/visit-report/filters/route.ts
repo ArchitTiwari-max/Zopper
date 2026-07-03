@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       }),
 
       // Get all executives
-      prisma.executive.findMany({
+      prisma.employee.findMany({
         select: {
           id: true,
           name: true,

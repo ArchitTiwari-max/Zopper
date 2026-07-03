@@ -32,7 +32,7 @@ export async function PATCH(
     const requiresFollowUp = body.requiresFollowUp || false;
 
     // Find admin profile for reviewer tracking
-    const adminProfile = await prisma.admin.findUnique({
+    const adminProfile = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: { id: true, name: true }
     });
@@ -57,7 +57,7 @@ export async function PATCH(
             storeName: true
           }
         },
-        executive: {
+        employee: {
           select: {
             name: true
           }
@@ -94,14 +94,14 @@ export async function PATCH(
         status: true,
         adminComment: true,
         reviewedAt: true,
-        reviewedByAdmin: { select: { id: true, name: true } },
+        reviewedByEmployee: { select: { id: true, name: true } },
         updatedAt: true
       }
     });
 
     let createdIssue = null;
     let createdAssignment = null;
-    let responseMessage = `Visit for ${existingVisit.store.storeName} by ${existingVisit.executive.name} has been marked as reviewed by ${adminProfile.name}`;
+    let responseMessage = `Visit for ${existingVisit.store.storeName} by ${existingVisit.employee.name} has been marked as reviewed by ${adminProfile.name}`;
 
     // If follow-up is required, create an issue from visit remarks
     if (requiresFollowUp && existingVisit.remarks && existingVisit.remarks.trim() !== '') {

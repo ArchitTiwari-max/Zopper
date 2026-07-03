@@ -10,32 +10,21 @@ const prisma = new PrismaClient();
 // Helper function to generate next ID based on role
 async function getNextId(role: string): Promise<string> {
   let prefix: string;
-  let model: any;
-  
-  switch (role.toLowerCase()) {
-    case 'admin':
-      prefix = 'admin_';
-      model = prisma.admin;
-      break;
-    case 'executive':
-      prefix = 'executive_';
-      model = prisma.executive;
-      break;
-    default:
-      prefix = 'user_';
-      // For regular users, we check User table
-      model = prisma.user;
+  if (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive' || role.toLowerCase() === 'employee') {
+    prefix = 'employee_';
+  } else {
+    prefix = 'user_';
   }
   
   try {
     let lastId: string;
     
-    if (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive') {
-      // Query Admin or Executive table
-      const lastRecord = await model.findMany({
+    if (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive' || role.toLowerCase() === 'employee') {
+      // Query unified Employee table
+      const lastRecord = await prisma.employee.findMany({
         where: {
           id: {
-            startsWith: prefix
+            startsWith: 'employee_'
           }
         },
         orderBy: {
@@ -45,7 +34,7 @@ async function getNextId(role: string): Promise<string> {
         select: { id: true }
       });
       
-      lastId = lastRecord[0]?.id || `${prefix}00000`;
+      lastId = lastRecord[0]?.id || `employee_00000`;
     } else {
       // Query User table for user_ prefix
       const lastRecord = await prisma.user.findMany({
@@ -92,12 +81,7 @@ export async function GET(request: NextRequest) {
         { username: { contains: escapedSearch, mode: 'insensitive' } },
         { email: { contains: escapedSearch, mode: 'insensitive' } },
         {
-          admin: {
-            name: { contains: escapedSearch, mode: 'insensitive' }
-          }
-        },
-        {
-          executive: {
+          employee: {
             name: { contains: escapedSearch, mode: 'insensitive' }
           }
         }
@@ -112,8 +96,7 @@ export async function GET(request: NextRequest) {
     const users = await prisma.user.findMany({
       where: whereClause,
       include: {
-        admin: true,
-        executive: true
+        employee: true
       },
       orderBy: {
         createdAt: 'desc'
@@ -130,17 +113,24 @@ export async function GET(request: NextRequest) {
         isActive: user.isActive,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-        adminInfo: user.admin ? {
-          adminId: user.admin.id,
-          name: user.admin.name,
-          contactNumber: user.admin.contact_number,
-          region: user.admin.region
+        adminInfo: user.employee && user.role === 'ADMIN' ? {
+          adminId: user.employee.id,
+          name: user.employee.name,
+          contactNumber: user.employee.contact_number,
+          region: user.employee.region
         } : null,
-        executiveInfo: user.executive ? {
-          executiveId: user.executive.id,
-          name: user.executive.name,
-          contactNumber: user.executive.contact_number,
-          region: user.executive.region
+        executiveInfo: user.employee && user.role === 'EXECUTIVE' ? {
+          executiveId: user.employee.id,
+          name: user.employee.name,
+          contactNumber: user.employee.contact_number,
+          region: user.employee.region
+        } : null,
+        employeeInfo: user.employee ? {
+          adminId: user.role === 'ADMIN' ? user.employee.id : undefined,
+          executiveId: user.role === 'EXECUTIVE' ? user.employee.id : undefined,
+          name: user.employee.name,
+          contactNumber: user.employee.contact_number,
+          region: user.employee.region
         } : null
       }))
     });
@@ -169,7 +159,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Validate role
-    if (!['ADMIN', 'EXECUTIVE'].includes(role.toUpperCase())) {
+    const targetRole = role.toUpperCase();
+    if (!['ADMIN', 'EXECUTIVE'].includes(targetRole)) {
       return NextResponse.json(
         { success: false, error: 'Role must be ADMIN or EXECUTIVE' },
         { status: 400 }
@@ -193,13 +184,18 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Get target role mapping from UserRole table
+    const userRoleRecord = await prisma.userRole.findUnique({
+      where: { name: targetRole === 'ADMIN' ? 'ADMIN' : 'SALES_EXECUTIVE' }
+    });
+    
     // Generate IDs
     const userId = await getNextId('user');
     const hashedPassword = await bcrypt.hash(password, 12);
     
     let newUser;
     
-    if (role.toUpperCase() === 'EXECUTIVE') {
+    if (targetRole === 'EXECUTIVE') {
       const executiveId = await getNextId('executive');
       
       newUser = await prisma.user.create({
@@ -209,21 +205,25 @@ export async function POST(request: NextRequest) {
           username: username,
           password: hashedPassword,
           role: 'EXECUTIVE',
-          executive: {
+          roleId: userRoleRecord?.id || null,
+          permissions: userRoleRecord?.permissions || [],
+          employee: {
             create: {
               id: executiveId,
               name: name,
               contact_number: contactNumber || '',
-              region: region || null
+              region: region || null,
+              designation: 'Relationship Manager',
+              department: 'Sales'
             }
           }
         },
         include: {
-          executive: true
+          employee: true
         }
       });
       
-    } else if (role.toUpperCase() === 'ADMIN') {
+    } else {
       const adminId = await getNextId('admin');
       
       newUser = await prisma.user.create({
@@ -233,17 +233,21 @@ export async function POST(request: NextRequest) {
           username: username,
           password: hashedPassword,
           role: 'ADMIN',
-          admin: {
+          roleId: userRoleRecord?.id || null,
+          permissions: userRoleRecord?.permissions || [],
+          employee: {
             create: {
               id: adminId,
               name: name,
               contact_number: contactNumber || '',
-              region: region || null
+              region: region || null,
+              designation: 'Operations Admin',
+              department: 'Operations'
             }
           }
         },
         include: {
-          admin: true
+          employee: true
         }
       });
     }
@@ -255,17 +259,24 @@ export async function POST(request: NextRequest) {
       email: newUser!.email,
       role: newUser!.role,
       createdAt: newUser!.createdAt,
-      adminInfo: (newUser as any).admin ? {
-        adminId: (newUser as any).admin.id,
-        name: (newUser as any).admin.name,
-        contactNumber: (newUser as any).admin.contact_number,
-        region: (newUser as any).admin.region
+      adminInfo: newUser.employee && newUser.role === 'ADMIN' ? {
+        adminId: newUser.employee.id,
+        name: newUser.employee.name,
+        contactNumber: newUser.employee.contact_number,
+        region: newUser.employee.region
       } : null,
-      executiveInfo: (newUser as any).executive ? {
-        executiveId: (newUser as any).executive.id,
-        name: (newUser as any).executive.name,
-        contactNumber: (newUser as any).executive.contact_number,
-        region: (newUser as any).executive.region
+      executiveInfo: newUser.employee && newUser.role === 'EXECUTIVE' ? {
+        executiveId: newUser.employee.id,
+        name: newUser.employee.name,
+        contactNumber: newUser.employee.contact_number,
+        region: newUser.employee.region
+      } : null,
+      employeeInfo: newUser.employee ? {
+        adminId: newUser.role === 'ADMIN' ? newUser.employee.id : undefined,
+        executiveId: newUser.role === 'EXECUTIVE' ? newUser.employee.id : undefined,
+        name: newUser.employee.name,
+        contactNumber: newUser.employee.contact_number,
+        region: newUser.employee.region
       } : null
     };
     
@@ -275,7 +286,7 @@ export async function POST(request: NextRequest) {
       emailSent = await sendCredentialsEmail(
         email.trim(),
         username.trim(),
-        role.toUpperCase(),
+        targetRole,
         name.trim(),
         password
       );
@@ -344,8 +355,7 @@ export async function DELETE(request: NextRequest) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        admin: true,
-        executive: true
+        employee: true
       }
     });
     
@@ -358,26 +368,19 @@ export async function DELETE(request: NextRequest) {
     
     // Use transaction to ensure all deletions succeed together
     await prisma.$transaction(async (tx) => {
-      // Delete related Admin/Executive record first, then delete User
-      if (user.admin) {
-        // Delete Admin record first
-        await tx.admin.delete({
-          where: { id: user.admin.id }
-        });
-      }
-      
-      if (user.executive) {
-        const executiveId = user.executive.id;
+      // Delete related Employee record first, then delete User
+      if (user.employee) {
+        const employeeId = user.employee.id;
         
-        console.log(`Starting comprehensive deletion for executive: ${executiveId}`);
+        console.log(`Starting comprehensive deletion for employee: ${employeeId}`);
         
-        // Delete all executive-related records in the correct order to avoid foreign key conflicts
+        // Delete all employee-related records in the correct order to avoid foreign key conflicts
         
         // 1. Delete AssignReports first (they depend on Assigned)
         const assignReports = await tx.assignReport.deleteMany({
           where: {
             assigned: {
-              executiveId: executiveId
+              executiveId: employeeId
             }
           }
         });
@@ -386,46 +389,46 @@ export async function DELETE(request: NextRequest) {
         // 2. Delete Assigned records (issue assignments)
         const assigned = await tx.assigned.deleteMany({
           where: {
-            executiveId: executiveId
+            executiveId: employeeId
           }
         });
         console.log(`Deleted ${assigned.count} assignments`);
         
-        // 3. Delete Issues that were created from visits by this executive
+        // 3. Delete Issues that were created from visits by this employee
         const issues = await tx.issue.deleteMany({
           where: {
             visit: {
-              executiveId: executiveId
+              executiveId: employeeId
             }
           }
         });
         console.log(`Deleted ${issues.count} issues`);
         
-        // 4. Delete Visits conducted by this executive
+        // 4. Delete Visits conducted by this employee
         const visits = await tx.visit.deleteMany({
           where: {
-            executiveId: executiveId
+            executiveId: employeeId
           }
         });
         console.log(`Deleted ${visits.count} visits`);
         
-        // 5. Delete VisitPlans created by this executive
+        // 5. Delete VisitPlans created by this employee
         const visitPlans = await tx.visitPlan.deleteMany({
           where: {
-            executiveId: executiveId
+            executiveId: employeeId
           }
         });
         console.log(`Deleted ${visitPlans.count} visit plans`);
         
-        // 6. Delete ExecutiveStoreAssignments
-        const storeAssignments = await tx.executiveStoreAssignment.deleteMany({
+        // 6. Delete EmployeeStoreAssignments
+        const storeAssignments = await tx.employeeStoreAssignment.deleteMany({
           where: {
-            executiveId: executiveId
+            employeeId: employeeId
           }
         });
         console.log(`Deleted ${storeAssignments.count} store assignments`);
         
-        // 7. Delete Notifications related to this executive (both sent and received)
+        // 7. Delete Notifications related to this employee (both sent and received)
         const notifications = await tx.notification.deleteMany({
           where: {
             OR: [
@@ -436,19 +439,19 @@ export async function DELETE(request: NextRequest) {
         });
         console.log(`Deleted ${notifications.count} notifications`);
         
-        // 8. Delete DostChat records (they have required relations to Executive and User)
+        // 8. Delete DostChat records
         const dostChats = await tx.dostChat.deleteMany({
           where: {
-            executiveId: executiveId
+            executiveId: employeeId
           }
         });
         console.log(`Deleted ${dostChats.count} dost chats`);
         
-        // 9. Finally, delete the Executive record
-        await tx.executive.delete({
-          where: { id: executiveId }
+        // 9. Finally, delete the Employee record
+        await tx.employee.delete({
+          where: { id: employeeId }
         });
-        console.log(`Deleted executive record: ${executiveId}`);
+        console.log(`Deleted employee record: ${employeeId}`);
       }
       
       // Now delete the User record
@@ -460,7 +463,7 @@ export async function DELETE(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      message: `User and all associated records deleted successfully${user.executive ? ' (including visits, assignments, and notifications)' : ''}`
+      message: `User and all associated records deleted successfully${user.employee ? ' (including visits, assignments, and notifications)' : ''}`
     });
     
   } catch (error) {

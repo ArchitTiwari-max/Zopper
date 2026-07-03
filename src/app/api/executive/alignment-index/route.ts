@@ -166,13 +166,13 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Find the logged-in executive ─────────────────────────────────────────
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: {
         id: true,
         name: true,
         subordinateIds: true,
-        executiveStores: { select: { storeId: true } },
+        employeeStores: { select: { storeId: true } },
       },
     });
 
@@ -180,7 +180,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Executive not found" }, { status: 404 });
     }
 
-    const selfStoreIds = executive.executiveStores.map((es) => es.storeId);
+    const selfStoreIds = executive.employeeStores.map((es) => es.storeId);
 
     // ── Fetch own stores ──────────────────────────────────────────────────────
     const selfStoresRaw = selfStoreIds.length
@@ -198,18 +198,18 @@ export async function GET(request: NextRequest) {
     const subordinatesData: { id: string; name: string; stores: any[] }[] = [];
 
     if (executive.subordinateIds && executive.subordinateIds.length > 0) {
-      const subordinates = await prisma.executive.findMany({
+      const subordinates = await prisma.employee.findMany({
         where: { id: { in: executive.subordinateIds } },
         select: {
           id: true,
           name: true,
-          executiveStores: { select: { storeId: true } },
+          employeeStores: { select: { storeId: true } },
         },
       });
 
       // Collect all subordinate store IDs to batch-fetch
       const allSubStoreIds = Array.from(
-        new Set(subordinates.flatMap((sub) => sub.executiveStores.map((es) => es.storeId)))
+        new Set(subordinates.flatMap((sub) => sub.employeeStores.map((es) => es.storeId)))
       );
 
       const allSubStoresRaw = allSubStoreIds.length
@@ -222,7 +222,7 @@ export async function GET(request: NextRequest) {
       const storeMap = new Map(allSubStoresRaw.map((s) => [s.id, s]));
 
       for (const sub of subordinates) {
-        const subStoreIds = sub.executiveStores.map((es) => es.storeId);
+        const subStoreIds = sub.employeeStores.map((es) => es.storeId);
         const subStores = subStoreIds
           .map((id) => storeMap.get(id))
           .filter((s): s is NonNullable<typeof s> => !!s && isBrandStore(s.storeName))

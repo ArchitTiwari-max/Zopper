@@ -29,7 +29,7 @@ export async function GET(
     }
 
     // Get executive details
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: { id: true, name: true }
     });
@@ -45,7 +45,7 @@ export async function GET(
         executiveId: executive.id
       },
       include: {
-        executive: {
+        employee: {
           select: { id: true, name: true }
         }
       }
@@ -155,7 +155,7 @@ export async function PUT(
     }
 
     // Get executive details
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: { id: true, name: true }
     });
@@ -362,7 +362,7 @@ export async function DELETE(
 
     const { id: planId } = await params;
     
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: { id: true }
     });

@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     const { from, to } = getDateRange(dateRange);
 
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: { id: true, subordinateIds: true },
     });
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const subordinates = await prisma.executive.findMany({
+    const subordinates = await prisma.employee.findMany({
       where: { id: { in: subordinateIds } },
       select: { id: true, name: true },
     });
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
               remarks: true,
               visitDate: true,
               createdAt: true,
-              reviewedByAdmin: { select: { name: true } },
+              reviewedByEmployee: { select: { name: true } },
               store: {
                 select: {
                   id: true,
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
                   storeBrands: { select: { brandId: true, brandType: true } },
                 },
               },
-              executive: { select: { name: true } },
+              employee: { select: { name: true } },
               issues: { select: { id: true, details: true, status: true } },
             },
             orderBy: { visitDate: "desc" },
@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
               remarks: true,
               connectDate: true,
               createdAt: true,
-              reviewedByAdmin: { select: { name: true } },
+              reviewedByEmployee: { select: { name: true } },
               store: {
                 select: {
                   id: true,
@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
                   storeBrands: { select: { brandId: true, brandType: true } },
                 },
               },
-              executive: { select: { name: true } },
+              employee: { select: { name: true } },
               issues: { select: { id: true, details: true, status: true } },
             },
             orderBy: { connectDate: "desc" },
@@ -234,7 +234,7 @@ export async function GET(request: NextRequest) {
         "Issue Details":
           v.issues?.map((i: any) => `${i.details} [${i.status}]`).join("; ") ||
           "",
-        "Reviewed By": v.reviewedByAdmin?.name || "Pending",
+        "Reviewed By": v.reviewedByEmployee?.name || "Pending",
       })),
       ...digitalVisits.map((v) => ({
         Type: "Digital",
@@ -250,7 +250,7 @@ export async function GET(request: NextRequest) {
         "Issue Details":
           v.issues?.map((i: any) => `${i.details} [${i.status}]`).join("; ") ||
           "",
-        "Reviewed By": v.reviewedByAdmin?.name || "Pending",
+        "Reviewed By": v.reviewedByEmployee?.name || "Pending",
       })),
     ].sort((a, b) => {
       const da = new Date(

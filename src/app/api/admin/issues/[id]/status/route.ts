@@ -66,7 +66,7 @@ export async function PATCH(
       include: {
         visit: {
           include: {
-            executive: {
+            employee: {
               select: {
                 id: true,
                 name: true,
@@ -84,7 +84,7 @@ export async function PATCH(
         },
         assigned: {
           include: {
-            executive: {
+            employee: {
               select: {
                 id: true,
                 name: true,
@@ -107,15 +107,15 @@ export async function PATCH(
       location: updatedIssue.visit.store.fullAddress || updatedIssue.visit.store.city,
       city: updatedIssue.visit.store.city,
       dateReported: updatedIssue.createdAt.toISOString().split('T')[0],
-      reportedBy: updatedIssue.visit.executive.name,
+      reportedBy: updatedIssue.visit.employee.name,
       reportedByRole: 'Executive',
       status: updatedIssue.status,
       description: updatedIssue.details,
       assignmentHistory: updatedIssue.assigned.map(assignment => ({
         id: assignment.id,
-        executiveId: assignment.executive.id,
-        executiveName: assignment.executive.name,
-        executiveInitials: assignment.executive.name.split(' ').map(n => n[0]).join(''),
+        executiveId: assignment.employee.id,
+        executiveName: assignment.employee.name,
+        executiveInitials: assignment.employee.name.split(' ').map(n => n[0]).join(''),
         dateAssigned: assignment.createdAt.toISOString().split('T')[0],
         adminComment: assignment.adminComment,
         status: assignment.status

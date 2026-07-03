@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
     // Fetch all users with complete information
     const users = await prisma.user.findMany({
       include: {
-        admin: true,
-        executive: {
+        employee: true,
+        employee: {
           include: {
             _count: {
               select: {
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     // Prepare data for Excel export
     const excelData = users.map((user, index) => {
       const isAdmin = user.role === 'ADMIN';
-      const userInfo = user.admin || user.executive;
+      const userInfo = user.employee || user.employee;
       
       return {
         'Sr No': index + 1,
@@ -47,15 +47,15 @@ export async function GET(request: NextRequest) {
         'Username': user.username,
         'Email': user.email,
         'Role': user.role,
-        'Admin ID': isAdmin ? user.admin?.id || 'N/A' : 'N/A',
-        'Executive ID': !isAdmin ? user.executive?.id || 'N/A' : 'N/A',
+        'Admin ID': isAdmin ? user.employee?.id || 'N/A' : 'N/A',
+        'Executive ID': !isAdmin ? user.employee?.id || 'N/A' : 'N/A',
         'Full Name': userInfo?.name || 'N/A',
         'Contact Number': userInfo?.contact_number || 'N/A',
         'Region': userInfo?.region || 'N/A',
-        'Total Visits': !isAdmin ? user.executive?._count?.visits || 0 : 'N/A',
-        'Total Assignments': !isAdmin ? user.executive?._count?.assigned || 0 : 'N/A',
-        'Total Visit Plans': !isAdmin ? user.executive?._count?.visitPlans || 0 : 'N/A',
-        'Store Assignments': !isAdmin ? user.executive?._count?.executiveStores || 0 : 'N/A',
+        'Total Visits': !isAdmin ? user.employee?._count?.visits || 0 : 'N/A',
+        'Total Assignments': !isAdmin ? user.employee?._count?.assigned || 0 : 'N/A',
+        'Total Visit Plans': !isAdmin ? user.employee?._count?.visitPlans || 0 : 'N/A',
+        'Store Assignments': !isAdmin ? user.employee?._count?.employeeStores || 0 : 'N/A',
         'Account Created': user.createdAt.toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'short',

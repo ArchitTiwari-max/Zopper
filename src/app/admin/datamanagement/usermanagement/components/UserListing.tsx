@@ -108,14 +108,14 @@ const UserListing: React.FC<UserListingProps> = ({ refreshTrigger }) => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(user => {
-        const name = user.adminInfo?.name || user.executiveInfo?.name || '';
+        const name = user.employeeInfo?.name || user.employeeInfo?.name || '';
         return (
           user.username.toLowerCase().includes(query) ||
           user.email.toLowerCase().includes(query) ||
           name.toLowerCase().includes(query) ||
           user.id.toLowerCase().includes(query) ||
-          (user.adminInfo?.adminId || '').toLowerCase().includes(query) ||
-          (user.executiveInfo?.executiveId || '').toLowerCase().includes(query)
+          (user.employeeInfo?.adminId || '').toLowerCase().includes(query) ||
+          (user.employeeInfo?.executiveId || '').toLowerCase().includes(query)
         );
       });
     }
@@ -383,9 +383,9 @@ const UserListing: React.FC<UserListingProps> = ({ refreshTrigger }) => {
       ) : (
         <div className="user-mgmt-users-grid">
           {filteredUsers.map((user) => {
-            const userInfo = user.adminInfo || user.executiveInfo;
+            const userInfo = user.employeeInfo || user.employeeInfo;
             const isAdmin = user.role === 'ADMIN';
-            const assignedId = isAdmin ? user.adminInfo?.adminId : user.executiveInfo?.executiveId;
+            const assignedId = isAdmin ? user.employeeInfo?.adminId : user.employeeInfo?.executiveId;
             
             return (
               <div key={user.id} className={`user-mgmt-user-card ${isAdmin ? 'admin' : 'executive'}`}>

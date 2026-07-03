@@ -109,7 +109,7 @@ export class NotificationService {
         visit: {
           include: {
             store: true,
-            executive: true
+            employee: true
           }
         },
         issue: {
@@ -132,12 +132,12 @@ export class NotificationService {
                 }
               }
             },
-            executive: true
+            employee: true
           }
         },
         visitPlan: {
           include: {
-            executive: {
+            employee: {
               include: {
                 user: true
               }
@@ -238,7 +238,7 @@ export class NotificationEvents {
       where: { id: visitId },
       include: {
         store: true,
-        executive: true
+        employee: true
       }
     });
 
@@ -247,7 +247,7 @@ export class NotificationEvents {
     const notifications = adminUserIds.map(adminId => 
       NotificationService.createNotification({
         title: '🏪 New Visit Submitted',
-        message: `${visit.executive.name} has submitted a visit report for ${visit.store.storeName}`,
+        message: `${visit.employee.name} has submitted a visit report for ${visit.store.storeName}`,
         type: 'VISIT_SUBMITTED',
         priority: 'MEDIUM',
         recipientId: adminId,
@@ -258,7 +258,7 @@ export class NotificationEvents {
         actionUrl: `/admin/stores/${visit.storeId}/visits/${visitId}`,
         metadata: {
           storeName: visit.store.storeName,
-          executiveName: visit.executive.name
+          executiveName: visit.employee.name
         }
       })
     );
@@ -274,7 +274,7 @@ export class NotificationEvents {
       where: { id: visitId },
       include: {
         store: true,
-        executive: { include: { user: true } }
+        employee: { include: { user: true } }
       }
     });
 
@@ -285,7 +285,7 @@ export class NotificationEvents {
       message: `Your visit report for ${visit.store.storeName} has been ${status.toLowerCase()}`,
       type: 'VISIT_REVIEWED',
       priority: status === 'NEEDS_UPDATE' ? 'HIGH' : 'MEDIUM',
-      recipientId: visit.executive.userId,
+      recipientId: visit.employee.userId,
       recipientRole: 'EXECUTIVE',
       senderId: adminUserId,
       senderRole: 'ADMIN',
@@ -308,7 +308,7 @@ export class NotificationEvents {
         visit: {
           include: {
             store: true,
-            executive: true
+            employee: true
           }
         }
       }
@@ -319,7 +319,7 @@ export class NotificationEvents {
     const notifications = adminUserIds.map(adminId => 
       NotificationService.createNotification({
         title: '⚠️ New Issue Reported',
-        message: `${issue.visit.executive.name} reported an issue at ${issue.visit.store.storeName}`,
+        message: `${issue.visit.employee.name} reported an issue at ${issue.visit.store.storeName}`,
         type: 'ISSUE_REPORTED',
         priority: 'HIGH',
         recipientId: adminId,
@@ -331,7 +331,7 @@ export class NotificationEvents {
         actionUrl: `/admin/issues/${issueId}`,
         metadata: {
           storeName: issue.visit.store.storeName,
-          executiveName: issue.visit.executive.name,
+          executiveName: issue.visit.employee.name,
           issueDetails: issue.details.substring(0, 100)
         }
       })
@@ -356,7 +356,7 @@ export class NotificationEvents {
             }
           }
         },
-        executive: {
+        employee: {
           include: { user: true }
         }
       }
@@ -369,7 +369,7 @@ export class NotificationEvents {
       message: `You've been assigned an issue at ${assigned.issue.visit.store.storeName}`,
       type: 'ISSUE_ASSIGNED',
       priority: 'HIGH',
-      recipientId: assigned.executive.userId,
+      recipientId: assigned.employee.userId,
       recipientRole: 'EXECUTIVE',
       senderId: adminUserId,
       senderRole: 'ADMIN',
@@ -395,7 +395,7 @@ export class NotificationEvents {
             visit: {
               include: {
                 store: true,
-                executive: true
+                employee: true
               }
             }
           }
@@ -414,7 +414,7 @@ export class NotificationEvents {
     const notifications = adminUserIds.map(adminId => 
       NotificationService.createNotification({
         title: '🔄 Issue Status Updated',
-        message: `${assigned.issue.visit.executive.name} has ${statusLabels[newStatus as keyof typeof statusLabels]} the issue at ${assigned.issue.visit.store.storeName}`,
+        message: `${assigned.issue.visit.employee.name} has ${statusLabels[newStatus as keyof typeof statusLabels]} the issue at ${assigned.issue.visit.store.storeName}`,
         type: 'ISSUE_STATUS_UPDATED',
         priority: newStatus === 'Completed' ? 'HIGH' : 'MEDIUM',
         recipientId: adminId,
@@ -426,7 +426,7 @@ export class NotificationEvents {
         actionUrl: `/admin/assignments/${assignedId}`,
         metadata: {
           storeName: assigned.issue.visit.store.storeName,
-          executiveName: assigned.issue.visit.executive.name,
+          executiveName: assigned.issue.visit.employee.name,
           newStatus: newStatus
         }
       })
@@ -443,7 +443,7 @@ export class NotificationEvents {
       where: { id: visitId },
       include: {
         store: true,
-        executive: { include: { user: true } }
+        employee: { include: { user: true } }
       }
     });
 
@@ -454,7 +454,7 @@ export class NotificationEvents {
       message: `Admin has added a comment to your visit report for ${visit.store.storeName}`,
       type: 'ADMIN_COMMENT_ADDED',
       priority: 'MEDIUM',
-      recipientId: visit.executive.userId,
+      recipientId: visit.employee.userId,
       recipientRole: 'EXECUTIVE',
       senderId: adminUserId,
       senderRole: 'ADMIN',

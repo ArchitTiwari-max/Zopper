@@ -33,19 +33,19 @@ export async function GET(
       include: {
         visit: {
           include: {
-            executive: { select: { id: true, name: true } },
+            employee: { select: { id: true, name: true } },
             store: { select: { id: true, storeName: true, city: true, fullAddress: true, storeBrands: { select: { brandId: true } } } }
           }
         },
         digitalVisit: {
           include: {
-            executive: { select: { id: true, name: true } },
+            employee: { select: { id: true, name: true } },
             store: { select: { id: true, storeName: true, city: true, fullAddress: true, storeBrands: { select: { brandId: true } } } }
           }
         },
         assigned: {
           include: {
-            executive: { select: { name: true } },
+            employee: { select: { name: true } },
             assignReport: { select: { remarks: true, personMetName: true, personMetDesignation: true, photoUrls: true, createdAt: true } }
           }
         }
@@ -89,14 +89,14 @@ export async function GET(
     // Process assignment history
     const assignmentHistory = targetIssue.assigned.map(assignment => {
       // Generate initials from executive name
-      const executiveInitials = assignment.executive.name
+      const executiveInitials = assignment.employee.name
         .split(' ')
         .map(word => word.charAt(0).toUpperCase())
         .join('');
 
       return {
         id: assignment.id,
-        executiveName: assignment.executive.name,
+        executiveName: assignment.employee.name,
         executiveInitials: executiveInitials,
         dateAssigned: assignment.createdAt.toISOString().split('T')[0],
         status: assignment.status,
@@ -129,7 +129,7 @@ export async function GET(
       createdAt: targetIssue.createdAt.toISOString(),
       updatedAt: targetIssue.updatedAt.toISOString(),
       // Additional details for the detail page
-      executive: {
+      employee: {
         id: source?.executive?.id || '',
         name: source?.executive?.name || 'Unknown Executive'
       },

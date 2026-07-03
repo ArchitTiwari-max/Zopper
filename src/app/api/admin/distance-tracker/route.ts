@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
                         longitude: true,
                     },
                 },
-                executive: {
+                employee: {
                     select: {
                         id: true,
                         name: true,

@@ -134,7 +134,7 @@ async function main() {
 
     for (const executiveId of executiveIds) {
       try {
-        await prisma.executiveStoreAssignment.create({
+        await prisma.employeeStoreAssignment.create({
           data: {
             executiveId,
             storeId,

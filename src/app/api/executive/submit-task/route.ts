@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get executive from user ID
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId }
     });
 
@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
     
     // For executives, get their profile
     if (user.role === 'EXECUTIVE') {
-      executive = await prisma.executive.findUnique({
+      executive = await prisma.employee.findUnique({
         where: { userId: user.userId }
       });
 
@@ -215,7 +215,7 @@ export async function GET(request: NextRequest) {
         assigned: {
           include: {
             issue: true,
-            executive: true
+            employee: true
           }
         }
       }

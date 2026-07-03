@@ -27,77 +27,86 @@ enum viststatus {
 }
 
 
+model UserRole {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  permissions String[]
+  users       User[]
+
+  @@map("UserRole")
+}
+
 model User {
   id              String           @id @map("_id")
   email           String           @unique
   username        String           @unique
   password        String
   role            Role             @default(EXECUTIVE)
+  permissions     String[]
   isActive        Boolean          @default(true)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   lastLoginAt     DateTime?
-  executive       Executive?
-  admin           Admin?
   dostChats       DostChat[]
   holidayRequests HolidayRequest[]
+
+  // New fields for unified schema:
+  roleId          String?          @db.ObjectId
+  userRole        UserRole?        @relation(fields: [roleId], references: [id])
+  employee        Employee?
 
   @@map("User")
 }
 
-model Admin {
-  id             String  @id @map("_id")
+model Employee {
+  id             String   @id @map("_id")
   name           String
   contact_number String
   region         String?
-  userId         String  @unique
-  user           User    @relation(fields: [userId], references: [id])
+  designation    String?
+  department     String?
 
-  // Back-relations: visits reviewed by this admin
-  reviewedVisits            Visit[]
-  reviewedDigitalVisits     DigitalVisit[]
-  reviewedStakeholderVisits StakeholderVisit[]
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id])
 
-  adminVisits AdminVisit[]
-}
+  // store assignments
+  employeeStores EmployeeStoreAssignment[]
 
-model Executive {
-  id              String                     @id @map("_id")
-  name            String
-  contact_number  String
-  region          String?
-  visits          Visit[]
-  digitalVisits   DigitalVisit[]
-  assigned        Assigned[]
-  visitPlans      VisitPlan[]
-  stakeholderVisits StakeholderVisit[]
-  userId          String                     @unique
-  user            User                       @relation(fields: [userId], references: [id])
-  // Store assignments
-  executiveStores ExecutiveStoreAssignment[]
-  // Stakeholder assignments
-
-  // Dost chat back-relation
-  dostChats       DostChat[]
-
-  // Senior-Junior hierarchy
+  // Hierarchy Structure
   managerIds     String[]    @map("manager_ids")
-  managers       Executive[] @relation("ExecutiveHierarchy", fields: [managerIds], references: [id])
+  managers       Employee[]  @relation("EmployeeHierarchy", fields: [managerIds], references: [id])
   subordinateIds String[]    @map("subordinate_ids")
-  subordinates   Executive[] @relation("ExecutiveHierarchy", fields: [subordinateIds], references: [id])
+  subordinates   Employee[]  @relation("EmployeeHierarchy", fields: [subordinateIds], references: [id])
+
+  // Relations: Activities logged by this Employee
+  visits            Visit[]            @relation("EmployeeCreatedVisits")
+  digitalVisits     DigitalVisit[]     @relation("EmployeeCreatedDigitalVisits")
+  stakeholderVisits StakeholderVisit[] @relation("EmployeeCreatedStakeholderVisits")
+  visitPlans        VisitPlan[]        @relation("EmployeeVisitPlans")
+  assigned          Assigned[]         @relation("EmployeeAssigned")
+  employeeVisits    EmployeeVisit[]    @relation("EmployeeVisits")
+  dostChats         DostChat[]
+
+  // Relations: Reviews done by this Employee
+  reviewedVisits            Visit[]            @relation("EmployeeReviewedVisits")
+  reviewedDigitalVisits     DigitalVisit[]     @relation("EmployeeReviewedDigitalVisits")
+  reviewedStakeholderVisits StakeholderVisit[] @relation("EmployeeReviewedStakeholderVisits")
+
+  @@map("Employee")
 }
 
-model ExecutiveStoreAssignment {
+model EmployeeStoreAssignment {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  executiveId String
+  employeeId  String   @map("executiveId")
   storeId     String
   assignedAt  DateTime @default(now())
   isFlagged   Boolean  @default(false)
 
-  executive Executive @relation(fields: [executiveId], references: [id])
-  store     Store     @relation(fields: [storeId], references: [id])
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  store       Store     @relation(fields: [storeId], references: [id])
 
-  @@unique([executiveId, storeId])
+  @@unique([employeeId, storeId])
+  @@map("ExecutiveStoreAssignment")
 }
 
 enum PartnerBrandType {
@@ -132,9 +141,9 @@ model Store {
   longitude       Float? // Geocoded longitude (Google Places API)
   visits          Visit[]
   digitalVisits   DigitalVisit[]
-  executiveStores ExecutiveStoreAssignment[]
+  employeeStores  EmployeeStoreAssignment[]
+  employeeVisits  EmployeeVisit[]
   salesRecords    SalesRecord[]
-  adminVisits     AdminVisit[]
   alignment       StoreAlignment?
   storeCategory   String?
   storeChannel    String?
@@ -247,10 +256,10 @@ model Visit {
   adminComment      String?
   reviewedAt        DateTime?
   reviewedByAdminId String?
-  reviewedByAdmin   Admin?     @relation(fields: [reviewedByAdminId], references: [id])
+  reviewedByEmployee Employee? @relation("EmployeeReviewedVisits", fields: [reviewedByAdminId], references: [id])
   // relations
   executiveId       String
-  executive         Executive  @relation(fields: [executiveId], references: [id])
+  employee          Employee?  @relation("EmployeeCreatedVisits", fields: [executiveId], references: [id])
 
   storeId           String
   store             Store    @relation(fields: [storeId], references: [id])
@@ -266,26 +275,26 @@ model Visit {
   @@index([storeId])
 }
 
-model AdminVisit {
+model EmployeeVisit {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  personMet   Json // [{ name: "Rajesh", designation: "Manager", phoneNumber: "1234567890" }]
+  personMet   Json
   POSMchecked Boolean?  @map("displayChecked")
   remarks     String?
   imageUrls   String[]
-  visitDate   DateTime? // Actual date of the visit (set by admin)
+  visitDate   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  // relations
-  adminId String
-  admin   Admin  @relation(fields: [adminId], references: [id])
+  employeeId  String    @map("adminId")
+  employee    Employee  @relation("EmployeeVisits", fields: [employeeId], references: [id])
 
   storeId  String
   store    Store    @relation(fields: [storeId], references: [id])
   brandIds String[]
 
-  @@index([adminId, visitDate])
+  @@index([employeeId, visitDate])
   @@index([storeId])
+  @@map("AdminVisit")
 }
 
 enum IssueStatus {
@@ -326,9 +335,9 @@ model Assigned {
   issueId String
   issue   Issue  @relation(fields: [issueId], references: [id])
 
-  // relation to Executive
+  // relation to Employee
   executiveId String
-  executive   Executive @relation(fields: [executiveId], references: [id])
+  employee    Employee? @relation("EmployeeAssigned", fields: [executiveId], references: [id])
 
   // relation to AssignReport
   assignReport  AssignReport?
@@ -366,10 +375,10 @@ model DigitalVisit {
   adminComment      String?
   reviewedAt        DateTime?
   reviewedByAdminId String?
-  reviewedByAdmin   Admin?     @relation(fields: [reviewedByAdminId], references: [id])
+  reviewedByEmployee Employee? @relation("EmployeeReviewedDigitalVisits", fields: [reviewedByAdminId], references: [id])
 
   executiveId String
-  executive   Executive @relation(fields: [executiveId], references: [id])
+  employee    Employee? @relation("EmployeeCreatedDigitalVisits", fields: [executiveId], references: [id])
 
   storeId String
   store   Store  @relation(fields: [storeId], references: [id])
@@ -397,7 +406,7 @@ enum VisitPlanStatus {
 model VisitPlan {
   id               String          @id @default(auto()) @map("_id") @db.ObjectId
   executiveId      String
-  executive        Executive       @relation(fields: [executiveId], references: [id])
+  employee         Employee?       @relation("EmployeeVisitPlans", fields: [executiveId], references: [id])
   storeIds         String[]
   storesSnapshot   Json? // Optional snapshot of store details at submission time
   status           VisitPlanStatus @default(SUBMITTED)
@@ -528,7 +537,7 @@ model DostChat {
   userId      String
   createdAt   DateTime @default(now())
 
-  executive Executive @relation(fields: [executiveId], references: [id])
+  employee  Employee? @relation(fields: [executiveId], references: [id])
   user      User      @relation(fields: [userId], references: [id])
 
   @@index([executiveId, createdAt])
@@ -754,11 +763,11 @@ model StakeholderVisit {
   adminComment      String?
   reviewedAt        DateTime?
   reviewedByAdminId String?
-  reviewedByAdmin   Admin?     @relation(fields: [reviewedByAdminId], references: [id])
+  reviewedByEmployee Employee? @relation("EmployeeReviewedStakeholderVisits", fields: [reviewedByAdminId], references: [id])
 
   // Relations
   executiveId       String
-  executive         Executive  @relation(fields: [executiveId], references: [id])
+  employee          Employee?  @relation("EmployeeCreatedStakeholderVisits", fields: [executiveId], references: [id])
 
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt

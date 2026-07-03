@@ -39,7 +39,7 @@ export async function DELETE(request: NextRequest, ctx?: { params?: Promise<{ id
 
     // If user is executive, ensure ownership. Admins can delete any.
     if (user.role === 'EXECUTIVE') {
-      const executive = await prisma.executive.findUnique({ where: { userId: user.userId } });
+      const executive = await prisma.employee.findUnique({ where: { userId: user.userId } });
       if (!executive) {
         return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
       }

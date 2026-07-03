@@ -45,7 +45,7 @@ export async function POST(
     }
 
     // Verify the executive exists
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: {
         id: executiveId
       }
@@ -67,7 +67,7 @@ export async function POST(
         status: 'Assigned'
       },
       include: {
-        executive: {
+        employee: {
           select: {
             id: true,
             name: true,
@@ -87,9 +87,9 @@ export async function POST(
     // Return the formatted assignment
     const formattedAssignment = {
       id: assignment.id,
-      executiveId: assignment.executive.id,
-      executiveName: assignment.executive.name,
-      executiveInitials: assignment.executive.name.split(' ').map(n => n[0]).join(''),
+      executiveId: assignment.employee.id,
+      executiveName: assignment.employee.name,
+      executiveInitials: assignment.employee.name.split(' ').map(n => n[0]).join(''),
       dateAssigned: assignment.createdAt.toISOString().split('T')[0],
       adminComment: assignment.adminComment,
       status: assignment.status,

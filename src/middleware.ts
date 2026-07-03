@@ -102,17 +102,22 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/', request.url));
       }
 
-      // Role-based authorization check
-      if ((pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) && user.role !== 'ADMIN') {
-        console.log(`[MIDDLEWARE] Role mismatch: User role ${user.role} attempted to access ${pathname}`);
-        if (pathname.startsWith('/api/')) {
-          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
-        return NextResponse.redirect(new URL('/', request.url));
+      // Permission-based authorization check
+      let requiredPermission: string | null = null;
+      if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
+        requiredPermission = 'ACCESS_ADMIN_PORTAL';
+      } else if (pathname.startsWith('/executive') || pathname.startsWith('/api/executive')) {
+        requiredPermission = 'ACCESS_EXECUTIVE_PORTAL';
       }
 
-      if ((pathname.startsWith('/executive') || pathname.startsWith('/api/executive')) && user.role !== 'EXECUTIVE') {
-        console.log(`[MIDDLEWARE] Role mismatch: User role ${user.role} attempted to access ${pathname}`);
+      const userPermissions = Array.isArray(user.permissions) && user.permissions.length > 0
+        ? user.permissions
+        : (user.userRole && Array.isArray(user.userRole.permissions))
+          ? user.userRole.permissions
+          : [];
+
+      if (requiredPermission && !userPermissions.includes(requiredPermission)) {
+        console.log(`[MIDDLEWARE] Permission mismatch: User missing required permission '${requiredPermission}' for ${pathname}`);
         if (pathname.startsWith('/api/')) {
           return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }

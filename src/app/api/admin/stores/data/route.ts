@@ -81,8 +81,8 @@ export async function GET(request: NextRequest) {
     // ── Resolve executive → store IDs (for DB-level filter) ───────────────────
     let execAssignedStoreIds: string[] | null = null;
     if (executiveFilterId && executiveFilterId !== 'All Executive') {
-      const assignments = await prisma.executiveStoreAssignment.findMany({
-        where: { executiveId: executiveFilterId },
+      const assignments = await prisma.employeeStoreAssignment.findMany({
+        where: { employeeId: executiveFilterId },
         select: { storeId: true }
       });
       execAssignedStoreIds = assignments.map(a => a.storeId);
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
         },
         select: { visit: { select: { storeId: true } } }
       });
-      unresolvedIssueStoreIds = [...new Set(issueRows.filter(r => r.visit != null).map(r => r.visit!.storeId))];
+      unresolvedIssueStoreIds = [...new Set(issueRows.filter(r => r.visit != null).map(r => r.visit!.storeId))] as string[];
       if (unresolvedIssueStoreIds.length === 0) {
         return NextResponse.json({ stores: [], total: 0, totalPages: 0 });
       }
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
         },
         select: { storeId: true }
       });
-      unreviewedVisitStoreIds = [...new Set(visitRows.map(r => r.storeId))];
+      unreviewedVisitStoreIds = [...new Set(visitRows.map(r => r.storeId))] as string[];
       if (unreviewedVisitStoreIds.length === 0) {
         return NextResponse.json({ stores: [], total: 0, totalPages: 0 });
       }
@@ -198,11 +198,18 @@ export async function GET(request: NextRequest) {
 
       prisma.brand.findMany({ select: { id: true, brandName: true } }),
 
-      prisma.executive.findMany({
+      prisma.employee.findMany({
+        where: {
+          user: {
+            userRole: {
+              name: 'SALES_EXECUTIVE'
+            }
+          }
+        },
         select: {
           id: true,
           name: true,
-          executiveStores: { select: { storeId: true } }
+          employeeStores: { select: { storeId: true } }
         }
       })
     ]);
@@ -269,7 +276,7 @@ export async function GET(request: NextRequest) {
     const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
     const executiveStoreMap = new Map<string, string>(); // storeId → executiveName
     allExecutives.forEach(exec => {
-      exec.executiveStores.forEach(es => {
+      (exec as any).employeeStores.forEach((es: any) => {
         executiveStoreMap.set(es.storeId, exec.name);
       });
     });

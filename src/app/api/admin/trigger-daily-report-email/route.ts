@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       },
       include: {
         store: true,
-        executive: {
+        employee: {
           include: { user: true }
         }
       },

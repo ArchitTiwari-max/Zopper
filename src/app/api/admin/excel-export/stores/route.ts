@@ -28,9 +28,9 @@ export async function GET(request: NextRequest) {
     // Fetch all stores with their executives, storeBrands and visit counts
     const stores = await prisma.store.findMany({
       include: {
-        executiveStores: {
+        employeeStores: {
           include: {
-            executive: { select: { id: true, name: true } }
+            employee: { select: { id: true, name: true } }
           }
         },
         storeBrands: { select: { brandId: true, storeBrandId: true, brandType: true } },
@@ -166,8 +166,8 @@ export async function GET(request: NextRequest) {
         store.cityTier || '',
         store.state || '',
         store.priority || '',
-        store.executiveStores.map(es => es.executive.id).join(', '),
-        store.executiveStores.map(es => es.executive.name).join(', '),
+        store.employeeStores.map(es => es.employee.id).join(', '),
+        store.employeeStores.map(es => es.employee.name).join(', '),
         store._count.visits
       ]);
     });

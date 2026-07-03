@@ -64,10 +64,10 @@ export async function getDostSuggestions(executiveId: string, opts?: { question?
   const now = new Date()
 
   // 1. Fetch context in parallel
-  const executive = await prisma.executive.findUnique({
+  const executive = await prisma.employee.findUnique({
     where: { id: executiveId },
     include: {
-      executiveStores: {
+      employeeStores: {
         include: { store: true }
       }
     }
@@ -87,7 +87,7 @@ export async function getDostSuggestions(executiveId: string, opts?: { question?
     }
   }
 
-  const storeIds = executive.executiveStores.map(es => es.storeId)
+  const storeIds = executive.employeeStores.map(es => es.storeId)
 
   const [visitsByStore, salesByStore, unresolvedIssuesByStore, announcements] = await Promise.all([
     // Last visit per store with remarks and unresolved issue statuses
@@ -182,7 +182,7 @@ export async function getDostSuggestions(executiveId: string, opts?: { question?
   }
 
   // Compute priority and reasons
-  const storesToVisit: DostStoreSuggestion[] = executive.executiveStores.map(es => {
+  const storesToVisit: DostStoreSuggestion[] = executive.employeeStores.map(es => {
     const s = es.store
     const sig = storeSignals.get(es.storeId) || { daysSinceLastVisit: 9999, unresolvedIssueCount: 0, unresolvedSamples: [], brandFocus: [] as string[] }
 
@@ -223,7 +223,7 @@ export async function getDostSuggestions(executiveId: string, opts?: { question?
 
   // Discussion points from issues, remarks, announcements
   const discussionPoints: DostDiscussionPoint[] = []
-  const storeMeta = new Map(executive.executiveStores.map(es => [es.storeId, { name: es.store.storeName }]))
+  const storeMeta = new Map(executive.employeeStores.map(es => [es.storeId, { name: es.store.storeName }]))
   for (const { storeId, issues } of unresolvedIssuesByStore) {
     const sig = storeSignals.get(storeId)
     const storeName = storeMeta.get(storeId)?.name || undefined
@@ -282,8 +282,8 @@ export async function getDostSuggestions(executiveId: string, opts?: { question?
   const systemPrompt = `You are Dost, an AI assistant for field sales executives. You produce concise, actionable suggestions and short, grounded answers. Prefer data from the provided context; if something isn't in context, state that clearly and suggest the best next action to obtain it. Always return strictly valid JSON and nothing else.`
 
   const context = {
-    executive: { id: executive.id, name: executive.name, region: executive.region },
-    stores: executive.executiveStores.map(es => ({ id: es.store.id, name: es.store.storeName, city: es.store.city })),
+    employee: { id: executive.id, name: executive.name, region: executive.region },
+    stores: executive.employeeStores.map(es => ({ id: es.store.id, name: es.store.storeName, city: es.store.city })),
     signals: Array.from(storeSignals.entries()).map(([storeId, s]) => ({
       storeId,
       daysSinceLastVisit: s.daysSinceLastVisit,

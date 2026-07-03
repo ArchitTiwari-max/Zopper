@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
       include: {
         visit: {
           include: {
-            executive: {
+            employee: {
               select: {
                 id: true,
                 name: true
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
         },
         assigned: {
           include: {
-            executive: {
+            employee: {
               select: {
                 name: true
               }
@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
         brandAssociated: brandAssociated,
         city: issue.visit.store.city,
         dateReported: new Date(issue.createdAt).toISOString().split('T')[0],
-        reportedBy: issue.visit.executive.name,
+        reportedBy: issue.visit.employee.name,
         reportedByRole: 'Executive',
         status: issue.status,
         description: issue.details,

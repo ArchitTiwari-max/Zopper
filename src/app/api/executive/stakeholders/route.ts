@@ -22,10 +22,10 @@ export async function GET(request: NextRequest) {
     });
 
     // Fetch executive's assigned brands
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId },
       select: {
-        executiveStores: {
+        employeeStores: {
           select: { storeId: true }
         }
       }
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     let brands: any[] = [];
     if (executive) {
-      const storeIds = executive.executiveStores.map(es => es.storeId);
+      const storeIds = executive.employeeStores.map(es => es.storeId);
       const stores = await prisma.store.findMany({
         where: { id: { in: storeIds } },
         select: { storeBrands: { select: { brandId: true } } }

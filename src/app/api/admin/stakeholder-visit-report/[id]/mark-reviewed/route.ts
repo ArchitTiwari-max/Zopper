@@ -12,7 +12,7 @@ export async function PATCH(
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'ADMIN') return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
 
-    const admin = await prisma.admin.findUnique({ where: { userId: user.id } });
+    const admin = await prisma.employee.findUnique({ where: { userId: user.id } });
     if (!admin) return NextResponse.json({ error: 'Admin profile not found' }, { status: 404 });
 
     const { id } = params;
@@ -28,7 +28,7 @@ export async function PATCH(
         reviewedByAdminId: admin.id,
       },
       include: {
-        reviewedByAdmin: { select: { id: true, name: true } },
+        reviewedByEmployee: { select: { id: true, name: true } },
       },
     });
 

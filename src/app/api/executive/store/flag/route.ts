@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Get executive data
-        const executive = await prisma.executive.findUnique({
+        const executive = await prisma.employee.findUnique({
             where: { userId: user.userId },
             select: { id: true }
         });
@@ -37,10 +37,10 @@ export async function POST(request: NextRequest) {
         // We search by composite key if possible, but prisma doesn't support update on non-unique fields directly unless we have an ID or unique constraint.
         // We have @@unique([executiveId, storeId]) in schema, so we can use that.
 
-        const updatedAssignment = await prisma.executiveStoreAssignment.update({
+        const updatedAssignment = await prisma.employeeStoreAssignment.update({
             where: {
-                executiveId_storeId: {
-                    executiveId: executive.id,
+                employeeId_storeId: {
+                    employeeId: executive.id,
                     storeId: storeId
                 }
             },

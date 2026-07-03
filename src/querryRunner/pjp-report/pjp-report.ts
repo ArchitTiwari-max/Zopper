@@ -21,7 +21,7 @@ async function generatePJPReport() {
     console.log(`📅 Date Range: ${thirtyDaysAgo.toISOString().split('T')[0]} to ${today.toISOString().split('T')[0]}`);
 
     // Fetch all executives
-    const executives = await prisma.executive.findMany({
+    const executives = await prisma.employee.findMany({
       select: {
         id: true,
         name: true,

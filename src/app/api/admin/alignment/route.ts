@@ -168,7 +168,7 @@ const computeStoreData = (
     alignment: status,
     executives: opts.summaryOnly
       ? undefined
-      : (store.executiveStores?.length ?? 0),
+      : (store.employeeStores?.length ?? 0),
   };
 
   if (opts.includeDrilldown && alignment) {
@@ -210,8 +210,8 @@ export async function GET(request: NextRequest) {
         where: { id: storeId },
         include: {
           alignment: true,
-          executiveStores: {
-            include: { executive: { select: { name: true } } },
+          employeeStores: {
+            include: { employee: { select: { name: true } } },
           },
         },
       });
@@ -254,8 +254,8 @@ export async function GET(request: NextRequest) {
       include: {
         alignment: true,
         ...(!summaryOnly && {
-          executiveStores: {
-            include: { executive: { select: { name: true } } },
+          employeeStores: {
+            include: { employee: { select: { name: true } } },
           },
         }),
       },

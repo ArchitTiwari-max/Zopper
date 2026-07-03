@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get executive from user ID
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId }
     });
 
@@ -229,7 +229,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Get executive from user ID
-    const executive = await prisma.executive.findUnique({
+    const executive = await prisma.employee.findUnique({
       where: { userId: user.userId }
     });
 
