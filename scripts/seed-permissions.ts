@@ -13,26 +13,51 @@ async function main() {
     let adminsUpdated = 0;
     let executivesUpdated = 0;
 
-    for (const user of users) {
-      const defaultPermissions = user.role === 'ADMIN' 
-        ? ['ACCESS_ADMIN_PORTAL'] 
-        : ['ACCESS_EXECUTIVE_PORTAL'];
-
-      // Only update if they don't have the correct permissions set already
-      const hasPermissions = user.permissions && user.permissions.length > 0;
-      const isCorrect = hasPermissions && user.permissions.includes(defaultPermissions[0]);
-
-      if (!isCorrect) {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            permissions: defaultPermissions
-          }
-        });
-
-        if (user.role === 'ADMIN') adminsUpdated++;
-        else executivesUpdated++;
+    // Update UserRole table definitions
+    await prisma.userRole.upsert({
+      where: { name: 'ADMIN' },
+      update: {
+        permissions: ['ACCESS_ADMIN_PORTAL']
+      },
+      create: {
+        name: 'ADMIN',
+        permissions: ['ACCESS_ADMIN_PORTAL']
       }
+    });
+
+    await prisma.userRole.upsert({
+      where: { name: 'SALES_EXECUTIVE' },
+      update: {
+        permissions: ['ACCESS_EXECUTIVE_PORTAL']
+      },
+      create: {
+        name: 'SALES_EXECUTIVE',
+        permissions: ['ACCESS_EXECUTIVE_PORTAL']
+      }
+    });
+
+    for (const user of users) {
+      let defaultPermissions: string[] = [];
+      if (user.role === 'ADMIN') {
+        defaultPermissions = ['ACCESS_ADMIN_PORTAL'];
+        // Specially give custom permissions ONLY to test_admin
+        if (user.username === 'test_admin') {
+          defaultPermissions.push('MANAGE_STORE_IMPORT', 'MANAGE_USERS');
+          console.log(`🌟 Specially assigning MANAGE_STORE_IMPORT and MANAGE_USERS to test_admin!`);
+        }
+      } else {
+        defaultPermissions = ['ACCESS_EXECUTIVE_PORTAL'];
+      }
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          permissions: defaultPermissions
+        }
+      });
+
+      if (user.role === 'ADMIN') adminsUpdated++;
+      else executivesUpdated++;
     }
 
     console.log(`✅ Seeding complete!`);

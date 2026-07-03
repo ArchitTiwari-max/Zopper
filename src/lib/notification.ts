@@ -478,10 +478,10 @@ export class NotificationEvents {
     expiresAt?: Date
   ) {
     // Get all users or users of specific role
-    const whereClause = targetRole ? { role: targetRole } : {};
+    const whereClause: any = targetRole ? { roles: { has: targetRole } } : {};
     const users = await prisma.user.findMany({
       where: whereClause,
-      select: { id: true, role: true }
+      select: { id: true, role: true, roles: true }
     });
 
     const notifications = users.map(user => 
@@ -491,7 +491,7 @@ export class NotificationEvents {
         type: 'SYSTEM_ANNOUNCEMENT',
         priority,
         recipientId: user.id,
-        recipientRole: user.role,
+        recipientRole: (user.roles && user.roles.length > 0 ? user.roles[0] : user.role) || 'EXECUTIVE',
         expiresAt,
         metadata: {
           isSystemAnnouncement: true,

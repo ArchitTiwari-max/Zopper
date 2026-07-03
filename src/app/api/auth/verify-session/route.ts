@@ -53,23 +53,29 @@ export async function GET(request: NextRequest) {
         const dbUser = await prisma.user.findUnique({
           where: { id: authResult.user.userId },
           include: {
-            userRole: true,
             employee: true
           }
         });
 
         if (dbUser) {
+          const userRoles = dbUser.roles && dbUser.roles.length > 0 ? dbUser.roles : ['EXECUTIVE'];
+          
+          const allUserRoles = await prisma.userRole.findMany({
+            where: { name: { in: userRoles } }
+          });
+          const combinedPermissions = Array.from(new Set([
+            ...allUserRoles.flatMap(r => r.permissions),
+            ...(dbUser.permissions || [])
+          ]));
+
           let userPayload: any = {
             id: dbUser.id,
             email: dbUser.email,
             username: dbUser.username,
-            role: dbUser.role,
-            permissions: dbUser.permissions || [],
-            userRole: dbUser.userRole ? {
-              id: dbUser.userRole.id,
-              name: dbUser.userRole.name,
-              permissions: dbUser.userRole.permissions
-            } : null,
+            role: userRoles[0],
+            roles: userRoles,
+            permissions: combinedPermissions,
+            userRole: null,
             lastLoginAt: dbUser.lastLoginAt,
             previousLoginAt: dbUser.lastLoginAt
           };
@@ -85,14 +91,15 @@ export async function GET(request: NextRequest) {
             };
 
             // Add legacy role-specific information for backward compatibility on client side
-            if (dbUser.role === 'EXECUTIVE') {
+            if (userRoles.includes('EXECUTIVE')) {
               userPayload.executive = {
                 id: dbUser.employee.id,
                 name: dbUser.employee.name,
                 contact_number: dbUser.employee.contact_number,
                 region: dbUser.employee.region
               };
-            } else if (dbUser.role === 'ADMIN') {
+            }
+            if (userRoles.includes('ADMIN')) {
               userPayload.admin = {
                 id: dbUser.employee.id,
                 name: dbUser.employee.name,

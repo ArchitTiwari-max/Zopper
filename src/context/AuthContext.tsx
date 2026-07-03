@@ -7,7 +7,8 @@ export interface UserInfo {
   id: string;
   email: string;
   username: string;
-  role: string;
+  role?: string;
+  roles?: string[];
   permissions?: string[];
   userRole?: {
     id: string;

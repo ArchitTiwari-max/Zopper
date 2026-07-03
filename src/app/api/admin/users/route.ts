@@ -105,34 +105,39 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      users: users.map(user => ({
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        isActive: user.isActive,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-        adminInfo: user.employee && user.role === 'ADMIN' ? {
-          adminId: user.employee.id,
-          name: user.employee.name,
-          contactNumber: user.employee.contact_number,
-          region: user.employee.region
-        } : null,
-        executiveInfo: user.employee && user.role === 'EXECUTIVE' ? {
-          executiveId: user.employee.id,
-          name: user.employee.name,
-          contactNumber: user.employee.contact_number,
-          region: user.employee.region
-        } : null,
-        employeeInfo: user.employee ? {
-          adminId: user.role === 'ADMIN' ? user.employee.id : undefined,
-          executiveId: user.role === 'EXECUTIVE' ? user.employee.id : undefined,
-          name: user.employee.name,
-          contactNumber: user.employee.contact_number,
-          region: user.employee.region
-        } : null
-      }))
+      users: users.map(user => {
+        const userRoles = user.roles && user.roles.length > 0 ? user.roles : ['EXECUTIVE'];
+        const primaryRole = userRoles[0];
+        return {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: primaryRole,
+          roles: userRoles,
+          isActive: user.isActive,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          adminInfo: user.employee && userRoles.includes('ADMIN') ? {
+            adminId: user.employee.id,
+            name: user.employee.name,
+            contactNumber: user.employee.contact_number,
+            region: user.employee.region
+          } : null,
+          executiveInfo: user.employee && userRoles.includes('EXECUTIVE') ? {
+            executiveId: user.employee.id,
+            name: user.employee.name,
+            contactNumber: user.employee.contact_number,
+            region: user.employee.region
+          } : null,
+          employeeInfo: user.employee ? {
+            adminId: userRoles.includes('ADMIN') ? user.employee.id : undefined,
+            executiveId: userRoles.includes('EXECUTIVE') ? user.employee.id : undefined,
+            name: user.employee.name,
+            contactNumber: user.employee.contact_number,
+            region: user.employee.region
+          } : null
+        };
+      })
     });
     
   } catch (error) {
@@ -204,8 +209,7 @@ export async function POST(request: NextRequest) {
           email: email,
           username: username,
           password: hashedPassword,
-          role: 'EXECUTIVE',
-          roleId: userRoleRecord?.id || null,
+          roles: ['EXECUTIVE'],
           permissions: userRoleRecord?.permissions || [],
           employee: {
             create: {
@@ -232,8 +236,7 @@ export async function POST(request: NextRequest) {
           email: email,
           username: username,
           password: hashedPassword,
-          role: 'ADMIN',
-          roleId: userRoleRecord?.id || null,
+          roles: ['ADMIN'],
           permissions: userRoleRecord?.permissions || [],
           employee: {
             create: {
@@ -253,27 +256,31 @@ export async function POST(request: NextRequest) {
     }
     
     // Remove password from response
+    const createdRoles = newUser!.roles && newUser!.roles.length > 0 ? newUser!.roles : ['EXECUTIVE'];
+    const primaryCreatedRole = createdRoles[0];
+
     const responseUser = {
       id: newUser!.id,
       username: newUser!.username,
       email: newUser!.email,
-      role: newUser!.role,
+      role: primaryCreatedRole,
+      roles: createdRoles,
       createdAt: newUser!.createdAt,
-      adminInfo: newUser.employee && newUser.role === 'ADMIN' ? {
+      adminInfo: newUser.employee && createdRoles.includes('ADMIN') ? {
         adminId: newUser.employee.id,
         name: newUser.employee.name,
         contactNumber: newUser.employee.contact_number,
         region: newUser.employee.region
       } : null,
-      executiveInfo: newUser.employee && newUser.role === 'EXECUTIVE' ? {
+      executiveInfo: newUser.employee && createdRoles.includes('EXECUTIVE') ? {
         executiveId: newUser.employee.id,
         name: newUser.employee.name,
         contactNumber: newUser.employee.contact_number,
         region: newUser.employee.region
       } : null,
       employeeInfo: newUser.employee ? {
-        adminId: newUser.role === 'ADMIN' ? newUser.employee.id : undefined,
-        executiveId: newUser.role === 'EXECUTIVE' ? newUser.employee.id : undefined,
+        adminId: createdRoles.includes('ADMIN') ? newUser.employee.id : undefined,
+        executiveId: createdRoles.includes('EXECUTIVE') ? newUser.employee.id : undefined,
         name: newUser.employee.name,
         contactNumber: newUser.employee.contact_number,
         region: newUser.employee.region

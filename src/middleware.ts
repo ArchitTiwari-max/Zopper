@@ -42,7 +42,8 @@ export async function middleware(request: NextRequest) {
         if (verifyRes.status === 200) {
           const data = await verifyRes.json();
           if (data && data.authenticated && data.user) {
-            const redirectUrl = data.user.role === 'ADMIN' ? '/admin/dashboard' : '/executive/dashboard';
+            const userRoles = data.user.roles || [data.user.role];
+            const redirectUrl = userRoles.includes('ADMIN') ? '/admin/dashboard' : '/executive/dashboard';
             console.log(`[MIDDLEWARE] Authenticated user on root, redirecting to ${redirectUrl}`);
             return NextResponse.redirect(new URL(redirectUrl, request.url));
           }
@@ -95,7 +96,7 @@ export async function middleware(request: NextRequest) {
         user.id = user.id || user.userId;
       }
 
-      if (!user || !user.role) {
+      if (!user || (!user.role && (!user.roles || user.roles.length === 0))) {
         if (pathname.startsWith('/api/')) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -104,17 +105,17 @@ export async function middleware(request: NextRequest) {
 
       // Permission-based authorization check
       let requiredPermission: string | null = null;
-      if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
+      if (pathname.startsWith('/admin/datamanagement/storewise') || pathname.startsWith('/api/admin/excel-import/storeimport') || pathname.startsWith('/api/admin/excel-export/stores')) {
+        requiredPermission = 'MANAGE_STORE_IMPORT';
+      } else if (pathname.startsWith('/admin/datamanagement/usermanagement') || pathname.startsWith('/api/admin/users')) {
+        requiredPermission = 'MANAGE_USERS';
+      } else if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
         requiredPermission = 'ACCESS_ADMIN_PORTAL';
       } else if (pathname.startsWith('/executive') || pathname.startsWith('/api/executive')) {
         requiredPermission = 'ACCESS_EXECUTIVE_PORTAL';
       }
 
-      const userPermissions = Array.isArray(user.permissions) && user.permissions.length > 0
-        ? user.permissions
-        : (user.userRole && Array.isArray(user.userRole.permissions))
-          ? user.userRole.permissions
-          : [];
+      const userPermissions = Array.isArray(user.permissions) ? user.permissions : [];
 
       if (requiredPermission && !userPermissions.includes(requiredPermission)) {
         console.log(`[MIDDLEWARE] Permission mismatch: User missing required permission '${requiredPermission}' for ${pathname}`);

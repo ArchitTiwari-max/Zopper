@@ -278,7 +278,7 @@ export async function PUT(
 
     // Notify admins about the updated visit plan
     const adminUsers = await prisma.user.findMany({
-      where: { role: 'ADMIN' },
+      where: { roles: { has: 'ADMIN' } },
       select: { id: true, email: true }
     });
 

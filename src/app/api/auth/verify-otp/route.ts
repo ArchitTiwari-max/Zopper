@@ -50,8 +50,7 @@ export async function POST(request: NextRequest) {
               }
             }
           }
-        },
-        userRole: true
+        }
       }
     });
 
@@ -70,12 +69,23 @@ export async function POST(request: NextRequest) {
       data: { lastLoginAt: currentLoginTime }
     });
 
+    const userRoles = user.roles && user.roles.length > 0 ? user.roles : ['EXECUTIVE'];
+
+    const allUserRoles = await prisma.userRole.findMany({
+      where: { name: { in: userRoles } }
+    });
+    const combinedPermissions = Array.from(new Set([
+      ...allUserRoles.flatMap(r => r.permissions),
+      ...(user.permissions || [])
+    ]));
+
     // Generate tokens
     const tokenPayload = {
       userId: user.id,
       email: user.email,
       username: user.username,
-      role: user.role
+      role: userRoles[0],
+      roles: userRoles
     };
 
     const accessToken = generateAccessToken(tokenPayload);
@@ -90,13 +100,10 @@ export async function POST(request: NextRequest) {
       id: user.id,
       email: user.email,
       username: user.username,
-      role: user.role,
-      permissions: user.permissions || [],
-      userRole: user.userRole ? {
-        id: user.userRole.id,
-        name: user.userRole.name,
-        permissions: user.userRole.permissions
-      } : null,
+      role: userRoles[0],
+      roles: userRoles,
+      permissions: combinedPermissions,
+      userRole: null,
       lastLoginAt: currentLoginTime,
       previousLoginAt: user.lastLoginAt
     };
@@ -112,14 +119,15 @@ export async function POST(request: NextRequest) {
       };
 
       // Add legacy role-specific information for backward compatibility on client side
-      if (user.role === 'EXECUTIVE') {
+      if (userRoles.includes('EXECUTIVE')) {
         userPayload.executive = {
           id: user.employee.id,
           name: user.employee.name,
           contact_number: user.employee.contact_number,
           region: user.employee.region
         };
-      } else if (user.role === 'ADMIN') {
+      }
+      if (userRoles.includes('ADMIN')) {
         userPayload.admin = {
           id: user.employee.id,
           name: user.employee.name,
@@ -134,7 +142,8 @@ export async function POST(request: NextRequest) {
       message: 'Authentication successful',
       user: {
         email: user.email,
-        role: user.role,
+        role: userRoles[0],
+        roles: userRoles,
         lastLoginAt: currentLoginTime,
         previousLoginAt: user.lastLoginAt
       }
