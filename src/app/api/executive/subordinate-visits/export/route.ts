@@ -221,7 +221,7 @@ export async function GET(request: NextRequest) {
     const rows = [
       ...visits.map((v) => ({
         Type: "Physical",
-        Executive: v.executive?.name || "",
+        Executive: v.employee?.name || "",
         "Store Name": v.store?.storeName || "",
         "Partner Brands": getBrandString(v.store?.storeBrands || []),
         "Visit Date": formatDate(v.visitDate || v.createdAt),
@@ -238,7 +238,7 @@ export async function GET(request: NextRequest) {
       })),
       ...digitalVisits.map((v) => ({
         Type: "Digital",
-        Executive: v.executive?.name || "",
+        Executive: v.employee?.name || "",
         "Store Name": v.store?.storeName || "",
         "Partner Brands": getBrandString(v.store?.storeBrands || []),
         "Visit Date": formatDate(v.connectDate || v.createdAt),

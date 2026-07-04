@@ -96,9 +96,7 @@ export async function GET(request: NextRequest) {
 
     // Transform visits data
     const transformedVisits = allVisits
-      .filter((visit: any) =>
-        visit.submitterType === "ADMIN" ? visit.admin : visit.executive,
-      )
+      .filter((visit: any) => visit.employee)
       .map((visit: any) => {
         if (visit.submitterType === "ADMIN") {
           return {
@@ -109,8 +107,8 @@ export async function GET(request: NextRequest) {
               day: "numeric",
             }),
             status: "REVIEWD",
-            representative: visit.admin?.name
-              ? `${visit.admin.name} (Admin)`
+            representative: visit.employee?.name
+              ? `${visit.employee.name} (Admin)`
               : "Unknown Admin",
             canViewDetails: false,
             personMet: visit.personMet,
@@ -139,7 +137,7 @@ export async function GET(request: NextRequest) {
               },
             ),
             status: visit.status,
-            representative: visit.executive?.name || "Unknown Executive",
+            representative: visit.employee?.name || "Unknown Executive",
             canViewDetails: true,
             personMet: visit.personMet,
             POSMchecked: visit.POSMchecked,
@@ -155,7 +153,7 @@ export async function GET(request: NextRequest) {
               .filter((issue: any) =>
                 issue.assigned.some(
                   (assignment: any) =>
-                    assignment.executive &&
+                    assignment.employee &&
                     assignment.employee.id === currentExecutive.id,
                 ),
               )
@@ -167,7 +165,7 @@ export async function GET(request: NextRequest) {
                 assigned: issue.assigned
                   .filter(
                     (assignment: any) =>
-                      assignment.executive &&
+                      assignment.employee &&
                       assignment.employee.id === currentExecutive.id,
                   )
                   .map((assignment: any) => ({
@@ -176,7 +174,7 @@ export async function GET(request: NextRequest) {
                     status: assignment.status,
                     createdAt: assignment.createdAt,
                     executiveName:
-                      assignment.executive?.name || "Unknown Executive",
+                      assignment.employee?.name || "Unknown Executive",
                   })),
               })),
             createdAt: visit.createdAt,
@@ -194,7 +192,7 @@ export async function GET(request: NextRequest) {
               },
             ),
             status: visit.status,
-            representative: visit.executive?.name || "Unknown Executive",
+            representative: visit.employee?.name || "Unknown Executive",
             canViewDetails: false,
             personMet: visit.personMet,
             POSMchecked: null,

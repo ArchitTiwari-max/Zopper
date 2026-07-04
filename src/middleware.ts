@@ -85,7 +85,7 @@ export async function middleware(request: NextRequest) {
         if (pathname.startsWith('/api/')) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        return NextResponse.redirect(new URL('/', request.url));
+        return NextResponse.redirect(new URL('/?error=session_expired', request.url));
       }
 
       const data = await verifyRes.json();
@@ -100,7 +100,7 @@ export async function middleware(request: NextRequest) {
         if (pathname.startsWith('/api/')) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        return NextResponse.redirect(new URL('/', request.url));
+        return NextResponse.redirect(new URL('/?error=session_expired', request.url));
       }
 
       // Permission-based authorization check
@@ -122,7 +122,9 @@ export async function middleware(request: NextRequest) {
         if (pathname.startsWith('/api/')) {
           return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
-        return NextResponse.redirect(new URL('/', request.url));
+        const userRoles = user.roles || [];
+        const safeDashboard = userRoles.includes('ADMIN') ? '/admin/dashboard' : '/executive/dashboard';
+        return NextResponse.redirect(new URL(`${safeDashboard}?error=access_denied`, request.url));
       }
 
       // Inject custom header x-user-data with serialized user object
@@ -152,7 +154,7 @@ export async function middleware(request: NextRequest) {
       if (pathname.startsWith('/api/')) {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
       }
-      return NextResponse.redirect(new URL('/', request.url));
+      return NextResponse.redirect(new URL('/?error=session_expired', request.url));
     }
   }
 

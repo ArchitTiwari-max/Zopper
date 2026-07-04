@@ -121,7 +121,7 @@ export async function GET(
       brandAssociated: brandAssociated,
       city: source?.store?.city || 'N/A',
       dateReported: new Date(targetIssue.createdAt).toISOString().split('T')[0],
-      reportedBy: source?.executive?.name || 'Unknown Executive',
+      reportedBy: source?.employee?.name || 'Unknown Executive',
       reportedByRole: 'Executive',
       status: targetIssue.status,
       description: targetIssue.details,
@@ -130,8 +130,8 @@ export async function GET(
       updatedAt: targetIssue.updatedAt.toISOString(),
       // Additional details for the detail page
       employee: {
-        id: source?.executive?.id || '',
-        name: source?.executive?.name || 'Unknown Executive'
+        id: source?.employee?.id || '',
+        name: source?.employee?.name || 'Unknown Executive'
       },
       store: {
         id: source?.store?.id || '',

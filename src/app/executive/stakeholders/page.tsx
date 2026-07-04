@@ -123,7 +123,7 @@ export default function StakeholdersPage() {
         {/* Brands List */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: '3rem 0' }}>
-            <div className="loading-spinner-large" style={{ margin: '0 auto 1rem', width: '40px', height: '40px', border: '3px solid #e2e8f0', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+            <div className="loading-spinner-large" style={{ margin: '0 auto 1rem' }} />
             <p style={{ color: '#64748b', margin: 0 }}>Loading brands...</p>
           </div>
         ) : filteredBrands.length === 0 ? (

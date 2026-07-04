@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
         ]);
 
         const allVisits = [
-            ...employeeVisitsRaw.map((v: any) => ({ ...v, submitterType: 'ADMIN' as const })),
+            ...adminVisitsRaw.map((v: any) => ({ ...v, submitterType: 'ADMIN' as const })),
             ...executiveVisitsRaw.map((v: any) => ({ ...v, submitterType: 'EXECUTIVE' as const }))
         ].sort((a, b) => {
             const aDate = (a as any).visitDate || a.createdAt;
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
                     id: visit.id,
                     date: ((visit as any).visitDate || visit.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
                     status: 'REVIEWD',
-                    representative: (visit as any).admin?.name ? `${(visit as any).admin.name} (Admin)` : 'Unknown Admin',
+                    representative: (visit as any).employee?.name ? `${(visit as any).employee.name} (Admin)` : 'Unknown Admin',
                     canViewDetails: true,
                     personMet: visit.personMet,
                     POSMchecked: visit.POSMchecked,
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
                     id: visit.id,
                     date: ((visit as any).visitDate || visit.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
                     status: (visit as any).status,
-                    representative: (visit as any).executive?.name || 'Unknown Executive',
+                    representative: (visit as any).employee?.name || 'Unknown Executive',
                     canViewDetails: true, // Admins can view all executive details
                     personMet: visit.personMet,
                     POSMchecked: visit.POSMchecked,
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
                             adminComment: assignment.adminComment,
                             status: assignment.status,
                             createdAt: assignment.createdAt,
-                            executiveName: assignment.executive?.name || 'Unknown Executive'
+                            executiveName: assignment.employee?.name || 'Unknown Executive'
                         }))
                     })),
                     createdAt: visit.createdAt,

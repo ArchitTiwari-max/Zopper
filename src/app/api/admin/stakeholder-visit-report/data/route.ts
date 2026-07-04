@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
     ];
 
     const processedVisits = (visits as any[]).map((visit) => {
-      const execName = visit.executive?.name || 'Unknown Executive';
+      const execName = visit.employee?.name || 'Unknown Executive';
       const initials = execName.split(' ').map((w: string) => w.charAt(0)).slice(0, 2).join('').toUpperCase();
       const colorIndex = Math.max(0, Math.min(execName.charCodeAt(0) - 65, colors.length - 1));
 
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
 
       return {
         id: visit.id,
-        executiveId: visit.executive?.id || 'unknown',
+        executiveId: visit.employee?.id || 'unknown',
         executiveName: execName,
         executiveInitials: initials,
         avatarColor: colors[colorIndex] || colors[0],

@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     // Group visits by executiveName
     const groupedVisits: Record<string, any[]> = {};
     visits.forEach(visit => {
-      const name = visit.executive?.name || 'Unknown Executive';
+      const name = visit.employee?.name || 'Unknown Executive';
       if (!groupedVisits[name]) groupedVisits[name] = [];
       groupedVisits[name].push(visit);
     });

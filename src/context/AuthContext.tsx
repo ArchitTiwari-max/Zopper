@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { setupAuthInterceptor } from '@/lib/authInterceptor';
+import { usePathname } from 'next/navigation';
 
 export interface UserInfo {
   id: string;
@@ -60,6 +61,7 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialUser }) => {
+  const pathname = usePathname();
   // Initialize state directly from initialUser injected via Server Component / headers (Phase 3)
   const [user, setUser] = useState<UserInfo | null>(initialUser || null);
   const [isLoading, setIsLoading] = useState<boolean>(!initialUser);
@@ -138,6 +140,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialUse
   useEffect(() => {
     setupAuthInterceptor(refreshAuth, logout);
   }, [refreshAuth, logout]);
+
+  // Check URL query parameters on mount to display access denied or session expired alerts
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const errorParam = params.get('error');
+      if (errorParam === 'access_denied') {
+        import('@/lib/authNotifications').then(({ showAccessDeniedNotification }) => {
+          showAccessDeniedNotification('Access Denied: You do not have permission to view that page.');
+        });
+        
+        // Clean URL query parameters so it doesn't pop up again on refresh
+        const url = new URL(window.location.href);
+        url.searchParams.delete('error');
+        window.history.replaceState({}, '', url.pathname + url.search);
+      } else if (errorParam === 'session_expired') {
+        import('@/lib/authNotifications').then(({ showAccessDeniedNotification }) => {
+          showAccessDeniedNotification('Session Expired: Please log in again.');
+        });
+        
+        // Clean URL query parameters
+        const url = new URL(window.location.href);
+        url.searchParams.delete('error');
+        window.history.replaceState({}, '', url.pathname + url.search);
+      }
+    }
+  }, [pathname]);
 
   // If initialUser was NOT provided (e.g. client-only navigation fallback), verify once
   useEffect(() => {

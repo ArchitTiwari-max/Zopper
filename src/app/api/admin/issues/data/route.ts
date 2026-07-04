@@ -192,7 +192,7 @@ export async function GET(request: NextRequest) {
         brandAssociated: brandAssociated,
         city: source?.store?.city || 'N/A',
         dateReported: formattedDateReported,
-        reportedBy: source?.executive?.name || 'Unknown Executive',
+        reportedBy: source?.employee?.name || 'Unknown Executive',
         reportedByRole: 'Executive',
         status: issue.status,
         description: issue.details,

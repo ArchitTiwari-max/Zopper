@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
       partnerBrand: (v.store?.storeBrands || []).map(sb => brandMap.get(sb.brandId) || 'Unknown Brand').join(', ') || 'N/A',
       status: v.status as any,
       reviewerName: v.reviewedByEmployee?.name,
-      representative: v.executive?.name || 'Unknown Executive',
+      representative: v.employee?.name || 'Unknown Executive',
       personMet: Array.isArray(v.personMet) ? (v.personMet as any[]).map(p => ({ name: p?.name || '', designation: p?.designation || '' })) : [],
       POSMchecked: null,
       remarks: v.remarks || '',

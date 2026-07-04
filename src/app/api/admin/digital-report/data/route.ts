@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     if (executiveId) whereClause.executiveId = executiveId;
     else if (executiveName && executiveName !== 'All Executive') {
       const escapedExecName = executiveName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      whereClause.executive = { ...whereClause.executive, name: { contains: escapedExecName, mode: 'insensitive' } };
+      whereClause.employee = { ...whereClause.employee, name: { contains: escapedExecName, mode: 'insensitive' } };
     }
     if (city && city !== 'All City') whereClause.store = { ...whereClause.store, city: city };
     if (visitStatus && visitStatus !== 'All Status') whereClause.status = visitStatus;
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
 
     let processed = digitalVisits.map((v) => {
       const partnerBrands = ((v.store as any)?.storeBrands || []).map((sb: any) => brandMap.get(sb.brandId)).filter(Boolean) as string[];
-      const execName = v.executive?.name || 'Unknown Executive';
+      const execName = v.employee?.name || 'Unknown Executive';
       const initials = execName.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
       const avatarColor = '#2563eb';
 

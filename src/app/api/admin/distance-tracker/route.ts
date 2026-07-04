@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
         // Build response
         const result = await Promise.all(Object.entries(grouped).map(async ([exId, dayMap]) => {
             const firstVisit = Object.values(dayMap)[0][0];
-            const executiveName = firstVisit.executive?.name || 'Unknown';
+            const executiveName = firstVisit.employee?.name || 'Unknown';
 
             const journeys = await Promise.all(Object.entries(dayMap)
                 .sort(([a], [b]) => b.localeCompare(a)) // newest date first

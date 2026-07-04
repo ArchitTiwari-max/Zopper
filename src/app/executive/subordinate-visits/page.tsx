@@ -272,31 +272,6 @@ export default function SubordinateVisitsPage() {
       <div className="sub-visits-content">
         {/* Removed date range bar as it's now in filters */}
 
-        {isLoading ? (
-          <div className="sub-visits-loading">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-4" />
-            <p>Loading team visits...</p>
-          </div>
-        ) : error ? (
-          <div className="sub-visits-error">
-            <p>{error}</p>
-            <button
-              onClick={() => fetchSubordinateVisits(dateRange, currentPage)}
-              className="mt-4 px-5 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : visits.length === 0 ? (
-          <div className="sub-visits-empty">
-            <div className="text-5xl mb-4">📭</div>
-            <h3>No visits found</h3>
-            <p>
-              No visits recorded for{" "}
-              {DATE_RANGE_LABELS[dateRange].toLowerCase()}.
-            </p>
-          </div>
-        ) : (
           <div className="sub-visits-dashboard">
             {/* Filters Section — dropdown style */}
             <div className="sub-visits-filters-bar">
@@ -433,45 +408,69 @@ export default function SubordinateVisitsPage() {
               </button>
             </div>
 
-            {filteredVisits.length === 0 ? (
-              <div className="sub-visits-empty-filter">
-                <div className="text-3xl mb-3 text-gray-300">🔍</div>
-                <p>
-                  No {visitType.toLowerCase()} visits found for{" "}
-                  {selectedExecutive === "All"
-                    ? "any executive"
-                    : selectedExecutive}
-                  .
-                </p>
-              </div>
-            ) : (
-              <div className="evr-table-section">
-                <div className="evr-table">
+            <div className="evr-table-section">
+              <div className="evr-table">
+                <div
+                  className={`evr-table-header sub-visits-custom-grid ${selectedExecutive === "All" ? "with-exec" : "without-exec"}`}
+                >
+                  {selectedExecutive === "All" && (
+                    <div className="evr-header-cell">EXECUTIVE</div>
+                  )}
+                  <div className="evr-header-cell">STORE NAME</div>
+                  <div className="evr-header-cell">BRANDS</div>
                   <div
-                    className={`evr-table-header sub-visits-custom-grid ${selectedExecutive === "All" ? "with-exec" : "without-exec"}`}
+                    className="evr-header-cell"
+                    style={{ justifyContent: "center" }}
                   >
-                    {selectedExecutive === "All" && (
-                      <div className="evr-header-cell">EXECUTIVE</div>
-                    )}
-                    <div className="evr-header-cell">STORE NAME</div>
-                    <div className="evr-header-cell">BRANDS</div>
-                    <div
-                      className="evr-header-cell"
-                      style={{ justifyContent: "center" }}
-                    >
-                      VISIT DATE
-                    </div>
-                    <div
-                      className="evr-header-cell"
-                      style={{ fontSize: "0.65rem", marginRight: "0.5rem" }}
-                    >
-                      ISSUES
-                    </div>
-                    <div className="evr-header-cell">ACTIONS</div>
+                    VISIT DATE
                   </div>
+                  <div
+                    className="evr-header-cell"
+                    style={{ fontSize: "0.65rem", marginRight: "0.5rem" }}
+                  >
+                    ISSUES
+                  </div>
+                  <div className="evr-header-cell">ACTIONS</div>
+                </div>
 
-                  <div className="evr-table-body">
-                    {filteredVisits.map((visit) => (
+                <div className="evr-table-body">
+                  {isLoading ? (
+                    <div className="loading-state" style={{ padding: "4rem 0" }}>
+                      <div className="loading-spinner-large"></div>
+                      <span className="loading-text">Loading team visits...</span>
+                    </div>
+                  ) : error ? (
+                    <div className="sub-visits-error" style={{ margin: "2rem auto", border: "none" }}>
+                      <p>{error}</p>
+                      <button
+                        onClick={() => fetchSubordinateVisits(dateRange, currentPage)}
+                        className="mt-4 px-5 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  ) : visits.length === 0 ? (
+                    <div className="sub-visits-empty" style={{ margin: "2rem auto", border: "none" }}>
+                      <div className="text-5xl mb-4">📭</div>
+                      <h3>No visits found</h3>
+                      <p>
+                        No visits recorded for{" "}
+                        {DATE_RANGE_LABELS[dateRange].toLowerCase()}.
+                      </p>
+                    </div>
+                  ) : filteredVisits.length === 0 ? (
+                    <div className="sub-visits-empty-filter" style={{ margin: "2rem auto", border: "none" }}>
+                      <div className="text-3xl mb-3 text-gray-300">🔍</div>
+                      <p>
+                        No {visitType.toLowerCase()} visits found for{" "}
+                        {selectedExecutive === "All"
+                          ? "any executive"
+                          : selectedExecutive}
+                        .
+                      </p>
+                    </div>
+                  ) : (
+                    filteredVisits.map((visit) => (
                       <div
                         key={visit.id}
                         className={`evr-table-row sub-visits-custom-grid ${selectedExecutive === "All" ? "with-exec" : "without-exec"}`}
@@ -490,7 +489,7 @@ export default function SubordinateVisitsPage() {
                                 fontSize: "0.75rem",
                               }}
                             >
-                              {visit.representative.split(" ")[0]}
+                              {visit.representative}
                             </span>
                           </div>
                         )}
@@ -618,14 +617,14 @@ export default function SubordinateVisitsPage() {
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    ))
+                  )}
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Pagination */}
-            {pagination.totalPages > 1 && (
+            {!isLoading && pagination.totalPages > 1 && (
               <div className="sub-visits-pagination">
                 <button
                   className="pagination-btn"
@@ -682,7 +681,6 @@ export default function SubordinateVisitsPage() {
               </div>
             )}
           </div>
-        )}
       </div>
 
       {/* Visit Details Modal */}
@@ -709,7 +707,7 @@ export default function SubordinateVisitsPage() {
             selectedVisit.issues.length > 0
               ? selectedVisit.issues[0].status
               : "Pending") as any,
-            city: "N/A",
+            city: selectedVisit.city || "N/A",
             issues:
               selectedVisit.issues && selectedVisit.issues.length > 0
                 ? selectedVisit.issues[0].details

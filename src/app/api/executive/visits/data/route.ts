@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
         : 'N/A',
       status: visit.status,
       reviewerName: visit.reviewedByEmployee?.name,
-      representative: visit.executive?.name || 'Unknown Executive',
+      representative: visit.employee?.name || 'Unknown Executive',
       personMet: visit.personMet,
       POSMchecked: visit.POSMchecked,
       remarks: visit.remarks,
@@ -191,13 +191,13 @@ export async function GET(request: NextRequest) {
         status: issue.status,
         createdAt: issue.createdAt,
         assigned: issue.assigned
-          .filter((assignment: any) => assignment.executive) // Filter out null executives
+          .filter((assignment: any) => assignment.employee) // Filter out null employees
           .map((assignment: any) => ({
             id: assignment.id,
             adminComment: assignment.adminComment,
             status: assignment.status,
             createdAt: assignment.createdAt,
-            executiveName: assignment.executive?.name || 'Unknown Executive'
+            executiveName: assignment.employee?.name || 'Unknown Executive'
           }))
       })),
       visitDate: visit.visitDate,
