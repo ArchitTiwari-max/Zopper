@@ -27,6 +27,13 @@ interface GodrejSFDCRecord {
   uploadedAt: string;
 }
 
+interface XiaomiTargetSummary {
+  total: number;
+  totalTarget: number;
+  month: number;
+  year: number;
+}
+
 const Settings: React.FC = () => {
   const router = useRouter();
   
@@ -39,6 +46,10 @@ const Settings: React.FC = () => {
     pushNotifications: false
   });
   
+  // Xiaomi target state
+  const [xiaomiSummary, setXiaomiSummary] = useState<XiaomiTargetSummary | null>(null);
+  const [isLoadingXiaomi, setIsLoadingXiaomi] = useState(true);
+
   // Form state
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -104,6 +115,25 @@ const Settings: React.FC = () => {
   useEffect(() => {
     // We moved the actual data fetching to the dedicated page
     // but we can still show a record count if needed by a lighter API call
+  }, []);
+
+  // Fetch Xiaomi target summary
+  useEffect(() => {
+    const fetchXiaomiSummary = async () => {
+      try {
+        setIsLoadingXiaomi(true);
+        const res = await fetch('/api/executive/xiaomi-target');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success) setXiaomiSummary(json.data.summary);
+        }
+      } catch (e) {
+        console.error('Failed to load Xiaomi summary', e);
+      } finally {
+        setIsLoadingXiaomi(false);
+      }
+    };
+    fetchXiaomiSummary();
   }, []);
   
   const handleNotificationToggle = (type: keyof NotificationSettings) => {
@@ -323,6 +353,39 @@ const Settings: React.FC = () => {
           <div className="exec-prof-card-preview">
             <span className="exec-prof-preview-text">View your sync history & records</span>
             <span className="exec-prof-preview-count">Click to open dedicated view</span>
+          </div>
+        </div>
+
+        {/* Xiaomi Target Card */}
+        <div
+          className="exec-prof-godrej-sfdc-card clickable"
+          onClick={() => router.push('/executive/xiaomi-target')}
+        >
+          <div className="exec-prof-card-header-with-action">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '20px' }}>📱</span>
+              <h2 className="exec-prof-godrej-sfdc-card-title">Xiaomi Target — July 2026</h2>
+            </div>
+            <div className="exec-prof-link-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 18L15 12L9 6" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <div className="exec-prof-card-preview">
+            {isLoadingXiaomi ? (
+              <span className="exec-prof-preview-text">Loading...</span>
+            ) : xiaomiSummary ? (
+              <>
+                <span className="exec-prof-preview-text">
+                  {xiaomiSummary.total.toLocaleString()} stores &nbsp;·&nbsp; Total Target: ₹{xiaomiSummary.totalTarget.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                </span>
+                <span className="exec-prof-preview-count">Click to view all store targets</span>
+              </>
+            ) : (
+              <span className="exec-prof-preview-text">No Xiaomi target data available</span>
+            )}
           </div>
         </div>
         
