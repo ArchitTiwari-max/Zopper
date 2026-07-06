@@ -86,8 +86,8 @@ export async function GET(req: Request) {
 
     console.log(`🔍 Found ${visits.length} visits, ${visitPlans.length} PJPs and ${brands.length} unique brands`);
 
-    // Fetch all active executives
-    const allExecutives = await prisma.employee.findMany({
+    // Fetch all active employees
+    const allEmployees = await prisma.employee.findMany({
       include: {
         user: true,
       },
@@ -97,6 +97,11 @@ export async function GET(req: Request) {
         },
       },
     });
+
+    // Filter to get only executives (excluding admins)
+    const allExecutives = allEmployees.filter(
+      (emp) => emp.user?.roles && !emp.user.roles.includes('ADMIN')
+    );
 
     console.log(`👥 Total executives: ${allExecutives.length}`);
 
