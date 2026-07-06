@@ -28,32 +28,7 @@ export async function middleware(request: NextRequest) {
     ? `http://127.0.0.1:${process.env.PORT || '3000'}`
     : request.url;
 
-  // Handle root login page redirect if already authenticated
-  if (pathname === '/') {
-    if (hasAuthCookies) {
-      try {
-        const verifyRes = await fetch(new URL('/api/auth/verify-session', internalBaseUrl), {
-          method: 'GET',
-          headers: {
-            cookie: cookieHeader
-          }
-        });
 
-        if (verifyRes.status === 200) {
-          const data = await verifyRes.json();
-          if (data && data.authenticated && data.user) {
-            const userRoles = data.user.roles || [data.user.role];
-            const redirectUrl = userRoles.includes('ADMIN') ? '/admin/dashboard' : '/executive/dashboard';
-            console.log(`[MIDDLEWARE] Authenticated user on root, redirecting to ${redirectUrl}`);
-            return NextResponse.redirect(new URL(redirectUrl, request.url));
-          }
-        }
-      } catch (e) {
-        console.error('[MIDDLEWARE] Error verifying session on root:', e);
-      }
-    }
-    return NextResponse.next();
-  }
 
   // Check if route is protected
   const isProtectedRoute = 
@@ -63,12 +38,25 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api/executive');
 
   if (isProtectedRoute) {
+    // Judge platform from routing path
+    const getLoginRedirectUrl = (errorParam?: string) => {
+      let platform = 'sales';
+      if (pathname.startsWith('/work') || pathname.startsWith('/upcoming')) {
+        platform = 'work';
+      }
+      const targetUrl = new URL(`/login?platform=${platform}`, request.url);
+      if (errorParam) {
+        targetUrl.searchParams.set('error', errorParam);
+      }
+      return targetUrl;
+    };
+
     // If no auth cookies exist at all, reject immediately
     if (!hasAuthCookies) {
       if (pathname.startsWith('/api/')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
-      return NextResponse.redirect(new URL('/', request.url));
+      return NextResponse.redirect(getLoginRedirectUrl());
     }
 
     try {
@@ -85,7 +73,7 @@ export async function middleware(request: NextRequest) {
         if (pathname.startsWith('/api/')) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        return NextResponse.redirect(new URL('/?error=session_expired', request.url));
+        return NextResponse.redirect(getLoginRedirectUrl('session_expired'));
       }
 
       const data = await verifyRes.json();
@@ -100,7 +88,7 @@ export async function middleware(request: NextRequest) {
         if (pathname.startsWith('/api/')) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        return NextResponse.redirect(new URL('/?error=session_expired', request.url));
+        return NextResponse.redirect(getLoginRedirectUrl('session_expired'));
       }
 
       // Permission-based authorization check

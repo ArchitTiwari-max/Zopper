@@ -28,7 +28,7 @@ const Navigation: React.FC = () => {
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <Link href="/admin/dashboard" className="logo-link" aria-label="SalesDost - Safalta ka Sathi - Go to Admin Dashboard">
+        <Link href="/" className="logo-link" aria-label="SalesDost - Safalta ka Sathi - Go to Portal Selection">
           <div className="logo">
             <span className="logo-icon">S</span>
             <div className="logo-text-container">
