@@ -28,32 +28,7 @@ export async function middleware(request: NextRequest) {
     ? `http://127.0.0.1:${process.env.PORT || '3000'}`
     : request.url;
 
-  // Handle root login page redirect if already authenticated
-  if (pathname === '/') {
-    if (hasAuthCookies) {
-      try {
-        const verifyRes = await fetch(new URL('/api/auth/verify-session', internalBaseUrl), {
-          method: 'GET',
-          headers: {
-            cookie: cookieHeader
-          }
-        });
 
-        if (verifyRes.status === 200) {
-          const data = await verifyRes.json();
-          if (data && data.authenticated && data.user) {
-            const userRoles = data.user.roles || [data.user.role];
-            const redirectUrl = userRoles.includes('ADMIN') ? '/admin/dashboard' : '/executive/dashboard';
-            console.log(`[MIDDLEWARE] Authenticated user on root, redirecting to ${redirectUrl}`);
-            return NextResponse.redirect(new URL(redirectUrl, request.url));
-          }
-        }
-      } catch (e) {
-        console.error('[MIDDLEWARE] Error verifying session on root:', e);
-      }
-    }
-    return NextResponse.next();
-  }
 
   // Check if route is protected
   const isProtectedRoute = 

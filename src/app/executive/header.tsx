@@ -31,7 +31,7 @@ const Header: React.FC = () => {
   return (
     <div className="header">
       <div className="logo-container">
-        <Link href="/executive/dashboard" className="logo-link" aria-label="SalesDost - Safalta ka Sathi - Go to Executive Dashboard">
+        <Link href="/" className="logo-link" aria-label="SalesDost - Safalta ka Sathi - Go to Portal Selection">
           <div className="logo-icon">S</div>
           <div className="logo-text-container">
             <span className="logo-text">SalesDost</span>
