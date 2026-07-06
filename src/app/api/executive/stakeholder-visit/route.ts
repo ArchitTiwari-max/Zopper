@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
     const {
       brandId,
       stakeholderDesignation,
+      state,
       visitDate,
       personMet,
       remarks,
@@ -76,6 +77,9 @@ export async function POST(request: NextRequest) {
 
     if (!brandId || !stakeholderDesignation) {
       return NextResponse.json({ error: 'Brand ID and designation are required' }, { status: 400 });
+    }
+    if (!state) {
+      return NextResponse.json({ error: 'State is required' }, { status: 400 });
     }
     if (!visitDate) {
       return NextResponse.json({ error: 'Visit date is required' }, { status: 400 });
@@ -88,6 +92,7 @@ export async function POST(request: NextRequest) {
       data: {
         brandId,
         stakeholderDesignation,
+        state,
         visitDate: new Date(visitDate),
         personMet,
         remarks: remarks || null,
