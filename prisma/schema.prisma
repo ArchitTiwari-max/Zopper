@@ -749,6 +749,7 @@ model StakeholderVisit {
   stakeholderDesignation String
 
   // Visit details (filled by executive via form — mirrors physical Visit)
+  state             String
   visitDate         DateTime?  // Actual date when visit occurred
   personMet         Json       // [{ name: "...", designation: "...", phoneNumber: "..." }]
   remarks           String?

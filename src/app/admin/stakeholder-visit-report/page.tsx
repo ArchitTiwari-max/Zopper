@@ -11,6 +11,7 @@ interface StakeholderVisitData {
   avatarColor: string;
   brandName: string;
   stakeholderDesignation: string;
+  state: string;
   visitDate: string;
   nextScheduledDate?: string | null;
   visitStatus: 'PENDING_REVIEW' | 'REVIEWD';
@@ -322,6 +323,7 @@ const StakeholderVisitReportPage: React.FC = () => {
                   <div className="evr-cell" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.125rem' }}>
                     <span style={{ fontWeight: '600', color: '#1e293b', fontSize: '0.875rem' }}>{visit.brandName}</span>
                     <span style={{ fontSize: '0.8125rem', color: '#6366f1', fontWeight: '500' }}>{visit.stakeholderDesignation}</span>
+                    <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>📍 {visit.state}</span>
                   </div>
 
                   {/* City Removed from Table */}
@@ -441,6 +443,10 @@ const StakeholderVisitReportPage: React.FC = () => {
 
               {/* Visit Info Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div style={{ padding: '0.875rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>State</p>
+                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.9375rem', color: '#1e293b', fontWeight: '500' }}>{selectedVisitDetail.state}</p>
+                </div>
                 <div style={{ padding: '0.875rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                   <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Visit Date</p>
                   <p style={{ margin: '0.25rem 0 0', fontSize: '0.9375rem', color: '#1e293b', fontWeight: '500' }}>{formatVisitDate(selectedVisitDetail.visitDate)}</p>

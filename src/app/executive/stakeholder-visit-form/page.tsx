@@ -42,6 +42,7 @@ const StakeholderVisitFormContent: React.FC = () => {
   const stakeholderDesignation = searchParams.get('designation') || '';
 
   const [visitDate, setVisitDate] = useState('');
+  const [state, setState] = useState('');
   const [nextScheduledDate, setNextScheduledDate] = useState('');
   const [remarks, setRemarks] = useState('');
   const [peopleMet, setPeopleMet] = useState<PersonMet[]>([]);
@@ -105,6 +106,7 @@ const StakeholderVisitFormContent: React.FC = () => {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (!visitDate) newErrors.visitDate = 'Visit date is required';
+    if (!state.trim()) newErrors.state = 'State is required';
     if (peopleMet.length === 0) newErrors.peopleMet = 'Please add at least one person met';
     if (!remarks.trim()) newErrors.remarks = 'Remarks are required';
     setErrors(newErrors);
@@ -118,6 +120,7 @@ const StakeholderVisitFormContent: React.FC = () => {
       const payload = {
         brandId,
         stakeholderDesignation,
+        state,
         visitDate,
         personMet: peopleMet,
         remarks,
@@ -212,6 +215,22 @@ const StakeholderVisitFormContent: React.FC = () => {
           }}
         />
         {errors.visitDate && <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#ef4444' }}>{errors.visitDate}</p>}
+      </div>
+
+      {/* State */}
+      <div style={{ background: 'white', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+        <h2 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: '600', color: '#1e293b' }}>📍 State</h2>
+        <input
+          type="text"
+          placeholder="e.g., Delhi, Maharashtra, UP"
+          value={state}
+          onChange={(e) => setState(e.target.value)}
+          style={{
+            width: '100%', padding: '0.625rem 0.875rem', border: `1px solid ${errors.state ? '#ef4444' : '#d1d5db'}`,
+            borderRadius: '8px', fontSize: '0.875rem', boxSizing: 'border-box'
+          }}
+        />
+        {errors.state && <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#ef4444' }}>{errors.state}</p>}
       </div>
 
       {/* People Met */}
