@@ -123,24 +123,13 @@ html, body {
   font-weight: 800;
   font-size: 26px;
   position: relative;
-  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.3);
-  transition: transform 0.3s ease;
+  box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.35);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.logo:hover .logo-icon {
-  transform: scale(1.05);
-}
-
-.logo-icon::before {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  right: 3px;
-  bottom: 3px;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #f97316 100%);
-  border-radius: 9px;
-  z-index: -1;
+.logo:hover .logo-icon, .logo:active .logo-icon {
+  transform: scale(1.08);
+  box-shadow: 0 0 28px rgba(59, 130, 246, 0.65), 0 12px 25px -5px rgba(29, 78, 216, 0.5);
 }
 
 .logo-text-container {

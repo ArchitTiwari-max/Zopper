@@ -38,12 +38,25 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api/executive');
 
   if (isProtectedRoute) {
+    // Judge platform from routing path
+    const getLoginRedirectUrl = (errorParam?: string) => {
+      let platform = 'sales';
+      if (pathname.startsWith('/work') || pathname.startsWith('/upcoming')) {
+        platform = 'work';
+      }
+      const targetUrl = new URL(`/login?platform=${platform}`, request.url);
+      if (errorParam) {
+        targetUrl.searchParams.set('error', errorParam);
+      }
+      return targetUrl;
+    };
+
     // If no auth cookies exist at all, reject immediately
     if (!hasAuthCookies) {
       if (pathname.startsWith('/api/')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
-      return NextResponse.redirect(new URL('/', request.url));
+      return NextResponse.redirect(getLoginRedirectUrl());
     }
 
     try {
@@ -60,7 +73,7 @@ export async function middleware(request: NextRequest) {
         if (pathname.startsWith('/api/')) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        return NextResponse.redirect(new URL('/?error=session_expired', request.url));
+        return NextResponse.redirect(getLoginRedirectUrl('session_expired'));
       }
 
       const data = await verifyRes.json();
@@ -75,7 +88,7 @@ export async function middleware(request: NextRequest) {
         if (pathname.startsWith('/api/')) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        return NextResponse.redirect(new URL('/?error=session_expired', request.url));
+        return NextResponse.redirect(getLoginRedirectUrl('session_expired'));
       }
 
       // Permission-based authorization check
