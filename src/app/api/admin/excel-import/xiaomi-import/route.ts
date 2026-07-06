@@ -194,11 +194,11 @@ export async function POST(request: NextRequest) {
 
         send({
           type: "progress",
-          message: `📋 Columns detected — RetailerName: col ${retailerIdx + 1}, Month (${targetHeader}): col ${targetColIdx + 1}${achievementIdx >= 0 ? `, Achievement: col ${achievementIdx + 1}` : " — ⚠️ No Achievement column found (will skip achievement update)"}`,
+          message: `📋 Columns detected — RetailerName: col ${retailerIdx + 1}, Target (${targetHeader}): col ${targetColIdx + 1}${achievementIdx >= 0 ? `, Achievement: col ${achievementIdx + 1}` : " (no Achievement column found)"}`,
         });
         send({
           type: "progress",
-          message: `📅 Updating achievement data for period: ${month}/${year} (existing targets will NOT be changed)`,
+          message: `📅 Period: ${month}/${year} — Will update Targets${achievementIdx >= 0 ? " and Achievements" : ""}`,
         });
 
         const totalRows = range.e.r - range.s.r;
@@ -216,11 +216,12 @@ export async function POST(request: NextRequest) {
         let notFound = 0;
         const errorLogs: string[] = [];
 
-        // Batch upsert data — only achievementRevenue is updated, targets are untouched
+        // Batch upsert data — stores what needs to be updated (Target, Achievement or both)
         const upsertBatch: Array<{
           storeId: string;
           storeName: string;
           state: string;
+          targetRevenue: number | null;
           achievementRevenue: number | null;
         }> = [];
 
@@ -237,8 +238,16 @@ export async function POST(request: NextRequest) {
           if (!retailerName) continue; // skip empty rows
 
           const stateRaw = String(getCell(stateIdx) ?? "").trim();
-          // Achievement: the only field admin fills in this import
+          
+          const targetRaw = getCell(targetColIdx);
           const achievementRaw = achievementIdx >= 0 ? getCell(achievementIdx) : null;
+          
+          const targetRevenue = typeof targetRaw === "number" 
+            ? targetRaw 
+            : (targetRaw !== null && targetRaw !== "" && targetRaw !== "—" && !isNaN(Number(targetRaw)) 
+              ? Number(targetRaw) 
+              : null);
+              
           const achievementRevenue = typeof achievementRaw === "number"
             ? achievementRaw
             : (achievementRaw !== null && achievementRaw !== "" && achievementRaw !== "—" && !isNaN(Number(achievementRaw))
@@ -272,6 +281,7 @@ export async function POST(request: NextRequest) {
             storeId: matchedStore.id,
             storeName: matchedStore.storeName,
             state: stateRaw,
+            targetRevenue,
             achievementRevenue,
           });
 
@@ -301,11 +311,16 @@ export async function POST(request: NextRequest) {
             await Promise.all(
               chunk.map(async (row) => {
                 try {
-                  // Only update achievementRevenue — do NOT overwrite existing targetRevenue
-                  if (row.achievementRevenue === null) {
-                    // No achievement value in this row — skip silently
-                    successful++;
-                    return;
+                  // Only update fields that have actual numbers in the Excel file.
+                  // If a cell is empty in Excel, it does NOT overwrite an existing DB value with null.
+                  const updateData: Record<string, unknown> = {};
+                  if (row.targetRevenue !== null) updateData.targetRevenue = row.targetRevenue;
+                  if (row.achievementRevenue !== null) updateData.achievementRevenue = row.achievementRevenue;
+
+                  if (Object.keys(updateData).length === 0) {
+                     // Nothing to update for this row (both target and achievement were empty)
+                     successful++;
+                     return;
                   }
 
                   await prisma.storeTarget.upsert({
@@ -317,15 +332,13 @@ export async function POST(request: NextRequest) {
                         year,
                       },
                     },
-                    update: {
-                      achievementRevenue: row.achievementRevenue,
-                    },
+                    update: updateData,
                     create: {
                       storeId: row.storeId,
                       brandId: xiaomiBrand!.id,
                       month,
                       year,
-                      // target not set here — only achievement is being imported
+                      targetRevenue: row.targetRevenue,
                       achievementRevenue: row.achievementRevenue,
                     },
                   });

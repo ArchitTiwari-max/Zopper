@@ -3,6 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+const MONTH_NAMES = [
+  "", "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
 interface XiaomiStore {
   storeId: string;
   storeName: string;
@@ -27,17 +32,29 @@ export default function XiaomiTargetPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [stateFilter, setStateFilter] = useState('');
+  
+  // Default to July 2026 based on original hardcoded values, or use current date if preferred
+  const [selectedMonth, setSelectedMonth] = useState('7');
+  const [selectedYear, setSelectedYear] = useState('2026');
 
   const [visibleCount, setVisibleCount] = useState(100);
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
-        const res = await fetch('/api/executive/xiaomi-target');
+        const params = new URLSearchParams({
+          month: selectedMonth,
+          year: selectedYear,
+        });
+        const res = await fetch(`/api/executive/xiaomi-target?${params}`);
         const json = await res.json();
         if (json.success) {
           setTargets(json.data.targets);
           setSummary(json.data.summary);
+        } else {
+          setTargets([]);
+          setSummary(null);
         }
       } catch (e) {
         console.error('Error fetching Xiaomi targets:', e);
@@ -46,7 +63,7 @@ export default function XiaomiTargetPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [selectedMonth, selectedYear]);
 
   // Reset visible count when filters change
   useEffect(() => {
@@ -78,7 +95,7 @@ export default function XiaomiTargetPage() {
       width: '100%',
     }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
         <button
           onClick={() => router.back()}
           style={{
@@ -91,14 +108,47 @@ export default function XiaomiTargetPage() {
             <path d="M15 18L9 12L15 6" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <div>
+        <div style={{ flex: 1 }}>
           <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#1e1b4b', lineHeight: 1.2 }}>
             📱 Xiaomi Target
           </h1>
           <p style={{ margin: 0, fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
-            July 2026 · No assignments
+            {MONTH_NAMES[parseInt(selectedMonth)]} {selectedYear} · No assignments
           </p>
         </div>
+      </div>
+
+      {/* Month/Year Filters */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+        <select
+          value={selectedMonth}
+          onChange={e => setSelectedMonth(e.target.value)}
+          style={{
+            flex: 1, padding: '8px 12px', borderRadius: '8px',
+            border: '1px solid #e5e7eb', fontSize: '14px', background: 'white',
+            cursor: 'pointer', outline: 'none',
+          }}
+        >
+          {MONTH_NAMES.slice(1).map((name, i) => (
+            <option key={i + 1} value={String(i + 1)}>
+              {name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={selectedYear}
+          onChange={e => setSelectedYear(e.target.value)}
+          style={{
+            flex: 1, padding: '8px 12px', borderRadius: '8px',
+            border: '1px solid #e5e7eb', fontSize: '14px', background: 'white',
+            cursor: 'pointer', outline: 'none',
+          }}
+        >
+          {[2024, 2025, 2026, 2027].map(y => (
+            <option key={y} value={String(y)}>{y}</option>
+          ))}
+        </select>
       </div>
 
       {/* Summary Cards */}

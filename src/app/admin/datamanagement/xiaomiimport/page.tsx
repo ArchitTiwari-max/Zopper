@@ -302,11 +302,11 @@ const XiaomiImportPage = () => {
           </div>
           <div>
             <h1 className="xiaomi-header-title">
-              Xiaomi Achievement Import
+              Xiaomi Target & Achievement Import
               <span className="xiaomi-header-badge">Xiaomi</span>
             </h1>
             <p className="xiaomi-header-subtitle">
-              Update store achievement data · Targets are pre-filled from DB and stay unchanged
+              Upload targets for a new month, or update achievements for an existing month
             </p>
           </div>
         </div>
@@ -324,11 +324,11 @@ const XiaomiImportPage = () => {
                 <th><span className="col-tag required">RetailerName</span></th>
                 <th style={{ background: "rgba(255,100,0,0.2)" }}>
                   <span className="col-tag required">Jul-26 (Target)</span>
-                  <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", display: "block", marginTop: "2px" }}>🔒 Pre-filled · Do not edit</span>
+                  <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", display: "block", marginTop: "2px" }}>Auto-detected from header</span>
                 </th>
                 <th style={{ background: "rgba(34,197,94,0.15)" }}>
                   <span className="col-tag optional" style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80", borderColor: "rgba(34,197,94,0.4)" }}>Achievement</span>
-                  <span style={{ fontSize: "0.65rem", color: "#4ade80", display: "block", marginTop: "2px" }}>✏️ Fill this column</span>
+                  <span style={{ fontSize: "0.65rem", color: "#4ade80", display: "block", marginTop: "2px" }}>Optional column</span>
                 </th>
               </tr>
             </thead>
@@ -348,8 +348,8 @@ const XiaomiImportPage = () => {
             </tbody>
           </table>
           <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)", marginTop: "0.6rem", marginBottom: 0 }}>
-            💡 <strong style={{ color: "#fb923c" }}>Download Template</strong> below to get all stores pre-filled with their existing targets.
-            Only fill in the <strong style={{ color: "#4ade80" }}>Achievement</strong> column — target column will not be changed during import.
+            💡 You can upload the raw Xiaomi Excel file to set <strong style={{ color: "#fb923c" }}>Targets</strong> for a new month. 
+            Later, download a template below to fill in <strong style={{ color: "#4ade80" }}>Achievements</strong> and re-upload. Both will update based on what is provided.
           </p>
         </div>
 
