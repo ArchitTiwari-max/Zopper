@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
       },
       select: {
         targetRevenue: true,
+        achievementRevenue: true,
         store: {
           select: {
             id: true,
@@ -53,9 +54,11 @@ export async function GET(request: NextRequest) {
         state: t.store.state,
         distributorName: t.store.fullAddress,
         targetRevenue: t.targetRevenue ?? 0,
+        achievementRevenue: t.achievementRevenue ?? 0,
       }));
 
     const totalTarget = targets.reduce((sum, t) => sum + t.targetRevenue, 0);
+    const totalAchievement = targets.reduce((sum, t) => sum + t.achievementRevenue, 0);
 
     return NextResponse.json({
       success: true,
@@ -64,6 +67,7 @@ export async function GET(request: NextRequest) {
         summary: {
           total: targets.length,
           totalTarget: Math.round(totalTarget * 100) / 100,
+          totalAchievement: Math.round(totalAchievement * 100) / 100,
           month: 7,
           year: 2026,
         }

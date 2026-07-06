@@ -9,11 +9,13 @@ interface XiaomiStore {
   state: string | null;
   distributorName: string | null;
   targetRevenue: number;
+  achievementRevenue: number;
 }
 
 interface Summary {
   total: number;
   totalTarget: number;
+  totalAchievement: number;
   month: number;
   year: number;
 }
@@ -64,6 +66,7 @@ export default function XiaomiTargetPage() {
 
   const visibleStores = filtered.slice(0, visibleCount);
   const filteredTotal = filtered.reduce((s, t) => s + t.targetRevenue, 0);
+  const filteredAchievement = filtered.reduce((s, t) => s + t.achievementRevenue, 0);
 
   return (
     <div style={{
@@ -100,21 +103,30 @@ export default function XiaomiTargetPage() {
 
       {/* Summary Cards */}
       {summary && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '20px' }}>
           <div style={{
             background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-            borderRadius: '14px', padding: '16px', color: 'white',
+            borderRadius: '12px', padding: '12px', color: 'white',
           }}>
-            <div style={{ fontSize: '11px', opacity: 0.85, marginBottom: '4px' }}>Total Stores</div>
-            <div style={{ fontSize: '24px', fontWeight: 700 }}>{summary.total.toLocaleString()}</div>
+            <div style={{ fontSize: '10px', opacity: 0.85, marginBottom: '2px' }}>Stores</div>
+            <div style={{ fontSize: '20px', fontWeight: 700 }}>{summary.total.toLocaleString()}</div>
           </div>
           <div style={{
             background: 'linear-gradient(135deg, #ec4899, #f43f5e)',
-            borderRadius: '14px', padding: '16px', color: 'white',
+            borderRadius: '12px', padding: '12px', color: 'white',
           }}>
-            <div style={{ fontSize: '11px', opacity: 0.85, marginBottom: '4px' }}>Total Target</div>
-            <div style={{ fontSize: '18px', fontWeight: 700 }}>
+            <div style={{ fontSize: '10px', opacity: 0.85, marginBottom: '2px' }}>Total Target</div>
+            <div style={{ fontSize: '16px', fontWeight: 700 }}>
               ₹{(summary.totalTarget / 100000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}L
+            </div>
+          </div>
+          <div style={{
+            background: 'linear-gradient(135deg, #10b981, #059669)',
+            borderRadius: '12px', padding: '12px', color: 'white',
+          }}>
+            <div style={{ fontSize: '10px', opacity: 0.85, marginBottom: '2px' }}>Achievement</div>
+            <div style={{ fontSize: '16px', fontWeight: 700 }}>
+              ₹{(summary.totalAchievement / 100000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}L
             </div>
           </div>
         </div>
@@ -149,8 +161,14 @@ export default function XiaomiTargetPage() {
 
       {/* Filtered count */}
       {(search || stateFilter) && (
-        <div style={{ marginBottom: '12px', fontSize: '13px', color: '#6b7280' }}>
-          {filtered.length} stores · ₹{(filteredTotal / 100000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}L
+        <div style={{ marginBottom: '12px', fontSize: '13px', color: '#6b7280', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <span>{filtered.length} stores</span>
+          <span>·</span>
+          <span>Target: ₹{(filteredTotal / 100000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}L</span>
+          <span>·</span>
+          <span style={{ color: '#059669', fontWeight: 500 }}>
+            Achieved: ₹{(filteredAchievement / 100000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}L
+          </span>
         </div>
       )}
 
@@ -178,7 +196,7 @@ export default function XiaomiTargetPage() {
                 boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
               }}
             >
-              {/* Store Name + Target */}
+              {/* Store Name + Target/Achievement */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                 <span style={{
                   fontSize: '14px', fontWeight: 600, color: '#111827',
@@ -186,12 +204,20 @@ export default function XiaomiTargetPage() {
                 }}>
                   {t.storeName}
                 </span>
-                <span style={{
-                  fontSize: '14px', fontWeight: 700, color: '#6366f1',
-                  flexShrink: 0, whiteSpace: 'nowrap',
-                }}>
-                  ₹{t.targetRevenue.toLocaleString('en-IN', { maximumFractionDigits: 1 })}
-                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
+                  <span style={{
+                    fontSize: '14px', fontWeight: 700, color: '#6366f1',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    T: ₹{t.targetRevenue.toLocaleString('en-IN', { maximumFractionDigits: 1 })}
+                  </span>
+                  <span style={{
+                    fontSize: '13px', fontWeight: 600, color: '#10b981',
+                    whiteSpace: 'nowrap', marginTop: '2px'
+                  }}>
+                    A: ₹{t.achievementRevenue.toLocaleString('en-IN', { maximumFractionDigits: 1 })}
+                  </span>
+                </div>
               </div>
 
               {/* State + Distributor */}

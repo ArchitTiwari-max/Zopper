@@ -1,0 +1,652 @@
+/* ─── Xiaomi Import Page ─────────────────────────────────────── */
+
+.xiaomi-import-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%);
+  padding: 2rem 1.5rem;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* ─── Template Download / Export Section ─────────────────────── */
+
+.xiaomi-template-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 100, 0, 0.18);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.xiaomi-template-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.9rem;
+}
+
+.xiaomi-template-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #fb923c;
+}
+
+.xiaomi-template-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.xiaomi-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.xiaomi-select-label {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.xiaomi-select {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 100, 0, 0.25);
+  color: #fff;
+  border-radius: 7px;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.825rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23fb923c'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  padding-right: 1.8rem;
+  min-width: 100px;
+}
+
+.xiaomi-select:hover,
+.xiaomi-select:focus {
+  border-color: rgba(255, 100, 0, 0.55);
+  background-color: rgba(255, 100, 0, 0.08);
+}
+
+.xiaomi-select option {
+  background: #1e1e2e;
+  color: #fff;
+}
+
+.xiaomi-template-btns {
+  display: flex;
+  gap: 0.6rem;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.xiaomi-tpl-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.xiaomi-tpl-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.xiaomi-tpl-btn.download {
+  background: rgba(255, 100, 0, 0.15);
+  border: 1px solid rgba(255, 100, 0, 0.35);
+  color: #fb923c;
+}
+
+.xiaomi-tpl-btn.download:hover:not(:disabled) {
+  background: rgba(255, 100, 0, 0.25);
+  border-color: rgba(255, 100, 0, 0.6);
+  box-shadow: 0 0 12px rgba(255, 100, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+.xiaomi-tpl-btn.export {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #4ade80;
+}
+
+.xiaomi-tpl-btn.export:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.55);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.18);
+  transform: translateY(-1px);
+}
+
+.xiaomi-template-hint {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.3);
+  margin: 0.75rem 0 0;
+  font-style: italic;
+}
+
+
+.xiaomi-import-card {
+  max-width: 900px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 100, 30, 0.2);
+  border-radius: 20px;
+  padding: 2.5rem;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 40px rgba(255, 80, 0, 0.12);
+}
+
+/* ─── Back Button ─────────────────────────────── */
+.xiaomi-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fb923c;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 2rem;
+  transition: color 0.2s, transform 0.2s;
+}
+.xiaomi-back-btn:hover {
+  color: #fdba74;
+  transform: translateX(-3px);
+}
+
+/* ─── Header ──────────────────────────────────── */
+.xiaomi-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 100, 30, 0.15);
+}
+
+.xiaomi-header-icon {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #ff6a00, #ee0979);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(255, 100, 0, 0.35);
+}
+
+.xiaomi-header-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 0.25rem;
+  line-height: 1.2;
+}
+
+.xiaomi-header-subtitle {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+.xiaomi-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(255, 100, 0, 0.15);
+  border: 1px solid rgba(255, 100, 0, 0.35);
+  color: #fb923c;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+/* ─── Format Guide Box ────────────────────────── */
+.xiaomi-format-box {
+  background: rgba(255, 100, 0, 0.06);
+  border: 1px solid rgba(255, 100, 0, 0.2);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.xiaomi-format-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #fb923c;
+  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.xiaomi-format-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.xiaomi-format-table th {
+  background: rgba(255, 100, 0, 0.12);
+  color: #fdba74;
+  font-weight: 600;
+  padding: 0.45rem 0.75rem;
+  text-align: left;
+  border: 1px solid rgba(255, 100, 0, 0.2);
+}
+
+.xiaomi-format-table td {
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.75);
+  font-family: 'Courier New', monospace;
+  font-size: 0.78rem;
+}
+
+.xiaomi-format-table tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.col-tag {
+  display: inline-block;
+  background: rgba(255, 100, 0, 0.2);
+  color: #fb923c;
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.col-tag.optional {
+  background: rgba(100, 100, 255, 0.15);
+  color: #a5b4fc;
+}
+
+.col-tag.required {
+  background: rgba(255, 100, 0, 0.25);
+  color: #fb923c;
+}
+
+/* ─── Dropzone ────────────────────────────────── */
+.xiaomi-dropzone {
+  border: 2px dashed rgba(255, 100, 0, 0.35);
+  border-radius: 14px;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: rgba(255, 100, 0, 0.03);
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.xiaomi-dropzone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255, 100, 0, 0.06) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.xiaomi-dropzone:hover,
+.xiaomi-dropzone.drag-active {
+  border-color: rgba(255, 100, 0, 0.7);
+  background: rgba(255, 100, 0, 0.07);
+  box-shadow: 0 0 24px rgba(255, 100, 0, 0.12);
+}
+
+.xiaomi-dropzone:hover::before,
+.xiaomi-dropzone.drag-active::before {
+  opacity: 1;
+}
+
+.xiaomi-dropzone-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem;
+  color: rgba(255, 100, 0, 0.6);
+}
+
+.xiaomi-dropzone-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 0.4rem;
+}
+
+.xiaomi-dropzone-sub {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+}
+
+.xiaomi-dropzone-sub span {
+  color: #fb923c;
+  font-weight: 600;
+}
+
+/* ─── File Selected State ─────────────────────── */
+.xiaomi-file-selected {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255, 100, 0, 0.08);
+  border: 1px solid rgba(255, 100, 0, 0.25);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.xiaomi-file-icon {
+  color: #fb923c;
+  flex-shrink: 0;
+}
+
+.xiaomi-file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.xiaomi-file-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.xiaomi-file-size {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 0.15rem;
+}
+
+.xiaomi-file-remove {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.xiaomi-file-remove:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+/* ─── Action Buttons ──────────────────────────── */
+.xiaomi-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.75rem;
+}
+
+.xiaomi-btn-import {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.5rem;
+  background: linear-gradient(135deg, #ff6a00, #ee0979);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 4px 16px rgba(255, 100, 0, 0.35);
+}
+
+.xiaomi-btn-import:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(255, 100, 0, 0.5);
+}
+
+.xiaomi-btn-import:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.xiaomi-btn-clear {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.85rem 1.25rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+.xiaomi-btn-clear:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* ─── Progress Bar ────────────────────────────── */
+.xiaomi-progress-bar-wrap {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 100px;
+  overflow: hidden;
+  height: 6px;
+  margin-bottom: 1.5rem;
+}
+
+.xiaomi-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff6a00, #ee0979);
+  transition: width 0.4s ease;
+  border-radius: 100px;
+}
+
+/* ─── Console ─────────────────────────────────── */
+.xiaomi-console-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px 10px 0 0;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.xiaomi-console-toggle:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.xiaomi-console-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.xiaomi-console-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.75); }
+}
+
+.xiaomi-console-body {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  padding: 1rem;
+  max-height: 320px;
+  overflow-y: auto;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.76rem;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+.xiaomi-console-body::-webkit-scrollbar {
+  width: 4px;
+}
+.xiaomi-console-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.xiaomi-console-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 100, 0, 0.3);
+  border-radius: 2px;
+}
+
+.log-line { display: flex; gap: 0.75rem; }
+.log-time { color: rgba(255,255,255,0.25); flex-shrink: 0; }
+.log-info    .log-msg { color: rgba(255, 255, 255, 0.7); }
+.log-success .log-msg { color: #4ade80; }
+.log-error   .log-msg { color: #f87171; }
+.log-warning .log-msg { color: #fbbf24; }
+
+/* ─── Result Summary ──────────────────────────── */
+.xiaomi-result-box {
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.xiaomi-result-box.success {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.xiaomi-result-box.partial {
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.xiaomi-result-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.xiaomi-result-box.success .xiaomi-result-title { color: #4ade80; }
+.xiaomi-result-box.partial .xiaomi-result-title { color: #fbbf24; }
+
+.xiaomi-result-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.xiaomi-stat {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
+.xiaomi-stat-number {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+
+.xiaomi-stat-label {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.xiaomi-stat.success-stat .xiaomi-stat-number { color: #4ade80; }
+.xiaomi-stat.failed-stat  .xiaomi-stat-number { color: #f87171; }
+.xiaomi-stat.notfound-stat .xiaomi-stat-number { color: #fbbf24; }
+.xiaomi-stat.total-stat   .xiaomi-stat-number { color: #60a5fa; }
+
+.xiaomi-errors-list {
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.xiaomi-errors-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #f87171;
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.xiaomi-errors-list li {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'Courier New', monospace;
+  margin-bottom: 0.25rem;
+  list-style: none;
+  padding-left: 0;
+}
+
+/* ─── Spinner ─────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.xiaomi-spinner {
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+/* ─── Dark Scrollbar global ───────────────────── */
+.xiaomi-import-container * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 100, 0, 0.3) transparent;
+}
