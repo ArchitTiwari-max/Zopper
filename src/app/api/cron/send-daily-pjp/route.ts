@@ -50,8 +50,8 @@ export async function GET() {
       }
     });
 
-    // Fetch all active executives to send individual PJP mails
-    const activeExecutives = await prisma.employee.findMany({
+    // Fetch all active employees to send individual PJP mails
+    const activeEmployees = await prisma.employee.findMany({
       where: {
         user: {
           isActive: true
@@ -61,6 +61,11 @@ export async function GET() {
         user: true
       }
     });
+
+    // Filter to get only executives (excluding admins)
+    const activeExecutives = activeEmployees.filter(
+      (emp) => emp.user?.roles && !emp.user.roles.includes('ADMIN')
+    );
 
     // Map plans by executive (take only the latest)
     const pjpMap = new Map<string, { executiveName: string; pjpStoreNames: string }>();
