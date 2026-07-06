@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Upload,
   Users,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import React from "react";
@@ -453,6 +454,56 @@ const DataManagementDashboard = () => {
                 <p>• Plan Id</p>
                 <p>• Phone</p>
                 <p>• ContractBookingID</p>
+              </div>
+            </div>
+          </Link>
+
+          {/* Xiaomi Target Import */}
+          <Link
+            href="/admin/datamanagement/xiaomiimport"
+            className="adm-excel-import-import-card xiaomi"
+          >
+            <div className="adm-excel-import-card-header">
+              <div className="adm-excel-import-card-icon xiaomi">
+                <Zap className="w-8 h-8 text-orange-500" />
+              </div>
+              <div className="adm-excel-import-card-title-section">
+                <div className="flex items-center gap-2">
+                  <h2 className="adm-excel-import-card-title">Xiaomi Target Import</h2>
+                  <span className="bg-orange-100 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider border border-orange-200">
+                    Xiaomi
+                  </span>
+                </div>
+                <p className="adm-excel-import-card-subtitle">
+                  Target &amp; Achievement data
+                </p>
+              </div>
+              <ArrowRight className="adm-excel-import-card-arrow" />
+            </div>
+
+            <p className="adm-excel-import-card-description">
+              Upload Xiaomi-format Excel to update store-wise monthly targets and achievement numbers. Supports auto-detection of month from column headers (e.g. Jul-26).
+            </p>
+
+            <div className="adm-excel-import-feature-list">
+              <div className="adm-excel-import-feature-item">
+                <FileSpreadsheet className="adm-excel-import-feature-icon xiaomi" />
+                Xiaomi format (State, RetailerName, Month)
+              </div>
+              <div className="adm-excel-import-feature-item">
+                <Upload className="adm-excel-import-feature-icon xiaomi" />
+                Target + Achievement in one sheet
+              </div>
+            </div>
+
+            <div className="adm-excel-import-columns-section xiaomi">
+              <h4 className="adm-excel-import-columns-title xiaomi">
+                Expected Columns:
+              </h4>
+              <div className="adm-excel-import-columns-list xiaomi">
+                <p>• State, RetailerName</p>
+                <p>• Jul-26 (or any month-year)</p>
+                <p>• Achievement (optional)</p>
               </div>
             </div>
           </Link>

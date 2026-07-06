@@ -218,13 +218,15 @@ model SalesRecord {
 }
 
 model StoreTarget {
-  id            String @id @default(auto()) @map("_id") @db.ObjectId
-  storeId       String
-  brandId       String
-  month         Int // Month (1-12)
-  year          Int // Year (e.g. 2026)
-  targetRevenue Float?
-  targetUnits   Int?
+  id                 String @id @default(auto()) @map("_id") @db.ObjectId
+  storeId            String
+  brandId            String
+  month              Int    // Month (1-12)
+  year               Int    // Year (e.g. 2026)
+  targetRevenue      Float?
+  targetUnits        Int?
+  achievementRevenue Float? // Actual achievement (revenue) — updated via Xiaomi import
+  achievementUnits   Int?   // Actual achievement (units) — updated via Xiaomi import
 
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
   brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)

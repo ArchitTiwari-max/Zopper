@@ -3,17 +3,24 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+const MONTH_NAMES = [
+  "", "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
 interface XiaomiStore {
   storeId: string;
   storeName: string;
   state: string | null;
   distributorName: string | null;
   targetRevenue: number;
+  achievementRevenue: number;
 }
 
 interface Summary {
   total: number;
   totalTarget: number;
+  totalAchievement: number;
   month: number;
   year: number;
 }
@@ -25,17 +32,29 @@ export default function XiaomiTargetPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [stateFilter, setStateFilter] = useState('');
+  
+  // Default to July 2026 based on original hardcoded values, or use current date if preferred
+  const [selectedMonth, setSelectedMonth] = useState('7');
+  const [selectedYear, setSelectedYear] = useState('2026');
 
   const [visibleCount, setVisibleCount] = useState(100);
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
-        const res = await fetch('/api/executive/xiaomi-target');
+        const params = new URLSearchParams({
+          month: selectedMonth,
+          year: selectedYear,
+        });
+        const res = await fetch(`/api/executive/xiaomi-target?${params}`);
         const json = await res.json();
         if (json.success) {
           setTargets(json.data.targets);
           setSummary(json.data.summary);
+        } else {
+          setTargets([]);
+          setSummary(null);
         }
       } catch (e) {
         console.error('Error fetching Xiaomi targets:', e);
@@ -44,7 +63,7 @@ export default function XiaomiTargetPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [selectedMonth, selectedYear]);
 
   // Reset visible count when filters change
   useEffect(() => {
@@ -64,6 +83,7 @@ export default function XiaomiTargetPage() {
 
   const visibleStores = filtered.slice(0, visibleCount);
   const filteredTotal = filtered.reduce((s, t) => s + t.targetRevenue, 0);
+  const filteredAchievement = filtered.reduce((s, t) => s + t.achievementRevenue, 0);
 
   return (
     <div style={{
@@ -75,7 +95,7 @@ export default function XiaomiTargetPage() {
       width: '100%',
     }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
         <button
           onClick={() => router.back()}
           style={{
@@ -88,33 +108,75 @@ export default function XiaomiTargetPage() {
             <path d="M15 18L9 12L15 6" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <div>
+        <div style={{ flex: 1 }}>
           <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#1e1b4b', lineHeight: 1.2 }}>
             📱 Xiaomi Target
           </h1>
           <p style={{ margin: 0, fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
-            July 2026 · No assignments
+            {MONTH_NAMES[parseInt(selectedMonth)]} {selectedYear} · No assignments
           </p>
         </div>
       </div>
 
+      {/* Month/Year Filters */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+        <select
+          value={selectedMonth}
+          onChange={e => setSelectedMonth(e.target.value)}
+          style={{
+            flex: 1, padding: '8px 12px', borderRadius: '8px',
+            border: '1px solid #e5e7eb', fontSize: '14px', background: 'white',
+            cursor: 'pointer', outline: 'none',
+          }}
+        >
+          {MONTH_NAMES.slice(1).map((name, i) => (
+            <option key={i + 1} value={String(i + 1)}>
+              {name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={selectedYear}
+          onChange={e => setSelectedYear(e.target.value)}
+          style={{
+            flex: 1, padding: '8px 12px', borderRadius: '8px',
+            border: '1px solid #e5e7eb', fontSize: '14px', background: 'white',
+            cursor: 'pointer', outline: 'none',
+          }}
+        >
+          {[2024, 2025, 2026, 2027].map(y => (
+            <option key={y} value={String(y)}>{y}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Summary Cards */}
       {summary && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '20px' }}>
           <div style={{
             background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-            borderRadius: '14px', padding: '16px', color: 'white',
+            borderRadius: '12px', padding: '12px', color: 'white',
           }}>
-            <div style={{ fontSize: '11px', opacity: 0.85, marginBottom: '4px' }}>Total Stores</div>
-            <div style={{ fontSize: '24px', fontWeight: 700 }}>{summary.total.toLocaleString()}</div>
+            <div style={{ fontSize: '10px', opacity: 0.85, marginBottom: '2px' }}>Stores</div>
+            <div style={{ fontSize: '20px', fontWeight: 700 }}>{summary.total.toLocaleString()}</div>
           </div>
           <div style={{
             background: 'linear-gradient(135deg, #ec4899, #f43f5e)',
-            borderRadius: '14px', padding: '16px', color: 'white',
+            borderRadius: '12px', padding: '12px', color: 'white',
           }}>
-            <div style={{ fontSize: '11px', opacity: 0.85, marginBottom: '4px' }}>Total Target</div>
-            <div style={{ fontSize: '18px', fontWeight: 700 }}>
+            <div style={{ fontSize: '10px', opacity: 0.85, marginBottom: '2px' }}>Total Target</div>
+            <div style={{ fontSize: '16px', fontWeight: 700 }}>
               ₹{(summary.totalTarget / 100000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}L
+            </div>
+          </div>
+          <div style={{
+            background: 'linear-gradient(135deg, #10b981, #059669)',
+            borderRadius: '12px', padding: '12px', color: 'white',
+          }}>
+            <div style={{ fontSize: '10px', opacity: 0.85, marginBottom: '2px' }}>Achievement</div>
+            <div style={{ fontSize: '16px', fontWeight: 700 }}>
+              ₹{(summary.totalAchievement / 100000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}L
             </div>
           </div>
         </div>
@@ -149,8 +211,14 @@ export default function XiaomiTargetPage() {
 
       {/* Filtered count */}
       {(search || stateFilter) && (
-        <div style={{ marginBottom: '12px', fontSize: '13px', color: '#6b7280' }}>
-          {filtered.length} stores · ₹{(filteredTotal / 100000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}L
+        <div style={{ marginBottom: '12px', fontSize: '13px', color: '#6b7280', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <span>{filtered.length} stores</span>
+          <span>·</span>
+          <span>Target: ₹{(filteredTotal / 100000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}L</span>
+          <span>·</span>
+          <span style={{ color: '#059669', fontWeight: 500 }}>
+            Achieved: ₹{(filteredAchievement / 100000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}L
+          </span>
         </div>
       )}
 
@@ -178,7 +246,7 @@ export default function XiaomiTargetPage() {
                 boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
               }}
             >
-              {/* Store Name + Target */}
+              {/* Store Name + Target/Achievement */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                 <span style={{
                   fontSize: '14px', fontWeight: 600, color: '#111827',
@@ -186,12 +254,20 @@ export default function XiaomiTargetPage() {
                 }}>
                   {t.storeName}
                 </span>
-                <span style={{
-                  fontSize: '14px', fontWeight: 700, color: '#6366f1',
-                  flexShrink: 0, whiteSpace: 'nowrap',
-                }}>
-                  ₹{t.targetRevenue.toLocaleString('en-IN', { maximumFractionDigits: 1 })}
-                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
+                  <span style={{
+                    fontSize: '14px', fontWeight: 700, color: '#6366f1',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    T: ₹{t.targetRevenue.toLocaleString('en-IN', { maximumFractionDigits: 1 })}
+                  </span>
+                  <span style={{
+                    fontSize: '13px', fontWeight: 600, color: '#10b981',
+                    whiteSpace: 'nowrap', marginTop: '2px'
+                  }}>
+                    A: ₹{t.achievementRevenue.toLocaleString('en-IN', { maximumFractionDigits: 1 })}
+                  </span>
+                </div>
               </div>
 
               {/* State + Distributor */}

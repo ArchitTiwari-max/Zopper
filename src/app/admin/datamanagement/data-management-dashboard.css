@@ -496,4 +496,60 @@
     color: #e11d48;
   }
 }
+
+/* ─── Xiaomi Target Import Card ────────────────────────────── */
+.adm-excel-import-import-card.xiaomi {
+  border: 1px solid #fed7aa;
+  background: linear-gradient(135deg, #ffffff 0%, #fff7ed 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.adm-excel-import-import-card.xiaomi::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 110px;
+  height: 110px;
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.adm-excel-import-import-card.xiaomi:hover {
+  border-color: #f97316;
+  box-shadow: 0 20px 25px -5px rgba(249, 115, 22, 0.18), 0 10px 10px -5px rgba(249, 115, 22, 0.08);
+}
+
+.adm-excel-import-card-icon.xiaomi {
+  background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+  box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.15);
+}
+
+.adm-excel-import-feature-icon.xiaomi {
+  color: #ea580c;
+}
+
+.adm-excel-import-columns-section.xiaomi {
+  background-color: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-top: 1rem;
+}
+
+.adm-excel-import-columns-title.xiaomi {
+  color: #9a3412;
+  font-weight: 600;
+}
+
+.adm-excel-import-columns-list.xiaomi {
+  color: #c2410c;
+}
+
+@media (hover: hover) {
+  .adm-excel-import-import-card.xiaomi:hover .adm-excel-import-card-title {
+    color: #ea580c;
+  }
+}
 
