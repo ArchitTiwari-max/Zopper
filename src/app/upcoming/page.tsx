@@ -68,7 +68,7 @@ export default function UpcomingPage() {
           color: '#64748b',
           margin: '0 0 28px 0'
         }}>
-          This Jira-style agile workspace for task tracking, to-do lists, and team execution is currently under development and will be available soon.
+          This agile workspace for task tracking, to-do lists, and team execution is currently under development and will be available soon.
         </p>
 
         <a 
