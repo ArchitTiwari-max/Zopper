@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { generateUniqueIssueId } from '@/lib/issueIdGenerator';
 
 export const runtime = 'nodejs';
 
@@ -73,6 +74,7 @@ export async function POST(request: NextRequest) {
       remarks,
       imageUrls,
       nextScheduledDate,
+      issuesRaised,
     } = body;
 
     if (!brandId || !stakeholderDesignation) {
@@ -103,7 +105,30 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, visit });
+    // Process top-level issues
+    let createdIssues: any[] = [];
+    if (issuesRaised && Array.isArray(issuesRaised) && issuesRaised.length > 0) {
+      for (const issueDetail of issuesRaised) {
+        if (issueDetail && issueDetail.trim() !== '') {
+          const uniqueIssueId = await generateUniqueIssueId();
+          const createdIssue = await prisma.issue.create({
+            data: {
+              id: uniqueIssueId,
+              details: issueDetail.trim(),
+              stakeholderVisitId: visit.id,
+              status: 'Pending',
+            },
+          });
+          createdIssues.push({
+            id: createdIssue.id,
+            details: createdIssue.details,
+            status: createdIssue.status,
+          });
+        }
+      }
+    }
+
+    return NextResponse.json({ success: true, visit: { ...visit, issues: createdIssues } });
   } catch (error) {
     console.error('Stakeholder Visit POST Error:', error);
     return NextResponse.json(

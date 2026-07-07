@@ -315,6 +315,8 @@ model Issue {
   visit          Visit?        @relation(fields: [visitId], references: [id])
   digitalVisitId String?       @db.ObjectId
   digitalVisit   DigitalVisit? @relation(fields: [digitalVisitId], references: [id])
+  stakeholderVisitId String?   @db.ObjectId
+  stakeholderVisit StakeholderVisit? @relation(fields: [stakeholderVisitId], references: [id])
 
   assigned      Assigned[] // One Issue can have multiple Assigned records
   notifications Notification[] // Notifications related to this issue
@@ -771,6 +773,8 @@ model StakeholderVisit {
 
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
+
+  issues            Issue[]    // Issues logged during this stakeholder visit
 
   @@index([executiveId, visitDate])
   @@index([executiveId, createdAt])

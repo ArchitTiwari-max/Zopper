@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import ImageUpload from '@/components/ImageUpload';
 import '../executive-form/ExecutiveForm.css';
 import StakeholderVisitDetailsModal from '../components/StakeholderVisitDetailsModal';
@@ -35,19 +35,23 @@ interface PastVisit {
 
 const StakeholderVisitFormContent: React.FC = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [brandId, setBrandId] = useState('');
+  const [brandName, setBrandName] = useState('');
+  const [availableBrands, setAvailableBrands] = useState<any[]>([]);
+  const [allDesignations, setAllDesignations] = useState<any[]>([]);
 
-  const brandId = searchParams.get('brandId') || '';
-  const brandName = searchParams.get('brandName') || '';
-  const stakeholderDesignation = searchParams.get('designation') || '';
-
+  const [stakeholderDesignation, setStakeholderDesignation] = useState('');
   const [visitDate, setVisitDate] = useState('');
   const [state, setState] = useState('');
+  const [availableStates, setAvailableStates] = useState<string[]>([]);
+  const [availableDesignations, setAvailableDesignations] = useState<any[]>([]);
   const [nextScheduledDate, setNextScheduledDate] = useState('');
   const [remarks, setRemarks] = useState('');
   const [peopleMet, setPeopleMet] = useState<PersonMet[]>([]);
   const [currentPerson, setCurrentPerson] = useState({ name: '', designation: '', phoneNumber: '' });
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const [issuesRaised, setIssuesRaised] = useState<string[]>([]);
+  const [currentIssue, setCurrentIssue] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pastVisits, setPastVisits] = useState<PastVisit[]>([]);
@@ -61,7 +65,39 @@ const StakeholderVisitFormContent: React.FC = () => {
     const istOffset = 5.5 * 60 * 60 * 1000;
     const istDate = new Date(today.getTime() + istOffset);
     setVisitDate(istDate.toISOString().split('T')[0]);
+
+    // Fetch states and designations
+    const fetchFormData = async () => {
+      try {
+        const res = await fetch('/api/executive/stakeholders', {
+          credentials: 'include',
+          cache: 'no-store',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAvailableStates(data.states || []);
+          setAvailableBrands(data.brands || []);
+          setAllDesignations(data.stakeholders || []);
+        }
+      } catch (e) {
+        console.error('Failed to fetch form data:', e);
+      }
+    };
+    fetchFormData();
   }, []);
+
+  // Update available designations when brand changes
+  useEffect(() => {
+    if (brandId && brandName) {
+      const applicableDesignations = allDesignations.filter((s: any) => 
+        s.brands.includes(brandName) || s.brands.includes(brandId)
+      );
+      setAvailableDesignations(applicableDesignations);
+    } else {
+      setAvailableDesignations([]);
+    }
+    setStakeholderDesignation(''); // Reset designation when brand changes
+  }, [brandId, brandName, allDesignations]);
 
   // Fetch past visits for this stakeholder
   useEffect(() => {
@@ -103,8 +139,21 @@ const StakeholderVisitFormContent: React.FC = () => {
     setPeopleMet(prev => prev.filter((_, i) => i !== index));
   };
 
+  const addIssue = () => {
+    if (currentIssue.trim()) {
+      setIssuesRaised(prev => [...prev, currentIssue.trim()]);
+      setCurrentIssue('');
+    }
+  };
+
+  const removeIssue = (index: number) => {
+    setIssuesRaised(prev => prev.filter((_, i) => i !== index));
+  };
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
+    if (!brandId) newErrors.brand = 'Brand is required';
+    if (!stakeholderDesignation) newErrors.stakeholderDesignation = 'Designation is required';
     if (!visitDate) newErrors.visitDate = 'Visit date is required';
     if (!state.trim()) newErrors.state = 'State is required';
     if (peopleMet.length === 0) newErrors.peopleMet = 'Please add at least one person met';
@@ -124,6 +173,7 @@ const StakeholderVisitFormContent: React.FC = () => {
         visitDate,
         personMet: peopleMet,
         remarks,
+        issuesRaised,
         imageUrls: uploadedImages.map(img => img.url),
         nextScheduledDate: nextScheduledDate || null,
       };
@@ -154,47 +204,70 @@ const StakeholderVisitFormContent: React.FC = () => {
     }
   };
 
-  if (!brandId || !stakeholderDesignation) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
-        <p>❌ Missing stakeholder information. Please go back and try again.</p>
-        <button
-          onClick={() => router.push('/executive/stakeholders')}
-          style={{ marginTop: '1rem', padding: '0.75rem 1.5rem', background: '#6366f1', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-        >
-          ← Back to Stakeholders
-        </button>
-      </div>
-    );
-  }
 
   return (
-    <div style={{ padding: '1.5rem', maxWidth: '800px', margin: '0 auto' }}>
-      {/* Header */}
+    <div style={{ padding: '1.5rem', maxWidth: '800px', margin: '0 auto', paddingBottom: '100px' }}>
+      
+      {/* Page Heading */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '700', color: '#1e293b' }}>
+          🤝 Stakeholder Connect
+        </h1>
+        <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: '#64748b' }}>
+          Log your visit and interactions with stakeholders
+        </p>
+      </div>
+
       <div style={{ marginBottom: '2rem' }}>
-        <button
-          onClick={() => router.push('/executive/stakeholders')}
-          style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '1rem', padding: 0 }}
-        >
-          ← Back to Stakeholders
-        </button>
         <div style={{ background: 'white', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '1.25rem' }}>
-              {brandName.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700', color: '#1e293b' }}>
-                {brandName}
-              </h1>
-              <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: '#6366f1', fontWeight: '500' }}>
-                {stakeholderDesignation}
-              </p>
-            </div>
+          
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600', color: '#1e293b' }}>
+              Select Brand
+            </label>
+            <select
+              value={brandId}
+              onChange={(e) => {
+                const selected = availableBrands.find(b => b.id === e.target.value);
+                setBrandId(e.target.value);
+                setBrandName(selected ? selected.brandName : '');
+              }}
+              style={{
+                width: '100%', padding: '0.625rem 0.875rem', border: `1px solid ${errors.brand ? '#ef4444' : '#d1d5db'}`,
+                borderRadius: '8px', fontSize: '0.875rem', boxSizing: 'border-box', background: 'white'
+              }}
+            >
+              <option value="">Select Brand</option>
+              {availableBrands.map(b => (
+                <option key={b.id} value={b.id}>{b.brandName}</option>
+              ))}
+            </select>
+            {errors.brand && <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#ef4444' }}>{errors.brand}</p>}
           </div>
+
+          <div style={{ marginTop: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600', color: '#1e293b' }}>
+              Stakeholder Designation
+            </label>
+            <select
+              value={stakeholderDesignation}
+              onChange={(e) => setStakeholderDesignation(e.target.value)}
+              style={{
+                width: '100%', padding: '0.625rem 0.875rem', border: `1px solid ${errors.stakeholderDesignation ? '#ef4444' : '#d1d5db'}`,
+                borderRadius: '8px', fontSize: '0.875rem', boxSizing: 'border-box', background: 'white'
+              }}
+            >
+              <option value="">Select Designation</option>
+              {availableDesignations.map(dsg => (
+                <option key={dsg.id} value={dsg.designation}>{dsg.designation}</option>
+              ))}
+            </select>
+            {errors.stakeholderDesignation && <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#ef4444' }}>{errors.stakeholderDesignation}</p>}
+          </div>
+
           <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #bae6fd' }}>
             <p style={{ margin: 0, fontSize: '0.8125rem', color: '#0369a1' }}>
-              🤝 You are logging a <strong>Stakeholder Visit</strong> for this stakeholder.
+              🤝 You are logging a <strong>Stakeholder Visit</strong> for this brand.
             </p>
           </div>
         </div>
@@ -220,16 +293,19 @@ const StakeholderVisitFormContent: React.FC = () => {
       {/* State */}
       <div style={{ background: 'white', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
         <h2 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: '600', color: '#1e293b' }}>📍 State</h2>
-        <input
-          type="text"
-          placeholder="e.g., Delhi, Maharashtra, UP"
+        <select
           value={state}
           onChange={(e) => setState(e.target.value)}
           style={{
             width: '100%', padding: '0.625rem 0.875rem', border: `1px solid ${errors.state ? '#ef4444' : '#d1d5db'}`,
-            borderRadius: '8px', fontSize: '0.875rem', boxSizing: 'border-box'
+            borderRadius: '8px', fontSize: '0.875rem', boxSizing: 'border-box', background: 'white'
           }}
-        />
+        >
+          <option value="">Select State</option>
+          {availableStates.map(s => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
         {errors.state && <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#ef4444' }}>{errors.state}</p>}
       </div>
 
@@ -282,6 +358,43 @@ const StakeholderVisitFormContent: React.FC = () => {
         </button>
         {errors.personName && <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#ef4444' }}>{errors.personName}</p>}
         {errors.peopleMet && <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#ef4444' }}>{errors.peopleMet}</p>}
+      </div>
+
+      {/* Issues Raised */}
+      <div style={{ background: 'white', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+        <h2 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: '600', color: '#1e293b' }}>⚠️ Issues Raised <span style={{ color: '#9ca3af', fontWeight: '400', fontSize: '0.8125rem' }}>(Optional)</span></h2>
+        
+        {issuesRaised.length > 0 && (
+          <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {issuesRaised.map((issue, idx) => (
+              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.625rem 0.875rem', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca' }}>
+                <span style={{ color: '#991b1b', fontSize: '0.875rem' }}>{issue}</span>
+                <button onClick={() => removeIssue(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '1rem' }}>✕</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <input
+            placeholder="Describe issue..."
+            value={currentIssue}
+            onChange={(e) => setCurrentIssue(e.target.value)}
+            style={{ flex: 1, padding: '0.625rem 0.875rem', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '0.875rem' }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addIssue();
+              }
+            }}
+          />
+          <button
+            onClick={addIssue}
+            style={{ padding: '0 1.25rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500' }}
+          >
+            Add Issue
+          </button>
+        </div>
       </div>
 
       {/* Remarks */}

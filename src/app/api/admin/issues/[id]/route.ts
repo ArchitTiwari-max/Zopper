@@ -43,6 +43,12 @@ export async function GET(
             store: { select: { id: true, storeName: true, city: true, fullAddress: true, storeBrands: { select: { brandId: true } } } }
           }
         },
+        stakeholderVisit: {
+          include: {
+            employee: { select: { id: true, name: true } },
+            brand: { select: { brandName: true } }
+          }
+        },
         assigned: {
           include: {
             employee: { select: { name: true } },
@@ -68,12 +74,14 @@ export async function GET(
     });
     const brandMap = new Map(brands.map(b => [b.id, b.brandName]));
 
-    // Choose source (physical or digital)
-    const source: any = targetIssue.visit ?? targetIssue.digitalVisit;
+    // Choose source (physical or digital or stakeholder)
+    const source: any = targetIssue.visit ?? targetIssue.digitalVisit ?? targetIssue.stakeholderVisit;
 
     // Build brand list
     let partnerBrandNames: string[] = [];
-    if (targetIssue.visit && Array.isArray((targetIssue.visit as any).brandIds)) {
+    if (targetIssue.stakeholderVisit && (targetIssue.stakeholderVisit as any).brand) {
+      partnerBrandNames = [(targetIssue.stakeholderVisit as any).brand.brandName];
+    } else if (targetIssue.visit && Array.isArray((targetIssue.visit as any).brandIds)) {
       const visitBrands = (targetIssue.visit as any).brandIds
         .map((brandId: string) => brandMap.get(brandId))
         .filter(Boolean) as string[];
@@ -112,14 +120,18 @@ export async function GET(
     });
 
     // Build the detailed issue response
+    const storeName = source?.store?.storeName || (targetIssue.stakeholderVisit ? `${(targetIssue.stakeholderVisit as any).brand?.brandName || 'Brand'} - ${(targetIssue.stakeholderVisit as any).stakeholderDesignation}` : 'Unknown Store');
+    const location = source?.store?.fullAddress || source?.store?.city || (targetIssue.stakeholderVisit as any)?.state || 'N/A';
+    const city = source?.store?.city || (targetIssue.stakeholderVisit as any)?.state || 'N/A';
+
     const issueDetail = {
       id: targetIssue.id,
       issueId: `#Issue_${targetIssue.id}`,
-      storeName: source?.store?.storeName || 'Unknown Store',
-      storeId: source?.store?.id || '',
-      location: source?.store?.fullAddress || source?.store?.city || 'N/A',
+      storeName: storeName,
+      storeId: source?.store?.id || (targetIssue.stakeholderVisit ? 'stakeholder' : ''),
+      location: location,
       brandAssociated: brandAssociated,
-      city: source?.store?.city || 'N/A',
+      city: city,
       dateReported: new Date(targetIssue.createdAt).toISOString().split('T')[0],
       reportedBy: source?.employee?.name || 'Unknown Executive',
       reportedByRole: 'Executive',
@@ -134,10 +146,10 @@ export async function GET(
         name: source?.employee?.name || 'Unknown Executive'
       },
       store: {
-        id: source?.store?.id || '',
-        name: source?.store?.storeName || 'Unknown Store',
-        address: source?.store?.fullAddress || null,
-        city: source?.store?.city || 'N/A'
+        id: source?.store?.id || (targetIssue.stakeholderVisit ? 'stakeholder' : ''),
+        name: storeName,
+        address: source?.store?.fullAddress || (targetIssue.stakeholderVisit ? `${(targetIssue.stakeholderVisit as any).state}` : null),
+        city: city
       },
       visit: {
         id: source?.id || '',

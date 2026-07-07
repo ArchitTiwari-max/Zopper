@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
     const executiveId = searchParams.get('executiveId');
     const designation = searchParams.get('designation');
     const visitStatus = searchParams.get('visitStatus');
+    const brandId = searchParams.get('brandId');
+    const state = searchParams.get('state');
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const isExport = searchParams.get('isExport') === 'true';
@@ -66,6 +68,12 @@ export async function GET(request: NextRequest) {
     if (visitStatus && visitStatus !== 'All Status') {
       whereClause.status = visitStatus;
     }
+    if (brandId && brandId !== 'all') {
+      whereClause.brandId = brandId;
+    }
+    if (state && state !== 'all') {
+      whereClause.state = state;
+    }
 
     const fetchOptions: any = {
       where: whereClause,
@@ -87,6 +95,7 @@ export async function GET(request: NextRequest) {
         reviewedByEmployee: { select: { id: true, name: true } },
         employee: { select: { id: true, name: true } },
         stakeholder: { select: { brands: true } },
+        issues: { select: { id: true, details: true, status: true, assigned: { include: { employee: { select: { name: true } } } } } },
       },
       orderBy: { visitDate: 'desc' },
     };
@@ -149,8 +158,25 @@ export async function GET(request: NextRequest) {
         peopleMet,
         imageUrls: visit.imageUrls || [],
         brands: visit.stakeholder?.brands || [],
+        issues: visit.issues || [],
       };
     });
+
+    // Fetch filter options (all brands, states, designations from all visits)
+    const allForFilters = await prisma.stakeholderVisit.findMany({
+      select: { brandId: true, brand: { select: { brandName: true } }, state: true, stakeholderDesignation: true },
+    });
+    const brandsMap = new Map<string, string>();
+    const statesSet = new Set<string>();
+    const designationsSet = new Set<string>();
+    for (const v of allForFilters as any[]) {
+      if (v.brandId && v.brand?.brandName) brandsMap.set(v.brandId, v.brand.brandName);
+      if (v.state) statesSet.add(v.state);
+      if (v.stakeholderDesignation) designationsSet.add(v.stakeholderDesignation);
+    }
+    const allBrands = Array.from(brandsMap.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+    const allStates = Array.from(statesSet).sort();
+    const allDesignations = Array.from(designationsSet).sort();
 
     const response = NextResponse.json({
       visits: processedVisits,
@@ -158,6 +184,9 @@ export async function GET(request: NextRequest) {
       page,
       limit,
       totalPages,
+      allBrands,
+      allStates,
+      allDesignations,
     });
     response.headers.set('Cache-Control', 'no-store');
     return response;
