@@ -95,6 +95,7 @@ export default function SubordinateVisitsPage() {
     null,
   );
   const [isExporting, setIsExporting] = useState(false);
+  const [isAddingRemark, setIsAddingRemark] = useState(false);
 
   const fetchSubordinateVisits = useCallback(
     async (range: DateRange, page: number) => {
@@ -189,6 +190,37 @@ export default function SubordinateVisitsPage() {
       alert("Export failed. Please try again.");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleAddRemark = async (visitId: string, remark: string) => {
+    try {
+      setIsAddingRemark(true);
+      const payload = {
+        visitId,
+        type: selectedVisit?.type || visitType,
+        remark
+      };
+      
+      const res = await fetch('/api/executive/subordinate-visits/remark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to add remark');
+      
+      alert(data.message || 'Remark added successfully');
+      setSelectedVisit(null); // Close modal
+      
+      // Optionally refresh the list to show new issue, but might not be necessary immediately
+      // fetchSubordinateVisits(dateRange, currentPage);
+    } catch (err: any) {
+      console.error('Error adding remark:', err);
+      alert(err.message || 'Failed to add remark. Please try again.');
+    } finally {
+      setIsAddingRemark(false);
     }
   };
 
@@ -723,6 +755,8 @@ export default function SubordinateVisitsPage() {
             brandVisitDetails: selectedVisit.brandVisitDetails || [],
           }}
           isDigital={selectedVisit.type === "Digital"}
+          onAddRemark={handleAddRemark}
+          isAddingRemark={isAddingRemark}
         />
       )}
     </div>
