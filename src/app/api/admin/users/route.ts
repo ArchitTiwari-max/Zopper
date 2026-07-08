@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
     
     // Get target role mapping from UserRole table
     const userRoleRecord = await prisma.userRole.findUnique({
-      where: { name: targetRole === 'ADMIN' ? 'ADMIN' : 'SALES_EXECUTIVE' }
+      where: { name: targetRole === 'ADMIN' ? 'ADMIN' : 'EXECUTIVE' }
     });
     
     // Generate IDs
