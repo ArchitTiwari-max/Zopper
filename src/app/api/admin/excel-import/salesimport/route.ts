@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
                 "PlanType",
                 "planType",
               ]
-            : ["Store_ID", "Brand", "Category", "Product Category", "ProductCategory", "category"];
+            : ["StoreBrand_ID", "Category", "Product Category", "ProductCategory", "category"];
         const totalRows = range.e.r - range.s.r - 1;
         let successful = 0;
         let failed = 0;
@@ -336,8 +336,6 @@ export async function POST(request: NextRequest) {
                         totalRows,
                         phase: "validating",
                         rowData: {
-                          Store_ID: rowObj.Store_ID || "",
-                          Brand: rowObj.Brand || "",
                           StoreBrand_ID: rowObj.StoreBrand_ID || "",
                           Category: rowObj.Category || rowObj['Product Category'] || rowObj.ProductCategory || rowObj.category,
                           status: "success",
@@ -364,8 +362,6 @@ export async function POST(request: NextRequest) {
                     phase: "validating",
                     message: `❌ Row ${currentRow} validation failed: ${parseError}`,
                     rowData: {
-                      Store_ID: rowObj.Store_ID || "",
-                      Brand: rowObj.Brand || "",
                       StoreBrand_ID: rowObj.StoreBrand_ID || "N/A",
                       Category: rowObj.Category || rowObj['Product Category'] || rowObj.ProductCategory || rowObj.category || "N/A",
                       status: "error",
@@ -394,8 +390,6 @@ export async function POST(request: NextRequest) {
                   phase: "error",
                   message: `❌ Critical error on row ${currentRow}: ${err}`,
                   rowData: {
-                    Store_ID: "",
-                    Brand: "",
                     StoreBrand_ID: "N/A",
                     Category: "N/A",
                     status: "error",

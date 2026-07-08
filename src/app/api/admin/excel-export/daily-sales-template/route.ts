@@ -281,7 +281,7 @@ export async function GET(request: Request) {
     const planHeader = wsPlanType.addRow(["Plan Type"]);
     planHeader.height = 22;
     styleHeaderCell(wsPlanType.getCell(1, 1), "FF1E3A5F");
-    ["ADLD", "SP", "COMBO", "EW"].forEach((pt) => {
+    ["ADLD", "SP", "COMBO", "EW", "Ew - 1yr", "Ew - 2yr", "Ew - 3yr", "Ew - 4yr"].forEach((pt) => {
       wsPlanType.addRow([pt]);
     });
 

@@ -126,6 +126,10 @@ enum PlanType {
   SP
   COMBO
   EW
+  EW_1YR @map("Ew - 1yr")
+  EW_2YR @map("Ew - 2yr")
+  EW_3YR @map("Ew - 3yr")
+  EW_4YR @map("Ew - 4yr")
   NA
 }
 
