@@ -36,6 +36,7 @@ const AdminStoresPage: React.FC = () => {
     partnerBrand: 'All Brands',
     partnerBrandType: 'All Category',
     city: 'All City',
+    state: 'All State',
     storeName: 'All Store',
     executiveName: 'All Executive',
     showOnlyUnresolvedIssues: false,
@@ -155,6 +156,7 @@ const AdminStoresPage: React.FC = () => {
       params.append('partnerBrand', filters.partnerBrand);
       params.append('partnerBrandType', filters.partnerBrandType);
       params.append('city', filters.city);
+      params.append('state', filters.state);
       params.append('storeId', filters.storeName);
       params.append('executiveId', filters.executiveName);
       params.append('storeSearchText', storeSearchText);
@@ -201,6 +203,7 @@ const AdminStoresPage: React.FC = () => {
     newUrl.searchParams.delete('brandId');
     newUrl.searchParams.delete('category');
     newUrl.searchParams.delete('city');
+    newUrl.searchParams.delete('state');
     newUrl.searchParams.delete('storeName');
     newUrl.searchParams.delete('executiveName');
     newUrl.searchParams.delete('showUnresolvedIssues');
@@ -234,6 +237,10 @@ const AdminStoresPage: React.FC = () => {
     }
 
     // Use city name in URL
+    if (currentFilters.state !== 'All State') {
+      newUrl.searchParams.set('state', currentFilters.state);
+    }
+
     if (currentFilters.city !== 'All City') {
       newUrl.searchParams.set('city', currentFilters.city);
     }
@@ -260,6 +267,7 @@ const AdminStoresPage: React.FC = () => {
     const executiveId = searchParams.get('executiveId');
     const brandId = searchParams.get('brandId');
     const city = searchParams.get('city');
+    const stateParam = searchParams.get('state');
     const category = searchParams.get('category');
     const pageParam = parseInt(searchParams.get('page') || '1', 10);
     const showUnresolvedIssues = searchParams.get('showUnresolvedIssues') === 'true';
@@ -284,6 +292,10 @@ const AdminStoresPage: React.FC = () => {
           setFilters(prev => ({ ...prev, partnerBrand: resolved.name }));
         }
       }
+    }
+
+    if (stateParam && filters.state !== stateParam) {
+      setFilters(prev => ({ ...prev, state: stateParam }));
     }
 
     if (city && filters.city !== city) {
@@ -608,6 +620,8 @@ const AdminStoresPage: React.FC = () => {
         return filterData.brands.map(brand => brand.name);
       case 'cities':
         return filterData.cities;
+      case 'states':
+        return filterData.states || [];
       case 'stores':
         return filterData.stores.map(store => store.name);
       case 'executives':
@@ -792,6 +806,21 @@ const AdminStoresPage: React.FC = () => {
                     <option value="All Brands">All Brands</option>
                     {getFilterOptions('brands').map(brand => (
                       <option key={brand} value={brand}>{brand}</option>
+                    ))}
+                  </select>
+                </div>
+
+                                {/* Then State */}
+                <div className="admin-stores-filter-group">
+                  <label>Filter by State</label>
+                  <select
+                    value={filters.state}
+                    onChange={(e) => handleFilterChange('state', e.target.value)}
+                    className="admin-stores-filter-select"
+                  >
+                    <option value="All State">All State</option>
+                    {getFilterOptions('states').map(state => (
+                      <option key={state} value={state}>{state}</option>
                     ))}
                   </select>
                 </div>
@@ -1086,7 +1115,7 @@ const AdminStoresPage: React.FC = () => {
                             )}
                           </Link>
                         )}
-                        <div className="admin-stores-store-subtext">{store.city}</div>
+                        <div className="admin-stores-store-subtext">{store.city}{store.state ? `, ${store.state}` : ''}</div>
                       </div>
                     </div>
                   </div>
