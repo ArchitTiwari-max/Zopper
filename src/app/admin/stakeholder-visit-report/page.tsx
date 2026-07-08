@@ -20,12 +20,14 @@ interface StakeholderVisitData {
   peopleMet?: Array<{ name: string; designation: string; phoneNumber?: string }>;
   imageUrls?: string[];
   brands?: string[];
+  issues?: any[];
 }
 
 interface Filters {
   executiveName: string;
-  executiveName: string;
+  brand: string;
   designation: string;
+  state: string;
   visitStatus: string;
 }
 
@@ -41,6 +43,7 @@ const StakeholderVisitReportPage: React.FC = () => {
   const [pageSize] = useState(50);
   const [showFilters, setShowFilters] = useState(true);
   const [markingReviewedId, setMarkingReviewedId] = useState<string | null>(null);
+  const [deletingVisitId, setDeletingVisitId] = useState<string | null>(null);
   const [selectedVisits, setSelectedVisits] = useState<Set<string>>(new Set());
   const [isBulkApproving, setIsBulkApproving] = useState(false);
   const [selectedVisitDetail, setSelectedVisitDetail] = useState<StakeholderVisitData | null>(null);
@@ -49,9 +52,16 @@ const StakeholderVisitReportPage: React.FC = () => {
   // Filter options (populated from data)
   const [executives, setExecutives] = useState<Array<{ id: string; name: string }>>([]);
 
+  const [allBrands, setAllBrands] = useState<Array<{ id: string; name: string }>>([]);
+  const [allStates, setAllStates] = useState<string[]>([]);
+  const [allDesignations, setAllDesignations] = useState<string[]>([]);
+  const [availableDesignations, setAvailableDesignations] = useState<string[]>([]);
+
   const [filters, setFilters] = useState<Filters>({
     executiveName: 'All Executive',
-    designation: '',
+    brand: 'all',
+    designation: 'all',
+    state: 'all',
     visitStatus: 'All Status',
   });
 
@@ -66,8 +76,10 @@ const StakeholderVisitReportPage: React.FC = () => {
       params.append('limit', pageSize.toString());
 
       if (filters.executiveName !== 'All Executive') params.append('executiveId', filters.executiveName);
-      if (filters.designation) params.append('designation', filters.designation);
+      if (filters.designation && filters.designation !== 'all') params.append('designation', filters.designation);
       if (filters.visitStatus !== 'All Status') params.append('visitStatus', filters.visitStatus);
+      if (filters.brand !== 'all') params.append('brandId', filters.brand);
+      if (filters.state !== 'all') params.append('state', filters.state);
       params.append('_ts', String(Date.now()));
 
       const response = await fetch(`/api/admin/stakeholder-visit-report/data?${params.toString()}`, {
@@ -94,7 +106,12 @@ const StakeholderVisitReportPage: React.FC = () => {
       setTotalRecords(data.total || 0);
       setCurrentPage(data.page || 1);
 
-      // Build filter options from loaded data
+      // Set filter options from API response
+      if (data.allBrands) setAllBrands(data.allBrands);
+      if (data.allStates) setAllStates(data.allStates);
+      if (data.allDesignations) setAllDesignations(data.allDesignations);
+
+      // Build executives list from loaded data
       const execMap = new Map<string, string>();
       list.forEach((v) => {
         if (v.executiveId && v.executiveId !== 'unknown' && v.executiveName) {
@@ -125,8 +142,23 @@ const StakeholderVisitReportPage: React.FC = () => {
 
   const handleFilterChange = (key: keyof Filters, value: string) => {
     setCurrentPage(1);
+    if (key === 'brand') {
+      // Filter designations based on selected brand's visits
+      setFilters((prev) => ({ ...prev, brand: value, designation: 'all' }));
+      return;
+    }
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
+
+  // Update available designations when brand changes
+  useEffect(() => {
+    if (filters.brand === 'all') {
+      setAvailableDesignations(allDesignations);
+    } else {
+      // Keep all designations, they'll be filtered server-side
+      setAvailableDesignations(allDesignations);
+    }
+  }, [filters.brand, allDesignations]);
 
   const handleMarkReviewed = async (visitId: string) => {
     setMarkingReviewedId(visitId);
@@ -146,6 +178,29 @@ const StakeholderVisitReportPage: React.FC = () => {
       alert('Failed to mark as reviewed');
     } finally {
       setMarkingReviewedId(null);
+    }
+  };
+
+  const handleDeleteVisit = async (visitId: string) => {
+    if (!window.confirm("Are you sure you want to delete this visit? This action cannot be undone.")) return;
+    setDeletingVisitId(visitId);
+    try {
+      const res = await fetch(`/api/admin/stakeholder-visit-report/${visitId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (data.success) {
+        setVisitData((prev) => prev.filter((v) => v.id !== visitId));
+        setFilteredVisits((prev) => prev.filter((v) => v.id !== visitId));
+        alert('Visit deleted successfully');
+      } else {
+        alert(data.error || 'Failed to delete visit');
+      }
+    } catch (err) {
+      alert('Error deleting visit');
+    } finally {
+      setDeletingVisitId(null);
     }
   };
 
@@ -234,15 +289,47 @@ const StakeholderVisitReportPage: React.FC = () => {
         </div>
         {showFilters && (
           <div className="evr-filters-grid">
+            {/* Executive Dropdown */}
+            <div className="evr-filter-group">
+              <label>Executive</label>
+              <select className="evr-filter-select" value={filters.executiveName} onChange={(e) => handleFilterChange('executiveName', e.target.value)}>
+                <option value="All Executive">All Executives</option>
+                {executives.map(ex => (
+                  <option key={ex.id} value={ex.id}>{ex.name}</option>
+                ))}
+              </select>
+            </div>
+            {/* Brand Dropdown */}
+            <div className="evr-filter-group">
+              <label>Brand</label>
+              <select className="evr-filter-select" value={filters.brand} onChange={(e) => handleFilterChange('brand', e.target.value)}>
+                <option value="all">All Brands</option>
+                {allBrands.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </div>
+            {/* Designation Dropdown */}
             <div className="evr-filter-group">
               <label>Designation</label>
-              <input
-                className="evr-filter-input"
-                placeholder="Search designation..."
-                value={filters.designation}
-                onChange={(e) => handleFilterChange('designation', e.target.value)}
-              />
+              <select className="evr-filter-select" value={filters.designation} onChange={(e) => handleFilterChange('designation', e.target.value)}>
+                <option value="all">All Designations</option>
+                {availableDesignations.map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
             </div>
+            {/* State Dropdown */}
+            <div className="evr-filter-group">
+              <label>State</label>
+              <select className="evr-filter-select" value={filters.state} onChange={(e) => handleFilterChange('state', e.target.value)}>
+                <option value="all">All States</option>
+                {allStates.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            {/* Visit Status */}
             <div className="evr-filter-group">
               <label>Visit Status</label>
               <select className="evr-filter-select" value={filters.visitStatus} onChange={(e) => handleFilterChange('visitStatus', e.target.value)}>
@@ -488,6 +575,30 @@ const StakeholderVisitReportPage: React.FC = () => {
                 </div>
               )}
 
+              {/* Issues */}
+              {(selectedVisitDetail.issues || []).length > 0 && (
+                <div>
+                  <p style={{ margin: '0 0 0.5rem', fontSize: '0.875rem', fontWeight: '600', color: '#374151' }}>⚠️ Issues Raised</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {selectedVisitDetail.issues!.map((issue, i) => (
+                      <div key={i} style={{ padding: '0.625rem 0.875rem', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca' }}>
+                        <span style={{ color: '#991b1b', fontSize: '0.875rem' }}>{issue.details}</span>
+                        <div style={{ marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '0.75rem', padding: '0.125rem 0.5rem', borderRadius: '4px', background: issue.status === 'Pending' ? '#fef08a' : issue.status === 'Assigned' ? '#bfdbfe' : '#bbf7d0', color: issue.status === 'Pending' ? '#854d0e' : issue.status === 'Assigned' ? '#1e40af' : '#166534', fontWeight: '500' }}>
+                            {issue.status}
+                          </span>
+                          {issue.assigned?.length > 0 && (
+                            <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                              Assigned to {issue.assigned[issue.assigned.length - 1].employee?.name}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Remarks */}
               {selectedVisitDetail.feedback && selectedVisitDetail.feedback !== 'No feedback provided' && (
                 <div>
@@ -514,22 +625,34 @@ const StakeholderVisitReportPage: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-              <button onClick={() => setSelectedVisitDetail(null)} style={{ padding: '0.625rem 1.25rem', background: '#f1f5f9', color: '#374151', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}>
-                Close
+            <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
+              <button 
+                onClick={async () => {
+                  await handleDeleteVisit(selectedVisitDetail.id);
+                  setSelectedVisitDetail(null);
+                }} 
+                disabled={deletingVisitId === selectedVisitDetail.id}
+                style={{ padding: '0.625rem 1.25rem', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}>
+                {deletingVisitId === selectedVisitDetail.id ? 'Deleting...' : '🗑️ Delete Visit'}
               </button>
-              {selectedVisitDetail.visitStatus === 'PENDING_REVIEW' && (
-                <button
-                  onClick={async () => {
-                    await handleMarkReviewed(selectedVisitDetail.id);
-                    setSelectedVisitDetail(null);
-                  }}
-                  disabled={markingReviewedId === selectedVisitDetail.id}
-                  style={{ padding: '0.625rem 1.25rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}
-                >
-                  ✓ Mark as Reviewed
+              
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button onClick={() => setSelectedVisitDetail(null)} style={{ padding: '0.625rem 1.25rem', background: '#f1f5f9', color: '#374151', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}>
+                  Close
                 </button>
-              )}
+                {selectedVisitDetail.visitStatus === 'PENDING_REVIEW' && (
+                  <button
+                    onClick={async () => {
+                      await handleMarkReviewed(selectedVisitDetail.id);
+                      setSelectedVisitDetail(null);
+                    }}
+                    disabled={markingReviewedId === selectedVisitDetail.id}
+                    style={{ padding: '0.625rem 1.25rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}
+                  >
+                    ✓ Mark as Reviewed
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

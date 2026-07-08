@@ -31,6 +31,8 @@ interface VisitDetailsModalProps {
   onMarkReviewed?: (visitId: string, requiresFollowUp?: boolean, adminComment?: string) => void;
   isMarkingReviewed?: boolean;
   isDigital?: boolean;
+  onAddRemark?: (visitId: string, remark: string) => void;
+  isAddingRemark?: boolean;
 }
 
 const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
@@ -39,13 +41,19 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
   visit,
   onMarkReviewed,
   isMarkingReviewed = false,
-  isDigital = false
+  isDigital = false,
+  onAddRemark,
+  isAddingRemark = false
 }) => {
   // All hooks must be declared unconditionally at the top to respect the Rules of Hooks
   const [showFollowUpForm, setShowFollowUpForm] = React.useState(false);
   const [adminComment, setAdminComment] = React.useState('');
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [activeBrandTab, setActiveBrandTab] = React.useState<string>('');
+  
+  // Manager Remark State
+  const [showRemarkForm, setShowRemarkForm] = React.useState(false);
+  const [remarkText, setRemarkText] = React.useState('');
 
   const handleMarkReviewWithFollow = () => {
     setShowFollowUpForm(true);
@@ -61,6 +69,17 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
   const handleCancelFollowUp = () => {
     setShowFollowUpForm(false);
     setAdminComment('');
+  };
+
+  const handleSendRemark = () => {
+    if (onAddRemark) {
+      onAddRemark(visit.id.toString(), remarkText.trim());
+    }
+  };
+
+  const handleCancelRemark = () => {
+    setShowRemarkForm(false);
+    setRemarkText('');
   };
   const getStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
@@ -122,6 +141,8 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
       // Reset form state when modal closes
       setShowFollowUpForm(false);
       setAdminComment('');
+      setShowRemarkForm(false);
+      setRemarkText('');
     }
   }, [isOpen, onClose]);
 
@@ -435,6 +456,54 @@ const VisitDetailsModal: React.FC<VisitDetailsModalProps> = ({
                       disabled={isMarkingReviewed || !adminComment.trim()}
                     >
                       {isMarkingReviewed ? 'Sending...' : 'Send'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Manager Remark Actions - shown if onAddRemark is provided */}
+          {onAddRemark && (
+            <div className="admin-visit-modal-actions" style={{ marginTop: '16px' }}>
+              {!showRemarkForm ? (
+                <button 
+                  className="admin-visit-modal-mark-reviewed-btn"
+                  onClick={() => setShowRemarkForm(true)}
+                  disabled={isAddingRemark}
+                >
+                  Add Remark
+                </button>
+              ) : (
+                <>
+                  <div className="admin-visit-modal-follow-up-form">
+                    <label htmlFor="manager-remark" className="admin-visit-modal-comment-label">
+                      Manager Remark:
+                    </label>
+                    <textarea
+                      id="manager-remark"
+                      className="admin-visit-modal-comment-textarea"
+                      value={remarkText}
+                      onChange={(e) => setRemarkText(e.target.value)}
+                      placeholder="Enter your remark to assign as a task..."
+                      rows={3}
+                      disabled={isAddingRemark}
+                    />
+                  </div>
+                  <div className="admin-visit-modal-follow-up-buttons">
+                    <button 
+                      className="admin-visit-modal-cancel-btn"
+                      onClick={handleCancelRemark}
+                      disabled={isAddingRemark}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      className="admin-visit-modal-send-btn"
+                      onClick={handleSendRemark}
+                      disabled={isAddingRemark || !remarkText.trim()}
+                    >
+                      {isAddingRemark ? 'Sending...' : 'Send'}
                     </button>
                   </div>
                 </>

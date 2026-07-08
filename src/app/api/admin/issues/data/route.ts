@@ -94,10 +94,10 @@ export async function GET(request: NextRequest) {
 
     const andConds: any[] = [];
     if (storeId) {
-      andConds.push({ OR: [ { visit: { storeId } }, { digitalVisit: { storeId } } ] });
+      andConds.push({ OR: [ { visit: { storeId } }, { digitalVisit: { storeId } }, { stakeholderVisit: { brandId: storeId } } ] }); // Note: using brandId for stakeholder mapping in filters if needed
     }
     if (executiveId) {
-      andConds.push({ OR: [ { visit: { executiveId } }, { digitalVisit: { executiveId } } ] });
+      andConds.push({ OR: [ { visit: { executiveId } }, { digitalVisit: { executiveId } }, { stakeholderVisit: { executiveId } } ] });
     }
     if (andConds.length) {
       whereClause.AND = andConds;
@@ -139,6 +139,12 @@ export async function GET(request: NextRequest) {
               store: { select: { id: true, storeName: true, city: true, fullAddress: true, storeBrands: { select: { brandId: true } } } }
             }
           },
+          stakeholderVisit: {
+            include: {
+              employee: { select: { id: true, name: true } },
+              brand: { select: { brandName: true } }
+            }
+          },
           assigned: {
             include: {
               employee: { select: { name: true } }
@@ -161,11 +167,13 @@ export async function GET(request: NextRequest) {
 
     // Process issues data (works for both physical and digital visits)
     let processedIssues = issues.map((issue) => {
-      const source = issue.visit ?? issue.digitalVisit; // prefer physical if present
+      const source = issue.visit ?? issue.digitalVisit ?? issue.stakeholderVisit; // prefer physical if present
 
       // Build brand list
       let partnerBrandNames: string[] = [];
-      if (issue.visit && Array.isArray((issue.visit as any).brandIds)) {
+      if (issue.stakeholderVisit && (issue.stakeholderVisit as any).brand) {
+        partnerBrandNames = [(issue.stakeholderVisit as any).brand.brandName];
+      } else if (issue.visit && Array.isArray((issue.visit as any).brandIds)) {
         const visitBrands = (issue.visit as any).brandIds
           .map((brandId: string) => brandMap.get(brandId))
           .filter(Boolean) as string[];
@@ -183,14 +191,19 @@ export async function GET(request: NextRequest) {
       const issueDate = new Date(issue.createdAt);
       const formattedDateReported = `${issueDate.getDate().toString().padStart(2, '0')}/${(issueDate.getMonth() + 1).toString().padStart(2, '0')}/${issueDate.getFullYear()}`;
 
+      // Store name fallback for stakeholder visits
+      const storeName = source?.store?.storeName || (issue.stakeholderVisit ? `${(issue.stakeholderVisit as any).brand?.brandName || 'Brand'} - ${(issue.stakeholderVisit as any).stakeholderDesignation}` : 'Unknown Store');
+      const location = source?.store?.fullAddress || source?.store?.city || (issue.stakeholderVisit as any)?.state || 'N/A';
+      const city = source?.store?.city || (issue.stakeholderVisit as any)?.state || 'N/A';
+
       return {
         id: issue.id, // Use real MongoDB ObjectId
         issueId: issue.id, // Display ID
-        storeName: source?.store?.storeName || 'Unknown Store',
-        storeId: source?.store?.id || '',
-        location: source?.store?.fullAddress || source?.store?.city || 'N/A',
+        storeName: storeName,
+        storeId: source?.store?.id || (issue.stakeholderVisit ? 'stakeholder' : ''),
+        location: location,
         brandAssociated: brandAssociated,
-        city: source?.store?.city || 'N/A',
+        city: city,
         dateReported: formattedDateReported,
         reportedBy: source?.employee?.name || 'Unknown Executive',
         reportedByRole: 'Executive',

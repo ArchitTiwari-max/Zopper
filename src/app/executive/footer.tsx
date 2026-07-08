@@ -30,7 +30,7 @@ const Footer: React.FC = () => {
           <span className="nav-icon">💡</span>
           <span className="nav-label">Insights</span>
         </Link> */}
-        <Link href="/executive/stakeholders" className={`nav-item ${pathname === '/executive/stakeholders' ? 'active' : ''}`}>
+        <Link href="/executive/stakeholder-visit-form" className={`nav-item ${pathname === '/executive/stakeholder-visit-form' ? 'active' : ''}`}>
           <span className="nav-icon">🤝</span>
           <span className="nav-label">Stakeholders</span>
         </Link>
