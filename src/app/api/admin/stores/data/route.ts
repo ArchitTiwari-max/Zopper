@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     const partnerBrand        = searchParams.get('partnerBrand');        // brand name
     const partnerBrandType    = searchParams.get('partnerBrandType');    // A+/A/B/C/D
     const city                = searchParams.get('city');
+    const state               = searchParams.get('state');
     const storeFilterId       = searchParams.get('storeId');
     const executiveFilterId   = searchParams.get('executiveId');
     const storeSearchText     = searchParams.get('storeSearchText') || '';
@@ -136,6 +137,11 @@ export async function GET(request: NextRequest) {
       whereClause.city = city;
     }
 
+    // State filter
+    if (state && state !== 'All State') {
+      whereClause.state = state;
+    }
+
     // Store name search (partial, case-insensitive)
     if (storeSearchText.trim()) {
       const escapedSearch = storeSearchText.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -246,6 +252,7 @@ export async function GET(request: NextRequest) {
         id: true,
         storeName: true,
         city: true,
+        state: true,
         fullAddress: true,
         storeBrands: {
           select: {
@@ -338,6 +345,7 @@ export async function GET(request: NextRequest) {
         id: store.id,
         storeName: store.storeName,
         city: store.city,
+        state: store.state,
         address: store.fullAddress || store.city,
         partnerBrands,
         partnerBrandPairs,

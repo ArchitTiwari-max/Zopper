@@ -44,7 +44,8 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           storeName: true,
-          city: true
+          city: true,
+          state: true
         },
         orderBy: {
           storeName: 'asc'
@@ -82,13 +83,15 @@ export async function GET(request: NextRequest) {
 
     // Get unique cities from stores
     const cities = [...new Set(stores.map(store => store.city))].sort();
+    const states = [...new Set(stores.map(store => store.state))].sort();
 
     // Format response
     const filterData = {
       stores: stores.map(store => ({
         id: store.id,
         name: store.storeName,
-        city: store.city
+        city: store.city,
+        state: store.state
       })),
       executives: executives.map(executive => ({
         id: executive.id,
@@ -101,6 +104,7 @@ export async function GET(request: NextRequest) {
         name: brand.brandName
       })),
       cities: cities.filter(Boolean), // Remove any null/undefined cities
+      states: states.filter(Boolean), // Remove any null/undefined states
       statuses: ['Active', 'Inactive', 'Pending'] // Static status options
     };
 
