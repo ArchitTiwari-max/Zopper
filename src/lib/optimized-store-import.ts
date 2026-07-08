@@ -41,8 +41,8 @@ export async function initializeStoreCache(prisma: PrismaClient): Promise<StoreC
     prisma.employee.findMany({
       where: {
         user: {
-          userRole: {
-            name: 'SALES_EXECUTIVE'
+          roles: {
+            hasSome: ['EXECUTIVE', 'SALES_EXECUTIVE']
           }
         }
       },
