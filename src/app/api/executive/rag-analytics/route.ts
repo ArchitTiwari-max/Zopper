@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     // ── Auth ────────────────────────────────────────────────────────────────────
     const authenticatedUser = JSON.parse(request.headers.get('x-user-data') || 'null');
-    if (!authenticatedUser || authenticatedUser.role !== 'EXECUTIVE') {
+    if (!authenticatedUser || !authenticatedUser.roles.includes('EXECUTIVE')) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized: Executive access required' },
         { status: 401 }

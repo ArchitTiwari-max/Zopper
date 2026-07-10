@@ -8,31 +8,28 @@ export interface TokenPayload {
   userId: string;
   email: string;
   username: string;
-  role?: string;
-  roles?: string[];
+  roles: string[];
   clientId?: string;
 }
 
 export function generateAccessToken(payload: TokenPayload): string {
-  // Remove existing exp and iat properties to avoid conflicts
   const cleanPayload = {
     userId: payload.userId,
     email: payload.email,
     username: payload.username,
-    role: payload.role || (payload.roles && payload.roles.length > 0 ? payload.roles[0] : 'EXECUTIVE'),
-    roles: payload.roles || (payload.role ? [payload.role] : ['EXECUTIVE'])
+    roles: payload.roles && payload.roles.length > 0 ? payload.roles : ['EXECUTIVE'],
+    clientId: payload.clientId
   };
   return (jwt as any).sign(cleanPayload, JWT_SECRET, { expiresIn: JWT_ACCESS_EXPIRY });
 }
 
 export function generateRefreshToken(payload: TokenPayload): string {
-  // Remove existing exp and iat properties to avoid conflicts
   const cleanPayload = {
     userId: payload.userId,
     email: payload.email,
     username: payload.username,
-    role: payload.role || (payload.roles && payload.roles.length > 0 ? payload.roles[0] : 'EXECUTIVE'),
-    roles: payload.roles || (payload.role ? [payload.role] : ['EXECUTIVE'])
+    roles: payload.roles && payload.roles.length > 0 ? payload.roles : ['EXECUTIVE'],
+    clientId: payload.clientId
   };
   return (jwt as any).sign(cleanPayload, JWT_SECRET, { expiresIn: JWT_REFRESH_EXPIRY });
 }

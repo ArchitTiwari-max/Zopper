@@ -11,7 +11,7 @@ export async function DELETE(request: NextRequest, ctx?: { params?: Promise<{ id
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (user.role !== 'EXECUTIVE' && user.role !== 'ADMIN') {
+    if (!user.roles.includes('EXECUTIVE') && !user.roles.includes('ADMIN')) {
       return NextResponse.json({ error: 'Access denied.' }, { status: 403 });
     }
 
@@ -38,7 +38,7 @@ export async function DELETE(request: NextRequest, ctx?: { params?: Promise<{ id
     }
 
     // If user is executive, ensure ownership. Admins can delete any.
-    if (user.role === 'EXECUTIVE') {
+    if (user.roles.includes('EXECUTIVE')) {
       const executive = await prisma.employee.findUnique({ where: { userId: user.userId } });
       if (!executive) {
         return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
@@ -48,7 +48,7 @@ export async function DELETE(request: NextRequest, ctx?: { params?: Promise<{ id
       }
     }
 
-    if (visit.status === 'REVIEWD' && user.role !== 'ADMIN') {
+    if (visit.status === 'REVIEWD' && !user.roles.includes('ADMIN')) {
       return NextResponse.json({ error: 'Reviewed visits cannot be deleted' }, { status: 400 });
     }
 

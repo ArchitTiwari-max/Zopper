@@ -8,6 +8,7 @@ import '../signin.css';
 function LoginContent() {
   const searchParams = useSearchParams();
   const platform = searchParams.get('platform');
+  const redirect = searchParams.get('redirect');
   
   const [showPassword, setShowPassword] = useState(false);
   const [showOtpVerification, setShowOtpVerification] = useState(false);
@@ -31,14 +32,14 @@ function LoginContent() {
     password: ''
   });
 
-  // Check if platform query param exists, otherwise redirect to landing page
+  // Check if platform or redirect query param exists, otherwise redirect to landing page
   useEffect(() => {
-    if (!platform) {
+    if (!platform && !redirect) {
       window.location.href = '/';
       return;
     }
     checkIfLoggedIn();
-  }, [platform]);
+  }, [platform, redirect]);
 
   const checkIfLoggedIn = async () => {
     try {
@@ -49,11 +50,13 @@ function LoginContent() {
 
       if (response.ok) {
         const data = await response.json();
-        const userRoles = data.user.roles || [data.user.role];
+        const userRoles = data.user.roles || [];
         const isAdmin = userRoles.includes('ADMIN');
         
         let redirectUrl;
-        if (platform === 'sales') {
+        if (redirect) {
+          redirectUrl = decodeURIComponent(redirect);
+        } else if (platform === 'sales') {
           redirectUrl = isAdmin ? '/admin/dashboard' : '/executive/dashboard';
         } else if (platform === 'work') {
           redirectUrl = '/upcoming';
@@ -145,11 +148,13 @@ function LoginContent() {
         setShowOtpVerification(false);
         setOtp('');
         
-        const userRoles = result.user.roles || [result.user.role];
+        const userRoles = result.user.roles || [];
         const isAdmin = userRoles.includes('ADMIN');
         let redirectUrl;
         
-        if (platform === 'sales') {
+        if (redirect) {
+          redirectUrl = decodeURIComponent(redirect);
+        } else if (platform === 'sales') {
           redirectUrl = isAdmin ? '/admin/dashboard' : '/executive/dashboard';
         } else if (platform === 'work') {
           redirectUrl = '/upcoming';

@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if user is an executive
-    if (user.role !== 'EXECUTIVE') {
+    if (!user.roles.includes('EXECUTIVE')) {
       return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
     }
 

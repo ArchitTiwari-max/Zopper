@@ -118,7 +118,7 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<TokenP
           userId: user.userId || user.id,
           email: user.email,
           username: user.username,
-          role: user.role
+          roles: user.roles || []
         };
       }
     } catch (e) {

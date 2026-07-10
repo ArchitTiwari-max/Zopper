@@ -18,7 +18,7 @@ export async function handleVisitSubmission(visitData: any, executiveUserId: str
 
     // 2. Get all admin user IDs
     const admins = await prisma.user.findMany({
-      where: { role: 'ADMIN' },
+      where: { roles: { has: 'ADMIN' } },
       select: { id: true }
     });
     const adminIds = admins.map(admin => admin.id);
@@ -81,7 +81,7 @@ export async function handleIssueReporting(visitId: string, issueDetails: string
 
     // 2. Get all admin user IDs
     const admins = await prisma.user.findMany({
-      where: { role: 'ADMIN' },
+      where: { roles: { has: 'ADMIN' } },
       select: { id: true }
     });
     const adminIds = admins.map(admin => admin.id);
@@ -134,7 +134,7 @@ export async function handleAssignmentStatusUpdate(assignedId: string, newStatus
 
     // 2. Get all admin user IDs
     const admins = await prisma.user.findMany({
-      where: { role: 'ADMIN' },
+      where: { roles: { has: 'ADMIN' } },
       select: { id: true }
     });
     const adminIds = admins.map(admin => admin.id);

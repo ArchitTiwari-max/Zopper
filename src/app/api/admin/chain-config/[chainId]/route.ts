@@ -12,7 +12,7 @@ export async function PATCH(
 ) {
   try {
     const user = JSON.parse(request.headers.get('x-user-data') || 'null');
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || !user.roles.includes('ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -69,7 +69,7 @@ export async function DELETE(
 ) {
   try {
     const user = JSON.parse(request.headers.get('x-user-data') || 'null');
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || !user.roles.includes('ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

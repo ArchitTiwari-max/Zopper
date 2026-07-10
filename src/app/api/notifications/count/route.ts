@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Convert string role to Prisma Role enum
-    const roleEnum = Role[user.role as keyof typeof Role];
+    const roleEnum = Role[(user.roles && user.roles.length > 0 ? user.roles[0] : 'EXECUTIVE') as keyof typeof Role];
     
     const unreadCount = await NotificationService.getUnreadCount(user.userId, roleEnum);
 

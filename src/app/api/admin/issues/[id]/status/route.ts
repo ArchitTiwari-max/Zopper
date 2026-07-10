@@ -11,7 +11,7 @@ export async function PATCH(
     // Authenticate user
     const user = JSON.parse(req.headers.get('x-user-data') || 'null');
     
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || !user.roles.includes('ADMIN')) {
       return NextResponse.json(
         { error: 'Unauthorized - Admin access required' },
         { status: 401 }

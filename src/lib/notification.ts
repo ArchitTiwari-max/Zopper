@@ -491,7 +491,7 @@ export class NotificationEvents {
         type: 'SYSTEM_ANNOUNCEMENT',
         priority,
         recipientId: user.id,
-        recipientRole: (user.roles && user.roles.length > 0 ? user.roles[0] : user.role) || 'EXECUTIVE',
+        recipientRole: (user.roles && user.roles.length > 0 ? user.roles[0] as Role : Role.EXECUTIVE),
         expiresAt,
         metadata: {
           isSystemAnnouncement: true,

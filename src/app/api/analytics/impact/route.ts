@@ -63,16 +63,16 @@ export async function GET(request: NextRequest) {
     // ── 1) Resolve executive ID once (used in multiple places below) ──────────
     let resolvedExecId: string | null = null;
 
-    if (user.role === 'EXECUTIVE') {
+    if (user.roles.includes('EXECUTIVE')) {
       const exec = await prisma.employee.findUnique({
         where: { userId: user.userId },
         select: { id: true },
       });
       if (!exec) return NextResponse.json({ data: [], summary: null });
       resolvedExecId = exec.id;
-    } else if (user.role === 'ADMIN' && scopeExecId) {
+    } else if (user.roles.includes('ADMIN') && scopeExecId) {
       resolvedExecId = scopeExecId;
-    } else if (user.role === 'ADMIN' && executiveName) {
+    } else if (user.roles.includes('ADMIN') && executiveName) {
       const exec = await prisma.employee.findFirst({
         where: { name: { contains: executiveName, mode: 'insensitive' } },
         select: { id: true },
@@ -485,7 +485,7 @@ export async function GET(request: NextRequest) {
         weekStart:       selStart.toISOString().split('T')[0],
         weekEnd:         selEnd.toISOString().split('T')[0],
         partnerBrandType: pbtParamRaw,
-        role:            user.role as Role,
+        role:            (user.roles && user.roles.length > 0 ? user.roles[0] : 'EXECUTIVE') as Role,
       },
     });
   } catch (e) {

@@ -10,7 +10,7 @@ export async function PATCH(
   try {
     const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'ADMIN') return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    if (!user.roles.includes('ADMIN')) return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
 
     const admin = await prisma.employee.findUnique({ where: { userId: user.id } });
     if (!admin) return NextResponse.json({ error: 'Admin profile not found' }, { status: 404 });

@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     // Allow both EXECUTIVE and ADMIN roles to access this endpoint.
     // - EXECUTIVE: sees their Godrej SFDC data in the executive portal
     // - ADMIN: uses the same endpoint to view imported records from the admin data management screen
-    const normalizedRole = String(user.role).toUpperCase();
+    const normalizedRole = String(user.roles && user.roles.length > 0 ? user.roles[0] : 'EXECUTIVE').toUpperCase();
     if (normalizedRole !== "EXECUTIVE" && normalizedRole !== "ADMIN") {
       return NextResponse.json(
         { error: "Access denied. Executive or Admin role required." },

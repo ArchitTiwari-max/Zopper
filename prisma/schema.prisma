@@ -786,3 +786,29 @@ model StakeholderVisit {
   @@map("StakeholderVisit")
 }
 
+model Client {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  clientId     String   @unique
+  clientSecret String
+  appName      String
+  redirectUris String[]
+  createdAt    DateTime @default(now())
+
+  @@map("Client")
+}
+
+model AuthorizationCode {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  code        String   @unique
+  clientId    String
+  userId      String
+  redirectUri String
+  scope       String?
+  expiresAt   DateTime
+  used        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@map("AuthorizationCode")
+}
+
+

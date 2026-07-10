@@ -17,7 +17,7 @@ export async function DELETE(
       );
     }
 
-    if (user.role !== 'ADMIN') {
+    if (!user.roles.includes('ADMIN')) {
       return NextResponse.json(
         { error: 'Admin access required' }, 
         { status: 403 }
@@ -86,7 +86,7 @@ export async function GET(
       );
     }
 
-    if (user.role !== 'ADMIN') {
+    if (!user.roles.includes('ADMIN')) {
       return NextResponse.json(
         { error: 'Admin access required' }, 
         { status: 403 }

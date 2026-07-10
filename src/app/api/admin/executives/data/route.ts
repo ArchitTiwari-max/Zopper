@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (user.role !== 'ADMIN') {
+    if (!user.roles.includes('ADMIN')) {
       return NextResponse.json(
         { error: 'Admin access required' }, 
         { status: 403 }

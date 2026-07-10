@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'ADMIN') return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    if (!user.roles.includes('ADMIN')) return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
 
     const { searchParams } = new URL(request.url);
     const dateFilter = searchParams.get('dateFilter') || 'Last 30 Days';

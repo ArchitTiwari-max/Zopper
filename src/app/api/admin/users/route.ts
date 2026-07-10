@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
     
     // Add role filter
     if (role) {
-      whereClause.role = role.toUpperCase();
+      whereClause.roles = { has: role.toUpperCase() };
     }
     
     const users = await prisma.user.findMany({
@@ -112,7 +112,6 @@ export async function GET(request: NextRequest) {
           id: user.id,
           username: user.username,
           email: user.email,
-          role: primaryRole,
           roles: userRoles,
           isActive: user.isActive,
           createdAt: user.createdAt,

@@ -23,7 +23,7 @@ export async function PATCH(
   try {
     const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'ADMIN') return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    if (!user.roles.includes('ADMIN')) return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
 
     // Await params in Next.js 15
     const { id: storeId } = await params;

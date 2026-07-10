@@ -21,7 +21,7 @@ async function main() {
             email: row.email,
             username: row.username,
             password: row.password, // assuming already hashed
-            role: "EXECUTIVE",
+            roles: ["EXECUTIVE"],
             employee: {
               create: {
                 id: row.Executive_id,
@@ -45,7 +45,7 @@ async function main() {
             email: row.email,
             username: row.username,
             password: row.password,
-            role: "ADMIN",
+            roles: ["ADMIN"],
             employee: {
               create: {
                 id: row.Admin_id,

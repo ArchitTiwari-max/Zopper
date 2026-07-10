@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (user.role !== 'EXECUTIVE') {
+    if (!user.roles.includes('EXECUTIVE')) {
       return NextResponse.json(
         { error: 'Executive access required' }, 
         { status: 403 }

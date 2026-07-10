@@ -16,12 +16,12 @@ export async function GET(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     
     // Allow both EXECUTIVE and ADMIN roles
-    if (user.role !== 'EXECUTIVE' && user.role !== 'ADMIN') {
+    if (!user.roles.includes('EXECUTIVE') && !user.roles.includes('ADMIN')) {
       return NextResponse.json({ error: 'Access denied. Executive or Admin role required.' }, { status: 403 });
     }
 
     // If ADMIN, fetch all stores instead of executive-specific stores
-    if (user.role === 'ADMIN') {
+    if (user.roles.includes('ADMIN')) {
       const stores = await prisma.store.findMany({
         select: {
           id: true,
@@ -266,7 +266,7 @@ export async function PUT(request: NextRequest) {
   try {
     const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
+    if (!user.roles.includes('EXECUTIVE')) return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
 
     const { storeId, brandIds } = await request.json();
     if (!storeId || !brandIds) return NextResponse.json({ error: 'Store ID and brand IDs are required' }, { status: 400 });

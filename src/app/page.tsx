@@ -29,7 +29,7 @@ function LandingContent() {
       if (response.ok) {
         const data = await response.json();
         if (data && data.authenticated && data.user) {
-          const userRoles = data.user.roles || [data.user.role];
+          const userRoles = data.user.roles || [];
           const isAdmin = userRoles.includes('ADMIN');
           setAuthStatus({
             isChecked: true,

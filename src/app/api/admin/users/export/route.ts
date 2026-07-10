@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 
     // Prepare data for Excel export
     const excelData = users.map((user, index) => {
-      const isAdmin = user.role === 'ADMIN';
+      const isAdmin = user.roles.includes('ADMIN');
       const userInfo = user.employee || user.employee;
       
       return {
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
         'User ID': user.id,
         'Username': user.username,
         'Email': user.email,
-        'Role': user.role,
+        'Role': user.roles && user.roles.length > 0 ? user.roles.join(', ') : 'EXECUTIVE',
         'Admin ID': isAdmin ? user.employee?.id || 'N/A' : 'N/A',
         'Executive ID': !isAdmin ? user.employee?.id || 'N/A' : 'N/A',
         'Full Name': userInfo?.name || 'N/A',
@@ -128,8 +128,8 @@ export async function GET(request: NextRequest) {
     // Create additional summary sheet
     const summaryData = [
       { 'Metric': 'Total Users', 'Count': users.length },
-      { 'Metric': 'Total Admins', 'Count': users.filter(u => u.role === 'ADMIN').length },
-      { 'Metric': 'Total Executives', 'Count': users.filter(u => u.role === 'EXECUTIVE').length },
+      { 'Metric': 'Total Admins', 'Count': users.filter(u => u.roles.includes('ADMIN')).length },
+      { 'Metric': 'Total Executives', 'Count': users.filter(u => u.roles.includes('EXECUTIVE')).length },
       { 'Metric': 'Users with Regions', 'Count': users.filter(u => (u.admin?.region || u.executive?.region)).length },
       { 'Metric': 'Users with Contact Info', 'Count': users.filter(u => (u.admin?.contact_number || u.executive?.contact_number)).length },
       { 'Metric': 'Export Generated On', 'Count': new Date().toLocaleString('en-US') }

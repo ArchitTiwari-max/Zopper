@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is an executive
-    if (user.role !== 'EXECUTIVE') {
+    if (!user.roles.includes('EXECUTIVE')) {
       return NextResponse.json({ error: 'Access denied. Executive role required.' }, { status: 403 });
     }
 
@@ -165,14 +165,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if user is an executive or admin
-    if (user.role !== 'EXECUTIVE' && user.role !== 'ADMIN') {
+    if (!user.roles.includes('EXECUTIVE') && !user.roles.includes('ADMIN')) {
       return NextResponse.json({ error: 'Access denied. Executive or Admin role required.' }, { status: 403 });
     }
 
     let executive = null;
     
     // For executives, get their profile
-    if (user.role === 'EXECUTIVE') {
+    if (user.roles.includes('EXECUTIVE')) {
       executive = await prisma.employee.findUnique({
         where: { userId: user.userId }
       });
@@ -198,7 +198,7 @@ export async function GET(request: NextRequest) {
 
     // Get the assign report for the task
     // For executives, restrict to their own assignments; for admins, allow access to any assignment
-    const whereClause = user.role === 'EXECUTIVE' ? {
+    const whereClause = user.roles.includes('EXECUTIVE') ? {
       assigned: {
         id: taskId,
         executiveId: executive!.id

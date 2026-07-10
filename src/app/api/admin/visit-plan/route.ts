@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Ensure the user is an admin
-    if (authResult.user!.role !== 'ADMIN') {
+    if (!authResult.user!.roles.includes('ADMIN')) {
       return NextResponse.json({ error: 'Only admins can create visit plans' }, { status: 403 });
     }
 
@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Only admins can access this
-    if (authResult.user!.role !== 'ADMIN') {
+    if (!authResult.user!.roles.includes('ADMIN')) {
       return NextResponse.json({ error: 'Only admins can access executive list' }, { status: 403 });
     }
 

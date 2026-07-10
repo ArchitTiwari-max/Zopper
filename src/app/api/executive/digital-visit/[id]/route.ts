@@ -7,7 +7,7 @@ export async function DELETE(request: NextRequest, ctx?: { params?: { id?: strin
   try {
     const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'EXECUTIVE' && user.role !== 'ADMIN') {
+    if (!user.roles.includes('EXECUTIVE') && !user.roles.includes('ADMIN')) {
       return NextResponse.json({ error: 'Access denied.' }, { status: 403 });
     }
 
@@ -28,7 +28,7 @@ export async function DELETE(request: NextRequest, ctx?: { params?: { id?: strin
     if (!visit) return NextResponse.json({ error: 'Visit not found' }, { status: 404 });
 
     // Ownership check for executives; admins can delete any
-    if (user.role === 'EXECUTIVE') {
+    if (user.roles.includes('EXECUTIVE')) {
       const executive = await prisma.employee.findUnique({ where: { userId: user.userId } });
       if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
       if (visit.executiveId !== executive.id) {
@@ -36,7 +36,7 @@ export async function DELETE(request: NextRequest, ctx?: { params?: { id?: strin
       }
     }
 
-    if (visit.status === 'REVIEWD' && user.role !== 'ADMIN') {
+    if (visit.status === 'REVIEWD' && !user.roles.includes('ADMIN')) {
       return NextResponse.json({ error: 'Reviewed visits cannot be deleted' }, { status: 400 });
     }
 

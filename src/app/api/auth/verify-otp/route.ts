@@ -84,7 +84,6 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       email: user.email,
       username: user.username,
-      role: userRoles[0],
       roles: userRoles
     };
 

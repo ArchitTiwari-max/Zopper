@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     try {
         const user = JSON.parse(request.headers.get('x-user-data') || 'null');
 
-        if (!user || user.role !== 'ADMIN') {
+        if (!user || !user.roles.includes('ADMIN')) {
             return NextResponse.json({ error: 'Unauthorized. Admin role required.' }, { status: 401 });
         }
 
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
     try {
         const user = JSON.parse(request.headers.get('x-user-data') || 'null');
 
-        if (!user || user.role !== 'ADMIN') {
+        if (!user || !user.roles.includes('ADMIN')) {
             return NextResponse.json({ error: 'Unauthorized. Admin role required.' }, { status: 401 });
         }
 

@@ -3,8 +3,7 @@ export interface UserInfo {
   id: string;
   email: string;
   username: string;
-  role?: string;
-  roles?: string[];
+  roles: string[];
 }
 
 /**
@@ -42,13 +41,12 @@ export function getUserFromCookie(): UserInfo | null {
     const userData = JSON.parse(decodedCookie);
     
     // Validate that we have the required fields
-    if (userData && userData.id && userData.email && userData.username && (userData.role || userData.roles)) {
+    if (userData && userData.id && userData.email && userData.username && userData.roles) {
       return {
         id: userData.id,
         email: userData.email,
         username: userData.username,
-        role: userData.role || (userData.roles && userData.roles.length > 0 ? userData.roles[0] : 'EXECUTIVE'),
-        roles: userData.roles || (userData.role ? [userData.role] : ['EXECUTIVE'])
+        roles: userData.roles
       };
     }
     
@@ -76,7 +74,7 @@ export function hasRole(requiredRoles: string[]): boolean {
     return false;
   }
   
-  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const userRoles = user.roles || [];
   return requiredRoles.some(r => userRoles.includes(r));
 }
 
@@ -90,7 +88,7 @@ export function isAuthorizedForPath(path: string, allowedRoles?: string[]): bool
     return false;
   }
   
-  const userRoles = user.roles || (user.role ? [user.role] : []);
+  const userRoles = user.roles || [];
 
   // If specific roles are defined, check against them
   if (allowedRoles && allowedRoles.length > 0) {

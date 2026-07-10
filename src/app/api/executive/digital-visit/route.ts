@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (user.role !== "EXECUTIVE")
+    if (!user.roles.includes('EXECUTIVE'))
       return NextResponse.json(
         { error: "Access denied. Executive role required." },
         { status: 403 },
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (user.role !== "EXECUTIVE")
+    if (!user.roles.includes('EXECUTIVE'))
       return NextResponse.json(
         { error: "Access denied. Executive role required." },
         { status: 403 },

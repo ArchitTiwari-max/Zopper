@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    if (user.role !== "EXECUTIVE")
+    if (!user.roles.includes('EXECUTIVE'))
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
 
     const { searchParams } = new URL(request.url);

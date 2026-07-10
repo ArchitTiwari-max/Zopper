@@ -122,7 +122,7 @@ const UserListing: React.FC<UserListingProps> = ({ refreshTrigger }) => {
 
     // Apply role filter
     if (roleFilter) {
-      filtered = filtered.filter(user => user.role === roleFilter);
+      filtered = filtered.filter(user => user.roles && user.roles.includes(roleFilter));
     }
 
     setFilteredUsers(filtered);
@@ -384,7 +384,7 @@ const UserListing: React.FC<UserListingProps> = ({ refreshTrigger }) => {
         <div className="user-mgmt-users-grid">
           {filteredUsers.map((user) => {
             const userInfo = user.employeeInfo || user.employeeInfo;
-            const isAdmin = user.role === 'ADMIN';
+            const isAdmin = user.roles.includes('ADMIN');
             const assignedId = isAdmin ? user.employeeInfo?.adminId : user.employeeInfo?.executiveId;
             
             return (
@@ -393,7 +393,7 @@ const UserListing: React.FC<UserListingProps> = ({ refreshTrigger }) => {
                 <div className="user-mgmt-user-card-header">
                   <div className="user-mgmt-user-role-badge">
                     {isAdmin ? <Shield size={16} /> : <User size={16} />}
-                    <span>{user.role}</span>
+                    <span>{user.roles && user.roles.length > 0 ? user.roles.join(', ') : 'EXECUTIVE'}</span>
                   </div>
                   
                   <div className="user-mgmt-status-badge" style={{

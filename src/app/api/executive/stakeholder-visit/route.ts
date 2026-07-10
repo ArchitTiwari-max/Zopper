@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Executive access required' }, { status: 403 });
+    if (!user.roles.includes('EXECUTIVE')) return NextResponse.json({ error: 'Executive access required' }, { status: 403 });
 
     const executive = await prisma.employee.findUnique({ where: { userId: user.userId } });
     if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Executive access required' }, { status: 403 });
+    if (!user.roles.includes('EXECUTIVE')) return NextResponse.json({ error: 'Executive access required' }, { status: 403 });
 
     const executive = await prisma.employee.findUnique({ where: { userId: user.userId } });
     if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });
@@ -143,7 +143,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const user = JSON.parse(request.headers.get('x-user-data') || 'null');
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'EXECUTIVE') return NextResponse.json({ error: 'Executive access required' }, { status: 403 });
+    if (!user.roles.includes('EXECUTIVE')) return NextResponse.json({ error: 'Executive access required' }, { status: 403 });
 
     const executive = await prisma.employee.findUnique({ where: { userId: user.userId } });
     if (!executive) return NextResponse.json({ error: 'Executive profile not found' }, { status: 404 });

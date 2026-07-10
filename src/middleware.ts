@@ -84,7 +84,7 @@ export async function middleware(request: NextRequest) {
         user.id = user.id || user.userId;
       }
 
-      if (!user || (!user.role && (!user.roles || user.roles.length === 0))) {
+      if (!user || !user.roles || user.roles.length === 0) {
         if (pathname.startsWith('/api/')) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }

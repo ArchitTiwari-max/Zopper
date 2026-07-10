@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
         id: authResult.user.userId,
         email: authResult.user.email,
         username: authResult.user.username,
-        role: authResult.user.role,
+        roles: authResult.user.roles,
         permissions: []
       }
     });
@@ -72,7 +72,6 @@ export async function GET(request: NextRequest) {
             id: dbUser.id,
             email: dbUser.email,
             username: dbUser.username,
-            role: userRoles[0],
             roles: userRoles,
             permissions: combinedPermissions,
             userRole: null,
