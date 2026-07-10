@@ -1,5 +1,4 @@
 import { PrismaClient, PartnerBrandType } from '@prisma/client';
-import { randomUUID } from 'crypto';
 
 // Singleton Prisma instance with connection pooling
 let prismaInstance: PrismaClient | null = null;
@@ -23,6 +22,7 @@ interface StoreCacheData {
   stores: Map<string, { id: string; storeName: string; currentExecutives: string[] }>; // storeId -> store data with executives
   brands: Map<string, { id: string; brandName: string }>; // brandId -> brand data
   storeIds: Set<string>; // fast lookup: does storeId exist in DB?
+  maxStoreIdNum: number; // max number part from store_XXXX IDs
 }
 
 // Global cache - reused across requests
@@ -60,6 +60,16 @@ export async function initializeStoreCache(prisma: PrismaClient): Promise<StoreC
     prisma.brand.findMany({ select: { id: true, brandName: true } })
   ]);
 
+  let maxStoreIdNum = 0;
+  for (const s of stores) {
+    if (s.id.startsWith('store_')) {
+      const numPart = parseInt(s.id.replace('store_', ''), 10);
+      if (!isNaN(numPart) && numPart > maxStoreIdNum) {
+        maxStoreIdNum = numPart;
+      }
+    }
+  }
+
   globalStoreCache = {
     executives: new Map(executives.map(e => [e.id, e])),
     stores: new Map(stores.map(s => [s.id, {
@@ -68,10 +78,11 @@ export async function initializeStoreCache(prisma: PrismaClient): Promise<StoreC
       currentExecutives: s.employeeStores.map(es => es.executiveId)
     }])),
     brands: new Map(brands.map(b => [b.id, b])),
-    storeIds: new Set(stores.map(s => s.id))
+    storeIds: new Set(stores.map(s => s.id)),
+    maxStoreIdNum
   };
 
-  console.log(`✅ Store cache initialized - ${executives.length} executives, ${stores.length} stores, ${brands.length} brands`);
+  console.log(`✅ Store cache initialized - ${executives.length} executives, ${stores.length} stores, ${brands.length} brands, maxStoreIdNum is ${maxStoreIdNum}`);
   return globalStoreCache;
 }
 
@@ -109,9 +120,10 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
         });
       }
     } else {
-      // Store_ID nahi diya → naya store create karo with auto-generated ID
+      // Store_ID nahi diya → naya store create karo with auto-generated ID in store_XXXX format
       action = 'CREATE';
-      storeId = randomUUID(); // system auto-generates
+      cache.maxStoreIdNum++;
+      storeId = `store_${cache.maxStoreIdNum.toString().padStart(4, '0')}`;
     }
 
     const context = `Store: ${storeId} | ${storeName} | ${city}`;
