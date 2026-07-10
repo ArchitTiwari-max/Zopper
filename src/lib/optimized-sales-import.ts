@@ -81,36 +81,29 @@ async function initializeCache(prisma: PrismaClient): Promise<CacheData> {
  */
 export async function optimizedPostSales(rowObj: Record<string, any>, storeCount: number, cache: CacheData): Promise<string> {
   try {
-    const { Store_ID, Brand, ...remaining } = rowObj;
+    const { StoreBrand_ID, ...remaining } = rowObj;
     const categoryVal = rowObj['Product Category'] || rowObj.Category || rowObj.ProductCategory || rowObj.category;
     const categoryName = (categoryVal && typeof categoryVal === 'string' && categoryVal.trim()) 
       ? categoryVal.trim() 
       : 'Other';
-    const context = `Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Product Category: ${categoryName}`;
+    const context = `StoreBrand_ID: ${StoreBrand_ID || 'N/A'}, Product Category: ${categoryName}`;
     
     // Quick validation
-    if (!Store_ID || !Brand) {
-      return `❌ Missing Store_ID or Brand. ${context}`;
+    if (!StoreBrand_ID) {
+      return `❌ Missing StoreBrand_ID. ${context}`;
     }
 
-    // Cache lookups (near-zero latency)
-    const store = cache.stores.get(Store_ID);
-    if (!store) return `❌ Store not found. ${context}`;
-    
-    const brand = cache.brands.get(Brand);
-    if (!brand) return `❌ Brand not found. ${context}`;
+    // Cache lookup (near-zero latency)
+    const mapping = cache.storeBrandsById.get(String(StoreBrand_ID).trim());
+    if (!mapping) return `❌ StoreBrand_ID not found in database. ${context}`;
     
     const category = cache.categories.get(categoryName);
     if (!category) return `❌ Product Category not found. ${context}`;
-    
-    if (!store.storeBrands.some(sb => sb.brandId === brand.id)) {
-      return `❌ Brand is not mapped to this store. ${context}`;
-    }
 
     // Process monthly sales data - support both DD-MM-YYYY and D/M/YYYY formats
     const monthMetrics: Record<string, any> = {};
     for (const key in remaining) {
-      if (!['Store_ID', 'Brand', 'Category', 'Product Category', 'ProductCategory', 'category'].includes(key)) {
+      if (!['StoreBrand_ID', 'Category', 'Product Category', 'ProductCategory', 'category'].includes(key)) {
         monthMetrics[key] = remaining[key];
       }
     }
@@ -141,8 +134,8 @@ export async function optimizedPostSales(rowObj: Record<string, any>, storeCount
     return JSON.stringify({
       success: true,
       data: {
-        storeId: Store_ID,
-        brandId: brand.id,
+        storeId: mapping.storeId,
+        brandId: mapping.brandId,
         productCategoryId: category.id,
         salesByYear,
         context,
@@ -152,9 +145,9 @@ export async function optimizedPostSales(rowObj: Record<string, any>, storeCount
     
   } catch (err) {
     console.error('Optimization error:', err);
-    const { Store_ID, Brand } = rowObj;
+    const { StoreBrand_ID } = rowObj;
     const categoryVal = rowObj['Product Category'] || rowObj.Category || rowObj.ProductCategory || rowObj.category;
-    return `❌ Internal server error for Store: ${Store_ID || 'N/A'}, Brand: ${Brand || 'N/A'}, Product Category: ${categoryVal || 'N/A'}`;
+    return `❌ Internal server error for StoreBrand_ID: ${StoreBrand_ID || 'N/A'}, Product Category: ${categoryVal || 'N/A'}`;
   }
 }
 
@@ -232,10 +225,29 @@ export async function optimizedPostDailySales(rowObj: Record<string, any>, succe
     let planType: any = 'NA';
     if (planTypeVal) {
       const cleanPlanType = String(planTypeVal).trim().toUpperCase();
-      if (['ADLD', 'SP', 'COMBO', 'EW', 'NA'].includes(cleanPlanType)) {
-        planType = cleanPlanType;
+      const planTypeMapping: Record<string, string> = {
+        'ADLD': 'ADLD',
+        'SP': 'SP',
+        'COMBO': 'COMBO',
+        'EW': 'EW',
+        'NA': 'NA',
+        'EW - 1YR': 'EW_1YR',
+        'EW - 2YR': 'EW_2YR',
+        'EW - 3YR': 'EW_3YR',
+        'EW - 4YR': 'EW_4YR',
+        'EW_1YR': 'EW_1YR',
+        'EW_2YR': 'EW_2YR',
+        'EW_3YR': 'EW_3YR',
+        'EW_4YR': 'EW_4YR',
+        'EW-1YR': 'EW_1YR',
+        'EW-2YR': 'EW_2YR',
+        'EW-3YR': 'EW_3YR',
+        'EW-4YR': 'EW_4YR',
+      };
+      if (planTypeMapping[cleanPlanType]) {
+        planType = planTypeMapping[cleanPlanType];
       } else {
-        return `❌ Invalid Plan Type: "${planTypeVal}". Allowed values are ADLD, SP, COMBO, EW, NA. ${context}`;
+        return `❌ Invalid Plan Type: "${planTypeVal}". Allowed values are ADLD, SP, COMBO, EW, Ew - 1yr, Ew - 2yr, Ew - 3yr, Ew - 4yr, NA. ${context}`;
       }
     }
 

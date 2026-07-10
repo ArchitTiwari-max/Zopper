@@ -204,11 +204,11 @@ const MonthwiseExcelImport = () => {
                   }
                   
                   if (data.rowData) {
-                    const { Store_ID, Brand, Category, status, message } = data.rowData;
+                    const { StoreBrand_ID, Category, status, message } = data.rowData;
                     const icon = status === 'success' ? '✅' : '❌';
                     const logType = status === 'success' ? 'success' : 'error';
                     
-                    addConsoleLog(logType, `${icon} Row ${data.currentRow}/${data.totalRows}: ${Store_ID} | ${Brand} | ${Category}`);
+                    addConsoleLog(logType, `${icon} Row ${data.currentRow}/${data.totalRows}: ${StoreBrand_ID} | ${Category}`);
                     if (message && message !== 'Total stores pushed:') {
                       addConsoleLog(logType === 'success' ? 'info' : 'error', `   └─ ${message}`);
                     }
@@ -331,7 +331,7 @@ const MonthwiseExcelImport = () => {
         <div className="excel-mon-sale-import-header">
           <h1 className="excel-mon-sale-import-title">Monthly Sales Data Import</h1>
           <p className="excel-mon-sale-import-description">
-            Upload Excel files with monthly sales data. The file should contain Store_ID, Brand, Product Category, 
+            Upload Excel files with monthly sales data. The file should contain StoreBrand_ID, Product Category, 
             and date columns with metrics like device sales, plan sales, attach %, and revenue.
           </p>
         </div>
@@ -568,7 +568,7 @@ const MonthwiseExcelImport = () => {
         <div className="excel-mon-sale-format-info">
           <h3 className="excel-mon-sale-format-title">Expected Excel Format:</h3>
           <div className="excel-mon-sale-format-list">
-            <p>• <strong>Required columns:</strong> Store_ID, Brand, Product Category</p>
+            <p>• <strong>Required columns:</strong> StoreBrand_ID, Product Category</p>
             <p>• <strong>Date columns:</strong> Format as DD-MM-YYYY (e.g., 01-01-2024)</p>
             <p>• <strong>Metrics:</strong> Device Sales, Plan Sales, Attach %, Revenue</p>
             <p>• <strong>Header structure:</strong> Two-row headers with dates and metrics</p>
