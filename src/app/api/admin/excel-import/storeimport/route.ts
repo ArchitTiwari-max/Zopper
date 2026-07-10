@@ -19,7 +19,8 @@ interface ProgressUpdate {
     Store_ID: string;
     Store_Name: string;
     City: string;
-    status: 'success' | 'error';
+    status: 'success' | 'error' | 'skipped';
+    action?: 'UPDATE' | 'CREATE' | 'SKIP';
     message: string;
     executivesAdded?: number;
     executivesRemoved?: number;
@@ -28,6 +29,7 @@ interface ProgressUpdate {
     totalRows: number;
     successful: number;
     failed: number;
+    skipped: number;
     errors: string[];
     totalExecutivesAdded: number;
     totalExecutivesRemoved: number;
@@ -113,7 +115,9 @@ export async function POST(request: NextRequest) {
 
         let successful = 0;
         let failed = 0;
+        let skipped = 0;
         const errorLogs: string[] = [];
+        const skipLogs: string[] = [];
         const batchData: any[] = [];
         
         // PHASE 1: Fast row processing and validation (no DB writes)
@@ -235,11 +239,31 @@ export async function POST(request: NextRequest) {
               // Success - parse the JSON result
               const parsedResult = JSON.parse(result);
               if (parsedResult.success) {
-                successful++;
-                batchData.push(parsedResult.data);
-                
-                // DON'T send progress update during validation - only during actual DB operations
-                // This prevents showing "success" logs before data is actually written
+                if (parsedResult.action === 'SKIP') {
+                  // ── SKIP: Store_ID diya but DB me nahi mila ────────────────────
+                  skipped++;
+                  skipLogs.push(parsedResult.message);
+
+                  const skipData: ProgressUpdate = {
+                    type: 'progress',
+                    currentRow,
+                    totalRows,
+                    rowData: {
+                      Store_ID: parsedResult.data.storeId,
+                      Store_Name: parsedResult.data.storeName || 'N/A',
+                      City: parsedResult.data.city || 'N/A',
+                      status: 'skipped',
+                      action: 'SKIP',
+                      message: parsedResult.message
+                    }
+                  };
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify(skipData)}\\n\\n`));
+                } else {
+                  // ── UPDATE or CREATE: add to batch ───────────────────────────
+                  batchData.push(parsedResult.data);
+                  // DON'T send progress update during validation - only during actual DB operations
+                  // This prevents showing "success" logs before data is actually written
+                }
               }
             } else {
               // Error message
@@ -287,7 +311,7 @@ export async function POST(request: NextRequest) {
         // Debug: Log validation phase completion
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({
           type: 'progress',
-          message: `✅ Validation phase complete: ${successful} successful, ${failed} failed, ${batchData.length} ready for DB write`
+          message: `✅ Validation phase complete: ${batchData.length} ready for DB write, ${skipped} skipped (Store_ID not in system), ${failed} errors`
         })}\\n\\n`));
         
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -316,7 +340,8 @@ export async function POST(request: NextRequest) {
                   Store_Name: storeData.storeName,
                   City: storeData.city,
                   status: success ? 'success' : 'error',
-                  message: success ? 'Database write successful' : message,
+                  action: storeData.action,
+                  message: success ? message : message,
                   executivesAdded: success ? storeData.executivesToAdd.length : 0,
                   executivesRemoved: success ? storeData.executivesToRemove.length : 0
                 }
@@ -332,7 +357,7 @@ export async function POST(request: NextRequest) {
             
             await new Promise(resolve => setTimeout(resolve, 100));
           
-            // Update final counts
+            // Update final counts (successful comes from batchResult)
             successful = batchResult.successful;
             failed += batchResult.failed;
             errorLogs.push(...batchResult.errors);
@@ -358,7 +383,8 @@ export async function POST(request: NextRequest) {
               totalRows,
               successful,
               failed,
-              errors: errorLogs,
+              skipped,
+              errors: [...errorLogs, ...skipLogs],
               totalExecutivesAdded: successful > 0 ? batchResult?.totalExecutivesAdded || 0 : 0,
               totalExecutivesRemoved: successful > 0 ? batchResult?.totalExecutivesRemoved || 0 : 0,
               processingTime: `${processingTime}s`
@@ -374,7 +400,8 @@ export async function POST(request: NextRequest) {
               totalRows,
               successful: 0,
               failed,
-              errors: errorLogs,
+              skipped,
+              errors: [...errorLogs, ...skipLogs],
               totalExecutivesAdded: 0,
               totalExecutivesRemoved: 0,
               processingTime: `${processingTime}s`

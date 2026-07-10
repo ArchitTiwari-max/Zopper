@@ -21,6 +21,8 @@ interface StoreCacheData {
   executives: Map<string, { id: string; name: string }>; // executiveId -> executive data
   stores: Map<string, { id: string; storeName: string; currentExecutives: string[] }>; // storeId -> store data with executives
   brands: Map<string, { id: string; brandName: string }>; // brandId -> brand data
+  storeIds: Set<string>; // fast lookup: does storeId exist in DB?
+  maxStoreIdNum: number; // max number part from store_XXXX IDs
 }
 
 // Global cache - reused across requests
@@ -58,6 +60,16 @@ export async function initializeStoreCache(prisma: PrismaClient): Promise<StoreC
     prisma.brand.findMany({ select: { id: true, brandName: true } })
   ]);
 
+  let maxStoreIdNum = 0;
+  for (const s of stores) {
+    if (s.id.startsWith('store_')) {
+      const numPart = parseInt(s.id.replace('store_', ''), 10);
+      if (!isNaN(numPart) && numPart > maxStoreIdNum) {
+        maxStoreIdNum = numPart;
+      }
+    }
+  }
+
   globalStoreCache = {
     executives: new Map(executives.map(e => [e.id, e])),
     stores: new Map(stores.map(s => [s.id, {
@@ -65,10 +77,12 @@ export async function initializeStoreCache(prisma: PrismaClient): Promise<StoreC
       storeName: s.storeName,
       currentExecutives: s.employeeStores.map(es => es.executiveId)
     }])),
-    brands: new Map(brands.map(b => [b.id, b]))
+    brands: new Map(brands.map(b => [b.id, b])),
+    storeIds: new Set(stores.map(s => s.id)),
+    maxStoreIdNum
   };
 
-  console.log(`✅ Store cache initialized - ${executives.length} executives, ${stores.length} stores, ${brands.length} brands`);
+  console.log(`✅ Store cache initialized - ${executives.length} executives, ${stores.length} stores, ${brands.length} brands, maxStoreIdNum is ${maxStoreIdNum}`);
   return globalStoreCache;
 }
 
@@ -77,10 +91,43 @@ export async function initializeStoreCache(prisma: PrismaClient): Promise<StoreC
  */
 export async function optimizedProcessStore(rowObj: Record<string, any>, rowIndex: number, cache: StoreCacheData): Promise<string> {
   try {
-    const storeId = rowObj.Store_ID?.toString().trim() || '';
+    const rawStoreId = rowObj.Store_ID?.toString().trim() || '';
     const storeName = rowObj['Store Name']?.toString().trim() || '';
     const city = rowObj.City?.toString().trim() || '';
+
+    // ── Determine action: UPDATE / CREATE / SKIP ──────────────────────────────
+    let action: 'UPDATE' | 'CREATE' | 'SKIP';
+    let storeId: string;
+
+    if (rawStoreId) {
+      // Store_ID diya gaya hai — check karo DB me hai ya nahi
+      if (cache.storeIds.has(rawStoreId)) {
+        action = 'UPDATE';
+        storeId = rawStoreId;
+      } else {
+        // Store_ID diya but DB me nahi → SKIP with warning
+        action = 'SKIP';
+        storeId = rawStoreId;
+        return JSON.stringify({
+          success: true,
+          action: 'SKIP',
+          data: {
+            storeId: rawStoreId,
+            storeName,
+            city
+          },
+          message: `⚠️ SKIPPED: Store_ID '${rawStoreId}' not found in system. | Store: ${rawStoreId} | ${storeName} | ${city}`
+        });
+      }
+    } else {
+      // Store_ID nahi diya → naya store create karo with auto-generated ID in store_XXXX format
+      action = 'CREATE';
+      cache.maxStoreIdNum++;
+      storeId = `store_${cache.maxStoreIdNum.toString().padStart(4, '0')}`;
+    }
+
     const context = `Store: ${storeId} | ${storeName} | ${city}`;
+
     // Helper: map string to enum value
     const mapType = (val: string): PartnerBrandType => {
       const v = val.toUpperCase().replace(/\s+/g, '');
@@ -122,9 +169,9 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
       }
     }
 
-    // Validate required fields
-    if (!storeId || !storeName) {
-      return `❌ Missing Store_ID or Store Name. ${context}`;
+    // Validate required field: Store Name is always required
+    if (!storeName) {
+      return `❌ Missing Store Name. ${context}`;
     }
 
     // Executive string parsing continues below...
@@ -190,10 +237,18 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
       currentExecutives: newExecutives
     });
 
+    // Update cache with new store (for CREATE case, so duplicate rows in same import are handled)
+    if (action === 'CREATE') {
+      cache.storeIds.add(storeId);
+      cache.stores.set(storeId, { id: storeId, storeName, currentExecutives: newExecutives });
+    }
+
     // Return prepared data for batch processing
     return JSON.stringify({
       success: true,
+      action, // 'UPDATE' | 'CREATE'
       data: {
+        action,
         storeId,
         storeName,
         city,
@@ -230,7 +285,7 @@ export async function batchProcessStoreRecords(
   validatedData: any[], 
   prisma: PrismaClient,
   onProgress?: (storeData: any, success: boolean, message: string) => void
-): Promise<{ successful: number; failed: number; errors: string[]; totalExecutivesAdded: number; totalExecutivesRemoved: number; }> {
+): Promise<{ successful: number; failed: number; skipped: number; errors: string[]; totalExecutivesAdded: number; totalExecutivesRemoved: number; }> {
   console.log(`🔄 Starting batch processing for ${validatedData.length} stores...`);
   
   // Debug: Log first few stores to be processed
@@ -238,6 +293,7 @@ export async function batchProcessStoreRecords(
 
   let successful = 0;
   let failed = 0;
+  let skipped = 0;
   let totalExecutivesAdded = 0;
   let totalExecutivesRemoved = 0;
   const errors: string[] = [];
@@ -252,35 +308,41 @@ export async function batchProcessStoreRecords(
 
     await Promise.all(batch.map(async (storeData) => {
       try {
-        // Upsert store data (each operation is atomic)
-        await prisma.store.upsert({
-          where: { id: storeData.storeId },
-          update: {
-            storeName: storeData.storeName,
-            city: storeData.city,
-            fullAddress: storeData.fullAddress,
-            latitude: storeData.latitude,
-            longitude: storeData.longitude,
-            storeCategory: storeData.storeCategory,
-            storeChannel: storeData.storeChannel,
-            cityTier: storeData.cityTier,
-            state: storeData.state,
-            priority: storeData.priority
-          },
-          create: {
-            id: storeData.storeId,
-            storeName: storeData.storeName,
-            city: storeData.city,
-            fullAddress: storeData.fullAddress,
-            latitude: storeData.latitude,
-            longitude: storeData.longitude,
-            storeCategory: storeData.storeCategory,
-            storeChannel: storeData.storeChannel,
-            cityTier: storeData.cityTier,
-            state: storeData.state,
-            priority: storeData.priority
-          }
-        });
+        if (storeData.action === 'UPDATE') {
+          // ── UPDATE existing store ────────────────────────────────────────────
+          await prisma.store.update({
+            where: { id: storeData.storeId },
+            data: {
+              storeName: storeData.storeName,
+              city: storeData.city,
+              fullAddress: storeData.fullAddress,
+              latitude: storeData.latitude,
+              longitude: storeData.longitude,
+              storeCategory: storeData.storeCategory,
+              storeChannel: storeData.storeChannel,
+              cityTier: storeData.cityTier,
+              state: storeData.state,
+              priority: storeData.priority
+            }
+          });
+        } else {
+          // ── CREATE new store with auto-generated ID ──────────────────────────
+          await prisma.store.create({
+            data: {
+              id: storeData.storeId,
+              storeName: storeData.storeName,
+              city: storeData.city,
+              fullAddress: storeData.fullAddress,
+              latitude: storeData.latitude,
+              longitude: storeData.longitude,
+              storeCategory: storeData.storeCategory,
+              storeChannel: storeData.storeChannel,
+              cityTier: storeData.cityTier,
+              state: storeData.state,
+              priority: storeData.priority
+            }
+          });
+        }
 
         // Synchronize StoreBrand collection
         if (storeData.storeBrandsData) {
@@ -358,14 +420,19 @@ export async function batchProcessStoreRecords(
           }
         }
 
-        successful++;
+        if (storeData.action === 'UPDATE') {
+          successful++;
+        } else {
+          successful++; // CREATE also counts as successful
+        }
         totalExecutivesAdded += storeData.executivesToAdd.length;
         totalExecutivesRemoved += storeData.executivesToRemove.length;
         
         // Notify frontend of successful database write
-        onProgress?.(storeData, true, `Store and ${storeData.executivesToAdd.length + storeData.executivesToRemove.length} executive assignments updated successfully`);
+        const actionLabel = storeData.action === 'CREATE' ? 'Created' : 'Updated';
+        onProgress?.(storeData, true, `${actionLabel}: Store and ${storeData.executivesToAdd.length + storeData.executivesToRemove.length} executive assignments updated successfully`);
         
-        console.log(`✅ Successfully processed: ${storeData.context}`);
+        console.log(`✅ [${storeData.action}] Successfully processed: ${storeData.context}`);
         console.log(`   └─ Executives added: ${storeData.executivesToAdd.length}, removed: ${storeData.executivesToRemove.length}`);
 
       } catch (error) {
@@ -383,11 +450,12 @@ export async function batchProcessStoreRecords(
     }));
   }
 
-  console.log(`✅ Batch processing complete: ${successful} successful, ${failed} failed`);
+  console.log(`✅ Batch processing complete: ${successful} successful, ${failed} failed, ${skipped} skipped`);
 
   return {
     successful,
     failed,
+    skipped,
     errors,
     totalExecutivesAdded,
     totalExecutivesRemoved
