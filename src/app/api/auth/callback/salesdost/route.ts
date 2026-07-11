@@ -19,14 +19,19 @@ export async function GET(request: NextRequest) {
 
   const clientId = process.env.SALESDOST_CLIENT_ID;
   const clientSecret = process.env.SALESDOST_CLIENT_SECRET;
-  const redirectUri = process.env.SALESDOST_REDIRECT_URI;
+
+  const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host');
+  const forwardedProto = request.headers.get('x-forwarded-proto') || (request.headers.get('host')?.includes('localhost') ? 'http' : 'https');
+  const origin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : request.nextUrl.origin;
+  const redirectUri = `${origin}/api/auth/callback/salesdost`;
 
   try {
     // 1. Exchange authorization code for tokens
-    // We construct the absolute URL to the local /api/oauth/token endpoint
-    const tokenUrl = new URL('/api/oauth/token', request.url);
+    // Use internal loopback URL to avoid hairpin NAT / DNS issues on server
+    const internalBaseUrl = `http://127.0.0.1:${process.env.PORT || '3000'}`;
+    const tokenUrl = new URL('/api/oauth/token', internalBaseUrl);
     
-    console.log(`[SELF-SSO] Exchanging authorization code at ${tokenUrl.toString()}...`);
+    console.log(`[SELF-SSO] Exchanging authorization code at ${tokenUrl.toString()} for redirectUri=${redirectUri}...`);
     const tokenResponse = await fetch(tokenUrl.toString(), {
       method: 'POST',
       headers: {

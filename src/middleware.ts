@@ -32,9 +32,13 @@ async function applyRefreshedTokens(response: NextResponse, verifyData: any) {
 // Helper: Generate login/SSO redirect URL based on platform
 function getLoginRedirectUrl(request: NextRequest, errorParam?: string) {
   const { pathname } = request.nextUrl;
-  const authorizeUrl = new URL('/api/oauth/authorize', request.url);
+  const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host');
+  const forwardedProto = request.headers.get('x-forwarded-proto') || (request.headers.get('host')?.includes('localhost') ? 'http' : 'https');
+  const origin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : request.nextUrl.origin;
+
+  const authorizeUrl = new URL('/api/oauth/authorize', origin);
   authorizeUrl.searchParams.set('client_id', process.env.SALESDOST_CLIENT_ID || '');
-  authorizeUrl.searchParams.set('redirect_uri', process.env.SALESDOST_REDIRECT_URI || '');
+  authorizeUrl.searchParams.set('redirect_uri', `${origin}/api/auth/callback/salesdost`);
   authorizeUrl.searchParams.set('response_type', 'code');
   authorizeUrl.searchParams.set('state', `salesdost_self_sso:${pathname}${request.nextUrl.search}`);
   if (errorParam) authorizeUrl.searchParams.set('error', errorParam);
