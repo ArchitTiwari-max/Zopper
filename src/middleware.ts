@@ -32,9 +32,10 @@ async function applyRefreshedTokens(response: NextResponse, verifyData: any) {
 // Helper: Generate login/SSO redirect URL based on platform
 function getLoginRedirectUrl(request: NextRequest, errorParam?: string) {
   const { pathname } = request.nextUrl;
-  const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host');
-  const forwardedProto = request.headers.get('x-forwarded-proto') || (request.headers.get('host')?.includes('localhost') ? 'http' : 'https');
-  const origin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : request.nextUrl.origin;
+  const rawHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+  const forwardedHost = rawHost.includes('0.0.0.0') ? (request.headers.get('x-forwarded-host') || '') : rawHost;
+  const isLocal = forwardedHost.includes('localhost') || forwardedHost.includes('127.0.0.1');
+  const origin = forwardedHost ? `${isLocal ? 'http' : 'https'}://${forwardedHost}` : request.nextUrl.origin;
 
   const authorizeUrl = new URL('/api/oauth/authorize', origin);
   authorizeUrl.searchParams.set('client_id', process.env.SALESDOST_CLIENT_ID || '');
