@@ -84,17 +84,27 @@ export async function POST(request: NextRequest) {
       });
 
       // Validate code record
-      if (
-        !authCodeRecord ||
-        authCodeRecord.used ||
-        authCodeRecord.expiresAt < new Date() ||
-        authCodeRecord.clientId !== clientId ||
-        authCodeRecord.redirectUri !== redirectUri
-      ) {
-        return NextResponse.json(
-          { error: 'invalid_grant', error_description: 'Invalid, expired, or already used authorization code' },
-          { status: 400 }
-        );
+      if (!authCodeRecord) {
+        console.error(`[OAUTH TOKEN] Authorization code not found: ${code}`);
+        return NextResponse.json({ error: 'invalid_grant', error_description: 'Authorization code not found' }, { status: 400 });
+      }
+      if (authCodeRecord.used) {
+        console.error(`[OAUTH TOKEN] Authorization code already used: ${code}`);
+        return NextResponse.json({ error: 'invalid_grant', error_description: 'Authorization code already used' }, { status: 400 });
+      }
+      if (authCodeRecord.expiresAt < new Date()) {
+        console.error(`[OAUTH TOKEN] Authorization code expired: ${authCodeRecord.expiresAt} < ${new Date()}`);
+        return NextResponse.json({ error: 'invalid_grant', error_description: 'Authorization code expired' }, { status: 400 });
+      }
+      if (authCodeRecord.clientId !== clientId) {
+        console.error(`[OAUTH TOKEN] ClientId mismatch: DB='${authCodeRecord.clientId}' vs Req='${clientId}'`);
+        return NextResponse.json({ error: 'invalid_grant', error_description: 'Client ID mismatch' }, { status: 400 });
+      }
+
+      const normalizeUri = (uri: string) => uri.replace(/^http:\/\//i, 'https://').replace(/\/$/, '');
+      if (normalizeUri(authCodeRecord.redirectUri) !== normalizeUri(redirectUri)) {
+        console.error(`[OAUTH TOKEN] RedirectUri mismatch: DB='${authCodeRecord.redirectUri}' vs Req='${redirectUri}'`);
+        return NextResponse.json({ error: 'invalid_grant', error_description: `Redirect URI mismatch: expected ${authCodeRecord.redirectUri}` }, { status: 400 });
       }
 
       // Mark the code as used immediately to prevent replay attacks

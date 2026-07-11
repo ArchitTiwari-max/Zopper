@@ -20,9 +20,10 @@ export async function GET(request: NextRequest) {
   const clientId = process.env.SALESDOST_CLIENT_ID;
   const clientSecret = process.env.SALESDOST_CLIENT_SECRET;
 
-  const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host');
-  const forwardedProto = request.headers.get('x-forwarded-proto') || (request.headers.get('host')?.includes('localhost') ? 'http' : 'https');
-  const origin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : request.nextUrl.origin;
+  const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+  const isLocal = forwardedHost.includes('localhost') || forwardedHost.includes('127.0.0.1');
+  const proto = isLocal ? 'http' : 'https';
+  const origin = forwardedHost ? `${proto}://${forwardedHost}` : request.nextUrl.origin;
   const redirectUri = `${origin}/api/auth/callback/salesdost`;
 
   try {
