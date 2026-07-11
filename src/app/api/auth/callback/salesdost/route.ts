@@ -138,7 +138,7 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    const redirectUrl = new URL(dashboardPath, request.url);
+    const redirectUrl = new URL(dashboardPath, origin);
     const response = NextResponse.redirect(redirectUrl);
 
     // Set secure browser session cookies
@@ -147,7 +147,7 @@ export async function GET(request: NextRequest) {
 
     response.cookies.set('accessToken', access_token, {
       httpOnly: true,
-      secure: false, // development localhost
+      secure: !isLocal,
       sameSite: 'lax',
       expires: accessTokenExpiry,
       path: '/'
@@ -155,7 +155,7 @@ export async function GET(request: NextRequest) {
 
     response.cookies.set('refreshToken', refresh_token, {
       httpOnly: true,
-      secure: false,
+      secure: !isLocal,
       sameSite: 'lax',
       expires: refreshTokenExpiry,
       path: '/'
