@@ -56,8 +56,12 @@ export async function GET(request: NextRequest) {
     if (!authResult.isAuthenticated || !authResult.user) {
       // User is not authenticated, redirect them to login page
       // After successful login, they will be redirected back to this exact authorization page
-      const currentUrl = request.url;
-      const loginUrl = new URL('/login', request.url);
+      const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host');
+      const forwardedProto = request.headers.get('x-forwarded-proto') || (request.headers.get('host')?.includes('localhost') ? 'http' : 'https');
+      const baseUrl = forwardedHost ? `${forwardedProto}://${forwardedHost}` : request.nextUrl.origin;
+
+      const currentUrl = `${baseUrl}${request.nextUrl.pathname}${request.nextUrl.search}`;
+      const loginUrl = new URL('/login', baseUrl);
       loginUrl.searchParams.set('redirect', currentUrl);
       
       return NextResponse.redirect(loginUrl.toString());
