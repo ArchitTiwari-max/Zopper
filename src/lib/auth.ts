@@ -20,7 +20,7 @@ export async function validateAndRefreshToken(request: NextRequest): Promise<Aut
     if (!refreshToken) {
       return { isAuthenticated: false };
     }
-    
+
     return await refreshAccessToken(refreshToken);
   }
 
@@ -33,9 +33,26 @@ export async function validateAndRefreshToken(request: NextRequest): Promise<Aut
     if (!refreshToken) {
       return { isAuthenticated: false };
     }
-    
+
     return await refreshAccessToken(refreshToken);
   }
+}
+
+/**
+ * Verifies sso_session cookie for IdP Authorization Server routes (/api/oauth/authorize)
+ * Strictly requires a valid sso_session cookie without falling back to local access/refresh tokens
+ */
+export async function verifySsoSession(request: NextRequest): Promise<AuthResult> {
+  const ssoSession = request.cookies.get('sso_session')?.value;
+  if (ssoSession) {
+    try {
+      const user = verifyToken(ssoSession);
+      return { isAuthenticated: true, user };
+    } catch (error) {
+      // sso_session invalid/expired
+    }
+  }
+  return { isAuthenticated: false };
 }
 
 /**
@@ -45,11 +62,11 @@ async function refreshAccessToken(refreshToken: string): Promise<AuthResult> {
   try {
     // Verify refresh token
     const user = verifyToken(refreshToken);
-    
+
     // Generate new access token
     const newAccessToken = generateAccessToken(user);
     const accessTokenExpiry = getTokenExpiry(process.env.JWT_ACCESS_EXPIRY || '15m');
-    
+
     // Create response with new access token cookie
     const response = NextResponse.next();
     response.cookies.set('accessToken', newAccessToken, {
@@ -59,11 +76,11 @@ async function refreshAccessToken(refreshToken: string): Promise<AuthResult> {
       expires: accessTokenExpiry,
       path: '/'
     });
-    
-    return { 
-      isAuthenticated: true, 
+
+    return {
+      isAuthenticated: true,
       user,
-      response 
+      response
     };
   } catch (error) {
     // Refresh token is also invalid
@@ -128,15 +145,15 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<TokenP
 
   // 2. Fallback: Validate token from cookie if header is missing
   const authResult = await validateAndRefreshToken(request);
-  
+
   // If tokens were refreshed, set them directly in the response using Next.js cookies
   if (authResult.response && authResult.isAuthenticated) {
     try {
       const { cookies } = await import('next/headers');
       const cookieStore = await cookies();
-      
+
       const refreshedCookies = authResult.response.cookies.getAll();
-      
+
       // Set refreshed cookies directly in the current API response
       refreshedCookies.forEach(cookie => {
         cookieStore.set(cookie.name, cookie.value, {
@@ -151,7 +168,7 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<TokenP
       console.error('Failed to set refreshed cookies:', error);
     }
   }
-  
+
   return authResult.isAuthenticated ? authResult.user || null : null;
 }
 
@@ -161,7 +178,7 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<TokenP
  */
 export function clearAllCache(): void {
   console.log('🧹 Starting cache clearing process...');
-  
+
   try {
     // Clear localStorage
     if (typeof Storage !== 'undefined' && localStorage) {
@@ -171,7 +188,7 @@ export function clearAllCache(): void {
     } else {
       console.log('⚠️ LocalStorage not available');
     }
-    
+
     // Clear sessionStorage  
     if (typeof Storage !== 'undefined' && sessionStorage) {
       const sessionStorageCount = sessionStorage.length;
@@ -180,12 +197,12 @@ export function clearAllCache(): void {
     } else {
       console.log('⚠️ SessionStorage not available');
     }
-    
+
     // Clear all cookies manually (in addition to server-side clearing)
     if (typeof document !== 'undefined') {
       const cookiesBefore = document.cookie;
       console.log('🍪 Cookies before clearing:', cookiesBefore);
-      
+
       document.cookie.split(';').forEach(cookie => {
         const eqPos = cookie.indexOf('=');
         const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
@@ -197,13 +214,13 @@ export function clearAllCache(): void {
           console.log(`🗑️ Cleared cookie: ${name}`);
         }
       });
-      
+
       const cookiesAfter = document.cookie;
       console.log('🍪 Cookies after clearing:', cookiesAfter);
     } else {
       console.log('⚠️ Document not available for cookie clearing');
     }
-    
+
     // Clear Service Worker caches
     if ('caches' in window) {
       caches.keys().then(names => {
@@ -219,7 +236,7 @@ export function clearAllCache(): void {
     } else {
       console.log('⚠️ Service Worker caches not available');
     }
-    
+
     // Clear any React/Next.js specific cached data
     if (typeof window !== 'undefined') {
       // Clear Next.js router cache
@@ -237,7 +254,7 @@ export function clearAllCache(): void {
         console.log('✅ Cleared __APP_STATE__');
       }
     }
-    
+
     console.log('✅ All user cache cleared successfully');
   } catch (error) {
     console.error('❌ Error clearing user cache:', error);
@@ -251,7 +268,7 @@ export function storeUserInfo(response: NextResponse, userPayload: any): NextRes
   try {
     // Store user info as JSON string in cookie
     const userInfoJson = JSON.stringify(userPayload);
-    
+
     response.cookies.set('userInfo', userInfoJson, {
       httpOnly: false, // Allow client-side access for user info
       secure: false, // Set to false for development (localhost)
@@ -259,7 +276,7 @@ export function storeUserInfo(response: NextResponse, userPayload: any): NextRes
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       path: '/'
     });
-    
+
     return response;
   } catch (error) {
     console.error('Error storing user info:', error);

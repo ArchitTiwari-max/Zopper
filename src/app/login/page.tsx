@@ -107,17 +107,13 @@ function LoginContent() {
         setShowOtpVerification(false);
         setOtp('');
         
-        const userRoles = result.user.roles || [];
-        const isAdmin = userRoles.includes('ADMIN');
-        let redirectUrl;
+        let redirectUrl = '/';
         
         if (redirect) {
           redirectUrl = decodeURIComponent(redirect);
           if (redirectUrl.includes('0.0.0.0')) {
             redirectUrl = redirectUrl.replace(/http[s]?:\/\/0\.0\.0\.0(:\d+)?/gi, window.location.origin);
           }
-        } else {
-          redirectUrl = isAdmin ? '/admin/dashboard' : '/executive/dashboard';
         }
         
         window.location.href = redirectUrl;

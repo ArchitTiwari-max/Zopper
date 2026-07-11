@@ -34,6 +34,40 @@ export function generateRefreshToken(payload: TokenPayload): string {
   return (jwt as any).sign(cleanPayload, JWT_SECRET, { expiresIn: JWT_REFRESH_EXPIRY });
 }
 
+export function generateSsoSessionToken(payload: TokenPayload, existingSessions: any[] = []): string {
+  const currentSession = {
+    userId: payload.userId,
+    email: payload.email,
+    username: payload.username,
+    roles: payload.roles && payload.roles.length > 0 ? payload.roles : ['EXECUTIVE'],
+    lastLoginAt: new Date().toISOString()
+  };
+
+  // Remove duplicate entries for this user and deduplicate existing list
+  const seen = new Set<string>();
+  const filtered = existingSessions.filter((s: any) => {
+    if (!s || s.userId === payload.userId || s.email === payload.email) return false;
+    const key = s.userId || s.email;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  // Keep maximum 3 accounts total (current account + up to 2 existing accounts)
+  const updatedSessions = [currentSession, ...filtered].slice(0, 3);
+
+  const cleanPayload = {
+    activeUserId: payload.userId,
+    userId: payload.userId,
+    email: payload.email,
+    username: payload.username,
+    roles: payload.roles && payload.roles.length > 0 ? payload.roles : ['EXECUTIVE'],
+    sessions: updatedSessions
+  };
+  return (jwt as any).sign(cleanPayload, JWT_SECRET, { expiresIn: process.env.JWT_SSO_EXPIRY || '30d' });
+}
+
+
 /**
  * Specifically for UAT/External testing to avoid sharing the main JWT_SECRET
  */

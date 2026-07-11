@@ -177,3 +177,31 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+/**
+ * 
+ * REQUEST PAYLOAD sent to POST /api/oauth/verify:
+ * {
+ *   "access_token": "eyJhbGciOi...",
+ *   "refresh_token": "eyJhbGciOi...",
+ *   "client_id": "sd_...",
+ *   "client_secret": "..."
+ * }
+ * 
+ * RESPONSE PAYLOAD returned by POST /api/oauth/verify (Status 200 OK):
+ * {
+ *   "authenticated": true,
+ *   "tokensRefreshed": true, // true if accessToken was expired and regenerated
+ *   "access_token": "eyJhbGciOi...", // fresh/rotated access token
+ *   "refresh_token": "eyJhbGciOi...", // fresh/rotated refresh token
+ *   "user": {
+ *     "id": "user_id",
+ *     "email": "user@zopper.com",
+ *     "username": "username",
+ *     "role": "ADMIN",
+ *     "roles": ["ADMIN"],
+ *     "permissions": ["MANAGE_USERS", "ACCESS_ADMIN_PORTAL", ...],
+ *     "employee": { "id": "emp_id", "name": "Employee Name", ... }
+ *   }
+ * }
+ */

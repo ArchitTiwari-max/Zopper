@@ -21,7 +21,7 @@ function LandingContent() {
       return;
     }
     const origin = window.location.origin;
-    window.location.href = `/api/oauth/authorize?client_id=sd_2e788dcd252d9297942790cd&redirect_uri=${encodeURIComponent(origin + '/api/auth/callback/salesdost')}&response_type=code&state=salesdost_self_sso:%2F`;
+    window.location.href = `/api/oauth/authorize?client_id=sd_2e788dcd252d9297942790cd&redirect_uri=${encodeURIComponent(origin + '/api/auth/callback/salesdost')}&response_type=code&state=salesdost_self_sso:%2F&prompt=select_account`;
   };
 
   return (
@@ -68,6 +68,9 @@ function LandingContent() {
             <p className="simple-portal-desc">
               Track sales data, monitor target achievements, and review important field performance metrics.
             </p>
+            <div style={{ marginTop: '16px', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: '#3b82f6', background: 'rgba(59, 130, 246, 0.12)', padding: '7px 14px', borderRadius: '8px' }}>
+              <span>🔐 Login with SalesDost SSO</span>
+            </div>
           </div>
 
           {/* Simple Work Management Div */}
@@ -79,6 +82,9 @@ function LandingContent() {
             <p className="simple-portal-desc">
               Manage daily to-do lists, assign team tasks, and track project workflows &amp; issue resolution seamlessly.
             </p>
+            <div style={{ marginTop: '16px', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: '#8b5cf6', background: 'rgba(139, 92, 246, 0.12)', padding: '7px 14px', borderRadius: '8px' }}>
+              <span>🔐 Login with SalesDost SSO</span>
+            </div>
           </div>
         </main>
       </div>

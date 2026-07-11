@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { generateAccessToken, generateRefreshToken, getTokenExpiry } from '@/lib/jwt';
-import { storeUserInfo } from '@/lib/auth';
+import { generateSsoSessionToken, getTokenExpiry, verifyToken } from '@/lib/jwt';
 
 export const runtime = 'nodejs';
 
@@ -71,15 +70,7 @@ export async function POST(request: NextRequest) {
 
     const userRoles = user.roles && user.roles.length > 0 ? user.roles : ['EXECUTIVE'];
 
-    const allUserRoles = await prisma.userRole.findMany({
-      where: { name: { in: userRoles } }
-    });
-    const combinedPermissions = Array.from(new Set([
-      ...allUserRoles.flatMap(r => r.permissions),
-      ...(user.permissions || [])
-    ]));
-
-    // Generate tokens
+    // Generate SSO session token payload
     const tokenPayload = {
       userId: user.id,
       email: user.email,
@@ -87,36 +78,40 @@ export async function POST(request: NextRequest) {
       roles: userRoles
     };
 
-    const accessToken = generateAccessToken(tokenPayload);
-    const refreshToken = generateRefreshToken(tokenPayload);
-
-    // Calculate token expiry dates
-    const refreshTokenExpiry = getTokenExpiry(process.env.JWT_REFRESH_EXPIRY || '7d');
-    const accessTokenExpiry = getTokenExpiry(process.env.JWT_ACCESS_EXPIRY || '15m');
-
-    // Create user payload for cookie storage (removed createdAt, updatedAt, assignedStoreIds)
-    let userPayload: any = {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      role: userRoles[0],
-      roles: userRoles,
-      permissions: combinedPermissions,
-      userRole: null,
-      lastLoginAt: currentLoginTime,
-      previousLoginAt: user.lastLoginAt
-    };
-
-    userPayload.employee = user.employee
-      ? {
-          id: user.employee.id,
-          name: user.employee.name,
-          contact_number: user.employee.contact_number,
-          region: user.employee.region,
-          designation: user.employee.designation,
-          department: user.employee.department,
+    let existingSessions: any[] = [];
+    try {
+      const oldSso = request.cookies.get('sso_session')?.value;
+      if (oldSso) {
+        const decoded: any = verifyToken(oldSso);
+        if (decoded && Array.isArray(decoded.sessions)) {
+          existingSessions = decoded.sessions;
+        } else if (decoded && decoded.userId) {
+          existingSessions = [{
+            userId: decoded.userId,
+            email: decoded.email,
+            username: decoded.username,
+            roles: decoded.roles || ['EXECUTIVE']
+          }];
         }
-      : null;
+      }
+    } catch (e) {}
+
+    // Enforce maximum 3 accounts limit for new account additions
+    const isAlreadyAdded = existingSessions.some(
+      (s: any) => s && (s.userId === user.id || s.email === user.email)
+    );
+    if (existingSessions.length >= 3 && !isAlreadyAdded) {
+      return NextResponse.json(
+        { error: 'Maximum limit of 3 accounts reached on this device. Please remove an account first.' },
+        { status: 400 }
+      );
+    }
+
+    const ssoSession = generateSsoSessionToken(tokenPayload, existingSessions);
+    const ssoSessionExpiry = getTokenExpiry(process.env.JWT_SSO_EXPIRY || '30d');
+
+    const rawHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+    const isLocal = rawHost.includes('localhost') || rawHost.includes('127.0.0.1');
 
     // Create response with httpOnly cookies
     const response = NextResponse.json({
@@ -130,25 +125,14 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Set authentication cookies
-    response.cookies.set('accessToken', accessToken, {
+    // Strictly set only the neutral sso_session cookie
+    response.cookies.set('sso_session', ssoSession, {
       httpOnly: true,
-      secure: false, // Set to false for development (localhost)
+      secure: !isLocal,
       sameSite: 'lax',
-      expires: accessTokenExpiry,
+      expires: ssoSessionExpiry,
       path: '/'
     });
-
-    response.cookies.set('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: false, // Set to false for development (localhost)
-      sameSite: 'lax',
-      expires: refreshTokenExpiry,
-      path: '/'
-    });
-
-    // Store comprehensive user info in cookie using our new function
-    storeUserInfo(response, userPayload);
 
     return response;
 

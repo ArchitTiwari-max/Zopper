@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { validateAndRefreshToken } from '@/lib/auth';
+import { verifySsoSession } from '@/lib/auth';
 import crypto from 'crypto';
 
 export const runtime = 'nodejs';
@@ -50,22 +50,40 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(errorUrl.toString());
     }
 
-    // 4. Verify user session using existing cookies
-    const authResult = await validateAndRefreshToken(request);
+    const prompt = searchParams.get('prompt');
 
-    if (!authResult.isAuthenticated || !authResult.user) {
-      // User is not authenticated, redirect them to login page
-      // After successful login, they will be redirected back to this exact authorization page
-      const rawHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
-      const forwardedHost = rawHost.includes('0.0.0.0') ? (request.headers.get('x-forwarded-host') || '') : rawHost;
-      const isLocal = forwardedHost.includes('localhost') || forwardedHost.includes('127.0.0.1');
-      const baseUrl = forwardedHost ? `${isLocal ? 'http' : 'https'}://${forwardedHost}` : request.nextUrl.origin;
+    // Check if there are saved accounts in sso_accounts cookie
+    let savedAccountsCount = 0;
+    try {
+      const rawAccounts = request.cookies.get('sso_accounts')?.value;
+      if (rawAccounts) {
+        const parsed = JSON.parse(rawAccounts);
+        if (Array.isArray(parsed)) savedAccountsCount = parsed.length;
+      }
+    } catch (e) {}
 
-      const currentUrl = `${baseUrl}${request.nextUrl.pathname}${request.nextUrl.search}`;
+    const rawHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+    const forwardedHost = rawHost.includes('0.0.0.0') ? (request.headers.get('x-forwarded-host') || '') : rawHost;
+    const isLocal = forwardedHost.includes('localhost') || forwardedHost.includes('127.0.0.1');
+    const baseUrl = forwardedHost ? `${isLocal ? 'http' : 'https'}://${forwardedHost}` : request.nextUrl.origin;
+    const currentUrl = `${baseUrl}${request.nextUrl.pathname}${request.nextUrl.search}`;
+
+    // 4. Verify user session using sso_session cookie (falling back to accessToken/refreshToken if needed)
+    const authResult = await verifySsoSession(request);
+
+    // If no active session or prompt is login -> send to login page (preserving currentUrl with prompt)
+    if (prompt === 'login' || !authResult.isAuthenticated || !authResult.user) {
       const loginUrl = new URL('/login', baseUrl);
       loginUrl.searchParams.set('redirect', currentUrl);
-      
       return NextResponse.redirect(loginUrl.toString());
+    }
+
+    // If user is authenticated AND prompt is select_account/choose_account -> show Choose Account screen unless already selected
+    const isAccountSelected = searchParams.get('account_selected') === 'true';
+    if (!isAccountSelected && (prompt === 'select_account' || prompt === 'choose_account' || savedAccountsCount > 1)) {
+      const chooseUrl = new URL('/oauth/choose-account', baseUrl);
+      chooseUrl.searchParams.set('redirect', currentUrl);
+      return NextResponse.redirect(chooseUrl.toString());
     }
 
     // 5. Generate secure random authorization code
@@ -110,7 +128,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('OAuth Authorization Error:', error);
-    
+
     // Redirect with internal server error if redirectUri is validated
     try {
       const errorUrl = new URL(redirectUri);

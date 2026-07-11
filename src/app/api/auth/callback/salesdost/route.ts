@@ -132,8 +132,8 @@ export async function GET(request: NextRequest) {
     
     if (state.startsWith('salesdost_self_sso:')) {
       const targetPath = state.substring('salesdost_self_sso:'.length);
-      // Basic security check: ensure it is a relative path starting with /
-      if (targetPath && targetPath.startsWith('/') && !targetPath.startsWith('//')) {
+      // Ensure it is a valid sub-path other than root /
+      if (targetPath && targetPath !== '/' && targetPath.startsWith('/') && !targetPath.startsWith('//')) {
         dashboardPath = targetPath;
       }
     }

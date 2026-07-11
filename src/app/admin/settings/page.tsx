@@ -410,7 +410,7 @@ const AdminSettingsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="account-controls">
+          <div className="account-controls" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div className="logout-section">
               <div className="logout-info">
                 <h4>Sign Out</h4>
