@@ -29,13 +29,17 @@ async function applyRefreshedTokens(response: NextResponse, verifyData: any) {
   storeUserInfo(response, verifyData.user);
 }
 
-// Helper: Generate login/SSO redirect URL based on platform
-function getLoginRedirectUrl(request: NextRequest, errorParam?: string) {
-  const { pathname } = request.nextUrl;
+function getPublicOrigin(request: NextRequest) {
   const rawHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
   const forwardedHost = rawHost.includes('0.0.0.0') ? (request.headers.get('x-forwarded-host') || '') : rawHost;
   const isLocal = forwardedHost.includes('localhost') || forwardedHost.includes('127.0.0.1');
-  const origin = forwardedHost ? `${isLocal ? 'http' : 'https'}://${forwardedHost}` : request.nextUrl.origin;
+  return forwardedHost && !forwardedHost.includes('0.0.0.0') ? `${isLocal ? 'http' : 'https'}://${forwardedHost}` : request.nextUrl.origin;
+}
+
+// Helper: Generate login/SSO redirect URL based on platform
+function getLoginRedirectUrl(request: NextRequest, errorParam?: string) {
+  const { pathname } = request.nextUrl;
+  const origin = getPublicOrigin(request);
 
   const authorizeUrl = new URL('/api/oauth/authorize', origin);
   authorizeUrl.searchParams.set('client_id', process.env.SALESDOST_CLIENT_ID || '');
@@ -100,7 +104,9 @@ export async function middleware(request: NextRequest) {
           ? decodeURIComponent(request.nextUrl.searchParams.get('redirect')!)
           : defaultPath;
 
-        const response = NextResponse.redirect(new URL(targetPath, request.url));
+        const origin = getPublicOrigin(request);
+        const cleanTargetPath = targetPath.replace(/http[s]?:\/\/0\.0\.0\.0(:\d+)?/gi, origin);
+        const response = NextResponse.redirect(new URL(cleanTargetPath, origin));
         if (verifyData.tokensRefreshed) {
           await applyRefreshedTokens(response, verifyData);
         }
@@ -159,7 +165,7 @@ export async function middleware(request: NextRequest) {
           return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
         const safeDashboard = (user.roles || []).includes('ADMIN') ? '/admin/dashboard' : '/executive/dashboard';
-        return NextResponse.redirect(new URL(`${safeDashboard}?error=access_denied`, request.url));
+        return NextResponse.redirect(new URL(`${safeDashboard}?error=access_denied`, getPublicOrigin(request)));
       }
 
       const requestHeaders = new Headers(request.headers);
@@ -182,7 +188,7 @@ export async function middleware(request: NextRequest) {
       if (pathname.startsWith('/api/')) {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
       }
-      return NextResponse.redirect(new URL('/?error=session_expired', request.url));
+      return NextResponse.redirect(new URL('/?error=session_expired', getPublicOrigin(request)));
     }
   }
 

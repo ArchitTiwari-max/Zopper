@@ -113,6 +113,9 @@ function LoginContent() {
         
         if (redirect) {
           redirectUrl = decodeURIComponent(redirect);
+          if (redirectUrl.includes('0.0.0.0')) {
+            redirectUrl = redirectUrl.replace(/http[s]?:\/\/0\.0\.0\.0(:\d+)?/gi, window.location.origin);
+          }
         } else {
           redirectUrl = isAdmin ? '/admin/dashboard' : '/executive/dashboard';
         }
