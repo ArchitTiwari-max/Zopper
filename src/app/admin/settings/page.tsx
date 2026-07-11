@@ -65,8 +65,7 @@ const AdminSettingsPage: React.FC = () => {
           
           setUserProfile(profileData);
           
-          // Generate initials for avatar
-          const userName = userData.admin?.name || userData.name || '';
+          const userName = userData.employee?.name || userData.admin?.name || userData.name || userData.username || '';
           const initials = generateInitials(userName);
           setUserInitials(initials);
         }
@@ -171,7 +170,7 @@ const AdminSettingsPage: React.FC = () => {
                   <label className="profile-field-label">Full Name</label>
                   <input 
                     type="text" 
-                    value={userProfile.admin?.name || userProfile.name || ''} 
+                    value={userProfile.employee?.name || userProfile.admin?.name || userProfile.name || 'N/A'} 
                     disabled 
                     className="profile-input"
                   />
@@ -182,7 +181,7 @@ const AdminSettingsPage: React.FC = () => {
                   <label className="profile-field-label">Username</label>
                   <input 
                     type="text" 
-                    value={userProfile.admin?.username || userProfile.username || 'N/A'} 
+                    value={userProfile.username || userProfile.admin?.username || 'N/A'} 
                     disabled 
                     className="profile-input"
                   />
@@ -193,7 +192,7 @@ const AdminSettingsPage: React.FC = () => {
                   <label className="profile-field-label">Region</label>
                   <input 
                     type="text" 
-                    value={userProfile.admin?.region || userProfile.region || 'N/A'} 
+                    value={userProfile.employee?.region || userProfile.admin?.region || userProfile.region || 'N/A'} 
                     disabled 
                     className="profile-input"
                   />
@@ -204,7 +203,7 @@ const AdminSettingsPage: React.FC = () => {
                   <label className="profile-field-label">Registered Email Address</label>
                   <input 
                     type="email" 
-                    value={userProfile.admin?.email || userProfile.email || 'N/A'} 
+                    value={userProfile.email || userProfile.admin?.email || 'N/A'} 
                     disabled 
                     className="profile-input"
                   />
@@ -215,7 +214,7 @@ const AdminSettingsPage: React.FC = () => {
                   <label className="profile-field-label">Phone Number</label>
                   <input 
                     type="tel" 
-                    value={userProfile.admin?.contact_number || 'N/A'}
+                    value={userProfile.employee?.contact_number || userProfile.admin?.contact_number || userProfile.contact_number || 'N/A'}
                     disabled 
                     className="profile-input"
                   />

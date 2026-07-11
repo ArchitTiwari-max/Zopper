@@ -7,7 +7,6 @@ import '../signin.css';
 
 function LoginContent() {
   const searchParams = useSearchParams();
-  const platform = searchParams.get('platform');
   const redirect = searchParams.get('redirect');
   
   const [showPassword, setShowPassword] = useState(false);
@@ -15,7 +14,7 @@ function LoginContent() {
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifyLoading, setIsVerifyLoading] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Auth loading state
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false); // Auth loading state
   const [userEmail, setUserEmail] = useState(''); // Store email from API response
   
   // Forgot Password states
@@ -32,47 +31,7 @@ function LoginContent() {
     password: ''
   });
 
-  // Check if platform or redirect query param exists, otherwise redirect to landing page
-  useEffect(() => {
-    if (!platform && !redirect) {
-      window.location.href = '/';
-      return;
-    }
-    checkIfLoggedIn();
-  }, [platform, redirect]);
 
-  const checkIfLoggedIn = async () => {
-    try {
-      const response = await fetch('/api/auth/verify-session', {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const userRoles = data.user.roles || [];
-        const isAdmin = userRoles.includes('ADMIN');
-        
-        let redirectUrl;
-        if (redirect) {
-          redirectUrl = decodeURIComponent(redirect);
-        } else if (platform === 'sales') {
-          redirectUrl = isAdmin ? '/admin/dashboard' : '/executive/dashboard';
-        } else if (platform === 'work') {
-          redirectUrl = '/upcoming';
-        } else {
-          redirectUrl = '/';
-        }
-        
-        window.location.href = redirectUrl;
-        return; // Don't set isCheckingAuth to false if redirecting
-      }
-    } catch (error) {
-      console.log('User not logged in');
-    }
-    
-    setIsCheckingAuth(false);
-  };
 
   const togglePassword = () => {
     setShowPassword(!showPassword);
@@ -154,10 +113,6 @@ function LoginContent() {
         
         if (redirect) {
           redirectUrl = decodeURIComponent(redirect);
-        } else if (platform === 'sales') {
-          redirectUrl = isAdmin ? '/admin/dashboard' : '/executive/dashboard';
-        } else if (platform === 'work') {
-          redirectUrl = '/upcoming';
         } else {
           redirectUrl = isAdmin ? '/admin/dashboard' : '/executive/dashboard';
         }
@@ -332,7 +287,7 @@ function LoginContent() {
         
         <div className="form-section">
           <h1>Sign In</h1>
-          <p className="subtitle">Sign In to continue to {platform === 'sales' ? 'Sales Platform' : 'Work Management'}</p>
+          <p className="subtitle">Sign In to continue to Salesdost</p>
           
           <form className="sign-in-form" onSubmit={handleSubmit}>
             <div className="form-group">

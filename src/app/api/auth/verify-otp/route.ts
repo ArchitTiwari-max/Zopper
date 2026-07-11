@@ -107,34 +107,16 @@ export async function POST(request: NextRequest) {
       previousLoginAt: user.lastLoginAt
     };
 
-    if (user.employee) {
-      userPayload.employee = {
-        id: user.employee.id,
-        name: user.employee.name,
-        contact_number: user.employee.contact_number,
-        region: user.employee.region,
-        designation: user.employee.designation,
-        department: user.employee.department
-      };
-
-      // Add legacy role-specific information for backward compatibility on client side
-      if (userRoles.includes('EXECUTIVE')) {
-        userPayload.executive = {
+    userPayload.employee = user.employee
+      ? {
           id: user.employee.id,
           name: user.employee.name,
           contact_number: user.employee.contact_number,
-          region: user.employee.region
-        };
-      }
-      if (userRoles.includes('ADMIN')) {
-        userPayload.admin = {
-          id: user.employee.id,
-          name: user.employee.name,
-          contact_number: user.employee.contact_number,
-          region: user.employee.region
-        };
-      }
-    }
+          region: user.employee.region,
+          designation: user.employee.designation,
+          department: user.employee.department,
+        }
+      : null;
 
     // Create response with httpOnly cookies
     const response = NextResponse.json({

@@ -10,56 +10,18 @@ function LandingContent() {
     isAuthenticated: boolean;
     isAdmin: boolean;
   }>({
-    isChecked: false,
+    isChecked: true,
     isAuthenticated: false,
     isAdmin: false,
   });
 
-  useEffect(() => {
-    checkSession();
-  }, []);
-
-  const checkSession = async () => {
-    try {
-      const response = await fetch('/api/auth/verify-session', {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.authenticated && data.user) {
-          const userRoles = data.user.roles || [];
-          const isAdmin = userRoles.includes('ADMIN');
-          setAuthStatus({
-            isChecked: true,
-            isAuthenticated: true,
-            isAdmin,
-          });
-          return;
-        }
-      }
-    } catch (error) {
-      console.log('User session not active');
-    }
-    setAuthStatus({
-      isChecked: true,
-      isAuthenticated: false,
-      isAdmin: false,
-    });
-  };
-
   const handlePlatformSelect = (platform: 'sales' | 'work') => {
     if (platform === 'work') {
-      window.location.href = '/upcoming';
+      window.location.href = '/work';
       return;
     }
-    if (authStatus.isAuthenticated) {
-      const dest = authStatus.isAdmin ? '/admin/dashboard' : '/executive/dashboard';
-      window.location.href = dest;
-    } else {
-      window.location.href = `/login?platform=${platform}`;
-    }
+    const origin = window.location.origin;
+    window.location.href = `/api/oauth/authorize?client_id=sd_2e788dcd252d9297942790cd&redirect_uri=${encodeURIComponent(origin + '/api/auth/callback/salesdost')}&response_type=code&state=salesdost_self_sso:%2F`;
   };
 
   return (
@@ -98,8 +60,8 @@ function LandingContent() {
         {/* Platform Grid */}
         <main className="platform-grid">
           {/* Simple Sales Platform Div */}
-          <div 
-            className="simple-portal-div div-sales" 
+          <div
+            className="simple-portal-div div-sales"
             onClick={() => handlePlatformSelect('sales')}
           >
             <h2 className="simple-portal-title">Sales Platform</h2>
@@ -109,8 +71,8 @@ function LandingContent() {
           </div>
 
           {/* Simple Work Management Div */}
-          <div 
-            className="simple-portal-div div-work" 
+          <div
+            className="simple-portal-div div-work"
             onClick={() => handlePlatformSelect('work')}
           >
             <h2 className="simple-portal-title">Work Management</h2>

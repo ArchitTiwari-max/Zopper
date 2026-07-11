@@ -85,11 +85,11 @@ const Settings: React.FC = () => {
           // Map the cookie data to profile format
           const profileData: UserProfile = {
             id: userData.id || 'N/A',
-            name: userData.executive?.name || userData.admin?.name || 'Not provided',
+            name: userData.employee?.name || userData.name || 'Not provided',
             email: userData.email || 'N/A',
-            username: userData.username || 'N/A', // This should now work
-            contact_number: userData.executive?.contact_number || userData.admin?.contact_number || null,
-            region: userData.executive?.region || userData.admin?.region || null
+            username: userData.username || 'N/A',
+            contact_number: userData.employee?.contact_number || null,
+            region: userData.employee?.region || null
           };
           
           console.log('Mapped profile data:', profileData);

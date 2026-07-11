@@ -47,7 +47,6 @@ interface AuthContextType {
   user: UserInfo | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  refreshAuth: () => Promise<UserInfo | null>;
   logout: () => Promise<void>;
   updateUser: (newUser: Partial<UserInfo>) => void;
   hasPermission: (permission: string) => boolean;
@@ -64,41 +63,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialUse
   const pathname = usePathname();
   // Initialize state directly from initialUser injected via Server Component / headers (Phase 3)
   const [user, setUser] = useState<UserInfo | null>(initialUser || null);
-  const [isLoading, setIsLoading] = useState<boolean>(!initialUser);
-
-  // Function to fetch latest auth state on-demand (Phase 4)
-  // This only use when there is any update in session like onboarding page user detail change form submit, not for initial loading
-  const refreshAuth = useCallback(async (): Promise<UserInfo | null> => {
-    try {
-      const response = await fetch('/api/auth/verify-session?refresh=true', {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Cache-Control': 'no-cache'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.user) {
-          setUser(data.user);
-          setIsLoading(false);
-          return data.user;
-        }
-      }
-      
-      // If verification fails and we didn't have a valid initialUser
-      if (!initialUser) {
-        setUser(null);
-      }
-      setIsLoading(false);
-      return null;
-    } catch (error) {
-      console.error('Error refreshing auth:', error);
-      setIsLoading(false);
-      return null;
-    }
-  }, [initialUser]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const logout = useCallback(async () => {
     try {
@@ -138,8 +103,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialUse
 
   // On mount, set up the global API interceptor (Phase 5)
   useEffect(() => {
-    setupAuthInterceptor(refreshAuth, logout);
-  }, [refreshAuth, logout]);
+    setupAuthInterceptor(undefined, logout);
+  }, [logout]);
 
   // Check URL query parameters on mount to display access denied or session expired alerts
   useEffect(() => {
@@ -168,21 +133,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, initialUse
     }
   }, [pathname]);
 
-  // If initialUser was NOT provided (e.g. client-only navigation fallback), verify once
+  // If initialUser changes, update user state
   useEffect(() => {
-    if (!initialUser && isLoading) {
-      refreshAuth();
-    } else if (initialUser) {
-      // Ensure loading is false when initialUser is present
-      setIsLoading(false);
+    if (initialUser) {
+      setUser(initialUser);
     }
-  }, [initialUser, isLoading, refreshAuth]);
+  }, [initialUser]);
 
   const value = {
     user,
     isAuthenticated: !!user,
     isLoading,
-    refreshAuth,
     logout,
     updateUser,
     hasPermission,

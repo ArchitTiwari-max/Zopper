@@ -58,7 +58,6 @@ export async function GET(request: NextRequest) {
       // After successful login, they will be redirected back to this exact authorization page
       const currentUrl = request.url;
       const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('platform', 'sales');
       loginUrl.searchParams.set('redirect', currentUrl);
       
       return NextResponse.redirect(loginUrl.toString());

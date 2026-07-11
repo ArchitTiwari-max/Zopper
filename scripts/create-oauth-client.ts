@@ -1,7 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import { MongoClient } from 'mongodb';
 import crypto from 'crypto';
+import dotenv from 'dotenv';
+import path from 'path';
 
-const prisma = new PrismaClient();
+// Load env variables
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 function printUsage() {
   console.log(`
@@ -48,37 +51,50 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`🚀 Registering client application "${name}"...`);
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) {
+    console.error('❌ Error: DATABASE_URL is not set in environment variables.');
+    process.exit(1);
+  }
+
+  console.log(`🚀 Connecting directly to database to register "${name}"...`);
   console.log(`🔗 Allowed Redirect URIs:`, redirectUris);
 
   // Generate secure random client_id and client_secret
   const clientId = 'sd_' + crypto.randomBytes(12).toString('hex'); // Prefix with sd_ for Salesdost
   const clientSecret = crypto.randomBytes(32).toString('hex');
 
+  const client = new MongoClient(dbUrl);
+
   try {
-    const client = await prisma.client.create({
-      data: {
-        clientId,
-        clientSecret,
-        appName: name,
-        redirectUris,
-      },
+    await client.connect();
+    const db = client.db();
+    
+    // In MongoDB collection name is "Client" matching Prisma @@map("Client")
+    const collection = db.collection('Client');
+
+    const result = await collection.insertOne({
+      clientId,
+      clientSecret,
+      appName: name,
+      redirectUris,
+      createdAt: new Date()
     });
 
-    console.log(`\n✅ Client application registered successfully!`);
+    console.log(`\n✅ Client application registered successfully via Native MongoDB Driver!`);
     console.log(`-----------------------------------------------`);
-    console.log(`Application Name : ${client.appName}`);
-    console.log(`Client ID        : ${client.clientId}`);
-    console.log(`Client Secret    : ${client.clientSecret}`);
-    console.log(`Redirect URIs    : ${client.redirectUris.join(', ')}`);
-    console.log(`Created At       : ${client.createdAt}`);
+    console.log(`Application Name : ${name}`);
+    console.log(`Client ID        : ${clientId}`);
+    console.log(`Client Secret    : ${clientSecret}`);
+    console.log(`Redirect URIs    : ${redirectUris.join(', ')}`);
+    console.log(`Doc ID           : ${result.insertedId}`);
     console.log(`-----------------------------------------------`);
     console.log(`⚠️  Save the Client Secret securely. It cannot be recovered.\n`);
 
   } catch (error) {
     console.error('❌ Failed to register OAuth client:', error);
   } finally {
-    await prisma.$disconnect();
+    await client.close();
   }
 }
 
