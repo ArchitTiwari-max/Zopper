@@ -75,7 +75,7 @@ export async function initializeStoreCache(prisma: PrismaClient): Promise<StoreC
     stores: new Map(stores.map(s => [s.id, {
       id: s.id,
       storeName: s.storeName,
-      currentExecutives: s.employeeStores.map(es => es.executiveId)
+      currentExecutives: s.employeeStores.map(es => es.employeeId).filter(Boolean)
     }])),
     brands: new Map(brands.map(b => [b.id, b])),
     storeIds: new Set(stores.map(s => s.id)),
@@ -389,13 +389,16 @@ export async function batchProcessStoreRecords(
         }
 
         // Remove old executive assignments
-        if (storeData.executivesToRemove.length > 0) {
-          await prisma.employeeStoreAssignment.deleteMany({
-            where: {
-              storeId: storeData.storeId,
-              employeeId: { in: storeData.executivesToRemove }
-            }
-          });
+        if (storeData.executivesToRemove?.length > 0) {
+          const validIdsToRemove = storeData.executivesToRemove.filter(Boolean);
+          if (validIdsToRemove.length > 0) {
+            await prisma.employeeStoreAssignment.deleteMany({
+              where: {
+                storeId: storeData.storeId,
+                employeeId: { in: validIdsToRemove }
+              }
+            });
+          }
         }
 
         // Add new executive assignments
