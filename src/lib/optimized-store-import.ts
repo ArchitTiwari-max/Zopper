@@ -184,13 +184,13 @@ export async function optimizedProcessStore(rowObj: Record<string, any>, rowInde
     const state = (rowObj.state || rowObj.State || rowObj.STATE)?.toString().trim() || '';
     const rawPriority = (rowObj.priority || rowObj.Priority || rowObj.PRIORITY)?.toString().trim() || '';
 
-    let priorityMapped: 'p1' | 'p2' | 'p3' | null = null;
+    let priorityMapped: 'p0' | 'p1' | 'p2' | 'p3' | null = null;
     if (rawPriority) {
       const p = rawPriority.toLowerCase();
-      if (p === 'p1' || p === 'p2' || p === 'p3') {
-        priorityMapped = p as 'p1' | 'p2' | 'p3';
+      if (p === 'p0' || p === 'p1' || p === 'p2' || p === 'p3') {
+        priorityMapped = p as 'p0' | 'p1' | 'p2' | 'p3';
       } else {
-        return `❌ Invalid Priority value '${rawPriority}'. Must be p1, p2, or p3. ${context}`;
+        return `❌ Invalid Priority value '${rawPriority}'. Must be p0, p1, p2, or p3. ${context}`;
       }
     }
 
